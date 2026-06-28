@@ -1,0 +1,42 @@
+{
+  "Brand": {
+    "name": "FreelanceAI",
+    "tagline": "Central Asia's marketplace for AI creators"
+  },
+  "Nav": {
+    "explore": "Services",
+    "becomeSeller": "Become a creator",
+    "login": "Log in",
+    "dashboard": "Dashboard"
+  },
+  "Home": {
+    "heroTitle": "AI videos and images for your business",
+    "heroSubtitle": "Find the best AI creators or sell your own work. Log in with Telegram and get started.",
+    "ctaPrimary": "Browse services",
+    "ctaSecondary": "Start as a creator",
+    "howItWorksTitle": "How it works",
+    "step1Title": "Log in with Telegram",
+    "step1Body": "Create an account in seconds — no password needed.",
+    "step2Title": "Choose a service",
+    "step2Body": "AI video, images and other creative work.",
+    "step3Title": "Secure payment",
+    "step3Body": "Funds are released to the creator once the work is done.",
+    "categoriesTitle": "Popular categories"
+  },
+  "Categories": {
+    "aiVideo": "AI video",
+    "aiImage": "AI image",
+    "aiAvatar": "AI avatar",
+    "aiAds": "AI ads",
+    "voiceover": "Voiceover",
+    "branding": "Branding"
+  },
+  "Footer": {
+    "rights": "All rights reserved.",
+    "language": "Language"
+  },
+  "Common": {
+    "comingSoon": "Coming soon",
+    "loading": "Loading..."
+  }
+}

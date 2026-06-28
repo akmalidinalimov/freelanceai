@@ -1,0 +1,42 @@
+{
+  "Brand": {
+    "name": "FreelanceAI",
+    "tagline": "Markaziy Osiyoning AI-ijodkorlar bozori"
+  },
+  "Nav": {
+    "explore": "Xizmatlar",
+    "becomeSeller": "Ijodkor bo'lish",
+    "login": "Kirish",
+    "dashboard": "Boshqaruv paneli"
+  },
+  "Home": {
+    "heroTitle": "Biznesingiz uchun AI video va rasmlar",
+    "heroSubtitle": "Eng zo'r AI-ijodkorlarni toping yoki o'z ishingizni soting. Telegram orqali kiring, ishni boshlang.",
+    "ctaPrimary": "Xizmatlarni ko'rish",
+    "ctaSecondary": "Ijodkor sifatida boshlash",
+    "howItWorksTitle": "Qanday ishlaydi",
+    "step1Title": "Telegram orqali kiring",
+    "step1Body": "Bir necha soniyada hisob yarating — parol kerak emas.",
+    "step2Title": "Xizmat tanlang",
+    "step2Body": "AI video, rasm va boshqa ijodiy ishlarni toping.",
+    "step3Title": "Xavfsiz to'lov",
+    "step3Body": "To'lov ish tugagach ijodkorga o'tkaziladi.",
+    "categoriesTitle": "Mashhur yo'nalishlar"
+  },
+  "Categories": {
+    "aiVideo": "AI video",
+    "aiImage": "AI rasm",
+    "aiAvatar": "AI avatar",
+    "aiAds": "AI reklama",
+    "voiceover": "Ovoz dublyaji",
+    "branding": "Brending"
+  },
+  "Footer": {
+    "rights": "Barcha huquqlar himoyalangan.",
+    "language": "Til"
+  },
+  "Common": {
+    "comingSoon": "Tez orada",
+    "loading": "Yuklanmoqda..."
+  }
+}

@@ -1,0 +1,446 @@
+// FreelanceAI — Prisma schema
+// Money is stored as integer UZS (no decimals, no floats).
+// The ledger is an internal accounting record, NOT a regulated e-money wallet.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum KycStatus {
+  NONE
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id         String   @id @default(cuid())
+  // Telegram numeric id (stable per user). Stored as string to be safe with large ids.
+  telegramId String   @unique
+  username   String?
+  firstName  String?
+  lastName   String?
+  photoUrl   String?
+  phone      String?
+  locale     String   @default("uz")
+  role       UserRole @default(BUYER)
+  isSeller   Boolean  @default(false)
+  kycStatus  KycStatus @default(NONE)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sellerProfile  SellerProfile?
+  sessions       Session[]
+  gigs           Gig[]
+  ordersAsBuyer  Order[]        @relation("BuyerOrders")
+  ordersAsSeller Order[]        @relation("SellerOrders")
+  messages       Message[]
+  reviewsWritten Review[]       @relation("ReviewAuthor")
+  ledgerEntries  LedgerEntry[]
+  payoutRequests PayoutRequest[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Seller profile & portfolio
+// ---------------------------------------------------------------------------
+
+enum SellerLevel {
+  NEW
+  LEVEL_1
+  LEVEL_2
+  TOP_RATED
+}
+
+model SellerProfile {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline      String?
+  bio           String?
+  skills        String[]    @default([])
+  aiTools       String[]    @default([])
+  level         SellerLevel @default(NEW)
+  ratingAvg     Float       @default(0)
+  ratingCount   Int         @default(0)
+  responseMins  Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  portfolio PortfolioItem[]
+}
+
+model PortfolioItem {
+  id        String        @id @default(cuid())
+  profileId String
+  profile   SellerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  mediaUrl  String
+  mediaType String        @default("image") // image | video
+  caption   String?
+  position  Int           @default(0)
+  createdAt DateTime      @default(now())
+
+  @@index([profileId])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Category {
+  id     String @id @default(cuid())
+  slug   String @unique
+  nameUz String
+  nameRu String
+  nameEn String
+  gigs   Gig[]
+}
+
+enum GigStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  REJECTED
+}
+
+model Gig {
+  id          String    @id @default(cuid())
+  sellerId    String
+  seller      User      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  title       String
+  slug        String    @unique
+  description String
+  tags        String[]  @default([])
+  coverUrl    String?
+  galleryUrls String[]  @default([])
+  locale      String    @default("uz")
+  status      GigStatus @default(DRAFT)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  packages GigPackage[]
+  orders   Order[]
+  reviews  Review[]
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([categoryId])
+}
+
+enum PackageTier {
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+model GigPackage {
+  id          String      @id @default(cuid())
+  gigId       String
+  gig         Gig         @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  tier        PackageTier
+  title       String
+  description String?
+  priceUzs    Int // integer UZS
+  deliveryDays Int
+  revisions   Int         @default(1)
+
+  @@unique([gigId, tier])
+}
+
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  IN_PROGRESS
+  DELIVERED
+  REVISION
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  gigId        String
+  gig          Gig         @relation(fields: [gigId], references: [id])
+  buyerId      String
+  buyer        User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  sellerId     String
+  seller       User        @relation("SellerOrders", fields: [sellerId], references: [id])
+  // Snapshot of the purchased package so later edits don't change history.
+  packageTier  PackageTier
+  packageTitle String
+  amountUzs    Int
+  commissionUzs Int        @default(0)
+  sellerNetUzs Int         @default(0)
+  requirements String?
+  status       OrderStatus @default(PENDING_PAYMENT)
+  dueAt        DateTime?
+  deliveredAt  DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  deliveries   OrderDelivery[]
+  conversation Conversation?
+  review       Review?
+  transactions Transaction[]
+  ledgerEntries LedgerEntry[]
+  dispute      Dispute?
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+}
+
+model OrderDelivery {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  message   String?
+  fileUrls  String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Messaging
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id        String    @id @default(cuid())
+  orderId   String?   @unique
+  order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  body           String?
+  fileUrls       String[]     @default([])
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+// ---------------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------------
+
+model Review {
+  id             String   @id @default(cuid())
+  orderId        String   @unique
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  gigId          String
+  gig            Gig      @relation(fields: [gigId], references: [id])
+  authorId       String
+  author         User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  rating         Int // 1..5
+  comment        String?
+  sellerResponse String?
+  createdAt      DateTime @default(now())
+
+  @@index([gigId])
+}
+
+// ---------------------------------------------------------------------------
+// Payments & double-entry ledger
+// ---------------------------------------------------------------------------
+
+enum PaymentProvider {
+  PAYME
+  CLICK
+  ATMOS
+  MANUAL
+}
+
+enum TransactionType {
+  PAYMENT_IN
+  REFUND
+  PAYOUT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+model Transaction {
+  id             String            @id @default(cuid())
+  orderId        String?
+  order          Order?            @relation(fields: [orderId], references: [id])
+  provider       PaymentProvider
+  type           TransactionType
+  status         TransactionStatus @default(PENDING)
+  amountUzs      Int
+  // Provider's own transaction id; used together with provider for idempotency.
+  providerTxnId  String?
+  // Idempotency key for webhook processing.
+  idempotencyKey String?           @unique
+  rawPayload     Json?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([provider, providerTxnId])
+  @@index([orderId])
+  @@index([status])
+}
+
+// Double-entry: every financial event produces balanced debit/credit entries.
+// `account` identifies the bucket (e.g. PLATFORM_REVENUE, SELLER_PAYABLE, CLIENT_FUNDS).
+enum LedgerAccount {
+  CLIENT_FUNDS // money received from clients via PSP
+  PLATFORM_REVENUE // commission earned by the platform
+  SELLER_PAYABLE // amount owed to a seller (becomes withdrawable on completion)
+  PAYOUT_CLEARING // funds moving out to sellers
+}
+
+model LedgerEntry {
+  id        String        @id @default(cuid())
+  orderId   String?
+  order     Order?        @relation(fields: [orderId], references: [id])
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id])
+  account   LedgerAccount
+  // Signed integer UZS. Sum of all entries for an order must net to 0 after settlement.
+  amountUzs Int
+  memo      String?
+  createdAt DateTime      @default(now())
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([account])
+}
+
+// ---------------------------------------------------------------------------
+// Payouts
+// ---------------------------------------------------------------------------
+
+enum PayoutStatus {
+  REQUESTED
+  APPROVED
+  PAID
+  REJECTED
+}
+
+model PayoutRequest {
+  id          String       @id @default(cuid())
+  sellerId    String
+  seller      User         @relation(fields: [sellerId], references: [id])
+  amountUzs   Int
+  // Only the masked card is stored (e.g. "8600 **** **** 1234"). Never the full PAN.
+  cardMasked  String
+  status      PayoutStatus @default(REQUESTED)
+  receiptUrl  String?
+  processedBy String? // admin user id
+  note        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([sellerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Disputes
+// ---------------------------------------------------------------------------
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED_REFUND
+  RESOLVED_RELEASE
+  REJECTED
+}
+
+model Dispute {
+  id         String        @id @default(cuid())
+  orderId    String        @unique
+  order      Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  openedById String
+  reason     String
+  status     DisputeStatus @default(OPEN)
+  resolution String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Notifications, audit, feature flags
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entity, entityId])
+}
+
+model FeatureFlag {
+  key       String   @id
+  enabled   Boolean  @default(false)
+  payload   Json?
+  updatedAt DateTime @updatedAt
+}
