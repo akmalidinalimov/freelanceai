@@ -42,6 +42,7 @@ const CHECKS = [
   { group: "Guards", name: "admin settlements gated", method: "GET", path: "/uz/admin/settlements", expect: 307 },
   { group: "Guards", name: "messages inbox gated", method: "GET", path: "/uz/messages", expect: 307 },
   { group: "Guards", name: "edit profile gated", method: "GET", path: "/uz/dashboard/seller/profile", expect: 307 },
+  { group: "Guards", name: "settings gated", method: "GET", path: "/uz/dashboard/settings", expect: 307 },
 
   // --- API endpoints reject unauthenticated (401) ---
   { group: "API", name: "create gig", method: "POST", path: "/api/gigs", origin: true, expect: 401 },
@@ -53,6 +54,7 @@ const CHECKS = [
   { group: "API", name: "admin payout", method: "POST", path: "/api/admin/payouts", origin: true, expect: 401 },
   { group: "API", name: "contact seller", method: "POST", path: "/api/contact", origin: true, expect: 401 },
   { group: "API", name: "update profile", method: "PATCH", path: "/api/me/profile", origin: true, expect: 401 },
+  { group: "API", name: "update settings", method: "PATCH", path: "/api/me/settings", origin: true, expect: 401 },
   { group: "API", name: "conversation messages", method: "GET", path: "/api/conversations/abc/messages", expect: 401 },
 ];
 

@@ -233,5 +233,15 @@
       "LEVEL_2": "2-daraja",
       "TOP_RATED": "Top reyting"
     }
+  },
+  "Settings": {
+    "title": "Sozlamalar",
+    "notifyTitle": "Yangi xabarlar haqida qayerda xabar beraylik?",
+    "telegram": "Telegram",
+    "telegramHint": "Botdan xabar olish",
+    "email": "Email",
+    "emailHint": "Emailga xat olish",
+    "noEmail": "Hisobingizga email qoʻshing",
+    "saved": "Saqlandi ✓"
   }
 }

@@ -233,5 +233,15 @@
       "LEVEL_2": "Level 2",
       "TOP_RATED": "Top rated"
     }
+  },
+  "Settings": {
+    "title": "Settings",
+    "notifyTitle": "Where should we notify you about new messages?",
+    "telegram": "Telegram",
+    "telegramHint": "Get a DM from the bot",
+    "email": "Email",
+    "emailHint": "Get an email",
+    "noEmail": "Add an email to your account to enable",
+    "saved": "Saved ✓"
   }
 }

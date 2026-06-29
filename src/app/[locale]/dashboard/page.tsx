@@ -18,6 +18,7 @@ export default async function DashboardPage({
   const t = await getTranslations("Dash");
   const to = await getTranslations("Order");
   const tm = await getTranslations("Message");
+  const ts = await getTranslations("Settings");
   const orders = await listBuyerOrders(user.id);
 
   return (
@@ -27,6 +28,9 @@ export default async function DashboardPage({
         <div className="flex gap-2">
           <Link href="/messages">
             <Button variant="ghost">{tm("inbox")}</Button>
+          </Link>
+          <Link href="/dashboard/settings">
+            <Button variant="ghost">{ts("title")}</Button>
           </Link>
           {!user.isSeller && (
             <Link href="/sell">

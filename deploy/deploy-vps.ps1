@@ -22,7 +22,8 @@ foreach ($k in $needed) {
 }
 # Optional vars: included only if present (e.g. the admin allowlist may be empty).
 $optional = 'ADMIN_TELEGRAM_IDS', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
-'S3_ENDPOINT', 'S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_PUBLIC_BASE_URL'
+'S3_ENDPOINT', 'S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_PUBLIC_BASE_URL',
+'RESEND_API_KEY', 'EMAIL_FROM'
 $lines = @($needed | ForEach-Object { "$_=$($dv[$_])" })
 foreach ($k in $optional) { if ($dv[$k] -and $dv[$k] -notmatch 'PASTE_') { $lines += "$k=$($dv[$k])" } }
 # [string] casts avoid a PowerShell 5.1 ConvertTo-Json quirk that wraps strings as {value,Count}.

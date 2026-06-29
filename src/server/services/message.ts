@@ -4,6 +4,7 @@ import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { tgSendMessage } from "@/lib/telegram-bot";
 import { stripContactInfo } from "@/lib/sanitize";
+import { sendEmail } from "@/lib/email";
 
 const SENDER_SELECT = { select: { id: true, firstName: true, name: true, username: true } } as const;
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -84,15 +85,22 @@ export async function postConversationMessage(conversationId: string, user: User
 
   const otherId = user.id === buyerId ? sellerId : user.id === sellerId ? buyerId : null;
   if (otherId) {
-    const other = await prisma.user.findUnique({ where: { id: otherId }, select: { telegramId: true } });
-    if (other?.telegramId) {
+    const other = await prisma.user.findUnique({
+      where: { id: otherId },
+      select: { telegramId: true, email: true, notifyTelegram: true, notifyEmail: true },
+    });
+    if (other) {
       const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
       const ctx = convo.gig?.title ? ` "${convo.gig.title}"` : "";
       const preview = text.length > 160 ? `${text.slice(0, 160)}…` : text;
-      void tgSendMessage(
-        other.telegramId,
-        `💬 New message${ctx}\n\n${preview}\n\n${origin}/uz/messages/${conversationId}`
-      );
+      const link = `${origin}/uz/messages/${conversationId}`;
+      // Respect the recipient's notification preferences.
+      if (other.notifyTelegram && other.telegramId) {
+        void tgSendMessage(other.telegramId, `💬 New message${ctx}\n\n${preview}\n\n${link}`);
+      }
+      if (other.notifyEmail && other.email) {
+        void sendEmail(other.email, `New message${ctx}`, `${preview}\n\nOpen: ${link}`);
+      }
     }
   }
   return message;
