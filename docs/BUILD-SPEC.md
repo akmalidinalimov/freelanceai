@@ -46,26 +46,35 @@ Fiverr-style marketplace for **AI creative work** (AI video/images), Central Asi
 
 ## 2. Architecture overview
 
+**ADR-001 — Edge & runtime:** the app is exposed via a **Cloudflare Tunnel** (no public ports on the
+VPS; TLS at Cloudflare's edge) and runs as a **Docker Compose** project on the Hostinger VPS — *not*
+Nginx + PM2 (an earlier draft said that; this is the resolved reality). The host VPS is shared with the
+founder's other apps, so binding 80/443 was not an option.
+
 ```
-                    Internet (HTTPS)
-                          │
-              ┌───────────▼───────────┐
-              │  Nginx (TLS, HTTP/2,   │   Let's Encrypt
-              │  headers, gzip)        │
-              └───────────┬───────────┘
-                          │ proxy :3000
-              ┌───────────▼───────────┐     ┌──────────────────┐
-              │  Next.js (PM2,         │────▶│ PostgreSQL 16     │ localhost only
-              │  standalone, cluster)  │     │ (LUKS disk, SCRAM,│
-              │  + pg-boss worker proc │     │  least-priv roles)│
-              └───────┬───────┬────────┘     └──────────────────┘
-                      │       │
-        Telegram Bot ◀┘       └▶ Cloudflare R2 (media; presigned)
-        (login, push)            Payme / Click (PSP webhooks)
+            Internet (HTTPS)
+                  │  Cloudflare edge (TLS, DNS, proxy)
+                  ▼
+        ┌──────────────────┐  Cloudflare Tunnel (outbound; no open ports)
+        │   cloudflared     │
+        └─────────┬─────────┘
+                  │ app:3000  (Docker network)
+   ┌──────────────▼──────────────┐     ┌──────────────────┐
+   │  Next.js app (container)     │────▶│ PostgreSQL 16     │ internal-only
+   │  + worker (pg-boss) [later]  │     │ (container, SCRAM)│ (no published port)
+   └──────┬───────────────┬───────┘     └──────────────────┘
+          │               │
+ Telegram Bot ◀┘          └▶ Cloudflare R2 (media; presigned)
+ (deep-link login,           Payme / Click (PSP webhooks)
+  bot webhook, push)
 ```
 
-- **One codebase**; one VPS at launch. Worker = a separate PM2 process running pg-boss jobs.
-- **Scale path** (later): move Postgres to its own box, add Redis for queue/cache/realtime fan-out, run multiple app instances behind Nginx.
+- **One codebase**, one VPS at launch (MVP). **Current MVP caveat:** the app container builds from
+  source on (re)start — fine for launch, **rebuilds on restart**. *Scale step:* a **prebuilt image via
+  CI** (GHCR) for fast, deterministic deploys; switch deploy from `db push` to **`prisma migrate deploy`**.
+- **Scale path:** move Postgres to its own host (+ pooling/replicas); add **Redis** for sessions, cache,
+  rate-limiting, the job queue, and realtime (SSE) fan-out; run **multiple app replicas** behind the
+  tunnel/load balancer; CDN for media; **k6 load tests** as a release gate. (Details: identity spec §9.)
 
 ---
 
@@ -73,10 +82,12 @@ Fiverr-style marketplace for **AI creative work** (AI video/images), Central Asi
 
 | Phase | State |
 |---|---|
-| **P0 Foundation** | ✅ done (scaffold, i18n, full Prisma schema, CI, tests) — commit `9a9803d` |
-| **P1 Identity** | ✅ code done + security-reviewed (Telegram auth, sessions); **live login pending DB + bot token** — commit `4af9387` |
-| P1.5 Foundations hardening | ⬜ next (see §4) |
-| P2–P12 | ⬜ planned (see §5) |
+| **P0 Foundation** | ✅ done (scaffold, i18n, schema, CI, tests) |
+| **P1 Identity** | ✅ done — **deep-link login live** at https://freelanceai.aicreator.academy |
+| **P1.5 Foundations** | ✅ done (env validation, API wrapper, AuthZ/IDOR, audit, nonce) |
+| **Deploy** | ✅ live on Hostinger VPS (Docker + Cloudflare Tunnel); MVP run-from-source |
+| **Spec rebuild** | 🔄 in progress — verified, per-component (Wave 1: [ENGINEERING-STANDARDS](ENGINEERING-STANDARDS.md) + [IDENTITY-ROLES-DASHBOARDS v2](IDENTITY-ROLES-DASHBOARDS.md)) |
+| P2–P12 | ⬜ planned (see §5) — to be re-verified per the standards + QA-loop |
 
 ---
 
