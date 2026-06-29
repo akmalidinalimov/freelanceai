@@ -38,6 +38,19 @@ export async function SiteHeader() {
                   {t("Nav.dashboard")}
                 </Button>
               </Link>
+              {user.isSeller && (
+                <Link
+                  href="/dashboard/seller"
+                  className="hidden text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] sm:inline"
+                >
+                  {t("Dash.creatorView")}
+                </Link>
+              )}
+              {user.role === "ADMIN" && (
+                <Link href="/admin" className="text-sm font-medium text-[hsl(var(--primary))]">
+                  {t("Dash.admin")}
+                </Link>
+              )}
               <form action="/api/auth/logout" method="post">
                 <Button size="sm" variant="ghost" type="submit">
                   {user.firstName ?? user.username ?? "✕"}

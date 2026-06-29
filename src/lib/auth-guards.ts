@@ -21,3 +21,23 @@ export async function requireOnboardedUser(locale: string): Promise<User> {
   }
   return user;
 }
+
+/** Creator-only page: non-sellers (non-admins) are sent to the buyer dashboard. */
+export async function requireSellerUser(locale: string): Promise<User> {
+  const user = await requireOnboardedUser(locale);
+  if (!user.isSeller && user.role !== "ADMIN") {
+    redirect({ href: "/dashboard", locale });
+    throw new Error("unreachable");
+  }
+  return user;
+}
+
+/** Admin-only page: non-admins are sent to the buyer dashboard (no existence leak). */
+export async function requireAdminUser(locale: string): Promise<User> {
+  const user = await requireOnboardedUser(locale);
+  if (user.role !== "ADMIN") {
+    redirect({ href: "/dashboard", locale });
+    throw new Error("unreachable");
+  }
+  return user;
+}

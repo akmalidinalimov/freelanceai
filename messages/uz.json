@@ -55,5 +55,30 @@
     "offer": "Oʻz ishimni sotish",
     "offerDesc": "Men ijodkor sifatida xizmat koʻrsatmoqchiman",
     "error": "Xatolik yuz berdi. Qaytadan urinib koʻring."
+  },
+  "Dash": {
+    "buyer": "Xaridor paneli",
+    "creator": "Ijodkor paneli",
+    "admin": "Admin paneli",
+    "buyerView": "Xaridor",
+    "creatorView": "Ijodkor",
+    "becomeCreator": "Ijodkor boʻlish",
+    "orders": "Faol buyurtmalar",
+    "messages": "Xabarlar",
+    "saved": "Saqlangan xizmatlar",
+    "spend": "Xarajatlar",
+    "earnings": "Daromad",
+    "held": "Saqlanmoqda",
+    "available": "Yechib olish mumkin",
+    "lifetime": "Jami",
+    "gigs": "Mening xizmatlarim",
+    "analytics": "Tahlil",
+    "reviews": "Sharhlar",
+    "users": "Foydalanuvchilar",
+    "moderation": "Moderatsiya",
+    "disputes": "Nizolar",
+    "payouts": "Toʻlovlar",
+    "kyc": "KYC tekshiruvi",
+    "metrics": "Koʻrsatkichlar"
   }
 }

@@ -55,5 +55,30 @@
     "offer": "Offer my work",
     "offerDesc": "I want to provide services as a creator",
     "error": "Something went wrong. Please try again."
+  },
+  "Dash": {
+    "buyer": "Buyer dashboard",
+    "creator": "Creator dashboard",
+    "admin": "Admin panel",
+    "buyerView": "Buyer",
+    "creatorView": "Creator",
+    "becomeCreator": "Become a creator",
+    "orders": "Active orders",
+    "messages": "Messages",
+    "saved": "Saved gigs",
+    "spend": "Spending",
+    "earnings": "Earnings",
+    "held": "Held",
+    "available": "Available to withdraw",
+    "lifetime": "Lifetime",
+    "gigs": "My gigs",
+    "analytics": "Analytics",
+    "reviews": "Reviews",
+    "users": "Users",
+    "moderation": "Moderation",
+    "disputes": "Disputes",
+    "payouts": "Payouts",
+    "kyc": "KYC review",
+    "metrics": "Metrics"
   }
 }
