@@ -17,17 +17,23 @@ export default async function DashboardPage({
   const user = await requireOnboardedUser(locale);
   const t = await getTranslations("Dash");
   const to = await getTranslations("Order");
+  const tm = await getTranslations("Message");
   const orders = await listBuyerOrders(user.id);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">{t("buyer")}</h1>
-        {!user.isSeller && (
-          <Link href="/sell">
-            <Button variant="outline">{t("becomeCreator")}</Button>
+        <div className="flex gap-2">
+          <Link href="/messages">
+            <Button variant="ghost">{tm("inbox")}</Button>
           </Link>
-        )}
+          {!user.isSeller && (
+            <Link href="/sell">
+              <Button variant="outline">{t("becomeCreator")}</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">

@@ -187,6 +187,9 @@
     "title": "Xabarlar",
     "placeholder": "Xabar yozing...",
     "send": "Yuborish",
+    "contact": "Bogʻlanish",
+    "inbox": "Xabarlar",
+    "inboxEmpty": "Hali suhbatlar yoʻq.",
     "empty": "Hali xabarlar yoʻq. Salomlashing 👋"
   },
   "Admin": {

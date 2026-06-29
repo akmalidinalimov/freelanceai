@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/session";
 import { formatUzs } from "@/lib/utils";
 import { OrderPanel } from "@/components/order-panel";
 import { Stars } from "@/components/stars";
+import { ContactSellerButton } from "@/components/contact-seller-button";
 
 const TIER_ORDER = { BASIC: 0, STANDARD: 1, PREMIUM: 2 } as const;
 
@@ -63,6 +64,9 @@ export default async function GigDetailPage({
             <span className="text-[hsl(var(--muted-foreground))]">({count})</span>
           </div>
         )}
+        <div className="mt-4">
+          <ContactSellerButton gigId={gig.id} locale={locale} viewer={viewer} />
+        </div>
         <p className="mt-6 whitespace-pre-wrap leading-relaxed">{gig.description}</p>
         {gig.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-2">

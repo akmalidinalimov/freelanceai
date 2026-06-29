@@ -17,11 +17,11 @@ function senderName(m: Msg) {
 }
 
 export function MessageThread({
-  orderId,
+  conversationId,
   currentUserId,
   initial,
 }: {
-  orderId: string;
+  conversationId: string;
   currentUserId: string;
   initial: Msg[];
 }) {
@@ -45,7 +45,7 @@ export function MessageThread({
       const last = messages[messages.length - 1]?.createdAt;
       try {
         const r = await fetch(
-          `/api/orders/${orderId}/messages${last ? `?after=${encodeURIComponent(last)}` : ""}`
+          `/api/conversations/${conversationId}/messages${last ? `?after=${encodeURIComponent(last)}` : ""}`
         );
         const j = await r.json();
         if (j.ok) append(j.data.messages);
@@ -55,7 +55,7 @@ export function MessageThread({
     };
     const interval = setInterval(tick, 5000);
     return () => clearInterval(interval);
-  }, [orderId, messages]);
+  }, [conversationId, messages]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -66,7 +66,7 @@ export function MessageThread({
     if (!body || busy) return;
     setBusy(true);
     try {
-      const r = await fetch(`/api/orders/${orderId}/messages`, {
+      const r = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body }),

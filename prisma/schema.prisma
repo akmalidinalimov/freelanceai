@@ -68,6 +68,8 @@ model User {
   ordersAsBuyer  Order[]        @relation("BuyerOrders")
   ordersAsSeller Order[]        @relation("SellerOrders")
   messages       Message[]
+  convosAsBuyer  Conversation[] @relation("ConvBuyer")
+  convosAsSeller Conversation[] @relation("ConvSeller")
   reviewsWritten Review[]       @relation("ReviewAuthor")
   ledgerEntries  LedgerEntry[]
   payoutRequests PayoutRequest[]
@@ -240,6 +242,7 @@ model Gig {
   packages GigPackage[]
   orders   Order[]
   reviews  Review[]
+  conversations Conversation[]
 
   @@index([sellerId])
   @@index([status])
@@ -334,8 +337,20 @@ model Conversation {
   id        String    @id @default(cuid())
   orderId   String?   @unique
   order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  // Direct (pre-order) conversation participants + gig context. Null for order-only
+  // conversations (participants derive from the order). One direct thread per buyer↔seller pair.
+  buyerId   String?
+  buyer     User?     @relation("ConvBuyer", fields: [buyerId], references: [id])
+  sellerId  String?
+  seller    User?     @relation("ConvSeller", fields: [sellerId], references: [id])
+  gigId     String?
+  gig       Gig?      @relation(fields: [gigId], references: [id], onDelete: SetNull)
   createdAt DateTime  @default(now())
   messages  Message[]
+
+  @@unique([buyerId, sellerId])
+  @@index([buyerId])
+  @@index([sellerId])
 }
 
 model Message {

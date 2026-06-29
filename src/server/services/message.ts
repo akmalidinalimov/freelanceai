@@ -1,24 +1,64 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
-import { orderWhereForUser } from "@/lib/authz";
 import { Errors } from "@/lib/api";
 import { tgSendMessage } from "@/lib/telegram-bot";
 
-const SENDER_SELECT = {
-  select: { id: true, firstName: true, name: true, username: true },
-} as const;
+const SENDER_SELECT = { select: { id: true, firstName: true, name: true, username: true } } as const;
+const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
 
-/** Messages on an order's conversation, oldest first. `after` (ISO) returns only newer ones. */
-export async function listMessages(orderId: string, user: Pick<User, "id" | "role">, after?: string) {
-  const order = await prisma.order.findFirst({ where: orderWhereForUser(orderId, user) });
-  if (!order) throw Errors.notFound("Order not found");
-  const convo = await prisma.conversation.findUnique({ where: { orderId } });
-  if (!convo) return [];
+function nameOf(u: { firstName?: string | null; name?: string | null; username?: string | null } | null) {
+  return u?.firstName ?? u?.name ?? u?.username ?? "";
+}
+
+/** Resolve a conversation + its two participant ids (from the order, or direct fields), enforcing access. */
+async function authzConversation(conversationId: string, user: Pick<User, "id" | "role">) {
+  const convo = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: { order: { select: { buyerId: true, sellerId: true } }, gig: { select: { title: true } } },
+  });
+  if (!convo) throw Errors.notFound("Conversation not found");
+  const buyerId = convo.order?.buyerId ?? convo.buyerId;
+  const sellerId = convo.order?.sellerId ?? convo.sellerId;
+  const isParty = user.id === buyerId || user.id === sellerId || user.role === "ADMIN";
+  if (!isParty) throw Errors.notFound("Conversation not found"); // 404 hides existence
+  return { convo, buyerId, sellerId };
+}
+
+/** Upsert the conversation tied to an order; returns its id. */
+export async function getOrderConversationId(orderId: string) {
+  const convo = await prisma.conversation.upsert({
+    where: { orderId },
+    create: { orderId },
+    update: {},
+  });
+  return convo.id;
+}
+
+/** Find (or create) the direct buyer↔seller conversation; returns its id. Can't contact yourself. */
+export async function getOrCreateDirectConversation(buyerId: string, sellerId: string, gigId?: string) {
+  if (buyerId === sellerId) throw Errors.forbidden("You cannot contact yourself");
+  const existing = await prisma.conversation.findUnique({
+    where: { buyerId_sellerId: { buyerId, sellerId } },
+  });
+  if (existing) return existing.id;
+  const created = await prisma.conversation.create({
+    data: { buyerId, sellerId, gigId: gigId ?? null },
+  });
+  return created.id;
+}
+
+/** Messages in a conversation, oldest first. `after` (ISO) returns only newer ones. */
+export async function listConversationMessages(
+  conversationId: string,
+  user: Pick<User, "id" | "role">,
+  after?: string
+) {
+  await authzConversation(conversationId, user);
   const afterDate = after ? new Date(after) : null;
   return prisma.message.findMany({
     where: {
-      conversationId: convo.id,
+      conversationId,
       ...(afterDate && !Number.isNaN(afterDate.getTime()) ? { createdAt: { gt: afterDate } } : {}),
     },
     orderBy: { createdAt: "asc" },
@@ -27,41 +67,79 @@ export async function listMessages(orderId: string, user: Pick<User, "id" | "rol
   });
 }
 
-/** Post a message on an order (buyer/seller/admin); best-effort Telegram notify to the other party. */
-export async function postMessage(orderId: string, sender: User, body: string) {
+/** Post a message in a conversation; best-effort Telegram notify to the other participant. */
+export async function postConversationMessage(conversationId: string, user: User, body: string) {
   const text = body.trim();
   if (!text) throw Errors.validation({ body: "Message is empty" });
   if (text.length > 2000) throw Errors.validation({ body: "Message is too long" });
 
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { buyer: true, seller: true, gig: { select: { title: true } } },
-  });
-  if (!order) throw Errors.notFound("Order not found");
-  const isParty =
-    order.buyerId === sender.id || order.sellerId === sender.id || sender.role === "ADMIN";
-  if (!isParty) throw Errors.forbidden();
-
-  const convo = await prisma.conversation.upsert({
-    where: { orderId },
-    create: { orderId },
-    update: {},
-  });
+  const { convo, buyerId, sellerId } = await authzConversation(conversationId, user);
   const message = await prisma.message.create({
-    data: { conversationId: convo.id, senderId: sender.id, body: text },
+    data: { conversationId, senderId: user.id, body: text },
     include: { sender: SENDER_SELECT },
   });
 
-  // Notify the counterpart on Telegram (best-effort; only when a buyer or seller sends).
-  const counterpart =
-    order.buyerId === sender.id ? order.seller : order.sellerId === sender.id ? order.buyer : null;
-  if (counterpart?.telegramId) {
-    const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
-    const preview = text.length > 160 ? `${text.slice(0, 160)}…` : text;
-    void tgSendMessage(
-      counterpart.telegramId,
-      `💬 New message on "${order.gig.title}"\n\n${preview}\n\n${origin}/uz/orders/${orderId}`
-    );
+  const otherId = user.id === buyerId ? sellerId : user.id === sellerId ? buyerId : null;
+  if (otherId) {
+    const other = await prisma.user.findUnique({ where: { id: otherId }, select: { telegramId: true } });
+    if (other?.telegramId) {
+      const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
+      const ctx = convo.gig?.title ? ` "${convo.gig.title}"` : "";
+      const preview = text.length > 160 ? `${text.slice(0, 160)}…` : text;
+      void tgSendMessage(
+        other.telegramId,
+        `💬 New message${ctx}\n\n${preview}\n\n${origin}/uz/messages/${conversationId}`
+      );
+    }
   }
   return message;
+}
+
+export interface InboxRow {
+  id: string;
+  counterpart: string;
+  context: string;
+  lastBody: string | null;
+  lastAt: string | null;
+}
+
+/** Conversations the user participates in (direct or via order), newest activity first. */
+export async function listInbox(user: Pick<User, "id">): Promise<InboxRow[]> {
+  const convos = await prisma.conversation.findMany({
+    where: {
+      OR: [
+        { buyerId: user.id },
+        { sellerId: user.id },
+        { order: { buyerId: user.id } },
+        { order: { sellerId: user.id } },
+      ],
+    },
+    include: {
+      buyer: NAME_SELECT,
+      seller: NAME_SELECT,
+      gig: { select: { title: true } },
+      order: {
+        select: { buyerId: true, sellerId: true, buyer: NAME_SELECT, seller: NAME_SELECT, gig: { select: { title: true } } },
+      },
+      messages: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+    take: 50,
+  });
+
+  const rows = convos.map((c): InboxRow => {
+    const buyerId = c.order?.buyerId ?? c.buyerId;
+    const counterpartUser =
+      user.id === buyerId ? c.order?.seller ?? c.seller : c.order?.buyer ?? c.buyer;
+    const last = c.messages[0];
+    return {
+      id: c.id,
+      counterpart: nameOf(counterpartUser),
+      context: c.order?.gig?.title ?? c.gig?.title ?? "",
+      lastBody: last?.body ?? null,
+      lastAt: last ? last.createdAt.toISOString() : null,
+    };
+  });
+
+  rows.sort((a, b) => (b.lastAt ?? "").localeCompare(a.lastAt ?? ""));
+  return rows;
 }

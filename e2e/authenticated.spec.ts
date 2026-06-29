@@ -73,6 +73,19 @@ test("messaging: buyer sends, seller sees it on the order", async ({ browser }) 
   await sellerCtx.close();
 });
 
+test("contact freelancer: buyer messages a seller directly", async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const buyer = await ctx.newPage();
+  await loginAs(buyer, "e2e_buyer");
+  await buyer.goto("/uz/gigs/e2e-gig");
+  await buyer.getByRole("button", { name: "Bogʻlanish" }).click();
+  await buyer.waitForURL(/\/uz\/messages\/.+/);
+  await buyer.getByPlaceholder("Xabar yozing...").fill("Hi, I have a question");
+  await buyer.getByRole("button", { name: "Yuborish" }).click();
+  await expect(buyer.getByText("Hi, I have a question")).toBeVisible();
+  await ctx.close();
+});
+
 test("admin can open the settlements console", async ({ browser }) => {
   const ctx = await browser.newContext();
   const admin = await ctx.newPage();

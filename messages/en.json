@@ -187,6 +187,9 @@
     "title": "Messages",
     "placeholder": "Write a message...",
     "send": "Send",
+    "contact": "Contact freelancer",
+    "inbox": "Messages",
+    "inboxEmpty": "No conversations yet.",
     "empty": "No messages yet. Say hello 👋"
   },
   "Admin": {

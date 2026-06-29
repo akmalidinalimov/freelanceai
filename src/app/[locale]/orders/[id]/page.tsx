@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { getOrderForUser } from "@/server/services/order";
 import { getOrderReview } from "@/server/services/review";
-import { listMessages } from "@/server/services/message";
+import { getOrderConversationId, listConversationMessages } from "@/server/services/message";
 import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
 import { ReviewForm } from "@/components/review-form";
@@ -26,7 +26,8 @@ export default async function OrderPage({
   if (!order) notFound();
 
   const review = await getOrderReview(order.id);
-  const initialMessages = (await listMessages(order.id, user)).map((m) => ({
+  const conversationId = await getOrderConversationId(order.id);
+  const initialMessages = (await listConversationMessages(conversationId, user)).map((m) => ({
     id: m.id,
     body: m.body,
     senderId: m.senderId,
@@ -84,7 +85,7 @@ export default async function OrderPage({
       )}
 
       <div className="mb-6">
-        <MessageThread orderId={order.id} currentUserId={user.id} initial={initialMessages} />
+        <MessageThread conversationId={conversationId} currentUserId={user.id} initial={initialMessages} />
       </div>
 
       <OrderActions orderId={order.id} status={order.status} role={role} />
