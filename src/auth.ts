@@ -72,6 +72,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    // Test-only login for automated E2E. Present ONLY when E2E_TEST_AUTH=1 — set in CI
+    // and local test runs, NEVER in the prod deploy compose — so it cannot exist in
+    // production. Lets Playwright sign in as a seeded user by id.
+    ...(process.env.E2E_TEST_AUTH === "1"
+      ? [
+          Credentials({
+            id: "e2e",
+            name: "e2e",
+            credentials: { userId: { type: "text" } },
+            async authorize(credentials) {
+              const userId = typeof credentials?.userId === "string" ? credentials.userId : "";
+              if (!userId) return null;
+              const user = await prisma.user.findUnique({ where: { id: userId } });
+              return user ? { id: user.id, name: user.firstName ?? user.username ?? "E2E" } : null;
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     // Only allow Google logins with a Google-verified email (required because
