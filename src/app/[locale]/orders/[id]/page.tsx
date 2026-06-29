@@ -3,8 +3,11 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { getOrderForUser } from "@/server/services/order";
+import { getOrderReview } from "@/server/services/review";
 import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
+import { ReviewForm } from "@/components/review-form";
+import { Stars } from "@/components/stars";
 
 export default async function OrderPage({
   params,
@@ -15,10 +18,12 @@ export default async function OrderPage({
   setRequestLocale(locale);
   const user = await requireOnboardedUser(locale);
   const t = await getTranslations("Order");
+  const tr = await getTranslations("Review");
 
   const order = await getOrderForUser(id, user).catch(() => null);
   if (!order) notFound();
 
+  const review = await getOrderReview(order.id);
   const role =
     user.id === order.buyerId ? "buyer" : user.id === order.sellerId ? "seller" : "admin";
   const counterpart = role === "buyer" ? order.seller : order.buyer;
@@ -70,6 +75,20 @@ export default async function OrderPage({
       )}
 
       <OrderActions orderId={order.id} status={order.status} role={role} />
+
+      {order.status === "COMPLETED" && (
+        <div className="mt-6">
+          {review ? (
+            <div className="rounded-xl border border-[hsl(var(--border))] p-5">
+              <p className="mb-1 text-sm font-medium">{tr("yourReview")}</p>
+              <Stars value={review.rating} className="text-lg" />
+              {review.comment && <p className="mt-2 text-sm">{review.comment}</p>}
+            </div>
+          ) : role === "buyer" ? (
+            <ReviewForm orderId={order.id} />
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

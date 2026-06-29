@@ -167,5 +167,15 @@
       "CANCELLED": "Cancelled",
       "DISPUTED": "Disputed"
     }
+  },
+  "Review": {
+    "leaveReview": "Leave a review",
+    "commentPh": "Share your experience (optional)...",
+    "submit": "Submit review",
+    "submitting": "Submitting...",
+    "pickRating": "Please pick a rating.",
+    "error": "Something went wrong.",
+    "yourReview": "Your review",
+    "reviews": "Reviews"
   }
 }

@@ -1,9 +1,11 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getGigBySlug } from "@/server/services/gig";
+import { getGigReviews } from "@/server/services/review";
 import { getCurrentUser } from "@/lib/session";
 import { formatUzs } from "@/lib/utils";
 import { OrderPanel } from "@/components/order-panel";
+import { Stars } from "@/components/stars";
 
 const TIER_ORDER = { BASIC: 0, STANDARD: 1, PREMIUM: 2 } as const;
 
@@ -15,6 +17,7 @@ export default async function GigDetailPage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Gig");
+  const tr = await getTranslations("Review");
 
   const gig = await getGigBySlug(slug);
   if (!gig) notFound();
@@ -24,6 +27,7 @@ export default async function GigDetailPage({
 
   const seller = gig.seller.firstName ?? gig.seller.name ?? gig.seller.username ?? "";
   const packages = [...gig.packages].sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier]);
+  const { reviews, avg, count } = await getGigReviews(gig.id);
 
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_360px]">
@@ -41,6 +45,13 @@ export default async function GigDetailPage({
           {t("byCreator")} {seller}
           {gig.category ? ` · ${gig.category.nameUz}` : ""}
         </p>
+        {count > 0 && (
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            <Stars value={avg} />
+            <span className="font-medium">{avg.toFixed(1)}</span>
+            <span className="text-[hsl(var(--muted-foreground))]">({count})</span>
+          </div>
+        )}
         <p className="mt-6 whitespace-pre-wrap leading-relaxed">{gig.description}</p>
         {gig.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-2">
@@ -52,6 +63,27 @@ export default async function GigDetailPage({
                 {tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {reviews.length > 0 && (
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl font-semibold">
+              {tr("reviews")} ({count})
+            </h2>
+            <ul className="space-y-4">
+              {reviews.map((rv) => (
+                <li key={rv.id} className="rounded-xl border border-[hsl(var(--border))] p-4">
+                  <div className="flex items-center gap-2">
+                    <Stars value={rv.rating} />
+                    <span className="text-sm font-medium">
+                      {rv.author.firstName ?? rv.author.name ?? rv.author.username ?? ""}
+                    </span>
+                  </div>
+                  {rv.comment && <p className="mt-2 text-sm">{rv.comment}</p>}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
