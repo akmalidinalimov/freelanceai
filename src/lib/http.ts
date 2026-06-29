@@ -5,7 +5,7 @@ import "server-only";
  * incoming request host, which is attacker-influenceable behind a proxy).
  */
 export function getAppOrigin(request: Request): string {
-  const configured = process.env.NEXT_PUBLIC_APP_URL;
+  const configured = process.env.APP_ORIGIN ?? process.env.NEXT_PUBLIC_APP_URL;
   if (configured) {
     try {
       return new URL(configured).origin;

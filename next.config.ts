@@ -5,6 +5,8 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Produce a minimal standalone server bundle for Docker deployment.
+  output: "standalone",
   images: {
     // Allow Telegram profile photos and (later) our media CDN.
     remotePatterns: [{ protocol: "https", hostname: "**" }],

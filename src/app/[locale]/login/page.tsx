@@ -21,7 +21,10 @@ export default async function LoginPage({
   const t = await getTranslations("Nav");
   const tb = await getTranslations("Brand");
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl =
+    process.env.APP_ORIGIN ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const botUsername =
+    process.env.TELEGRAM_BOT_USERNAME ?? process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
   const authUrl = `${appUrl}/api/auth/telegram`;
 
   return (
@@ -39,7 +42,7 @@ export default async function LoginPage({
         </p>
       )}
 
-      <TelegramLoginButton authUrl={authUrl} />
+      <TelegramLoginButton authUrl={authUrl} botUsername={botUsername} />
     </div>
   );
 }

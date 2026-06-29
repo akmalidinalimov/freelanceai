@@ -44,3 +44,6 @@ yarn-error.log*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Local MCP config (contains the Hostinger API token — never commit)
+/.mcp.json

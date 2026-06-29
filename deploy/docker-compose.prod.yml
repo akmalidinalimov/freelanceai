@@ -1,0 +1,79 @@
+# Production stack for VPS deployment (deployed via the Hostinger MCP as project
+# "freelanceai"). Postgres is internal-only; Caddy terminates TLS automatically.
+# Secrets come from the project environment (POSTGRES_PASSWORD, SESSION_SECRET,
+# TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME) — never committed here.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: freelanceai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: freelanceai
+    volumes:
+      - freelanceai_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freelanceai -d freelanceai"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # No published ports — only reachable inside the Docker network.
+
+  migrate:
+    image: node:24-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
+    entrypoint: ["sh", "-c"]
+    command:
+      - "apk add --no-cache wget ca-certificates openssl && wget -O schema.prisma https://raw.githubusercontent.com/akmalidinalimov/freelanceai/main/prisma/schema.prisma && npx -y prisma@6.19.3 db push --schema=schema.prisma --skip-generate"
+    restart: "no"
+
+  app:
+    image: ghcr.io/akmalidinalimov/freelanceai:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
+      SESSION_SECRET: ${SESSION_SECRET}
+      APP_ORIGIN: "https://freelanceai.alikhanova.cloud"
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      PLATFORM_COMMISSION_PCT: "20"
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+
+configs:
+  caddyfile:
+    content: |
+      freelanceai.alikhanova.cloud {
+        encode gzip zstd
+        reverse_proxy app:3000
+      }
+
+volumes:
+  freelanceai_pgdata:
+  caddy_data:
+  caddy_config:

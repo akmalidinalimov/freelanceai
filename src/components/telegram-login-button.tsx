@@ -11,9 +11,14 @@ import { useEffect, useRef } from "react";
  *  - The widget only works on the public domain registered with @BotFather
  *    (/setdomain). It will not function on localhost.
  */
-export function TelegramLoginButton({ authUrl }: { authUrl: string }) {
+export function TelegramLoginButton({
+  authUrl,
+  botUsername,
+}: {
+  authUrl: string;
+  botUsername?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
 
   useEffect(() => {
     if (!ref.current || !botUsername) return;
