@@ -28,8 +28,13 @@ export default async function GigDetailPage({
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_360px]">
       <div>
-        <div className="mb-5 flex aspect-video items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-5xl font-bold text-[hsl(var(--primary))]">
-          {gig.title.slice(0, 1).toUpperCase()}
+        <div className="mb-5 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-5xl font-bold text-[hsl(var(--primary))]">
+          {gig.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={gig.coverUrl} alt={gig.title} className="h-full w-full object-cover" />
+          ) : (
+            gig.title.slice(0, 1).toUpperCase()
+          )}
         </div>
         <h1 className="text-3xl font-bold">{gig.title}</h1>
         <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">

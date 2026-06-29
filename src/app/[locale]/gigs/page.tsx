@@ -31,8 +31,13 @@ export default async function GigsPage({
                 href={`/gigs/${g.slug}`}
                 className="flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-colors hover:border-[hsl(var(--primary))]"
               >
-                <div className="mb-3 flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-2xl font-bold text-[hsl(var(--primary))]">
-                  {g.title.slice(0, 1).toUpperCase()}
+                <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-2xl font-bold text-[hsl(var(--primary))]">
+                  {g.coverUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={g.coverUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    g.title.slice(0, 1).toUpperCase()
+                  )}
                 </div>
                 <p className="line-clamp-2 font-medium">{g.title}</p>
                 <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{seller}</p>

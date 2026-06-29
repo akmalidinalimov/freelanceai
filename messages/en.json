@@ -115,6 +115,13 @@
     "byCreator": "Creator:",
     "daysDelivery": "days",
     "revisionsLabel": "revisions",
-    "orderingSoon": "Ordering coming soon."
+    "orderingSoon": "Ordering coming soon.",
+    "cover": "Cover image",
+    "addCover": "Add image",
+    "removeCover": "Remove",
+    "uploading": "Uploading...",
+    "mediaType": "Images only (jpg, png, webp).",
+    "mediaSize": "Image must be under 8 MB.",
+    "mediaError": "Upload failed."
   }
 }

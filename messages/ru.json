@@ -115,6 +115,13 @@
     "byCreator": "Креатор:",
     "daysDelivery": "дней",
     "revisionsLabel": "правок",
-    "orderingSoon": "Оформление заказа скоро появится."
+    "orderingSoon": "Оформление заказа скоро появится.",
+    "cover": "Обложка",
+    "addCover": "Добавить фото",
+    "removeCover": "Удалить",
+    "uploading": "Загрузка...",
+    "mediaType": "Только изображения (jpg, png, webp).",
+    "mediaSize": "Файл должен быть меньше 8 МБ.",
+    "mediaError": "Ошибка загрузки."
   }
 }

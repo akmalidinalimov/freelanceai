@@ -15,6 +15,7 @@ export interface GigPackageInput {
 export interface CreateGigInput {
   title: string;
   description: string;
+  coverUrl?: string;
   categoryId?: string;
   tags?: string[];
   locale?: string;
@@ -29,6 +30,7 @@ export async function createGig(sellerId: string, input: CreateGigInput) {
       title: input.title,
       slug: uniqueSlug(input.title),
       description: input.description,
+      coverUrl: input.coverUrl || null,
       categoryId: input.categoryId || null,
       tags: input.tags ?? [],
       locale: input.locale ?? "uz",

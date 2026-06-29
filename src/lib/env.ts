@@ -20,6 +20,12 @@ const envSchema = z
     AUTH_TRUST_HOST: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
+    // Cloudflare R2 (S3-compatible) media storage
+    S3_ENDPOINT: z.string().url().optional(),
+    S3_BUCKET: z.string().optional(),
+    S3_ACCESS_KEY_ID: z.string().optional(),
+    S3_SECRET_ACCESS_KEY: z.string().optional(),
+    S3_PUBLIC_BASE_URL: z.string().url().optional(),
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     // Runtime bot username (public); used for the bot deep-link login.
     TELEGRAM_BOT_USERNAME: z.string().optional(),
