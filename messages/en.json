@@ -177,5 +177,11 @@
     "error": "Something went wrong.",
     "yourReview": "Your review",
     "reviews": "Reviews"
+  },
+  "Message": {
+    "title": "Messages",
+    "placeholder": "Write a message...",
+    "send": "Send",
+    "empty": "No messages yet. Say hello 👋"
   }
 }
