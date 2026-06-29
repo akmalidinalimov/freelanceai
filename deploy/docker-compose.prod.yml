@@ -33,7 +33,11 @@ services:
     restart: "no"
 
   app:
-    image: ghcr.io/akmalidinalimov/freelanceai:latest
+    # Build the image on the VPS directly from the public GitHub repo (no registry).
+    build:
+      context: "https://github.com/akmalidinalimov/freelanceai.git#main"
+      dockerfile: Dockerfile
+    image: freelanceai-app:latest
     restart: unless-stopped
     depends_on:
       db:
