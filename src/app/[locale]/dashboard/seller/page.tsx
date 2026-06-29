@@ -20,6 +20,7 @@ export default async function SellerDashboardPage({
   const t = await getTranslations("Dash");
   const tg = await getTranslations("Gig");
   const to = await getTranslations("Order");
+  const ta = await getTranslations("Admin");
   const gigs = await listSellerGigs(user.id);
   const orders = await listSellerOrders(user.id);
   const earnings = await getSellerEarnings(user.id);
@@ -28,9 +29,16 @@ export default async function SellerDashboardPage({
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">{t("creator")}</h1>
-        <Link href="/dashboard">
-          <Button variant="ghost">{t("buyerView")}</Button>
-        </Link>
+        <div className="flex gap-2">
+          {user.role === "ADMIN" && (
+            <Link href="/admin/settlements">
+              <Button variant="outline">{ta("title")}</Button>
+            </Link>
+          )}
+          <Link href="/dashboard">
+            <Button variant="ghost">{t("buyerView")}</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Earnings */}

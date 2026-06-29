@@ -186,5 +186,21 @@
     "placeholder": "Xabar yozing...",
     "send": "Yuborish",
     "empty": "Hali xabarlar yoʻq. Salomlashing 👋"
+  },
+  "Admin": {
+    "title": "Hisob-kitoblar",
+    "pendingPayments": "Tasdiqlanadigan toʻlovlar",
+    "noPending": "Tasdiqlashni kutayotgan toʻlovlar yoʻq.",
+    "confirm": "Toʻlovni tasdiqlash",
+    "sellerBalances": "Ijrochilar balansi",
+    "noBalances": "Yechib olinadigan mablagʻ yoʻq.",
+    "available": "Mavjud",
+    "recordPayout": "Toʻlovni qayd etish",
+    "cardLabel": "Karta",
+    "cardPh": "8600 **** **** 1234",
+    "amount": "Summa",
+    "recentPayouts": "Soʻnggi toʻlovlar",
+    "noPayouts": "Hali toʻlovlar yoʻq.",
+    "error": "Xatolik yuz berdi."
   }
 }

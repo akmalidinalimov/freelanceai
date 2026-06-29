@@ -186,5 +186,21 @@
     "placeholder": "Write a message...",
     "send": "Send",
     "empty": "No messages yet. Say hello 👋"
+  },
+  "Admin": {
+    "title": "Settlements",
+    "pendingPayments": "Payments to confirm",
+    "noPending": "No payments awaiting confirmation.",
+    "confirm": "Confirm payment",
+    "sellerBalances": "Seller balances",
+    "noBalances": "No withdrawable balances.",
+    "available": "Available",
+    "recordPayout": "Record payout",
+    "cardLabel": "Card",
+    "cardPh": "8600 **** **** 1234",
+    "amount": "Amount",
+    "recentPayouts": "Recent payouts",
+    "noPayouts": "No payouts yet.",
+    "error": "Something went wrong."
   }
 }

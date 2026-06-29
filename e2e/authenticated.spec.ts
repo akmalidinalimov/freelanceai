@@ -72,3 +72,12 @@ test("messaging: buyer sends, seller sees it on the order", async ({ browser }) 
   await buyerCtx.close();
   await sellerCtx.close();
 });
+
+test("admin can open the settlements console", async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const admin = await ctx.newPage();
+  await loginAs(admin, "e2e_admin");
+  await admin.goto("/uz/admin/settlements");
+  await expect(admin.getByRole("heading", { name: "Hisob-kitoblar" })).toBeVisible();
+  await ctx.close();
+});

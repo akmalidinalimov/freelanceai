@@ -37,6 +37,7 @@ const CHECKS = [
   { group: "Guards", name: "seller dashboard gated", method: "GET", path: "/uz/dashboard/seller", expect: 307 },
   { group: "Guards", name: "new gig gated", method: "GET", path: "/uz/dashboard/seller/gigs/new", expect: 307 },
   { group: "Guards", name: "order page gated", method: "GET", path: "/uz/orders/abc", expect: 307 },
+  { group: "Guards", name: "admin settlements gated", method: "GET", path: "/uz/admin/settlements", expect: 307 },
 
   // --- API endpoints reject unauthenticated (401) ---
   { group: "API", name: "create gig", method: "POST", path: "/api/gigs", origin: true, expect: 401 },
@@ -46,6 +47,7 @@ const CHECKS = [
   { group: "API", name: "list messages", method: "GET", path: "/api/orders/abc/messages", expect: 401 },
   { group: "API", name: "post message", method: "POST", path: "/api/orders/abc/messages", origin: true, expect: 401 },
   { group: "API", name: "create review", method: "POST", path: "/api/reviews", origin: true, expect: 401 },
+  { group: "API", name: "admin payout", method: "POST", path: "/api/admin/payouts", origin: true, expect: 401 },
 ];
 
 const ok = (expect, status) => (Array.isArray(expect) ? expect.includes(status) : expect === status);
