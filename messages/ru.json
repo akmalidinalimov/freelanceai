@@ -41,6 +41,8 @@
   },
   "Auth": {
     "loginTelegram": "Войти через Telegram",
+    "loginGoogle": "Войти через Google",
+    "or": "или",
     "preparing": "Подготовка...",
     "waiting": "Нажмите «Start» в Telegram и вернитесь сюда...",
     "openInTelegram": "Открыть Telegram",

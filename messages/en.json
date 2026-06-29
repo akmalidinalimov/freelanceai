@@ -41,6 +41,8 @@
   },
   "Auth": {
     "loginTelegram": "Log in with Telegram",
+    "loginGoogle": "Continue with Google",
+    "or": "or",
     "preparing": "Preparing...",
     "waiting": "Tap “Start” in Telegram, then come back here...",
     "openInTelegram": "Open Telegram",

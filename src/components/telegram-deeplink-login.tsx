@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 type Phase = "init" | "ready" | "waiting" | "error";
@@ -57,9 +58,18 @@ export function TelegramDeepLinkLogin({ locale }: { locale: string }) {
           body: JSON.stringify({ token: tokenRef.current }),
         });
         const j = await r.json();
-        if (j.status === "ok") {
+        if (j.ok && j.status === "confirmed") {
           clearInterval(pollRef.current);
-          window.location.href = `/${locale}`;
+          // Exchange the confirmed token for an Auth.js session.
+          const res = await signIn("telegram", {
+            token: tokenRef.current,
+            redirect: false,
+          });
+          if (res && !res.error) {
+            window.location.href = `/${locale}`;
+          } else {
+            setPhase("error");
+          }
         } else if (j.status === "expired") {
           clearInterval(pollRef.current);
           setPhase("error");

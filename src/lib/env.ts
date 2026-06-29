@@ -13,6 +13,12 @@ const envSchema = z
     APP_ORIGIN: z.string().url().optional(),
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
     SESSION_SECRET: z.string().min(16, "SESSION_SECRET must be >= 16 chars"),
+    // Auth.js (NextAuth v5)
+    AUTH_SECRET: z.string().min(16).optional(),
+    AUTH_URL: z.string().url().optional(),
+    AUTH_TRUST_HOST: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     // Runtime bot username (public); used for the bot deep-link login.
     TELEGRAM_BOT_USERNAME: z.string().optional(),
@@ -40,6 +46,14 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ["APP_ORIGIN"],
         message: "APP_ORIGIN (or NEXT_PUBLIC_APP_URL) is required in production",
+      });
+    }
+    // Auth.js needs its secret in production.
+    if (env.NODE_ENV === "production" && !env.AUTH_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["AUTH_SECRET"],
+        message: "AUTH_SECRET is required in production",
       });
     }
     // Bot deep-link login needs the username + webhook secret in production.

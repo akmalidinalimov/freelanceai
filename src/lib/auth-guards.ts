@@ -15,10 +15,8 @@ export async function requireOnboardedUser(locale: string): Promise<User> {
     redirect({ href: "/login", locale });
     throw new Error("unreachable"); // redirect throws; narrows for TS
   }
-  if (!user.onboardingCompleted && user.role !== "ADMIN") {
-    redirect({ href: "/onboarding", locale });
-    throw new Error("unreachable");
-  }
+  // Fiverr-style: everyone is a buyer immediately; no forced onboarding gate.
+  // Selling is the opt-in `isSeller` capability ("Become a creator").
   return user;
 }
 

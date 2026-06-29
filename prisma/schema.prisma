@@ -40,13 +40,18 @@ enum KycStatus {
 
 model User {
   id         String   @id @default(cuid())
-  // Telegram numeric id (stable per user). Stored as string to be safe with large ids.
-  telegramId String   @unique
+  // Telegram numeric id (optional — users may sign in via Google instead).
+  telegramId String?  @unique
   username   String?
   firstName  String?
   lastName   String?
   photoUrl   String?
   phone      String?
+  // Auth.js fields (used by Google / the Prisma adapter).
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
   locale     String   @default("uz")
   role       UserRole @default(BUYER)
   isSeller   Boolean  @default(false)
@@ -57,6 +62,7 @@ model User {
   updatedAt  DateTime @updatedAt
 
   sellerProfile  SellerProfile?
+  accounts       Account[]
   sessions       Session[]
   gigs           Gig[]
   ordersAsBuyer  Order[]        @relation("BuyerOrders")
@@ -79,6 +85,35 @@ model Session {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// Auth.js (NextAuth) — linked external accounts (e.g. Google). One user may have many.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// Auth.js — used by email/magic-link flows (kept for adapter completeness).
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 // Single-use guard for Telegram login payloads: the verified `hash` is recorded

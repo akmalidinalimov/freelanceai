@@ -41,6 +41,8 @@
   },
   "Auth": {
     "loginTelegram": "Telegram orqali kirish",
+    "loginGoogle": "Google orqali kirish",
+    "or": "yoki",
     "preparing": "Tayyorlanmoqda...",
     "waiting": "Telegramda “Start” tugmasini bosing va shu yerga qayting...",
     "openInTelegram": "Telegramni ochish",
