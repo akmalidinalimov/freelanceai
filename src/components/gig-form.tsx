@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { MediaUpload } from "@/components/media-upload";
+import { GalleryUpload } from "@/components/gallery-upload";
 
 interface Category {
   id: string;
@@ -26,6 +27,7 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
   const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [pkgs, setPkgs] = useState<Record<Tier, PkgState>>({
     BASIC: { ...emptyPkg },
     STANDARD: { ...emptyPkg },
@@ -66,6 +68,7 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
           title: title.trim(),
           description: description.trim(),
           coverUrl,
+          galleryUrls,
           categoryId: categoryId || undefined,
           tags: tags
             .split(",")
@@ -100,6 +103,7 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
   return (
     <form onSubmit={submit} className="flex flex-col gap-5">
       <MediaUpload value={coverUrl} onChange={setCoverUrl} />
+      <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("titleLabel")}</span>

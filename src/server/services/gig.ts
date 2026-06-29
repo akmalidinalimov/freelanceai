@@ -30,6 +30,7 @@ export interface CreateGigInput {
   title: string;
   description: string;
   coverUrl?: string;
+  galleryUrls?: string[];
   categoryId?: string;
   tags?: string[];
   locale?: string;
@@ -48,6 +49,7 @@ export async function createGig(sellerId: string, input: CreateGigInput) {
       slug: uniqueSlug(title),
       description,
       coverUrl: input.coverUrl || null,
+      galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
       categoryId: input.categoryId || null,
       tags: input.tags ?? [],
       locale: input.locale ?? "uz",

@@ -42,6 +42,22 @@ export default async function GigDetailPage({
             gig.title.slice(0, 1).toUpperCase()
           )}
         </div>
+        {gig.galleryUrls.length > 0 && (
+          <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {gig.galleryUrls.map((url) => (
+              <a
+                key={url}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="aspect-video overflow-hidden rounded-lg border border-[hsl(var(--border))]"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="h-full w-full object-cover" />
+              </a>
+            ))}
+          </div>
+        )}
         <h1 className="text-3xl font-bold">{gig.title}</h1>
         <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
           {t("byCreator")}{" "}

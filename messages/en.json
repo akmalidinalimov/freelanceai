@@ -120,6 +120,7 @@
     "orderingSoon": "Ordering coming soon.",
     "cover": "Cover image",
     "addCover": "Add image",
+    "gallery": "Gallery (optional)",
     "removeCover": "Remove",
     "uploading": "Uploading...",
     "mediaType": "Images only (jpg, png, webp).",

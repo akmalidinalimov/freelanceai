@@ -18,6 +18,7 @@ const schema = z
     title: z.string().min(5).max(80),
     description: z.string().min(20).max(5000),
     coverUrl: z.string().url().optional(),
+    galleryUrls: z.array(z.string().url()).max(8).optional(),
     categoryId: z.string().optional(),
     tags: z.array(z.string().min(1).max(30)).max(8).optional(),
     packages: z.array(packageSchema).min(1).max(3),
