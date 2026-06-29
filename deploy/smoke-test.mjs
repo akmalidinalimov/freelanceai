@@ -1,0 +1,96 @@
+// Post-deploy regression smoke test. Checks every shipped feature's surface so a new
+// deploy can't silently break an old one. Run AFTER every deploy:
+//   node deploy/smoke-test.mjs                (defaults to prod)
+//   node deploy/smoke-test.mjs https://host   (override base URL)
+// Exit code 0 = all pass, 1 = something regressed.
+
+const BASE = (process.argv[2] ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+
+/**
+ * expect: status code or array of acceptable codes.
+ * origin: send same-origin header (needed to reach the auth layer on plain POST routes).
+ * contains: substring that must appear in the body (proves the page actually rendered).
+ */
+const CHECKS = [
+  // --- Health / infra ---
+  { group: "Infra", name: "health db:up", method: "GET", path: "/api/health", expect: 200, contains: '"db":"up"' },
+
+  // --- Public pages render in all 3 locales (catches i18n / message-catalog breakage) ---
+  { group: "i18n", name: "home uz", method: "GET", path: "/uz", expect: 200, contains: "FreelanceAI" },
+  { group: "i18n", name: "home ru", method: "GET", path: "/ru", expect: 200, contains: "FreelanceAI" },
+  { group: "i18n", name: "home en", method: "GET", path: "/en", expect: 200, contains: "FreelanceAI" },
+
+  // --- Marketplace + discovery (Phase 2/3) ---
+  { group: "Gigs", name: "marketplace uz", method: "GET", path: "/uz/gigs", expect: 200, contains: "Xizmat qidirish" },
+  { group: "Gigs", name: "marketplace ru", method: "GET", path: "/ru/gigs", expect: 200 },
+  { group: "Gigs", name: "marketplace en", method: "GET", path: "/en/gigs", expect: 200 },
+  { group: "Search", name: "filters q+cat+price+sort", method: "GET",
+    path: "/uz/gigs?q=video&category=ai-video&min=1000&max=99999999&sort=price_asc", expect: 200 },
+  { group: "Gigs", name: "missing gig -> 404", method: "GET", path: "/uz/gigs/__nope__", expect: 404 },
+
+  // --- Auth entry points ---
+  { group: "Auth", name: "login page", method: "GET", path: "/uz/login", expect: 200 },
+  { group: "Auth", name: "become-creator page", method: "GET", path: "/uz/sell", expect: 200 },
+
+  // --- Auth-gated pages redirect to login (307) ---
+  { group: "Guards", name: "buyer dashboard gated", method: "GET", path: "/uz/dashboard", expect: 307 },
+  { group: "Guards", name: "seller dashboard gated", method: "GET", path: "/uz/dashboard/seller", expect: 307 },
+  { group: "Guards", name: "new gig gated", method: "GET", path: "/uz/dashboard/seller/gigs/new", expect: 307 },
+  { group: "Guards", name: "order page gated", method: "GET", path: "/uz/orders/abc", expect: 307 },
+
+  // --- API endpoints reject unauthenticated (401) ---
+  { group: "API", name: "create gig", method: "POST", path: "/api/gigs", origin: true, expect: 401 },
+  { group: "API", name: "media presign", method: "POST", path: "/api/media/presign", origin: true, expect: 401 },
+  { group: "API", name: "create order", method: "POST", path: "/api/orders", origin: true, expect: 401 },
+  { group: "API", name: "order action", method: "POST", path: "/api/orders/abc", origin: true, expect: 401 },
+  { group: "API", name: "list messages", method: "GET", path: "/api/orders/abc/messages", expect: 401 },
+  { group: "API", name: "post message", method: "POST", path: "/api/orders/abc/messages", origin: true, expect: 401 },
+  { group: "API", name: "create review", method: "POST", path: "/api/reviews", origin: true, expect: 401 },
+];
+
+const ok = (expect, status) => (Array.isArray(expect) ? expect.includes(status) : expect === status);
+
+async function run(c) {
+  const headers = {};
+  if (c.method === "POST") {
+    headers["Content-Type"] = "application/json";
+    if (c.origin) headers["Origin"] = BASE;
+  }
+  try {
+    const res = await fetch(BASE + c.path, {
+      method: c.method,
+      headers,
+      body: c.method === "POST" ? "{}" : undefined,
+      redirect: "manual",
+    });
+    let pass = ok(c.expect, res.status);
+    let note = "";
+    if (pass && c.contains) {
+      const body = await res.text();
+      if (!body.includes(c.contains)) {
+        pass = false;
+        note = `missing "${c.contains}"`;
+      }
+    }
+    return { ...c, status: res.status, pass, note };
+  } catch (e) {
+    return { ...c, status: "ERR", pass: false, note: String(e?.message).slice(0, 60) };
+  }
+}
+
+const results = await Promise.all(CHECKS.map(run));
+
+let group = "";
+for (const r of results) {
+  if (r.group !== group) {
+    group = r.group;
+    console.log(`\n${group}`);
+  }
+  const mark = r.pass ? "✅" : "❌";
+  const want = Array.isArray(r.expect) ? r.expect.join("/") : r.expect;
+  console.log(`  ${mark} ${r.name.padEnd(26)} ${r.method} ${r.path}  -> ${r.status} (want ${want}) ${r.note}`);
+}
+
+const failed = results.filter((r) => !r.pass);
+console.log(`\n${failed.length === 0 ? "✅ ALL PASS" : `❌ ${failed.length} FAILED`}  (${results.length} checks, ${BASE})`);
+process.exit(failed.length === 0 ? 0 : 1);
