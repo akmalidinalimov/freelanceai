@@ -204,5 +204,19 @@
     "recentPayouts": "Soʻnggi toʻlovlar",
     "noPayouts": "Hali toʻlovlar yoʻq.",
     "error": "Xatolik yuz berdi."
+  },
+  "Profile": {
+    "about": "Haqida",
+    "skills": "Koʻnikmalar",
+    "services": "Xizmatlar",
+    "memberSince": "Platformada",
+    "noReviews": "Hali sharhlar yoʻq",
+    "noGigs": "Hali faol xizmatlar yoʻq.",
+    "level": {
+      "NEW": "Yangi ijrochi",
+      "LEVEL_1": "1-daraja",
+      "LEVEL_2": "2-daraja",
+      "TOP_RATED": "Top reyting"
+    }
   }
 }

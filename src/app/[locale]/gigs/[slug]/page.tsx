@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { getGigBySlug } from "@/server/services/gig";
 import { getGigReviews } from "@/server/services/review";
 import { getCurrentUser } from "@/lib/session";
@@ -42,7 +43,17 @@ export default async function GigDetailPage({
         </div>
         <h1 className="text-3xl font-bold">{gig.title}</h1>
         <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
-          {t("byCreator")} {seller}
+          {t("byCreator")}{" "}
+          {gig.seller.username ? (
+            <Link
+              href={`/creators/${gig.seller.username}`}
+              className="font-medium text-[hsl(var(--primary))] hover:underline"
+            >
+              {seller}
+            </Link>
+          ) : (
+            seller
+          )}
           {gig.category ? ` · ${gig.category.nameUz}` : ""}
         </p>
         {count > 0 && (

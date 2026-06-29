@@ -204,5 +204,19 @@
     "recentPayouts": "Recent payouts",
     "noPayouts": "No payouts yet.",
     "error": "Something went wrong."
+  },
+  "Profile": {
+    "about": "About",
+    "skills": "Skills",
+    "services": "Services",
+    "memberSince": "On the platform since",
+    "noReviews": "No reviews yet",
+    "noGigs": "No active services yet.",
+    "level": {
+      "NEW": "New seller",
+      "LEVEL_1": "Level 1",
+      "LEVEL_2": "Level 2",
+      "TOP_RATED": "Top rated"
+    }
   }
 }
