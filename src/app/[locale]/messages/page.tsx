@@ -27,10 +27,19 @@ export default async function InboxPage({
             <li key={c.id}>
               <Link href={`/messages/${c.id}`} className="flex items-center justify-between gap-3 p-4 hover:bg-[hsl(var(--muted))]/40">
                 <div className="min-w-0">
-                  <p className="font-medium">{c.counterpart || "—"}</p>
+                  <p className={c.unread > 0 ? "font-semibold" : "font-medium"}>{c.counterpart || "—"}</p>
                   {c.context && <p className="truncate text-xs text-[hsl(var(--muted-foreground))]">{c.context}</p>}
-                  {c.lastBody && <p className="truncate text-sm text-[hsl(var(--muted-foreground))]">{c.lastBody}</p>}
+                  {c.lastBody && (
+                    <p className={`truncate text-sm ${c.unread > 0 ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--muted-foreground))]"}`}>
+                      {c.lastBody}
+                    </p>
+                  )}
                 </div>
+                {c.unread > 0 && (
+                  <span className="shrink-0 rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-xs font-medium text-[hsl(var(--primary-foreground))]">
+                    {c.unread}
+                  </span>
+                )}
               </Link>
             </li>
           ))}

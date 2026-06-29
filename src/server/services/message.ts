@@ -106,12 +106,22 @@ export async function postConversationMessage(conversationId: string, user: User
   return message;
 }
 
+/** Mark all messages from the other party in a conversation as read. */
+export async function markConversationRead(conversationId: string, user: Pick<User, "id" | "role">) {
+  await authzConversation(conversationId, user);
+  await prisma.message.updateMany({
+    where: { conversationId, readAt: null, NOT: { senderId: user.id } },
+    data: { readAt: new Date() },
+  });
+}
+
 export interface InboxRow {
   id: string;
   counterpart: string;
   context: string;
   lastBody: string | null;
   lastAt: string | null;
+  unread: number;
 }
 
 /** Conversations the user participates in (direct or via order), newest activity first. */
@@ -133,6 +143,7 @@ export async function listInbox(user: Pick<User, "id">): Promise<InboxRow[]> {
         select: { buyerId: true, sellerId: true, buyer: NAME_SELECT, seller: NAME_SELECT, gig: { select: { title: true } } },
       },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      _count: { select: { messages: { where: { readAt: null, NOT: { senderId: user.id } } } } },
     },
     take: 50,
   });
@@ -148,6 +159,7 @@ export async function listInbox(user: Pick<User, "id">): Promise<InboxRow[]> {
       context: c.order?.gig?.title ?? c.gig?.title ?? "",
       lastBody: last?.body ?? null,
       lastAt: last ? last.createdAt.toISOString() : null,
+      unread: c._count.messages,
     };
   });
 

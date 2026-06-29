@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
-import { listConversationMessages } from "@/server/services/message";
+import { listConversationMessages, markConversationRead } from "@/server/services/message";
 import { MessageThread } from "@/components/message-thread";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +19,7 @@ export default async function ConversationPage({
 
   const initial = await listConversationMessages(convId, user).catch(() => null);
   if (initial === null) notFound();
+  await markConversationRead(convId, user);
 
   const msgs = initial.map((m) => ({
     id: m.id,
