@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isSameOrigin } from "@/lib/http";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 /**
  * Poll a login token's status. The actual session is created by the Auth.js
@@ -10,6 +11,9 @@ import { isSameOrigin } from "@/lib/http";
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+  }
+  if (!rateLimit(`tg-poll:${clientIp(request)}`, 150, 60_000)) {
+    return NextResponse.json({ ok: false, status: "pending" }, { status: 429 });
   }
 
   let token: string | undefined;

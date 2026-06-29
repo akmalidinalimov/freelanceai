@@ -139,6 +139,9 @@ model LoginToken {
   id         String           @id @default(cuid())
   token      String           @unique
   status     LoginTokenStatus @default(PENDING)
+  // sha256 of the httpOnly nonce cookie set on /start — binds the session exchange
+  // to the originating browser (defends against login-CSRF / token-leak takeover).
+  browserNonceHash String?
   telegramId String?
   firstName  String?
   lastName   String?
@@ -147,6 +150,12 @@ model LoginToken {
   createdAt  DateTime         @default(now())
 
   @@index([expiresAt])
+}
+
+// Webhook idempotency: Telegram retries deliveries; we process each update once.
+model ProcessedUpdate {
+  updateId  BigInt   @id
+  createdAt DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------

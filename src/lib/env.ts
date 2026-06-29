@@ -12,9 +12,10 @@ const envSchema = z
     // Public app origin. Prefer the runtime APP_ORIGIN; NEXT_PUBLIC_APP_URL kept for dev.
     APP_ORIGIN: z.string().url().optional(),
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-    SESSION_SECRET: z.string().min(16, "SESSION_SECRET must be >= 16 chars"),
-    // Auth.js (NextAuth v5)
-    AUTH_SECRET: z.string().min(16).optional(),
+    // Legacy (pre-Auth.js opaque sessions); no longer signs sessions. Kept optional.
+    SESSION_SECRET: z.string().min(16).optional(),
+    // Auth.js (NextAuth v5) — signs the JWT session.
+    AUTH_SECRET: z.string().min(32).optional(),
     AUTH_URL: z.string().url().optional(),
     AUTH_TRUST_HOST: z.string().optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
