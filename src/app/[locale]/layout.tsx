@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale, getTranslations, getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
@@ -36,11 +36,15 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+  // Pass ALL messages to the client so client components can use any namespace
+  // (without this, next-intl only forwards namespaces accessed by server components
+  // on the page — e.g. OrderPanel's "Order" namespace would be missing on the gig page).
+  const messages = await getMessages();
 
   return (
     <html lang={locale}>
       <body className="flex min-h-screen flex-col">
-        <NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />
