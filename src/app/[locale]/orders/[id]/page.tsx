@@ -1,0 +1,75 @@
+import { setRequestLocale, getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { requireOnboardedUser } from "@/lib/auth-guards";
+import { getOrderForUser } from "@/server/services/order";
+import { formatUzs } from "@/lib/utils";
+import { OrderActions } from "@/components/order-actions";
+
+export default async function OrderPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { locale, id } = await params;
+  setRequestLocale(locale);
+  const user = await requireOnboardedUser(locale);
+  const t = await getTranslations("Order");
+
+  const order = await getOrderForUser(id, user).catch(() => null);
+  if (!order) notFound();
+
+  const role =
+    user.id === order.buyerId ? "buyer" : user.id === order.sellerId ? "seller" : "admin";
+  const counterpart = role === "buyer" ? order.seller : order.buyer;
+  const cpName = counterpart.firstName ?? counterpart.name ?? counterpart.username ?? "";
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <Link href={`/gigs/${order.gig.slug}`} className="text-sm text-[hsl(var(--primary))] hover:underline">
+            {order.gig.title}
+          </Link>
+          <h1 className="text-2xl font-bold">{t("order")} #{order.id.slice(-6)}</h1>
+        </div>
+        <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-sm font-medium">
+          {t(`status.${order.status}`)}
+        </span>
+      </div>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-[hsl(var(--border))] p-5">
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">{order.packageTitle}</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums">
+            {formatUzs(order.amountUzs)} <span className="text-base font-normal">so&apos;m</span>
+          </p>
+          <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+            {role === "buyer" ? t("seller") : t("buyer")}: {cpName}
+          </p>
+        </div>
+        <div className="rounded-xl border border-[hsl(var(--border))] p-5">
+          <p className="mb-1 text-sm font-medium">{t("requirements")}</p>
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            {order.requirements || t("noRequirements")}
+          </p>
+        </div>
+      </div>
+
+      {order.deliveries.length > 0 && (
+        <div className="mb-6 rounded-xl border border-[hsl(var(--border))] p-5">
+          <p className="mb-2 text-sm font-medium">{t("deliveries")}</p>
+          <ul className="space-y-3">
+            {order.deliveries.map((d) => (
+              <li key={d.id} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3 text-sm">
+                {d.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <OrderActions orderId={order.id} status={order.status} role={role} />
+    </div>
+  );
+}

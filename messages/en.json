@@ -134,5 +134,38 @@
     "apply": "Apply",
     "results": "results",
     "noResults": "Nothing found."
+  },
+  "Order": {
+    "order": "Order",
+    "placeOrder": "Place order",
+    "placing": "Placing...",
+    "ownGig": "This is your own gig.",
+    "requirementsPh": "Describe what you need (optional)...",
+    "noPaymentYet": "No payment required yet — payments come later.",
+    "error": "Something went wrong.",
+    "noOrders": "You have no orders yet.",
+    "browse": "Browse gigs",
+    "noSellerOrders": "No orders to fulfill yet.",
+    "requirements": "Requirements",
+    "noRequirements": "No requirements provided.",
+    "deliveries": "Deliveries",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "deliverTitle": "Deliver your work",
+    "deliverPh": "Add a message for the buyer...",
+    "deliver": "Deliver",
+    "accept": "Accept & complete",
+    "requestRevision": "Request revision",
+    "cancel": "Cancel order",
+    "status": {
+      "PENDING_PAYMENT": "Pending payment",
+      "PAID": "Paid",
+      "IN_PROGRESS": "In progress",
+      "DELIVERED": "Delivered",
+      "REVISION": "Revision",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "DISPUTED": "Disputed"
+    }
   }
 }

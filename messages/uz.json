@@ -134,5 +134,38 @@
     "apply": "Qoʻllash",
     "results": "natija",
     "noResults": "Hech narsa topilmadi."
+  },
+  "Order": {
+    "order": "Buyurtma",
+    "placeOrder": "Buyurtma berish",
+    "placing": "Yuborilmoqda...",
+    "ownGig": "Bu sizning xizmatingiz.",
+    "requirementsPh": "Nima kerakligini yozing (ixtiyoriy)...",
+    "noPaymentYet": "Hozircha toʻlov shart emas — toʻlovlar keyinroq qoʻshiladi.",
+    "error": "Xatolik yuz berdi.",
+    "noOrders": "Sizda hali buyurtma yoʻq.",
+    "browse": "Xizmatlarni koʻrish",
+    "noSellerOrders": "Bajariladigan buyurtmalar yoʻq.",
+    "requirements": "Talablar",
+    "noRequirements": "Talablar koʻrsatilmagan.",
+    "deliveries": "Topshiriqlar",
+    "seller": "Ijrochi",
+    "buyer": "Buyurtmachi",
+    "deliverTitle": "Ishni topshirish",
+    "deliverPh": "Buyurtmachi uchun xabar...",
+    "deliver": "Topshirish",
+    "accept": "Qabul qilish va yakunlash",
+    "requestRevision": "Tahrir soʻrash",
+    "cancel": "Bekor qilish",
+    "status": {
+      "PENDING_PAYMENT": "Toʻlov kutilmoqda",
+      "PAID": "Toʻlangan",
+      "IN_PROGRESS": "Jarayonda",
+      "DELIVERED": "Topshirilgan",
+      "REVISION": "Tahrir",
+      "COMPLETED": "Yakunlangan",
+      "CANCELLED": "Bekor qilingan",
+      "DISPUTED": "Nizo"
+    }
   }
 }

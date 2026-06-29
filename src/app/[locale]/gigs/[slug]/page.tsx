@@ -1,7 +1,9 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getGigBySlug } from "@/server/services/gig";
+import { getCurrentUser } from "@/lib/session";
 import { formatUzs } from "@/lib/utils";
+import { OrderPanel } from "@/components/order-panel";
 
 const TIER_ORDER = { BASIC: 0, STANDARD: 1, PREMIUM: 2 } as const;
 
@@ -17,13 +19,11 @@ export default async function GigDetailPage({
   const gig = await getGigBySlug(slug);
   if (!gig) notFound();
 
+  const me = await getCurrentUser();
+  const viewer = !me ? "guest" : me.id === gig.sellerId ? "owner" : "buyer";
+
   const seller = gig.seller.firstName ?? gig.seller.name ?? gig.seller.username ?? "";
   const packages = [...gig.packages].sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier]);
-  const tierLabel: Record<string, string> = {
-    BASIC: t("basic"),
-    STANDARD: t("standard"),
-    PREMIUM: t("premium"),
-  };
 
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_360px]">
@@ -56,25 +56,21 @@ export default async function GigDetailPage({
         )}
       </div>
 
-      {/* Packages */}
-      <aside className="space-y-4">
-        {packages.map((p) => (
-          <div key={p.id} className="rounded-xl border border-[hsl(var(--border))] p-5">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold">{tierLabel[p.tier] ?? p.title}</span>
-              <span className="text-xl font-bold tabular-nums">
-                {formatUzs(p.priceUzs)} so&apos;m
-              </span>
-            </div>
-            {p.description && (
-              <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{p.description}</p>
-            )}
-            <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">
-              {p.deliveryDays} {t("daysDelivery")} · {p.revisions} {t("revisionsLabel")}
-            </p>
-          </div>
-        ))}
-        <p className="text-center text-xs text-[hsl(var(--muted-foreground))]">{t("orderingSoon")}</p>
+      {/* Packages + order */}
+      <aside>
+        <OrderPanel
+          gigId={gig.id}
+          locale={locale}
+          viewer={viewer}
+          packages={packages.map((p) => ({
+            tier: p.tier,
+            title: p.title,
+            description: p.description,
+            priceUzs: p.priceUzs,
+            deliveryDays: p.deliveryDays,
+            revisions: p.revisions,
+          }))}
+        />
       </aside>
     </div>
   );
