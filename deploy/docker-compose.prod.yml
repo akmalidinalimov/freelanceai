@@ -71,7 +71,7 @@ services:
     command:
       # --include=dev is required because NODE_ENV=production would otherwise skip
       # the build-time devDependencies (Tailwind, TypeScript, Prisma CLI).
-      - "apk add --no-cache git openssl && rm -rf /srv/app && git clone --depth 1 -b main https://github.com/akmalidinalimov/freelanceai /srv/app && cd /srv/app && npm ci --include=dev && npx prisma generate && npm run build && npx next start -H 0.0.0.0 -p 3000"
+      - "apk add --no-cache git openssl && rm -rf /srv/app && git clone --depth 1 -b main https://github.com/akmalidinalimov/freelanceai /srv/app && cd /srv/app && npm ci --include=dev && npx prisma generate && npm run build && (node prisma/seed-prod.mjs || echo 'seed-prod skipped') && npx next start -H 0.0.0.0 -p 3000"
 
   # Outbound connector to Cloudflare; routes freelanceai.alikhanova.cloud -> app:3000.
   # The public-hostname mapping is configured in the Cloudflare dashboard (remote-managed
