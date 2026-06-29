@@ -73,6 +73,7 @@ model User {
   messages       Message[]
   convosAsBuyer  Conversation[] @relation("ConvBuyer")
   convosAsSeller Conversation[] @relation("ConvSeller")
+  savedGigs      SavedGig[]
   reviewsWritten Review[]       @relation("ReviewAuthor")
   ledgerEntries  LedgerEntry[]
   payoutRequests PayoutRequest[]
@@ -247,10 +248,23 @@ model Gig {
   orders   Order[]
   reviews  Review[]
   conversations Conversation[]
+  savedBy  SavedGig[]
 
   @@index([sellerId])
   @@index([status])
   @@index([categoryId])
+}
+
+model SavedGig {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gigId     String
+  gig       Gig      @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, gigId])
+  @@index([userId])
 }
 
 enum PackageTier {

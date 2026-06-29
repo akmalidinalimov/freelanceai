@@ -51,6 +51,7 @@ const CHECKS = [
   { group: "API", name: "create order", method: "POST", path: "/api/orders", origin: true, expect: 401 },
   { group: "API", name: "order action", method: "POST", path: "/api/orders/abc", origin: true, expect: 401 },
   { group: "API", name: "create review", method: "POST", path: "/api/reviews", origin: true, expect: 401 },
+  { group: "API", name: "save gig", method: "POST", path: "/api/saved", origin: true, expect: 401 },
   { group: "API", name: "admin payout", method: "POST", path: "/api/admin/payouts", origin: true, expect: 401 },
   { group: "API", name: "contact seller", method: "POST", path: "/api/contact", origin: true, expect: 401 },
   { group: "API", name: "update profile", method: "PATCH", path: "/api/me/profile", origin: true, expect: 401 },

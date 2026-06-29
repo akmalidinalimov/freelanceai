@@ -1,9 +1,9 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { DashCard } from "@/components/dash-card";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listBuyerOrders } from "@/server/services/order";
+import { listSavedGigs } from "@/server/services/saved";
 import { formatUzs } from "@/lib/utils";
 
 export default async function DashboardPage({
@@ -19,7 +19,9 @@ export default async function DashboardPage({
   const to = await getTranslations("Order");
   const tm = await getTranslations("Message");
   const ts = await getTranslations("Settings");
+  const tg = await getTranslations("Gig");
   const orders = await listBuyerOrders(user.id);
+  const saved = await listSavedGigs(user.id);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -68,9 +70,37 @@ export default async function DashboardPage({
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <DashCard title={t("messages")} />
-        <DashCard title={t("saved")} />
+      <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+        <h3 className="mb-3 font-semibold">{t("saved")}</h3>
+        {saved.length === 0 ? (
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">{tg("noSaved")}</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {saved.map((g) => {
+              const from = g.packages[0]?.priceUzs ?? 0;
+              return (
+                <Link
+                  key={g.id}
+                  href={`/gigs/${g.slug}`}
+                  className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
+                >
+                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary))]">
+                    {g.coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={g.coverUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      g.title.slice(0, 1).toUpperCase()
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-sm font-medium">{g.title}</p>
+                  <p className="mt-auto pt-1 text-sm font-semibold tabular-nums">
+                    {tg("from")} {formatUzs(from)} so&apos;m
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

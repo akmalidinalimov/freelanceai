@@ -4,10 +4,12 @@ import { Link } from "@/i18n/navigation";
 import { getGigBySlug } from "@/server/services/gig";
 import { getGigReviews } from "@/server/services/review";
 import { getCurrentUser } from "@/lib/session";
+import { isGigSaved } from "@/server/services/saved";
 import { formatUzs } from "@/lib/utils";
 import { OrderPanel } from "@/components/order-panel";
 import { Stars } from "@/components/stars";
 import { ContactSellerButton } from "@/components/contact-seller-button";
+import { SaveButton } from "@/components/save-button";
 
 const TIER_ORDER = { BASIC: 0, STANDARD: 1, PREMIUM: 2 } as const;
 
@@ -26,6 +28,7 @@ export default async function GigDetailPage({
 
   const me = await getCurrentUser();
   const viewer = !me ? "guest" : me.id === gig.sellerId ? "owner" : "buyer";
+  const saved = me && viewer !== "owner" ? await isGigSaved(me.id, gig.id) : false;
 
   const seller = gig.seller.firstName ?? gig.seller.name ?? gig.seller.username ?? "";
   const packages = [...gig.packages].sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier]);
@@ -80,8 +83,9 @@ export default async function GigDetailPage({
             <span className="text-[hsl(var(--muted-foreground))]">({count})</span>
           </div>
         )}
-        <div className="mt-4">
+        <div className="mt-4 flex gap-2">
           <ContactSellerButton gigId={gig.id} locale={locale} viewer={viewer} />
+          <SaveButton gigId={gig.id} locale={locale} viewer={viewer} initialSaved={saved} />
         </div>
         <p className="mt-6 whitespace-pre-wrap leading-relaxed">{gig.description}</p>
         {gig.tags.length > 0 && (
