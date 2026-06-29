@@ -1,6 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { redirect } from "@/i18n/navigation";
-import { getCurrentUser } from "@/lib/session";
+import { requireOnboardedUser } from "@/lib/auth-guards";
 
 export default async function DashboardPage({
   params,
@@ -10,12 +9,8 @@ export default async function DashboardPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // Auth gate: must be signed in.
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect({ href: "/login", locale });
-    return null; // unreachable (redirect throws); narrows `user` for TS
-  }
+  // Auth + onboarding gate (not signed in → /login; not onboarded → /onboarding).
+  const user = await requireOnboardedUser(locale);
 
   const t = await getTranslations("Nav");
 

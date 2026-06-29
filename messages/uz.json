@@ -46,5 +46,14 @@
     "openInTelegram": "Telegramni ochish",
     "failed": "Kirish amalga oshmadi. Qaytadan urinib koʻring.",
     "retry": "Qaytadan"
+  },
+  "Onboarding": {
+    "title": "FreelanceAI dan qanday foydalanasiz?",
+    "subtitle": "Buni keyinroq oʻzgartirishingiz mumkin.",
+    "hire": "Ijodkor yollash",
+    "hireDesc": "Men AI video va rasm xizmatlarini sotib olmoqchiman",
+    "offer": "Oʻz ishimni sotish",
+    "offerDesc": "Men ijodkor sifatida xizmat koʻrsatmoqchiman",
+    "error": "Xatolik yuz berdi. Qaytadan urinib koʻring."
   }
 }

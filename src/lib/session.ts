@@ -51,6 +51,8 @@ export async function upsertTelegramUser(tg: TelegramUser): Promise<User> {
       lastName: tg.lastName,
       photoUrl: tg.photoUrl,
       role: targetRole,
+      // Admins skip onboarding.
+      ...(targetRole === "ADMIN" ? { onboardingCompleted: true } : {}),
     },
     create: {
       telegramId: tg.id,

@@ -46,5 +46,14 @@
     "openInTelegram": "Open Telegram",
     "failed": "Login failed. Please try again.",
     "retry": "Retry"
+  },
+  "Onboarding": {
+    "title": "How will you use FreelanceAI?",
+    "subtitle": "You can change this later.",
+    "hire": "Hire creators",
+    "hireDesc": "I want to buy AI video and image services",
+    "offer": "Offer my work",
+    "offerDesc": "I want to provide services as a creator",
+    "error": "Something went wrong. Please try again."
   }
 }
