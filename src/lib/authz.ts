@@ -74,11 +74,16 @@ export function payoutWhereForUser(payoutId: string, user: Principal) {
   return { id: payoutId, sellerId: user.id };
 }
 
-/** A conversation/message is visible only to participants of the linked order. */
+/** A conversation is visible only to its participants — direct (buyer/seller) or via its order. */
 export function conversationWhereForUser(conversationId: string, user: Principal) {
   if (isAdmin(user)) return { id: conversationId };
   return {
     id: conversationId,
-    order: { OR: [{ buyerId: user.id }, { sellerId: user.id }] },
+    OR: [
+      { buyerId: user.id },
+      { sellerId: user.id },
+      { order: { buyerId: user.id } },
+      { order: { sellerId: user.id } },
+    ],
   };
 }

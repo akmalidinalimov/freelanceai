@@ -96,10 +96,32 @@ describe("ownership where-builders (IDOR scoping)", () => {
     expect(payoutWhereForUser("p1", seller)).toEqual({ id: "p1", sellerId: "u_seller" });
   });
 
-  it("scopes conversations to order participants", () => {
+  it("scopes conversations to direct or order participants", () => {
     expect(conversationWhereForUser("c1", buyer)).toEqual({
       id: "c1",
-      order: { OR: [{ buyerId: "u_buyer" }, { sellerId: "u_buyer" }] },
+      OR: [
+        { buyerId: "u_buyer" },
+        { sellerId: "u_buyer" },
+        { order: { buyerId: "u_buyer" } },
+        { order: { sellerId: "u_buyer" } },
+      ],
     });
+    expect(conversationWhereForUser("c1", admin)).toEqual({ id: "c1" });
+  });
+});
+
+describe("cross-tenant negative: a caller's scope never references another user", () => {
+  it("no ownership builder leaks a different user's id", () => {
+    const builders = [
+      orderWhereForUser("o1", buyer),
+      gigEditWhereForUser("g1", buyer),
+      payoutWhereForUser("p1", buyer),
+      conversationWhereForUser("c1", buyer),
+    ];
+    for (const w of builders) {
+      const s = JSON.stringify(w);
+      expect(s).toContain("u_buyer"); // bound to the caller
+      expect(s).not.toContain("u_seller"); // never to anyone else
+    }
   });
 });
