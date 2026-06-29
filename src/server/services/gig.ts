@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { uniqueSlug } from "@/lib/slug";
 import { audit } from "@/lib/audit";
+import { stripContactInfo } from "@/lib/sanitize";
 
 export type GigSort = "newest" | "price_asc" | "price_desc";
 export interface GigFilters {
@@ -35,12 +36,15 @@ export interface CreateGigInput {
 
 /** Create a gig with its packages. New gigs are ACTIVE (moderation comes later). */
 export async function createGig(sellerId: string, input: CreateGigInput) {
+  // Strip off-platform contact info from public gig text (anti-escrow-bypass).
+  const title = stripContactInfo(input.title).text;
+  const description = stripContactInfo(input.description).text;
   const gig = await prisma.gig.create({
     data: {
       sellerId,
-      title: input.title,
-      slug: uniqueSlug(input.title),
-      description: input.description,
+      title,
+      slug: uniqueSlug(title),
+      description,
       coverUrl: input.coverUrl || null,
       categoryId: input.categoryId || null,
       tags: input.tags ?? [],

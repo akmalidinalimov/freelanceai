@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { tgSendMessage } from "@/lib/telegram-bot";
+import { stripContactInfo } from "@/lib/sanitize";
 
 const SENDER_SELECT = { select: { id: true, firstName: true, name: true, username: true } } as const;
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -69,9 +70,11 @@ export async function listConversationMessages(
 
 /** Post a message in a conversation; best-effort Telegram notify to the other participant. */
 export async function postConversationMessage(conversationId: string, user: User, body: string) {
-  const text = body.trim();
-  if (!text) throw Errors.validation({ body: "Message is empty" });
-  if (text.length > 2000) throw Errors.validation({ body: "Message is too long" });
+  const trimmed = body.trim();
+  if (!trimmed) throw Errors.validation({ body: "Message is empty" });
+  if (trimmed.length > 2000) throw Errors.validation({ body: "Message is too long" });
+  // Strip off-platform contact info (anti-escrow-bypass).
+  const text = stripContactInfo(trimmed).text;
 
   const { convo, buyerId, sellerId } = await authzConversation(conversationId, user);
   const message = await prisma.message.create({
