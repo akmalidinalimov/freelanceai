@@ -5,6 +5,7 @@ import { orderWhereForUser, assertFound } from "@/lib/authz";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
+import { computeSplit } from "@/lib/commission";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -22,8 +23,7 @@ export async function createOrder(buyerId: string, gigId: string, tier: PackageT
   const pkg = gig.packages[0];
   if (!pkg) throw Errors.validation({ tier: "Package not available" });
 
-  const amountUzs = pkg.priceUzs;
-  const commissionUzs = Math.round((amountUzs * commissionPct()) / 100);
+  const { amountUzs, commissionUzs, sellerNetUzs } = computeSplit(pkg.priceUzs, commissionPct());
   const order = await prisma.order.create({
     data: {
       gigId: gig.id,
@@ -33,9 +33,10 @@ export async function createOrder(buyerId: string, gigId: string, tier: PackageT
       packageTitle: pkg.title,
       amountUzs,
       commissionUzs,
-      sellerNetUzs: amountUzs - commissionUzs,
+      sellerNetUzs,
       requirements: requirements?.trim() || null,
-      status: "IN_PROGRESS",
+      // Awaiting (manual) payment confirmation before work begins.
+      status: "PENDING_PAYMENT",
       dueAt: new Date(Date.now() + pkg.deliveryDays * 24 * 60 * 60 * 1000),
     },
   });

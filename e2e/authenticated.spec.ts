@@ -18,6 +18,14 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
   await buyer.waitForURL(/\/uz\/orders\/.+/);
   const orderUrl = buyer.url();
 
+  // Admin confirms (manual) payment → order moves into work.
+  const adminCtx = await browser.newContext();
+  const admin = await adminCtx.newPage();
+  await loginAs(admin, "e2e_admin");
+  await admin.goto(orderUrl);
+  await admin.getByRole("button", { name: "Toʻlov qabul qilindi" }).click();
+  await expect(admin.getByText("Jarayonda").first()).toBeVisible();
+
   // Seller delivers.
   const sellerCtx = await browser.newContext();
   const seller = await sellerCtx.newPage();
@@ -39,6 +47,7 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
 
   await buyerCtx.close();
   await sellerCtx.close();
+  await adminCtx.close();
 });
 
 test("messaging: buyer sends, seller sees it on the order", async ({ browser }) => {

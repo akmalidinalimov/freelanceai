@@ -45,10 +45,26 @@ export function OrderActions({ orderId, status, role }: { orderId: string; statu
 
   const isSeller = role === "seller" || role === "admin";
   const isBuyer = role === "buyer" || role === "admin";
+  const isAdmin = role === "admin";
   const active = status === "IN_PROGRESS" || status === "REVISION";
+  const cancelable = active || status === "PENDING_PAYMENT";
 
   return (
     <div className="space-y-3">
+      {status === "PENDING_PAYMENT" &&
+        (isAdmin ? (
+          <div className="space-y-2 rounded-xl border border-[hsl(var(--border))] p-4">
+            <p className="text-sm font-medium">{t("confirmPaymentTitle")}</p>
+            <Button onClick={() => act("confirm_payment")} disabled={busy} variant="accent">
+              {t("confirmPayment")}
+            </Button>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-[hsl(var(--border))] p-4 text-sm text-[hsl(var(--muted-foreground))]">
+            {t("awaitingPayment")}
+          </p>
+        ))}
+
       {isSeller && active && (
         <div className="space-y-2 rounded-xl border border-[hsl(var(--border))] p-4">
           <p className="text-sm font-medium">{t("deliverTitle")}</p>
@@ -75,7 +91,7 @@ export function OrderActions({ orderId, status, role }: { orderId: string; statu
         </div>
       )}
 
-      {active && (
+      {cancelable && (
         <Button onClick={() => act("cancel")} disabled={busy} variant="ghost" size="sm">
           {t("cancel")}
         </Button>

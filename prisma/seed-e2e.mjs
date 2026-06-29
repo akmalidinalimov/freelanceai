@@ -38,6 +38,19 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { id: "e2e_admin" },
+    update: { role: "ADMIN", status: "ACTIVE" },
+    create: {
+      id: "e2e_admin",
+      firstName: "E2E Admin",
+      username: "e2e_admin",
+      role: "ADMIN",
+      status: "ACTIVE",
+      onboardingCompleted: true,
+    },
+  });
+
   await prisma.gig.upsert({
     where: { id: "e2e_gig" },
     update: { status: "ACTIVE" },
@@ -57,7 +70,7 @@ async function main() {
     },
   });
 
-  console.log("E2E seed complete: e2e_seller, e2e_buyer, gig e2e-gig");
+  console.log("E2E seed complete: e2e_seller, e2e_buyer, e2e_admin, gig e2e-gig");
 }
 
 main()

@@ -9,10 +9,11 @@ import {
   requestRevision,
   cancelOrder,
 } from "@/server/services/order";
+import { confirmOrderPayment } from "@/server/services/payments";
 
 const schema = z
   .object({
-    action: z.enum(["deliver", "accept", "revision", "cancel"]),
+    action: z.enum(["deliver", "accept", "revision", "cancel", "confirm_payment"]),
     message: z.string().max(2000).optional(),
   })
   .strict();
@@ -42,6 +43,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         break;
       case "cancel":
         await cancelOrder(id, user);
+        break;
+      case "confirm_payment":
+        await confirmOrderPayment(id, user);
         break;
     }
     return ok({ done: true });

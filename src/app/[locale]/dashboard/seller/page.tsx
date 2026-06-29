@@ -5,6 +5,7 @@ import { DashCard } from "@/components/dash-card";
 import { requireSellerUser } from "@/lib/auth-guards";
 import { listSellerGigs } from "@/server/services/gig";
 import { listSellerOrders } from "@/server/services/order";
+import { getSellerEarnings } from "@/server/services/payments";
 import { formatUzs } from "@/lib/utils";
 
 export default async function SellerDashboardPage({
@@ -21,6 +22,7 @@ export default async function SellerDashboardPage({
   const to = await getTranslations("Order");
   const gigs = await listSellerGigs(user.id);
   const orders = await listSellerOrders(user.id);
+  const earnings = await getSellerEarnings(user.id);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -34,9 +36,9 @@ export default async function SellerDashboardPage({
       {/* Earnings */}
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         {[
-          { label: t("held"), value: 0 },
-          { label: t("available"), value: 0 },
-          { label: t("lifetime"), value: 0 },
+          { label: t("held"), value: earnings.heldUzs },
+          { label: t("available"), value: earnings.availableUzs },
+          { label: t("lifetime"), value: earnings.lifetimeUzs },
         ].map((b) => (
           <div
             key={b.label}
