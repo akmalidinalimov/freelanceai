@@ -1,7 +1,18 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { uniqueSlug } from "@/lib/slug";
 import { audit } from "@/lib/audit";
+
+export type GigSort = "newest" | "price_asc" | "price_desc";
+export interface GigFilters {
+  q?: string;
+  categorySlug?: string;
+  minUzs?: number;
+  maxUzs?: number;
+  sort?: GigSort;
+  take?: number;
+}
 
 export interface GigPackageInput {
   tier: "BASIC" | "STANDARD" | "PREMIUM";
@@ -60,19 +71,53 @@ export function listSellerGigs(sellerId: string) {
   });
 }
 
-export function listPublicGigs(opts?: { categorySlug?: string; take?: number }) {
-  return prisma.gig.findMany({
-    where: {
-      status: "ACTIVE",
-      ...(opts?.categorySlug ? { category: { slug: opts.categorySlug } } : {}),
-    },
+export async function listPublicGigs(opts: GigFilters = {}) {
+  const q = opts.q?.trim();
+  const where: Prisma.GigWhereInput = {
+    status: "ACTIVE",
+    ...(opts.categorySlug ? { category: { slug: opts.categorySlug } } : {}),
+    ...(q
+      ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { description: { contains: q, mode: "insensitive" } },
+            { tags: { has: q.toLowerCase() } },
+          ],
+        }
+      : {}),
+    ...(opts.minUzs != null || opts.maxUzs != null
+      ? {
+          packages: {
+            some: {
+              priceUzs: {
+                ...(opts.minUzs != null ? { gte: opts.minUzs } : {}),
+                ...(opts.maxUzs != null ? { lte: opts.maxUzs } : {}),
+              },
+            },
+          },
+        }
+      : {}),
+  };
+
+  const gigs = await prisma.gig.findMany({
+    where,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: opts?.take ?? 24,
+    take: opts.take ?? 48,
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },
       seller: { select: { firstName: true, username: true, name: true } },
     },
   });
+
+  // Price sort uses the lowest package; done in-app (Prisma can't orderBy a relation min here).
+  if (opts.sort === "price_asc" || opts.sort === "price_desc") {
+    gigs.sort((a, b) => {
+      const pa = a.packages[0]?.priceUzs ?? 0;
+      const pb = b.packages[0]?.priceUzs ?? 0;
+      return opts.sort === "price_asc" ? pa - pb : pb - pa;
+    });
+  }
+  return gigs;
 }
 
 export function getGigBySlug(slug: string) {

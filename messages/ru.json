@@ -122,6 +122,17 @@
     "uploading": "Загрузка...",
     "mediaType": "Только изображения (jpg, png, webp).",
     "mediaSize": "Файл должен быть меньше 8 МБ.",
-    "mediaError": "Ошибка загрузки."
+    "mediaError": "Ошибка загрузки.",
+    "searchPh": "Поиск услуг...",
+    "allCategories": "Все категории",
+    "minPrice": "Цена от",
+    "maxPrice": "Цена до",
+    "sort": "Сортировка",
+    "sortNewest": "Новые",
+    "sortPriceLow": "Дешевле",
+    "sortPriceHigh": "Дороже",
+    "apply": "Применить",
+    "results": "результатов",
+    "noResults": "Ничего не найдено."
   }
 }

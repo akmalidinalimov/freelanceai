@@ -1,25 +1,104 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listPublicGigs } from "@/server/services/gig";
+import { prisma } from "@/lib/prisma";
+import { listPublicGigs, type GigSort } from "@/server/services/gig";
 import { formatUzs } from "@/lib/utils";
+import type { Locale } from "@/i18n/routing";
 
 export default async function GigsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{
+    q?: string;
+    category?: string;
+    min?: string;
+    max?: string;
+    sort?: string;
+  }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const sp = await searchParams;
   const tn = await getTranslations("Nav");
   const tg = await getTranslations("Gig");
-  const gigs = await listPublicGigs({ take: 24 });
+
+  const sort = (["newest", "price_asc", "price_desc"] as const).includes(sp.sort as GigSort)
+    ? (sp.sort as GigSort)
+    : "newest";
+  const minUzs = sp.min ? Number(sp.min) : undefined;
+  const maxUzs = sp.max ? Number(sp.max) : undefined;
+
+  const nameKey = ({ uz: "nameUz", ru: "nameRu", en: "nameEn" } as const)[locale as Locale];
+  const categories = await prisma.category.findMany({ orderBy: { slug: "asc" } });
+  const gigs = await listPublicGigs({
+    q: sp.q,
+    categorySlug: sp.category || undefined,
+    minUzs: Number.isFinite(minUzs) ? minUzs : undefined,
+    maxUzs: Number.isFinite(maxUzs) ? maxUzs : undefined,
+    sort,
+  });
+
+  const field =
+    "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-6 text-3xl font-bold">{tn("explore")}</h1>
+      <h1 className="mb-5 text-3xl font-bold">{tn("explore")}</h1>
+
+      {/* Filter bar — plain GET form, URL-driven */}
+      <form
+        method="get"
+        className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4"
+      >
+        <input
+          name="q"
+          defaultValue={sp.q ?? ""}
+          placeholder={tg("searchPh")}
+          className={`${field} min-w-48 flex-1`}
+        />
+        <select name="category" defaultValue={sp.category ?? ""} className={field} aria-label={tg("category")}>
+          <option value="">{tg("allCategories")}</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.slug}>
+              {c[nameKey]}
+            </option>
+          ))}
+        </select>
+        <input
+          name="min"
+          inputMode="numeric"
+          defaultValue={sp.min ?? ""}
+          placeholder={tg("minPrice")}
+          className={`${field} w-28`}
+        />
+        <input
+          name="max"
+          inputMode="numeric"
+          defaultValue={sp.max ?? ""}
+          placeholder={tg("maxPrice")}
+          className={`${field} w-28`}
+        />
+        <select name="sort" defaultValue={sort} className={field} aria-label={tg("sort")}>
+          <option value="newest">{tg("sortNewest")}</option>
+          <option value="price_asc">{tg("sortPriceLow")}</option>
+          <option value="price_desc">{tg("sortPriceHigh")}</option>
+        </select>
+        <button
+          type="submit"
+          className="h-10 rounded-md bg-[hsl(var(--primary))] px-5 text-sm font-medium text-[hsl(var(--primary-foreground))]"
+        >
+          {tg("apply")}
+        </button>
+      </form>
+
+      <p className="mb-4 text-sm text-[hsl(var(--muted-foreground))]">
+        {gigs.length} {tg("results")}
+      </p>
 
       {gigs.length === 0 ? (
-        <p className="text-[hsl(var(--muted-foreground))]">{tg("noneYet")}</p>
+        <p className="text-[hsl(var(--muted-foreground))]">{tg("noResults")}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {gigs.map((g) => {

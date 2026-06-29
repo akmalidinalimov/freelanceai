@@ -2,13 +2,13 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 
-const CATEGORY_KEYS = [
-  "aiVideo",
-  "aiImage",
-  "aiAvatar",
-  "aiAds",
-  "voiceover",
-  "branding",
+const CATEGORIES = [
+  { key: "aiVideo", slug: "ai-video" },
+  { key: "aiImage", slug: "ai-image" },
+  { key: "aiAvatar", slug: "ai-avatar" },
+  { key: "aiAds", slug: "ai-ads" },
+  { key: "voiceover", slug: "voiceover" },
+  { key: "branding", slug: "branding" },
 ] as const;
 
 export default async function HomePage({
@@ -52,13 +52,14 @@ export default async function HomePage({
           {t("Home.categoriesTitle")}
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {CATEGORY_KEYS.map((key) => (
-            <div
+          {CATEGORIES.map(({ key, slug }) => (
+            <Link
               key={key}
+              href={`/gigs?category=${slug}`}
               className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 text-center text-sm font-medium transition-colors hover:border-[hsl(var(--primary))]"
             >
               {t(`Categories.${key}`)}
-            </div>
+            </Link>
           ))}
         </div>
       </section>

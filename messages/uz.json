@@ -122,6 +122,17 @@
     "uploading": "Yuklanmoqda...",
     "mediaType": "Faqat rasm (jpg, png, webp).",
     "mediaSize": "Rasm 8MB dan kichik boʻlsin.",
-    "mediaError": "Yuklashda xatolik."
+    "mediaError": "Yuklashda xatolik.",
+    "searchPh": "Xizmat qidirish...",
+    "allCategories": "Barcha yoʻnalishlar",
+    "minPrice": "Min narx",
+    "maxPrice": "Maks narx",
+    "sort": "Saralash",
+    "sortNewest": "Yangi",
+    "sortPriceLow": "Arzon",
+    "sortPriceHigh": "Qimmat",
+    "apply": "Qoʻllash",
+    "results": "natija",
+    "noResults": "Hech narsa topilmadi."
   }
 }
