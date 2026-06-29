@@ -23,6 +23,7 @@ export default async function SellerDashboardPage({
   const to = await getTranslations("Order");
   const ta = await getTranslations("Admin");
   const tm = await getTranslations("Message");
+  const tp = await getTranslations("Profile");
   const gigs = await listSellerGigs(user.id);
   const orders = await listSellerOrders(user.id);
   const earnings = await getSellerEarnings(user.id);
@@ -39,6 +40,9 @@ export default async function SellerDashboardPage({
           )}
           <Link href="/messages">
             <Button variant="ghost">{tm("inbox")}</Button>
+          </Link>
+          <Link href="/dashboard/seller/profile">
+            <Button variant="ghost">{tp("editTitle")}</Button>
           </Link>
           <Link href="/dashboard">
             <Button variant="ghost">{t("buyerView")}</Button>

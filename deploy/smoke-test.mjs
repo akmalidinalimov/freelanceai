@@ -41,6 +41,7 @@ const CHECKS = [
   { group: "Guards", name: "order page gated", method: "GET", path: "/uz/orders/abc", expect: 307 },
   { group: "Guards", name: "admin settlements gated", method: "GET", path: "/uz/admin/settlements", expect: 307 },
   { group: "Guards", name: "messages inbox gated", method: "GET", path: "/uz/messages", expect: 307 },
+  { group: "Guards", name: "edit profile gated", method: "GET", path: "/uz/dashboard/seller/profile", expect: 307 },
 
   // --- API endpoints reject unauthenticated (401) ---
   { group: "API", name: "create gig", method: "POST", path: "/api/gigs", origin: true, expect: 401 },
@@ -51,6 +52,7 @@ const CHECKS = [
   { group: "API", name: "create review", method: "POST", path: "/api/reviews", origin: true, expect: 401 },
   { group: "API", name: "admin payout", method: "POST", path: "/api/admin/payouts", origin: true, expect: 401 },
   { group: "API", name: "contact seller", method: "POST", path: "/api/contact", origin: true, expect: 401 },
+  { group: "API", name: "update profile", method: "PATCH", path: "/api/me/profile", origin: true, expect: 401 },
   { group: "API", name: "conversation messages", method: "GET", path: "/api/conversations/abc/messages", expect: 401 },
 ];
 
@@ -58,7 +60,8 @@ const ok = (expect, status) => (Array.isArray(expect) ? expect.includes(status) 
 
 async function run(c) {
   const headers = {};
-  if (c.method === "POST") {
+  const isMutation = c.method !== "GET";
+  if (isMutation) {
     headers["Content-Type"] = "application/json";
     if (c.origin) headers["Origin"] = BASE;
   }
@@ -66,7 +69,7 @@ async function run(c) {
     const res = await fetch(BASE + c.path, {
       method: c.method,
       headers,
-      body: c.method === "POST" ? "{}" : undefined,
+      body: isMutation ? "{}" : undefined,
       redirect: "manual",
     });
     let pass = ok(c.expect, res.status);

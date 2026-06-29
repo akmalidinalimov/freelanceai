@@ -219,6 +219,13 @@
     "memberSince": "On the platform since",
     "noReviews": "No reviews yet",
     "noGigs": "No active services yet.",
+    "editTitle": "Edit your profile",
+    "headline": "Headline",
+    "tools": "AI tools",
+    "commaHint": "Comma-separated",
+    "save": "Save",
+    "saved": "Saved ✓",
+    "viewPublic": "View public profile",
     "level": {
       "NEW": "New seller",
       "LEVEL_1": "Level 1",

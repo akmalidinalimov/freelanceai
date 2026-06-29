@@ -219,6 +219,13 @@
     "memberSince": "Platformada",
     "noReviews": "Hali sharhlar yoʻq",
     "noGigs": "Hali faol xizmatlar yoʻq.",
+    "editTitle": "Profilni tahrirlash",
+    "headline": "Sarlavha",
+    "tools": "AI vositalar",
+    "commaHint": "Vergul bilan ajrating",
+    "save": "Saqlash",
+    "saved": "Saqlandi ✓",
+    "viewPublic": "Ommaviy profil",
     "level": {
       "NEW": "Yangi ijrochi",
       "LEVEL_1": "1-daraja",
