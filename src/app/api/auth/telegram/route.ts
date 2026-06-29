@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyLoginWidget } from "@/lib/telegram";
-import { upsertTelegramUser, createSession } from "@/lib/session";
+import { upsertTelegramUser, createSession, consumeLoginNonce } from "@/lib/session";
 import { appUrl } from "@/lib/http";
+import { audit } from "@/lib/audit";
 
 // The redirect-mode callback URL is short-lived; reject payloads older than this
 // to limit replay if the URL leaks (history, logs, referer).
@@ -25,8 +26,15 @@ export async function GET(request: Request) {
       return NextResponse.redirect(appUrl(request, "/login?error=auth"));
     }
 
+    // Single-use: reject replays of an already-consumed (valid) payload.
+    const fresh = await consumeLoginNonce(data.hash);
+    if (!fresh) {
+      return NextResponse.redirect(appUrl(request, "/login?error=auth"));
+    }
+
     const user = await upsertTelegramUser(tgUser);
     await createSession(user.id);
+    await audit({ actorId: user.id, action: "auth.login", entity: "User", entityId: user.id });
 
     return NextResponse.redirect(appUrl(request, "/"));
   } catch (err) {

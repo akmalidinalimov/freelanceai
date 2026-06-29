@@ -69,6 +69,16 @@ model Session {
   @@index([userId])
 }
 
+// Single-use guard for Telegram login payloads: the verified `hash` is recorded
+// once so the same signed payload cannot be replayed (defense beyond the 60s window).
+model TelegramAuthNonce {
+  hash      String   @id
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
 // ---------------------------------------------------------------------------
 // Seller profile & portfolio
 // ---------------------------------------------------------------------------

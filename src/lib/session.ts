@@ -8,6 +8,26 @@ import type { User } from "@prisma/client";
 const COOKIE_NAME = "fa_session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
+/**
+ * Single-use guard for a verified Telegram login payload. Records the payload `hash`
+ * once; a replay (same hash) hits the unique constraint and returns false → reject.
+ * Defense beyond the 60s freshness window. Returns true if this is the first use.
+ */
+export async function consumeLoginNonce(
+  hash: string,
+  ttlMs = 5 * 60 * 1000
+): Promise<boolean> {
+  try {
+    await prisma.telegramAuthNonce.create({
+      data: { hash, expiresAt: new Date(Date.now() + ttlMs) },
+    });
+    return true;
+  } catch {
+    // Unique violation (replay) or transient error → treat as not-first-use.
+    return false;
+  }
+}
+
 /** Create/refresh the User record from a verified Telegram identity. */
 export async function upsertTelegramUser(tg: TelegramUser): Promise<User> {
   return prisma.user.upsert({
