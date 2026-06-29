@@ -1,0 +1,40 @@
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+
+/** Pause / resume / delete actions for a gig row on the creator dashboard. */
+export function GigRowActions({ gigId, status }: { gigId: string; status: string }) {
+  const t = useTranslations("Gig");
+  const [busy, setBusy] = useState(false);
+
+  async function act(action: "pause" | "resume" | "delete") {
+    if (action === "delete" && !window.confirm(t("confirmDelete"))) return;
+    setBusy(true);
+    const r = await fetch(`/api/gigs/${gigId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    const j = await r.json();
+    if (j.ok) window.location.reload();
+    else setBusy(false);
+  }
+
+  return (
+    <span className="flex items-center gap-2 text-xs">
+      {status === "ACTIVE" ? (
+        <button onClick={() => act("pause")} disabled={busy} className="hover:underline">
+          {t("pause")}
+        </button>
+      ) : (
+        <button onClick={() => act("resume")} disabled={busy} className="text-[hsl(var(--primary))] hover:underline">
+          {t("resume")}
+        </button>
+      )}
+      <button onClick={() => act("delete")} disabled={busy} className="text-red-600 hover:underline">
+        {t("delete")}
+      </button>
+    </span>
+  );
+}

@@ -135,7 +135,11 @@
     "sortPriceHigh": "Qimmat",
     "apply": "Qoʻllash",
     "results": "natija",
-    "noResults": "Hech narsa topilmadi."
+    "noResults": "Hech narsa topilmadi.",
+    "pause": "Toʻxtatish",
+    "resume": "Davom ettirish",
+    "delete": "Oʻchirish",
+    "confirmDelete": "Xizmat oʻchirilsinmi? U bozordan olib tashlanadi."
   },
   "Order": {
     "order": "Buyurtma",

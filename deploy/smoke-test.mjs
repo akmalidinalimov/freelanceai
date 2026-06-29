@@ -44,6 +44,7 @@ const CHECKS = [
 
   // --- API endpoints reject unauthenticated (401) ---
   { group: "API", name: "create gig", method: "POST", path: "/api/gigs", origin: true, expect: 401 },
+  { group: "API", name: "manage gig", method: "POST", path: "/api/gigs/abc", origin: true, expect: 401 },
   { group: "API", name: "media presign", method: "POST", path: "/api/media/presign", origin: true, expect: 401 },
   { group: "API", name: "create order", method: "POST", path: "/api/orders", origin: true, expect: 401 },
   { group: "API", name: "order action", method: "POST", path: "/api/orders/abc", origin: true, expect: 401 },

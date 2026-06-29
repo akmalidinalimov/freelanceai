@@ -135,7 +135,11 @@
     "sortPriceHigh": "Price: high",
     "apply": "Apply",
     "results": "results",
-    "noResults": "Nothing found."
+    "noResults": "Nothing found.",
+    "pause": "Pause",
+    "resume": "Resume",
+    "delete": "Delete",
+    "confirmDelete": "Delete this gig? It will be removed from the marketplace."
   },
   "Order": {
     "order": "Order",

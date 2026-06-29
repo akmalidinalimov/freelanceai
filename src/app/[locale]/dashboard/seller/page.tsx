@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { DashCard } from "@/components/dash-card";
+import { GigRowActions } from "@/components/gig-row-actions";
 import { requireSellerUser } from "@/lib/auth-guards";
 import { listSellerGigs } from "@/server/services/gig";
 import { listSellerOrders } from "@/server/services/order";
@@ -90,6 +91,7 @@ export default async function SellerDashboardPage({
                     <span className="tabular-nums">
                       {tg("from")} {formatUzs(from)} so&apos;m
                     </span>
+                    <GigRowActions gigId={g.id} status={g.status} />
                   </span>
                 </li>
               );

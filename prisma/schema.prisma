@@ -236,6 +236,7 @@ model Gig {
   galleryUrls String[]  @default([])
   locale      String    @default("uz")
   status      GigStatus @default(DRAFT)
+  deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

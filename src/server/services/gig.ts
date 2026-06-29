@@ -1,9 +1,11 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, User } from "@prisma/client";
 import { uniqueSlug } from "@/lib/slug";
 import { audit } from "@/lib/audit";
 import { stripContactInfo } from "@/lib/sanitize";
+import { Errors } from "@/lib/api";
+import { gigEditWhereForUser } from "@/lib/authz";
 
 export type GigSort = "newest" | "price_asc" | "price_desc";
 export interface GigFilters {
@@ -69,16 +71,36 @@ export async function createGig(sellerId: string, input: CreateGigInput) {
 
 export function listSellerGigs(sellerId: string) {
   return prisma.gig.findMany({
-    where: { sellerId },
+    where: { sellerId, deletedAt: null },
     orderBy: { createdAt: "desc" },
     include: { packages: { orderBy: { priceUzs: "asc" }, take: 1 }, category: true },
   });
 }
 
+type GigActor = Pick<User, "id" | "role">;
+
+/** Pause / resume / soft-delete a gig — owner (or admin) only, scoped via gigEditWhereForUser. */
+async function updateOwnedGig(gigId: string, user: GigActor, data: Prisma.GigUpdateManyMutationInput, action: string) {
+  const res = await prisma.gig.updateMany({
+    where: { ...gigEditWhereForUser(gigId, user), deletedAt: null },
+    data,
+  });
+  if (res.count === 0) throw Errors.notFound("Gig not found");
+  await audit({ actorId: user.id, action, entity: "Gig", entityId: gigId });
+}
+
+export const pauseGig = (gigId: string, user: GigActor) =>
+  updateOwnedGig(gigId, user, { status: "PAUSED" }, "gig.pause");
+export const resumeGig = (gigId: string, user: GigActor) =>
+  updateOwnedGig(gigId, user, { status: "ACTIVE" }, "gig.resume");
+export const softDeleteGig = (gigId: string, user: GigActor) =>
+  updateOwnedGig(gigId, user, { deletedAt: new Date(), status: "PAUSED" }, "gig.softDelete");
+
 export async function listPublicGigs(opts: GigFilters = {}) {
   const q = opts.q?.trim();
   const where: Prisma.GigWhereInput = {
     status: "ACTIVE",
+    deletedAt: null,
     ...(opts.categorySlug ? { category: { slug: opts.categorySlug } } : {}),
     ...(q
       ? {
@@ -126,7 +148,7 @@ export async function listPublicGigs(opts: GigFilters = {}) {
 
 export function getGigBySlug(slug: string) {
   return prisma.gig.findFirst({
-    where: { slug, status: "ACTIVE" },
+    where: { slug, status: "ACTIVE", deletedAt: null },
     include: {
       packages: { orderBy: { priceUzs: "asc" } },
       category: true,

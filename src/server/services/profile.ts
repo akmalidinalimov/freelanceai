@@ -23,7 +23,7 @@ export async function getPublicProfile(username: string) {
   const [profile, gigs] = await Promise.all([
     prisma.sellerProfile.findUnique({ where: { userId: user.id } }),
     prisma.gig.findMany({
-      where: { sellerId: user.id, status: "ACTIVE" },
+      where: { sellerId: user.id, status: "ACTIVE", deletedAt: null },
       orderBy: { createdAt: "desc" },
       take: 24,
       include: { packages: { orderBy: { priceUzs: "asc" }, take: 1 } },
