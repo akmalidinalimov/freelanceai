@@ -34,11 +34,9 @@ services:
     restart: "no"
 
   app:
-    # Build the image on the VPS directly from the public GitHub repo (no registry).
-    build:
-      context: "https://github.com/akmalidinalimov/freelanceai.git#main"
-      dockerfile: Dockerfile
-    image: freelanceai-app:latest
+    # Hostinger's deploy only PULLS images (no build step), so use a prebuilt
+    # public image from GHCR (produced by .github/workflows/image.yml).
+    image: ghcr.io/akmalidinalimov/freelanceai:latest
     restart: unless-stopped
     depends_on:
       db:
