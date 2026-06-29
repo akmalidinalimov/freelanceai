@@ -38,5 +38,13 @@
   "Common": {
     "comingSoon": "Coming soon",
     "loading": "Loading..."
+  },
+  "Auth": {
+    "loginTelegram": "Log in with Telegram",
+    "preparing": "Preparing...",
+    "waiting": "Tap “Start” in Telegram, then come back here...",
+    "openInTelegram": "Open Telegram",
+    "failed": "Login failed. Please try again.",
+    "retry": "Retry"
   }
 }

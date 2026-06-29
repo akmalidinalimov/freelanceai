@@ -16,7 +16,7 @@ $dv = @{}
 Get-Content "$root\.env.deploy.local" | Where-Object { $_ -match '^\s*[A-Z]' } | ForEach-Object {
   $k, $v = $_ -split '=', 2; $dv[$k.Trim()] = $v.Trim()
 }
-$needed = 'POSTGRES_PASSWORD', 'SESSION_SECRET', 'CLOUDFLARE_TUNNEL_TOKEN', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_USERNAME'
+$needed = 'POSTGRES_PASSWORD', 'SESSION_SECRET', 'CLOUDFLARE_TUNNEL_TOKEN', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_USERNAME', 'TELEGRAM_WEBHOOK_SECRET'
 foreach ($k in $needed) {
   if (-not $dv[$k] -or $dv[$k] -match 'PASTE_') { throw "$k missing/placeholder in .env.deploy.local" }
 }

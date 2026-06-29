@@ -50,6 +50,7 @@ services:
       APP_ORIGIN: "https://freelanceai.aicreator.academy"
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
       PLATFORM_COMMISSION_PCT: "20"
     expose:
       - "3000"

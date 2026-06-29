@@ -38,5 +38,13 @@
   "Common": {
     "comingSoon": "Скоро",
     "loading": "Загрузка..."
+  },
+  "Auth": {
+    "loginTelegram": "Войти через Telegram",
+    "preparing": "Подготовка...",
+    "waiting": "Нажмите «Start» в Telegram и вернитесь сюда...",
+    "openInTelegram": "Открыть Telegram",
+    "failed": "Не удалось войти. Попробуйте снова.",
+    "retry": "Повторить"
   }
 }

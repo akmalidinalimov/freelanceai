@@ -14,8 +14,10 @@ const envSchema = z
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
     SESSION_SECRET: z.string().min(16, "SESSION_SECRET must be >= 16 chars"),
     TELEGRAM_BOT_TOKEN: z.string().optional(),
-    // Runtime bot username (public); passed to the login widget as a prop.
+    // Runtime bot username (public); used for the bot deep-link login.
     TELEGRAM_BOT_USERNAME: z.string().optional(),
+    // Shared secret for verifying Telegram webhook calls.
+    TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
     NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: z.string().optional(),
     // Field-encryption key (AES-256 = 32 bytes). Required once we encrypt PII (P5/P8).
     DATA_ENC_KEY: z.string().min(32).optional(),

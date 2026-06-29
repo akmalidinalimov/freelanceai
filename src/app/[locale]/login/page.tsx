@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/session";
-import { TelegramLoginButton } from "@/components/telegram-login-button";
+import { TelegramDeepLinkLogin } from "@/components/telegram-deeplink-login";
 
 export default async function LoginPage({
   params,
@@ -21,12 +21,6 @@ export default async function LoginPage({
   const t = await getTranslations("Nav");
   const tb = await getTranslations("Brand");
 
-  const appUrl =
-    process.env.APP_ORIGIN ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const botUsername =
-    process.env.TELEGRAM_BOT_USERNAME ?? process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
-  const authUrl = `${appUrl}/api/auth/telegram`;
-
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
       <div>
@@ -42,7 +36,7 @@ export default async function LoginPage({
         </p>
       )}
 
-      <TelegramLoginButton authUrl={authUrl} botUsername={botUsername} />
+      <TelegramDeepLinkLogin locale={locale} />
     </div>
   );
 }

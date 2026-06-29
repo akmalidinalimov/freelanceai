@@ -79,6 +79,29 @@ model TelegramAuthNonce {
   @@index([expiresAt])
 }
 
+enum LoginTokenStatus {
+  PENDING
+  CONFIRMED
+  CONSUMED
+}
+
+// One-time token for bot deep-link login: site creates it (PENDING), the bot
+// webhook confirms it with the user's Telegram identity on /start, and the site's
+// poll exchanges a CONFIRMED token for a session (then CONSUMED). No phone needed.
+model LoginToken {
+  id         String           @id @default(cuid())
+  token      String           @unique
+  status     LoginTokenStatus @default(PENDING)
+  telegramId String?
+  firstName  String?
+  lastName   String?
+  username   String?
+  expiresAt  DateTime
+  createdAt  DateTime         @default(now())
+
+  @@index([expiresAt])
+}
+
 // ---------------------------------------------------------------------------
 // Seller profile & portfolio
 // ---------------------------------------------------------------------------
