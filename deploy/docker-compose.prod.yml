@@ -1,7 +1,9 @@
-# Production stack for VPS deployment (deployed via the Hostinger MCP as project
-# "freelanceai"). Postgres is internal-only; Caddy terminates TLS automatically.
-# Secrets come from the project environment (POSTGRES_PASSWORD, SESSION_SECRET,
-# TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME) — never committed here.
+# Production stack for the shared Hostinger VPS (deployed via the Hostinger MCP as
+# project "freelanceai"). Exposure is via Cloudflare Tunnel (cloudflared) — no host
+# ports are published, so the box's existing nginx (80/443) and other apps are
+# untouched. Postgres stays internal. Secrets come from the project environment:
+#   POSTGRES_PASSWORD, SESSION_SECRET, CLOUDFLARE_TUNNEL_TOKEN,
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME  (never committed here).
 services:
   db:
     image: postgres:16-alpine
@@ -17,7 +19,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-    # No published ports — only reachable inside the Docker network.
 
   migrate:
     image: node:24-alpine
@@ -50,30 +51,15 @@ services:
     expose:
       - "3000"
 
-  caddy:
-    image: caddy:2-alpine
+  # Outbound connector to Cloudflare; routes freelanceai.alikhanova.cloud -> app:3000.
+  # The public-hostname mapping is configured in the Cloudflare dashboard (remote-managed
+  # tunnel); cloudflared only needs the token.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
     restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
       - app
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    configs:
-      - source: caddyfile
-        target: /etc/caddy/Caddyfile
-
-configs:
-  caddyfile:
-    content: |
-      freelanceai.alikhanova.cloud {
-        encode gzip zstd
-        reverse_proxy app:3000
-      }
 
 volumes:
   freelanceai_pgdata:
-  caddy_data:
-  caddy_config:
