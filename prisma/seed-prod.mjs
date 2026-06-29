@@ -154,11 +154,15 @@ async function main() {
     });
   }
 
+  const publicBase = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
+  const coverFor = (cat) => (publicBase ? `${publicBase}/covers/${cat}.png` : null);
+
   for (const g of GIGS) {
     const cat = await prisma.category.findUnique({ where: { slug: g.cat } });
+    const coverUrl = coverFor(g.cat);
     await prisma.gig.upsert({
       where: { id: `demo_gig_${g.slug}` },
-      update: { status: "ACTIVE", categoryId: cat?.id ?? null, tags: g.tags },
+      update: { status: "ACTIVE", categoryId: cat?.id ?? null, tags: g.tags, coverUrl },
       create: {
         id: `demo_gig_${g.slug}`,
         sellerId: g.seller,
@@ -167,6 +171,7 @@ async function main() {
         slug: g.slug,
         description: g.description,
         tags: g.tags,
+        coverUrl,
         status: "ACTIVE",
         locale: "uz",
         packages: {
