@@ -4,6 +4,8 @@ import {
   isAdmin,
   requireRole,
   requireAdmin,
+  requireSeller,
+  requireActive,
   assertFound,
   orderWhereForUser,
   gigEditWhereForUser,
@@ -36,6 +38,26 @@ describe("role checks", () => {
   it("requireAdmin", () => {
     expect(() => requireAdmin(buyer)).toThrow(ApiError);
     expect(() => requireAdmin(admin)).not.toThrow();
+  });
+});
+
+describe("requireActive / requireSeller", () => {
+  const activeSeller = { id: "s", role: "BUYER" as const, isSeller: true, status: "ACTIVE" as const };
+  const activeBuyer = { id: "b", role: "BUYER" as const, isSeller: false, status: "ACTIVE" as const };
+  const suspendedSeller = { id: "x", role: "BUYER" as const, isSeller: true, status: "SUSPENDED" as const };
+  const adminNonSeller = { id: "a", role: "ADMIN" as const, isSeller: false, status: "ACTIVE" as const };
+
+  it("requireActive rejects non-active accounts", () => {
+    expect(() => requireActive(suspendedSeller)).toThrow(ApiError);
+    expect(() => requireActive(activeBuyer)).not.toThrow();
+  });
+  it("requireSeller allows an active seller and admins", () => {
+    expect(() => requireSeller(activeSeller)).not.toThrow();
+    expect(() => requireSeller(adminNonSeller)).not.toThrow();
+  });
+  it("requireSeller rejects a non-seller and a suspended seller", () => {
+    expect(() => requireSeller(activeBuyer)).toThrow(ApiError);
+    expect(() => requireSeller(suspendedSeller)).toThrow(ApiError);
   });
 });
 

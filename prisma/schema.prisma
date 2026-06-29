@@ -15,10 +15,20 @@ datasource db {
 // Identity
 // ---------------------------------------------------------------------------
 
+// Privilege tier. BUYER = default member tier (everyone can buy); ADMIN = back-office.
+// Seller/creator is a CAPABILITY (User.isSeller), not a role. The clean rename to
+// {USER, ADMIN} is deferred to a proper Prisma migration (avoids a destructive enum
+// change on the live DB via db push). See docs/IDENTITY-ROLES-DASHBOARDS.md §1.1.
 enum UserRole {
   BUYER
   SELLER
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
 }
 
 enum KycStatus {
@@ -40,6 +50,8 @@ model User {
   locale     String   @default("uz")
   role       UserRole @default(BUYER)
   isSeller   Boolean  @default(false)
+  status     UserStatus @default(ACTIVE)
+  onboardingCompleted Boolean @default(false)
   kycStatus  KycStatus @default(NONE)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

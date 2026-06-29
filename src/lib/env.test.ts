@@ -33,11 +33,17 @@ describe("parseEnv", () => {
     expect(() => parseEnv({ ...base, NEXT_PUBLIC_APP_URL: "not-a-url" })).toThrow();
   });
 
-  it("requires TELEGRAM_BOT_TOKEN in production", () => {
+  it("requires bot token/username/webhook secret in production", () => {
     expect(() => parseEnv({ ...base, NODE_ENV: "production" })).toThrow(/TELEGRAM_BOT_TOKEN/);
-    // ...but passes when provided
+    // ...passes when all production-required fields are present
     expect(() =>
-      parseEnv({ ...base, NODE_ENV: "production", TELEGRAM_BOT_TOKEN: "123:abc" })
+      parseEnv({
+        ...base,
+        NODE_ENV: "production",
+        TELEGRAM_BOT_TOKEN: "123:abc",
+        TELEGRAM_BOT_USERNAME: "aifrilance_bot",
+        TELEGRAM_WEBHOOK_SECRET: "a-sufficiently-long-secret",
+      })
     ).not.toThrow();
   });
 

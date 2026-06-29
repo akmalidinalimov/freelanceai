@@ -16,8 +16,10 @@ const envSchema = z
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     // Runtime bot username (public); used for the bot deep-link login.
     TELEGRAM_BOT_USERNAME: z.string().optional(),
-    // Shared secret for verifying Telegram webhook calls.
-    TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
+    // Shared secret for verifying Telegram webhook calls (>=16 chars when set).
+    TELEGRAM_WEBHOOK_SECRET: z.string().min(16).optional(),
+    // Comma-separated Telegram numeric IDs granted ADMIN on login (allowlist).
+    ADMIN_TELEGRAM_IDS: z.string().optional(),
     NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: z.string().optional(),
     // Field-encryption key (AES-256 = 32 bytes). Required once we encrypt PII (P5/P8).
     DATA_ENC_KEY: z.string().min(32).optional(),
@@ -39,6 +41,23 @@ const envSchema = z
         path: ["APP_ORIGIN"],
         message: "APP_ORIGIN (or NEXT_PUBLIC_APP_URL) is required in production",
       });
+    }
+    // Bot deep-link login needs the username + webhook secret in production.
+    if (env.NODE_ENV === "production") {
+      if (!env.TELEGRAM_BOT_USERNAME) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["TELEGRAM_BOT_USERNAME"],
+          message: "TELEGRAM_BOT_USERNAME is required in production",
+        });
+      }
+      if (!env.TELEGRAM_WEBHOOK_SECRET) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["TELEGRAM_WEBHOOK_SECRET"],
+          message: "TELEGRAM_WEBHOOK_SECRET is required in production",
+        });
+      }
     }
   });
 

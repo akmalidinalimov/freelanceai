@@ -20,8 +20,12 @@ $needed = 'POSTGRES_PASSWORD', 'SESSION_SECRET', 'CLOUDFLARE_TUNNEL_TOKEN', 'TEL
 foreach ($k in $needed) {
   if (-not $dv[$k] -or $dv[$k] -match 'PASTE_') { throw "$k missing/placeholder in .env.deploy.local" }
 }
+# Optional vars: included only if present (e.g. the admin allowlist may be empty).
+$optional = 'ADMIN_TELEGRAM_IDS'
+$lines = @($needed | ForEach-Object { "$_=$($dv[$_])" })
+foreach ($k in $optional) { if ($dv[$k] -and $dv[$k] -notmatch 'PASTE_') { $lines += "$k=$($dv[$k])" } }
 # [string] casts avoid a PowerShell 5.1 ConvertTo-Json quirk that wraps strings as {value,Count}.
-$envStr = [string](($needed | ForEach-Object { "$_=$($dv[$_])" }) -join "`n")
+$envStr = [string]($lines -join "`n")
 $content = [string](Get-Content "$root\deploy\docker-compose.prod.yml" -Raw)
 
 # Call the Hostinger API (replaces the existing 'freelanceai' project)

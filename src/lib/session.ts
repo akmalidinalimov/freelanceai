@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import type { TelegramUser } from "@/lib/telegram";
 import type { User } from "@prisma/client";
+import { parseAdminIds, resolveRole, isDemotion } from "@/lib/roles";
 
 const COOKIE_NAME = "fa_session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -28,15 +29,28 @@ export async function consumeLoginNonce(
   }
 }
 
-/** Create/refresh the User record from a verified Telegram identity. */
+/**
+ * Create/refresh the User from a verified Telegram identity, applying the admin
+ * allowlist: an allowlisted telegramId becomes ADMIN; a previously-admin user no
+ * longer on the list is demoted to BUYER and has all sessions revoked.
+ */
 export async function upsertTelegramUser(tg: TelegramUser): Promise<User> {
-  return prisma.user.upsert({
+  const adminIds = parseAdminIds(process.env.ADMIN_TELEGRAM_IDS);
+  const targetRole = resolveRole(tg.id, adminIds);
+
+  const existing = await prisma.user.findUnique({
+    where: { telegramId: tg.id },
+    select: { role: true },
+  });
+
+  const user = await prisma.user.upsert({
     where: { telegramId: tg.id },
     update: {
       username: tg.username,
       firstName: tg.firstName,
       lastName: tg.lastName,
       photoUrl: tg.photoUrl,
+      role: targetRole,
     },
     create: {
       telegramId: tg.id,
@@ -44,8 +58,18 @@ export async function upsertTelegramUser(tg: TelegramUser): Promise<User> {
       firstName: tg.firstName,
       lastName: tg.lastName,
       photoUrl: tg.photoUrl,
+      role: targetRole,
+      // Admins skip onboarding; everyone else completes it on first use.
+      onboardingCompleted: targetRole === "ADMIN",
     },
   });
+
+  // Demotion (admin removed from the allowlist) revokes existing sessions.
+  if (isDemotion(existing?.role, targetRole)) {
+    await prisma.session.deleteMany({ where: { userId: user.id } });
+  }
+
+  return user;
 }
 
 /** Create a session row + set an httpOnly cookie holding an opaque token. */
@@ -83,6 +107,11 @@ export async function getCurrentUser(): Promise<User | null> {
   if (!session) return null;
 
   if (session.expiresAt.getTime() < Date.now()) {
+    await prisma.session.delete({ where: { id: token } }).catch(() => {});
+    return null;
+  }
+  // Suspended/deleted users are treated as logged out and their session cleared.
+  if (session.user.status !== "ACTIVE") {
     await prisma.session.delete({ where: { id: token } }).catch(() => {});
     return null;
   }
