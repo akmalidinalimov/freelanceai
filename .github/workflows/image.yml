@@ -1,11 +1,8 @@
 name: Build & Push Image
 
+# Manual-only for now: the VPS currently runs the app from source (no registry).
+# Re-enable the push trigger once GHCR publishing is wired up for faster deploys.
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
   workflow_dispatch:
 
 permissions:

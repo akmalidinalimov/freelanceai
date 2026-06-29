@@ -34,9 +34,9 @@ services:
     restart: "no"
 
   app:
-    # Hostinger's deploy only PULLS images (no build step), so use a prebuilt
-    # public image from GHCR (produced by .github/workflows/image.yml).
-    image: ghcr.io/akmalidinalimov/freelanceai:latest
+    # Hostinger's deploy only PULLS images (no build step). Run from a stock node
+    # image that clones the public repo, builds, and starts — no registry needed.
+    image: node:24-alpine
     restart: unless-stopped
     depends_on:
       db:
@@ -53,6 +53,9 @@ services:
       PLATFORM_COMMISSION_PCT: "20"
     expose:
       - "3000"
+    entrypoint: ["sh", "-c"]
+    command:
+      - "apk add --no-cache git openssl && rm -rf /srv/app && git clone --depth 1 -b main https://github.com/akmalidinalimov/freelanceai /srv/app && cd /srv/app && npm ci && npx prisma generate && npm run build && npx next start -H 0.0.0.0 -p 3000"
 
   # Outbound connector to Cloudflare; routes freelanceai.alikhanova.cloud -> app:3000.
   # The public-hostname mapping is configured in the Cloudflare dashboard (remote-managed
