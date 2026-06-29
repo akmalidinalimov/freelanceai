@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { GalleryUpload } from "@/components/gallery-upload";
 
 type Status =
   | "IN_PROGRESS"
@@ -20,6 +21,7 @@ export function OrderActions({ orderId, status, role }: { orderId: string; statu
   const t = useTranslations("Order");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   async function act(action: string, body: Record<string, unknown> = {}) {
@@ -74,7 +76,8 @@ export function OrderActions({ orderId, status, role }: { orderId: string; statu
             placeholder={t("deliverPh")}
             className="min-h-20 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
           />
-          <Button onClick={() => act("deliver", { message })} disabled={busy}>
+          <GalleryUpload value={files} onChange={setFiles} prefix="deliveries" label={t("deliverFiles")} />
+          <Button onClick={() => act("deliver", { message, fileUrls: files })} disabled={busy}>
             {t("deliver")}
           </Button>
         </div>

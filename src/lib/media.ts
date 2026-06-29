@@ -52,7 +52,7 @@ export interface PresignResult {
 
 /** Validate type/size and return a presigned PUT + the eventual public URL. */
 export async function presignUpload(
-  prefix: "gigs" | "portfolio",
+  prefix: "gigs" | "portfolio" | "deliveries",
   contentType: string,
   size: number
 ): Promise<PresignResult> {

@@ -78,6 +78,21 @@ export default async function OrderPage({
             {order.deliveries.map((d) => (
               <li key={d.id} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3 text-sm">
                 {d.message}
+                {d.fileUrls.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {d.fileUrls.map((url, i) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary))] hover:underline"
+                      >
+                        {t("file")} {i + 1}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ul>

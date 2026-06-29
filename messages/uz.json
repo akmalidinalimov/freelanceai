@@ -163,6 +163,8 @@
     "buyer": "Buyurtmachi",
     "deliverTitle": "Ishni topshirish",
     "deliverPh": "Buyurtmachi uchun xabar...",
+    "deliverFiles": "Fayl biriktirish (ixtiyoriy)",
+    "file": "Fayl",
     "deliver": "Topshirish",
     "accept": "Qabul qilish va yakunlash",
     "requestRevision": "Tahrir soʻrash",

@@ -163,6 +163,8 @@
     "buyer": "Buyer",
     "deliverTitle": "Deliver your work",
     "deliverPh": "Add a message for the buyer...",
+    "deliverFiles": "Attach files (optional)",
+    "file": "File",
     "deliver": "Deliver",
     "accept": "Accept & complete",
     "requestRevision": "Request revision",

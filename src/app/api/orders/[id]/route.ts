@@ -15,6 +15,7 @@ const schema = z
   .object({
     action: z.enum(["deliver", "accept", "revision", "cancel", "confirm_payment"]),
     message: z.string().max(2000).optional(),
+    fileUrls: z.array(z.string().url()).max(10).optional(),
   })
   .strict();
 
@@ -33,7 +34,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     switch (body.action) {
       case "deliver":
-        await deliverOrder(id, user, body.message ?? "");
+        await deliverOrder(id, user, body.message ?? "", body.fileUrls ?? []);
         break;
       case "accept":
         await acceptOrder(id, user);

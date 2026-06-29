@@ -11,9 +11,13 @@ const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
 export function GalleryUpload({
   value,
   onChange,
+  prefix = "gigs",
+  label,
 }: {
   value: string[];
   onChange: (urls: string[]) => void;
+  prefix?: "gigs" | "portfolio" | "deliveries";
+  label?: string;
 }) {
   const t = useTranslations("Gig");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +34,7 @@ export function GalleryUpload({
       const r = await fetch("/api/media/presign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prefix: "gigs", contentType: file.type, size: file.size }),
+        body: JSON.stringify({ prefix, contentType: file.type, size: file.size }),
       });
       const j = await r.json();
       if (!j.ok) return setError(t("mediaError"));
@@ -50,7 +54,7 @@ export function GalleryUpload({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">{t("gallery")}</span>
+      <span className="text-sm font-medium">{label ?? t("gallery")}</span>
       <div className="flex flex-wrap gap-2">
         {value.map((url, i) => (
           <div key={url} className="relative h-20 w-28 overflow-hidden rounded-lg border border-[hsl(var(--border))]">
