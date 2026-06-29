@@ -1,7 +1,23 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getPublicProfile } from "@/server/services/profile";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  const data = await getPublicProfile(username).catch(() => null);
+  if (!data) return {};
+  const name = data.user.firstName ?? data.user.name ?? data.user.username ?? "";
+  return {
+    title: name,
+    description: data.profile?.headline ?? `${name} — FreelanceAI`,
+  };
+}
 import { formatUzs } from "@/lib/utils";
 import { Stars } from "@/components/stars";
 

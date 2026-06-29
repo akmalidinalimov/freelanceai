@@ -1,7 +1,28 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getGigBySlug } from "@/server/services/gig";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const gig = await getGigBySlug(slug).catch(() => null);
+  if (!gig) return {};
+  const description = gig.description.slice(0, 160);
+  return {
+    title: gig.title,
+    description,
+    openGraph: {
+      title: gig.title,
+      description,
+      images: gig.coverUrl ? [gig.coverUrl] : [],
+    },
+  };
+}
 import { getGigReviews } from "@/server/services/review";
 import { getCurrentUser } from "@/lib/session";
 import { isGigSaved } from "@/server/services/saved";

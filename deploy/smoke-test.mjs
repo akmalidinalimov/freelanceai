@@ -14,6 +14,8 @@ const BASE = (process.argv[2] ?? "https://freelanceai.aicreator.academy").replac
 const CHECKS = [
   // --- Health / infra ---
   { group: "Infra", name: "health db:up", method: "GET", path: "/api/health", expect: 200, contains: '"db":"up"' },
+  { group: "SEO", name: "sitemap.xml", method: "GET", path: "/sitemap.xml", expect: 200, contains: "/uz/gigs" },
+  { group: "SEO", name: "robots.txt", method: "GET", path: "/robots.txt", expect: 200, contains: "Sitemap" },
 
   // --- Public pages render in all 3 locales (catches i18n / message-catalog breakage) ---
   { group: "i18n", name: "home uz", method: "GET", path: "/uz", expect: 200, contains: "FreelanceAI" },
