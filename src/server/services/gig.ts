@@ -31,6 +31,12 @@ export interface GigFaqItem {
   a: string;
 }
 
+export interface GigExtraInput {
+  title: string;
+  priceUzs: number;
+  deliveryDays?: number;
+}
+
 export interface CreateGigInput {
   title: string;
   description: string;
@@ -40,6 +46,7 @@ export interface CreateGigInput {
   tags?: string[];
   locale?: string;
   faq?: GigFaqItem[];
+  extras?: GigExtraInput[];
   packages: GigPackageInput[];
 }
 
@@ -67,6 +74,17 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       locale: input.locale ?? "uz",
       // New gigs await moderation; admins (and trusted callers) publish immediately.
       status: autoApprove ? "ACTIVE" : "PENDING_REVIEW",
+      extras: {
+        create: (input.extras ?? [])
+          .slice(0, 6)
+          .filter((e) => e.title.trim() && e.priceUzs >= 1000)
+          .map((e, i) => ({
+            title: stripContactInfo(e.title).text.slice(0, 80),
+            priceUzs: Math.round(e.priceUzs),
+            deliveryDays: Math.max(0, Math.min(60, e.deliveryDays ?? 0)),
+            position: i,
+          })),
+      },
       packages: {
         create: input.packages.map((p) => ({
           tier: p.tier,
@@ -214,6 +232,7 @@ export function getGigBySlug(slug: string) {
     where: { slug, status: "ACTIVE", deletedAt: null },
     include: {
       packages: { orderBy: { priceUzs: "asc" } },
+      extras: { orderBy: { position: "asc" } },
       category: true,
       seller: {
         select: {

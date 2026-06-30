@@ -9,6 +9,7 @@ const schema = z
     tier: z.enum(["BASIC", "STANDARD", "PREMIUM"]),
     requirements: z.string().max(3000).optional(),
     requirementFileUrls: z.array(z.string().url()).max(10).optional(),
+    extraIds: z.array(z.string().min(1).max(40)).max(6).optional(),
   })
   .strict();
 
@@ -20,7 +21,8 @@ export const POST = defineHandler({ auth: true, schema }, async ({ user, body })
     body.gigId,
     body.tier,
     body.requirements,
-    body.requirementFileUrls ?? []
+    body.requirementFileUrls ?? [],
+    body.extraIds ?? []
   );
   return ok({ id: order.id });
 });

@@ -25,6 +25,16 @@ const schema = z
       .array(z.object({ q: z.string().min(1).max(200), a: z.string().min(1).max(1000) }))
       .max(10)
       .optional(),
+    extras: z
+      .array(
+        z.object({
+          title: z.string().min(1).max(80),
+          priceUzs: z.number().int().min(1000).max(100_000_000),
+          deliveryDays: z.number().int().min(0).max(60).optional(),
+        })
+      )
+      .max(6)
+      .optional(),
     packages: z.array(packageSchema).min(1).max(3),
   })
   .strict();

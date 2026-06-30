@@ -15,27 +15,47 @@ interface Pkg {
   revisions: number;
 }
 
+interface Extra {
+  id: string;
+  title: string;
+  priceUzs: number;
+  deliveryDays: number;
+}
+
 export function OrderPanel({
   gigId,
   locale,
   viewer,
   packages,
+  extras = [],
 }: {
   gigId: string;
   locale: string;
   viewer: "guest" | "buyer" | "owner";
   packages: Pkg[];
+  extras?: Extra[];
 }) {
   const t = useTranslations("Gig");
   const to = useTranslations("Order");
   const [tier, setTier] = useState<Pkg["tier"]>(packages[0]?.tier ?? "BASIC");
   const [requirements, setRequirements] = useState("");
   const [reqFiles, setReqFiles] = useState<string[]>([]);
+  const [chosenExtras, setChosenExtras] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selected = packages.find((p) => p.tier === tier) ?? packages[0];
   const tierLabel = { BASIC: t("basic"), STANDARD: t("standard"), PREMIUM: t("premium") };
+  const extrasTotal = extras.filter((e) => chosenExtras.has(e.id)).reduce((a, e) => a + e.priceUzs, 0);
+  const total = (selected?.priceUzs ?? 0) + extrasTotal;
+
+  function toggleExtra(id: string) {
+    setChosenExtras((s) => {
+      const next = new Set(s);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   async function placeOrder() {
     if (viewer === "guest") {
@@ -53,6 +73,7 @@ export function OrderPanel({
           tier,
           requirements: requirements.trim() || undefined,
           requirementFileUrls: reqFiles,
+          extraIds: extras.filter((e) => chosenExtras.has(e.id)).map((e) => e.id),
         }),
       });
       const j = await r.json();
@@ -99,6 +120,32 @@ export function OrderPanel({
           <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">
             {selected.deliveryDays} {t("daysDelivery")} · {selected.revisions} {t("revisionsLabel")}
           </p>
+        </div>
+      )}
+
+      {extras.length > 0 && viewer !== "owner" && (
+        <div className="rounded-xl border border-[hsl(var(--border))] p-4">
+          <p className="mb-2 text-sm font-medium">{to("extras")}</p>
+          <div className="space-y-2">
+            {extras.map((e) => (
+              <label key={e.id} className="flex cursor-pointer items-center justify-between gap-2 text-sm">
+                <span className="flex items-center gap-2">
+                  <input type="checkbox" checked={chosenExtras.has(e.id)} onChange={() => toggleExtra(e.id)} />
+                  {e.title}
+                  {e.deliveryDays > 0 && (
+                    <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                      (+{e.deliveryDays} {t("daysDelivery")})
+                    </span>
+                  )}
+                </span>
+                <span className="tabular-nums">+{formatUzs(e.priceUzs)}</span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-between border-t border-[hsl(var(--border))] pt-2 text-sm font-semibold">
+            <span>{to("total")}</span>
+            <span className="tabular-nums">{formatUzs(total)} so&apos;m</span>
+          </div>
         </div>
       )}
 

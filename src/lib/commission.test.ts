@@ -1,11 +1,32 @@
 import { describe, it, expect } from "vitest";
 import {
   computeSplit,
+  orderTotals,
   paymentPostings,
   payoutPostings,
   refundPostings,
   postingsBalance,
 } from "./commission";
+
+describe("order totals with extras", () => {
+  it("adds extras to the base and splits on the combined total", () => {
+    const r = orderTotals(100_000, [{ priceUzs: 20_000, deliveryDays: 1 }, { priceUzs: 30_000 }], 20);
+    expect(r.extrasUzs).toBe(50_000);
+    expect(r.extraDays).toBe(1);
+    expect(r.amountUzs).toBe(150_000);
+    expect(r.commissionUzs).toBe(30_000);
+    expect(r.sellerNetUzs).toBe(120_000);
+  });
+
+  it("with no extras equals a plain split", () => {
+    expect(orderTotals(80_000, [], 20)).toMatchObject({ amountUzs: 80_000, extrasUzs: 0, extraDays: 0 });
+  });
+
+  it("the resulting payment postings still balance to zero", () => {
+    const r = orderTotals(100_000, [{ priceUzs: 50_000 }], 15);
+    expect(postingsBalance(paymentPostings(r.amountUzs, r.commissionUzs))).toBe(0);
+  });
+});
 
 describe("commission split", () => {
   it("splits amount into commission + seller net", () => {

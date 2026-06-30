@@ -29,6 +29,7 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
   const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [faq, setFaq] = useState<{ q: string; a: string }[]>([]);
+  const [extras, setExtras] = useState<{ title: string; priceUzs: string; deliveryDays: string }[]>([]);
   const [pkgs, setPkgs] = useState<Record<Tier, PkgState>>({
     BASIC: { ...emptyPkg },
     STANDARD: { ...emptyPkg },
@@ -81,6 +82,14 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
               .map((f) => ({ q: f.q.trim(), a: f.a.trim() }))
               .filter((f) => f.q && f.a)
               .slice(0, 10) || undefined,
+          extras: extras
+            .map((e) => ({
+              title: e.title.trim(),
+              priceUzs: Number(e.priceUzs),
+              deliveryDays: Number(e.deliveryDays || 0),
+            }))
+            .filter((e) => e.title && e.priceUzs >= 1000)
+            .slice(0, 6),
           packages,
         }),
       });
@@ -195,6 +204,53 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
               className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
             >
               + {t("faqAdd")}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-medium">{t("extras")}</p>
+        <div className="flex flex-col gap-2">
+          {extras.map((e, i) => (
+            <div key={i} className="flex flex-wrap gap-2 rounded-lg border border-[hsl(var(--border))] p-2">
+              <input
+                className={`${field} flex-1`}
+                placeholder={t("extraTitle")}
+                value={e.title}
+                onChange={(ev) => setExtras((arr) => arr.map((x, j) => (j === i ? { ...x, title: ev.target.value } : x)))}
+              />
+              <input
+                className={`${field} w-28`}
+                inputMode="numeric"
+                placeholder={`${t("price")} (so'm)`}
+                value={e.priceUzs}
+                onChange={(ev) => setExtras((arr) => arr.map((x, j) => (j === i ? { ...x, priceUzs: ev.target.value.replace(/\D/g, "") } : x)))}
+              />
+              <input
+                className={`${field} w-24`}
+                inputMode="numeric"
+                placeholder={t("extraDays")}
+                value={e.deliveryDays}
+                onChange={(ev) => setExtras((arr) => arr.map((x, j) => (j === i ? { ...x, deliveryDays: ev.target.value.replace(/\D/g, "") } : x)))}
+              />
+              <button
+                type="button"
+                aria-label={t("faqRemove")}
+                onClick={() => setExtras((arr) => arr.filter((_, j) => j !== i))}
+                className="shrink-0 rounded-md border border-[hsl(var(--border))] px-2 text-sm"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {extras.length < 6 && (
+            <button
+              type="button"
+              onClick={() => setExtras((arr) => [...arr, { title: "", priceUzs: "", deliveryDays: "" }])}
+              className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
+            >
+              + {t("extraAdd")}
             </button>
           )}
         </div>

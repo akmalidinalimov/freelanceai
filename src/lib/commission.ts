@@ -20,6 +20,23 @@ export function computeSplit(amountUzs: number, commissionPct: number): Split {
   return { amountUzs, commissionUzs, sellerNetUzs: amountUzs - commissionUzs };
 }
 
+export interface ExtraLine {
+  priceUzs: number;
+  deliveryDays?: number;
+}
+
+/**
+ * Order totals = base package price + selected add-ons, with the commission split
+ * computed on the combined total. Returns the split plus the extras subtotal and the
+ * extra delivery days. Pure → unit-tested.
+ */
+export function orderTotals(basePriceUzs: number, extras: ExtraLine[], commissionPct: number) {
+  const extrasUzs = extras.reduce((a, e) => a + Math.max(0, Math.round(e.priceUzs)), 0);
+  const extraDays = extras.reduce((a, e) => a + Math.max(0, e.deliveryDays ?? 0), 0);
+  const split = computeSplit(basePriceUzs + extrasUzs, commissionPct);
+  return { ...split, extrasUzs, extraDays };
+}
+
 export interface Posting {
   account: LedgerAccount;
   amountUzs: number;

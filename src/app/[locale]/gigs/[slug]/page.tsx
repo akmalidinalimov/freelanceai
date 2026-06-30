@@ -208,6 +208,12 @@ export default async function GigDetailPage({
             deliveryDays: p.deliveryDays,
             revisions: p.revisions,
           }))}
+          extras={gig.extras.map((e) => ({
+            id: e.id,
+            title: e.title,
+            priceUzs: e.priceUzs,
+            deliveryDays: e.deliveryDays,
+          }))}
         />
       </aside>
     </div>

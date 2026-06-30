@@ -5,7 +5,7 @@ import { orderWhereForUser, assertFound } from "@/lib/authz";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
-import { computeSplit } from "@/lib/commission";
+import { orderTotals } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { notify } from "@/server/services/notification";
 
@@ -14,24 +14,33 @@ function commissionPct(): number {
   return Number.isFinite(n) ? n : 20;
 }
 
-/** Place an order on a gig package. No payment yet → starts IN_PROGRESS. */
+/** Place an order on a gig package (+ optional add-ons). No payment yet → starts IN_PROGRESS. */
 export async function createOrder(
   buyerId: string,
   gigId: string,
   tier: PackageTier,
   requirements?: string,
-  requirementFileUrls: string[] = []
+  requirementFileUrls: string[] = [],
+  extraIds: string[] = []
 ) {
   const gig = await prisma.gig.findFirst({
     where: { id: gigId, status: "ACTIVE" },
-    include: { packages: { where: { tier } } },
+    include: {
+      packages: { where: { tier } },
+      extras: extraIds.length ? { where: { id: { in: extraIds } } } : false,
+    },
   });
   if (!gig) throw Errors.notFound("Gig not found");
   if (gig.sellerId === buyerId) throw Errors.forbidden("You cannot order your own gig");
   const pkg = gig.packages[0];
   if (!pkg) throw Errors.validation({ tier: "Package not available" });
 
-  const { amountUzs, commissionUzs, sellerNetUzs } = computeSplit(pkg.priceUzs, commissionPct());
+  const selectedExtras = gig.extras ?? [];
+  const { amountUzs, commissionUzs, sellerNetUzs, extrasUzs, extraDays } = orderTotals(
+    pkg.priceUzs,
+    selectedExtras.map((e) => ({ priceUzs: e.priceUzs, deliveryDays: e.deliveryDays })),
+    commissionPct()
+  );
   const order = await prisma.order.create({
     data: {
       gigId: gig.id,
@@ -42,11 +51,15 @@ export async function createOrder(
       amountUzs,
       commissionUzs,
       sellerNetUzs,
+      extrasUzs,
+      extrasSnapshot: selectedExtras.length
+        ? selectedExtras.map((e) => ({ title: e.title, priceUzs: e.priceUzs }))
+        : undefined,
       requirements: requirements?.trim() || null,
       requirementFileUrls: requirementFileUrls.slice(0, 10),
       // Awaiting (manual) payment confirmation before work begins.
       status: "PENDING_PAYMENT",
-      dueAt: new Date(Date.now() + pkg.deliveryDays * 24 * 60 * 60 * 1000),
+      dueAt: new Date(Date.now() + (pkg.deliveryDays + extraDays) * 24 * 60 * 60 * 1000),
     },
   });
   await audit({ actorId: buyerId, action: "order.create", entity: "Order", entityId: order.id });

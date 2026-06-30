@@ -248,6 +248,7 @@ model Gig {
   updatedAt   DateTime  @updatedAt
 
   packages GigPackage[]
+  extras   GigExtra[]
   orders   Order[]
   reviews  Review[]
   conversations Conversation[]
@@ -256,6 +257,18 @@ model Gig {
   @@index([sellerId])
   @@index([status])
   @@index([categoryId])
+}
+
+model GigExtra {
+  id           String @id @default(cuid())
+  gigId        String
+  gig          Gig    @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  title        String
+  priceUzs     Int
+  deliveryDays Int    @default(0) // extra days added to delivery
+  position     Int    @default(0)
+
+  @@index([gigId])
 }
 
 model SavedGig {
@@ -319,6 +332,8 @@ model Order {
   amountUzs    Int
   commissionUzs Int        @default(0)
   sellerNetUzs Int         @default(0)
+  extrasUzs    Int         @default(0)
+  extrasSnapshot Json?     // [{ title, priceUzs }] selected add-ons
   requirements String?
   requirementFileUrls String[] @default([])
   status       OrderStatus @default(PENDING_PAYMENT)
