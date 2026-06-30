@@ -3,6 +3,8 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getPublicProfile } from "@/server/services/profile";
+import { getCurrentUser } from "@/lib/session";
+import { ContactSellerButton } from "@/components/contact-seller-button";
 
 export async function generateMetadata({
   params,
@@ -41,6 +43,10 @@ export default async function CreatorProfilePage({
   const avatar = user.image ?? user.photoUrl ?? null;
   const memberYear = new Date(user.createdAt).getFullYear();
 
+  const me = await getCurrentUser().catch(() => null);
+  const viewer = !me ? "guest" : me.id === user.id ? "owner" : "buyer";
+  const contactGigId = gigs[0]?.id;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       {/* Identity card */}
@@ -75,6 +81,11 @@ export default async function CreatorProfilePage({
             {t("memberSince")} {memberYear}
           </p>
           {profile?.headline && <p className="mt-3 font-medium">{profile.headline}</p>}
+          {contactGigId && viewer !== "owner" && (
+            <div className="mt-3">
+              <ContactSellerButton gigId={contactGigId} locale={locale} viewer={viewer} />
+            </div>
+          )}
         </div>
       </div>
 

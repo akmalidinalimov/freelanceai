@@ -76,7 +76,7 @@ export function OrderActions({ orderId, status, role }: { orderId: string; statu
             placeholder={t("deliverPh")}
             className="min-h-20 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
           />
-          <GalleryUpload value={files} onChange={setFiles} prefix="deliveries" label={t("deliverFiles")} />
+          <GalleryUpload value={files} onChange={setFiles} prefix="deliveries" label={t("deliverFiles")} video />
           <Button onClick={() => act("deliver", { message, fileUrls: files })} disabled={busy}>
             {t("deliver")}
           </Button>

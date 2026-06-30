@@ -13,6 +13,12 @@ export async function toggleSaved(userId: string, gigId: string): Promise<boolea
   return true;
 }
 
+/** Set of gig ids the user has saved — for marking cards in a list. */
+export async function listSavedGigIds(userId: string): Promise<Set<string>> {
+  const rows = await prisma.savedGig.findMany({ where: { userId }, select: { gigId: true } });
+  return new Set(rows.map((r) => r.gigId));
+}
+
 export async function isGigSaved(userId: string, gigId: string): Promise<boolean> {
   const e = await prisma.savedGig.findUnique({ where: { userId_gigId: { userId, gigId } } });
   return Boolean(e);

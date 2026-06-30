@@ -2,7 +2,10 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { listPublicGigs, type GigSort } from "@/server/services/gig";
+import { getCurrentUser } from "@/lib/session";
+import { listSavedGigIds } from "@/server/services/saved";
 import { formatUzs } from "@/lib/utils";
+import { SaveHeart } from "@/components/save-heart";
 import type { Locale } from "@/i18n/routing";
 
 export default async function GigsPage({
@@ -39,6 +42,9 @@ export default async function GigsPage({
     maxUzs: Number.isFinite(maxUzs) ? maxUzs : undefined,
     sort,
   });
+
+  const me = await getCurrentUser().catch(() => null);
+  const savedSet = me ? await listSavedGigIds(me.id) : new Set<string>();
 
   const field =
     "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
@@ -108,8 +114,9 @@ export default async function GigsPage({
               <Link
                 key={g.id}
                 href={`/gigs/${g.slug}`}
-                className="flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-colors hover:border-[hsl(var(--primary))]"
+                className="relative flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-colors hover:border-[hsl(var(--primary))]"
               >
+                <SaveHeart gigId={g.id} locale={locale} initialSaved={savedSet.has(g.id)} isGuest={!me} />
                 <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-2xl font-bold text-[hsl(var(--primary))]">
                   {g.coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
