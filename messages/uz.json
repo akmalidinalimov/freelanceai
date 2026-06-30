@@ -279,6 +279,8 @@
     "requirementsPh": "Nima kerakligini yozing (ixtiyoriy)...",
     "noPaymentYet": "Buyurtmadan soʻng toʻlov jamoamiz tomonidan qoʻlda tasdiqlanadi.",
     "awaitingPayment": "Toʻlov tasdiqlanishi kutilmoqda — tasdiqlangach, ish boshlanadi.",
+    "payTitle": "Toʻlovni amalga oshiring",
+    "payNow": "Hozir toʻlash",
     "confirmPaymentTitle": "Toʻlov",
     "confirmPayment": "Toʻlov qabul qilindi",
     "error": "Xatolik yuz berdi.",

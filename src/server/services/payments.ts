@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { User } from "@prisma/client";
+import type { User, $Enums, Prisma } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
@@ -8,11 +8,65 @@ import { notify } from "@/server/services/notification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
 
+type OrderRow = { id: string; sellerId: string; amountUzs: number; commissionUzs: number; discountUzs: number };
+
+/**
+ * Post a balanced payment-in settlement inside a transaction: a SUCCEEDED Transaction
+ * (idempotency-keyed so a retry/double-click can't double-post), the double-entry
+ * ledger, and the order moving PENDING_PAYMENT → IN_PROGRESS. Returns false if it was
+ * already settled. Shared by the manual (admin) flow and the PSP webhooks.
+ */
+async function postOrderPaymentTx(
+  tx: Prisma.TransactionClient,
+  order: OrderRow,
+  provider: $Enums.PaymentProvider,
+  externalRef?: string
+): Promise<boolean> {
+  const idempotencyKey = `order:${order.id}:payment-in`;
+  const existing = await tx.transaction.findUnique({ where: { idempotencyKey } });
+  if (existing) return false; // already settled — no double post
+
+  await tx.transaction.create({
+    data: {
+      orderId: order.id,
+      provider,
+      type: "PAYMENT_IN",
+      status: "SUCCEEDED",
+      // What the buyer actually pays (net of any platform-funded discount).
+      amountUzs: order.amountUzs - order.discountUzs,
+      idempotencyKey,
+      rawPayload: externalRef ? { externalRef } : undefined,
+    },
+  });
+
+  const postings =
+    order.discountUzs > 0
+      ? discountedPaymentPostings(order.amountUzs, order.commissionUzs, order.discountUzs)
+      : paymentPostings(order.amountUzs, order.commissionUzs);
+  await tx.ledgerEntry.createMany({
+    data: postings.map((p) => ({
+      orderId: order.id,
+      account: p.account,
+      amountUzs: p.amountUzs,
+      userId: p.account === "SELLER_PAYABLE" ? order.sellerId : null,
+      memo: `${provider} payment for order ${order.id}`,
+    })),
+  });
+
+  await tx.order.update({ where: { id: order.id }, data: { status: "IN_PROGRESS" } });
+  return true;
+}
+
+async function notifySellerPaid(orderId: string, sellerId: string) {
+  await notify(sellerId, "order.paid", "Toʻlov tasdiqlandi", {
+    body: "Buyurtma toʻlovi tasdiqlandi — ishni boshlang.",
+    link: `/orders/${orderId}`,
+  });
+}
+
 /**
  * Confirm that payment was received for an order (manual/facilitator settlement,
- * admin-only). Posts the balanced double-entry ledger + a Transaction record and
- * moves the order into work (PENDING_PAYMENT → PAID → IN_PROGRESS). Idempotent via
- * the Transaction.idempotencyKey, so a double-click can't double-post the ledger.
+ * admin-only). Moves the order into work and posts the ledger via the shared path.
  */
 export async function confirmOrderPayment(orderId: string, actor: User) {
   if (actor.role !== "ADMIN") throw Errors.forbidden("Only an admin can confirm payment");
@@ -23,46 +77,44 @@ export async function confirmOrderPayment(orderId: string, actor: User) {
     throw Errors.conflict(`Order is not awaiting payment (status: ${order.status})`);
   }
 
-  const idempotencyKey = `order:${orderId}:payment-in`;
-
+  let posted = false;
   await prisma.$transaction(async (tx) => {
-    const existing = await tx.transaction.findUnique({ where: { idempotencyKey } });
-    if (existing) return; // already settled — no double post
-
-    await tx.transaction.create({
-      data: {
-        orderId,
-        provider: "MANUAL",
-        type: "PAYMENT_IN",
-        status: "SUCCEEDED",
-        // What the buyer actually pays (net of any platform-funded discount).
-        amountUzs: order.amountUzs - order.discountUzs,
-        idempotencyKey,
-      },
-    });
-
-    const postings =
-      order.discountUzs > 0
-        ? discountedPaymentPostings(order.amountUzs, order.commissionUzs, order.discountUzs)
-        : paymentPostings(order.amountUzs, order.commissionUzs);
-    await tx.ledgerEntry.createMany({
-      data: postings.map((p) => ({
-        orderId,
-        account: p.account,
-        amountUzs: p.amountUzs,
-        userId: p.account === "SELLER_PAYABLE" ? order.sellerId : null,
-        memo: `Manual payment for order ${orderId}`,
-      })),
-    });
-
-    await tx.order.update({ where: { id: orderId }, data: { status: "IN_PROGRESS" } });
+    posted = await postOrderPaymentTx(tx, order, "MANUAL");
   });
 
   await audit({ actorId: actor.id, action: "order.payment.confirm", entity: "Order", entityId: orderId });
-  await notify(order.sellerId, "order.paid", "Toʻlov tasdiqlandi", {
-    body: "Buyurtma toʻlovi tasdiqlandi — ishni boshlang.",
-    link: `/orders/${orderId}`,
+  if (posted) await notifySellerPaid(orderId, order.sellerId);
+}
+
+/**
+ * Settle an order from a PSP webhook (Payme/Click) once the provider confirms the
+ * payment. Idempotent: a no-op if the order is no longer awaiting payment or was
+ * already settled. `externalRef` is the provider's transaction id (audit only).
+ */
+export async function settleOrderByProvider(
+  orderId: string,
+  provider: $Enums.PaymentProvider,
+  externalRef?: string
+) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw Errors.notFound("Order not found");
+  if (order.status !== "PENDING_PAYMENT") return; // already settled / closed — idempotent
+
+  let posted = false;
+  await prisma.$transaction(async (tx) => {
+    posted = await postOrderPaymentTx(tx, order, provider, externalRef);
   });
+
+  if (posted) {
+    await audit({
+      actorId: order.sellerId,
+      action: "order.payment.webhook",
+      entity: "Order",
+      entityId: orderId,
+      metadata: { provider, externalRef: externalRef ?? null },
+    });
+    await notifySellerPaid(orderId, order.sellerId);
+  }
 }
 
 /** Total successful tips received by a seller (across all their orders). */

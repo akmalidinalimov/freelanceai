@@ -17,7 +17,17 @@ type Status =
 type Role = "buyer" | "seller" | "admin";
 
 /** Role + status-aware order actions. The server enforces all transitions. */
-export function OrderActions({ orderId, status, role }: { orderId: string; status: Status; role: Role }) {
+export function OrderActions({
+  orderId,
+  status,
+  role,
+  checkoutUrl,
+}: {
+  orderId: string;
+  status: Status;
+  role: Role;
+  checkoutUrl?: string | null;
+}) {
   const t = useTranslations("Order");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -60,6 +70,15 @@ export function OrderActions({ orderId, status, role }: { orderId: string; statu
             <Button onClick={() => act("confirm_payment")} disabled={busy} variant="accent">
               {t("confirmPayment")}
             </Button>
+          </div>
+        ) : checkoutUrl ? (
+          <div className="space-y-2 rounded-xl border border-[hsl(var(--border))] p-4">
+            <p className="text-sm font-medium">{t("payTitle")}</p>
+            <a href={checkoutUrl}>
+              <Button variant="accent" className="w-full">
+                {t("payNow")}
+              </Button>
+            </a>
           </div>
         ) : (
           <p className="rounded-xl border border-[hsl(var(--border))] p-4 text-sm text-[hsl(var(--muted-foreground))]">

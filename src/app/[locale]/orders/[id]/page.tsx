@@ -7,6 +7,7 @@ import { getOrderReview, getOrderBuyerReview, getBuyerRating } from "@/server/se
 import { getOrderConversationId, listConversationMessages } from "@/server/services/message";
 import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
+import { activeProvider } from "@/lib/payments";
 import { DisputeBox } from "@/components/dispute-box";
 import { CancellationBox } from "@/components/cancellation-box";
 import { getOrderCancellation } from "@/server/services/cancellation";
@@ -191,7 +192,19 @@ export default async function OrderPage({
         <MessageThread conversationId={conversationId} currentUserId={user.id} initial={initialMessages} />
       </div>
 
-      <OrderActions orderId={order.id} status={order.status} role={role} />
+      <OrderActions
+        orderId={order.id}
+        status={order.status}
+        role={role}
+        checkoutUrl={
+          role === "buyer" && order.status === "PENDING_PAYMENT"
+            ? (activeProvider()?.checkoutUrl({
+                id: order.id,
+                amountUzs: order.amountUzs - order.discountUzs,
+              }) ?? null)
+            : null
+        }
+      />
 
       <div className="mt-4">
         <DisputeBox orderId={order.id} status={order.status} />

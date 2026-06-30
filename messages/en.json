@@ -279,6 +279,8 @@
     "requirementsPh": "Describe what you need (optional)...",
     "noPaymentYet": "After you order, our team arranges and confirms payment manually.",
     "awaitingPayment": "Awaiting payment confirmation — once our team confirms it, work begins.",
+    "payTitle": "Complete payment",
+    "payNow": "Pay now",
     "confirmPaymentTitle": "Payment",
     "confirmPayment": "Confirm payment received",
     "error": "Something went wrong.",
