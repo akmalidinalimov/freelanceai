@@ -49,6 +49,14 @@ body {
   border-radius: 2px;
 }
 
+/* Printing (receipts): drop the site chrome for a clean page. */
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+}
+
 /* Respect users who prefer reduced motion. */
 @media (prefers-reduced-motion: reduce) {
   *,

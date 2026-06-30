@@ -55,6 +55,14 @@
     "notFoundDesc": "The page you're looking for doesn't exist.",
     "goHome": "Go home"
   },
+  "Receipt": {
+    "title": "Receipt",
+    "print": "Print",
+    "discount": "Discount",
+    "total": "Total paid",
+    "status": "Status",
+    "backToOrder": "Back to order"
+  },
   "Cancel": {
     "title": "Cancellation request",
     "request": "Request cancellation",
@@ -264,6 +272,7 @@
     "tipThanks": "Thanks! Your tip was sent.",
     "couponPh": "Promo code (optional)",
     "discount": "Discount",
+    "receipt": "Receipt",
     "ownGig": "This is your own gig.",
     "requirementsPh": "Describe what you need (optional)...",
     "noPaymentYet": "After you order, our team arranges and confirms payment manually.",

@@ -55,6 +55,14 @@
     "notFoundDesc": "Siz qidirayotgan sahifa mavjud emas.",
     "goHome": "Bosh sahifaga"
   },
+  "Receipt": {
+    "title": "Kvitansiya",
+    "print": "Chop etish",
+    "discount": "Chegirma",
+    "total": "Jami toʻlangan",
+    "status": "Holat",
+    "backToOrder": "Buyurtmaga qaytish"
+  },
   "Cancel": {
     "title": "Bekor qilish soʻrovi",
     "request": "Bekor qilishni soʻrash",
@@ -264,6 +272,7 @@
     "tipThanks": "Rahmat! Choychaqa yuborildi.",
     "couponPh": "Promo-kod (ixtiyoriy)",
     "discount": "Chegirma",
+    "receipt": "Kvitansiya",
     "ownGig": "Bu sizning xizmatingiz.",
     "requirementsPh": "Nima kerakligini yozing (ixtiyoriy)...",
     "noPaymentYet": "Buyurtmadan soʻng toʻlov jamoamiz tomonidan qoʻlda tasdiqlanadi.",

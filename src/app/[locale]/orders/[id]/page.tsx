@@ -57,9 +57,17 @@ export default async function OrderPage({
           </Link>
           <h1 className="text-2xl font-bold">{t("order")} #{order.id.slice(-6)}</h1>
         </div>
-        <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-sm font-medium">
-          {t(`status.${order.status}`)}
-        </span>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/orders/${order.id}/receipt`}
+            className="text-sm text-[hsl(var(--primary))] hover:underline"
+          >
+            {t("receipt")}
+          </Link>
+          <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-sm font-medium">
+            {t(`status.${order.status}`)}
+          </span>
+        </div>
       </div>
 
       {!["CANCELLED", "DISPUTED"].includes(order.status) && (
