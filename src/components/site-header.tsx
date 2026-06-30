@@ -57,7 +57,9 @@ export async function SiteHeader() {
               )}
               <form action="/api/auth/logout" method="post">
                 <Button size="sm" variant="ghost" type="submit">
-                  {user.firstName ?? user.username ?? "✕"}
+                  <span className="inline-block max-w-[6rem] truncate align-bottom">
+                    {user.firstName ?? user.username ?? "✕"}
+                  </span>
                 </Button>
               </form>
             </>

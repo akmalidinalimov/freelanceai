@@ -40,13 +40,25 @@ export default async function LocaleLayout({
   // (without this, next-intl only forwards namespaces accessed by server components
   // on the page — e.g. OrderPanel's "Order" namespace would be missing on the gig page).
   const messages = await getMessages();
+  const skip =
+    ({ uz: "Asosiy kontentga oʻtish", ru: "Перейти к содержимому", en: "Skip to content" } as Record<string, string>)[
+      locale
+    ] ?? "Skip to content";
 
   return (
     <html lang={locale}>
       <body className="flex min-h-screen flex-col">
         <NextIntlClientProvider messages={messages}>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[hsl(var(--primary))] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-[hsl(var(--primary-foreground))]"
+          >
+            {skip}
+          </a>
           <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <main id="main" className="flex-1">
+            {children}
+          </main>
           <SiteFooter />
         </NextIntlClientProvider>
       </body>
