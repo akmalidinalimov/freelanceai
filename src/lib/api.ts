@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { randomBytes } from "crypto";
+import { logger } from "./logger";
 
 /**
  * Uniform API result envelope + error model. Pure (no server-only / DB imports) so it
@@ -87,8 +89,16 @@ export function errorResponse(err: unknown): NextResponse {
       { status: err.status }
     );
   }
+  // Unhandled: log with a correlation id (full detail server-side) and return it to the
+  // client so support can trace the exact event — the user-facing message stays generic.
+  const correlationId = randomBytes(6).toString("hex");
+  logger.error("unhandled_error", {
+    correlationId,
+    error: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack : undefined,
+  });
   return NextResponse.json(
-    { ok: false, error: { code: "INTERNAL", message: "Internal error" } } satisfies ApiResult<never>,
+    { ok: false, error: { code: "INTERNAL", message: "Internal error", correlationId } },
     { status: 500 }
   );
 }
