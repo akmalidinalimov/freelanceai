@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
-import { paymentPostings, payoutPostings } from "@/lib/commission";
+import { paymentPostings, payoutPostings, tipPostings } from "@/lib/commission";
 import { notify } from "@/server/services/notification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -60,6 +60,46 @@ export async function confirmOrderPayment(orderId: string, actor: User) {
   });
 }
 
+/** Total successful tips received by a seller (across all their orders). */
+async function sellerTipsTotal(sellerId: string): Promise<number> {
+  const tips = await prisma.transaction.findMany({
+    where: { type: "TIP", status: "SUCCEEDED", order: { sellerId } },
+    select: { amountUzs: true },
+  });
+  return tips.reduce((a, t) => a + t.amountUzs, 0);
+}
+
+/** Buyer tips the seller on a COMPLETED order — fully credited to the seller (no commission). */
+export async function tipOrder(orderId: string, buyer: User, amountUzs: number) {
+  if (!Number.isInteger(amountUzs) || amountUzs < 1000 || amountUzs > 10_000_000) {
+    throw Errors.validation({ amountUzs: "Invalid tip amount" });
+  }
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw Errors.notFound("Order not found");
+  if (order.buyerId !== buyer.id) throw Errors.forbidden();
+  if (order.status !== "COMPLETED") throw Errors.conflict("You can tip only after completion");
+
+  await prisma.$transaction(async (tx) => {
+    await tx.transaction.create({
+      data: { orderId, provider: "MANUAL", type: "TIP", status: "SUCCEEDED", amountUzs },
+    });
+    await tx.ledgerEntry.createMany({
+      data: tipPostings(amountUzs).map((p) => ({
+        orderId,
+        account: p.account,
+        amountUzs: p.amountUzs,
+        userId: p.account === "SELLER_PAYABLE" ? order.sellerId : null,
+        memo: `Tip for order ${orderId}`,
+      })),
+    });
+  });
+  await audit({ actorId: buyer.id, action: "order.tip", entity: "Order", entityId: orderId });
+  await notify(order.sellerId, "order.tip", "Choychaqa oldingiz", {
+    body: "Buyurtmachi sizga choychaqa qoldirdi.",
+    link: `/orders/${orderId}`,
+  });
+}
+
 export interface SellerEarnings {
   heldUzs: number; // in active orders, not yet releasable
   availableUzs: number; // completed and not yet paid out
@@ -81,15 +121,16 @@ export async function getSellerEarnings(sellerId: string): Promise<SellerEarning
     else if (ACTIVE.has(o.status)) heldUzs += o.sellerNetUzs;
   }
 
-  const paidOut = await prisma.payoutRequest.aggregate({
-    where: { sellerId, status: "PAID" },
-    _sum: { amountUzs: true },
-  });
+  const [paidOut, tips] = await Promise.all([
+    prisma.payoutRequest.aggregate({ where: { sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
+    sellerTipsTotal(sellerId),
+  ]);
 
+  const lifetimeWithTips = lifetimeUzs + tips;
   return {
     heldUzs,
-    lifetimeUzs,
-    availableUzs: lifetimeUzs - (paidOut._sum.amountUzs ?? 0),
+    lifetimeUzs: lifetimeWithTips,
+    availableUzs: lifetimeWithTips - (paidOut._sum.amountUzs ?? 0),
   };
 }
 
@@ -123,15 +164,23 @@ export interface SellerBalanceRow {
 
 /** Sellers with a positive withdrawable balance (completed earnings minus payouts). */
 export async function listSellerBalances(): Promise<SellerBalanceRow[]> {
-  const [completed, payouts] = await Promise.all([
+  const [completed, payouts, tipTxns] = await Promise.all([
     prisma.order.groupBy({ by: ["sellerId"], where: { status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
     prisma.payoutRequest.groupBy({ by: ["sellerId"], where: { status: "PAID" }, _sum: { amountUzs: true } }),
+    prisma.transaction.findMany({
+      where: { type: "TIP", status: "SUCCEEDED" },
+      select: { amountUzs: true, order: { select: { sellerId: true } } },
+    }),
   ]);
   const paidMap = new Map(payouts.map((p) => [p.sellerId, p._sum.amountUzs ?? 0]));
+  const tipMap = new Map<string, number>();
+  for (const t of tipTxns) {
+    if (t.order) tipMap.set(t.order.sellerId, (tipMap.get(t.order.sellerId) ?? 0) + t.amountUzs);
+  }
 
   const rows = completed
     .map((c) => {
-      const lifetimeUzs = c._sum.sellerNetUzs ?? 0;
+      const lifetimeUzs = (c._sum.sellerNetUzs ?? 0) + (tipMap.get(c.sellerId) ?? 0);
       const paidUzs = paidMap.get(c.sellerId) ?? 0;
       return { sellerId: c.sellerId, lifetimeUzs, paidUzs, availableUzs: lifetimeUzs - paidUzs };
     })

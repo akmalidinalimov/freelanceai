@@ -11,6 +11,7 @@ import { DisputeBox } from "@/components/dispute-box";
 import { ReviewForm } from "@/components/review-form";
 import { Stars } from "@/components/stars";
 import { MessageThread } from "@/components/message-thread";
+import { TipButton } from "@/components/tip-button";
 
 export default async function OrderPage({
   params,
@@ -91,6 +92,11 @@ export default async function OrderPage({
           <p className="mt-1 text-2xl font-bold tabular-nums">
             {formatUzs(order.amountUzs)} <span className="text-base font-normal">so&apos;m</span>
           </p>
+          {order.extrasUzs > 0 && (
+            <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+              {t("extras")}: +{formatUzs(order.extrasUzs)} so&apos;m
+            </p>
+          )}
           <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
             {role === "buyer" ? t("seller") : t("buyer")}: {cpName}
           </p>
@@ -163,6 +169,11 @@ export default async function OrderPage({
           ) : role === "buyer" ? (
             <ReviewForm orderId={order.id} />
           ) : null}
+          {role === "buyer" && (
+            <div className="mt-4">
+              <TipButton orderId={order.id} />
+            </div>
+          )}
         </div>
       )}
     </div>

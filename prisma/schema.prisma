@@ -439,6 +439,7 @@ enum TransactionType {
   PAYMENT_IN
   REFUND
   PAYOUT
+  TIP
 }
 
 enum TransactionStatus {

@@ -60,6 +60,14 @@ export function refundPostings(amountUzs: number, commissionUzs: number): Postin
   }));
 }
 
+/** Balanced postings for a buyer tip (no commission — the seller keeps it all). */
+export function tipPostings(amountUzs: number): Posting[] {
+  return [
+    { account: "CLIENT_FUNDS", amountUzs }, // +A received from client
+    { account: "SELLER_PAYABLE", amountUzs: -amountUzs }, // fully owed to the seller
+  ];
+}
+
 /** Balanced postings for paying a seller out. */
 export function payoutPostings(amountUzs: number): Posting[] {
   return [

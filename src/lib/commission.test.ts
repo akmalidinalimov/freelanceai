@@ -5,8 +5,18 @@ import {
   paymentPostings,
   payoutPostings,
   refundPostings,
+  tipPostings,
   postingsBalance,
 } from "./commission";
+
+describe("tip postings", () => {
+  it("credit the seller in full with no commission, balanced to zero", () => {
+    const p = tipPostings(25_000);
+    expect(postingsBalance(p)).toBe(0);
+    expect(p.find((x) => x.account === "SELLER_PAYABLE")?.amountUzs).toBe(-25_000);
+    expect(p.find((x) => x.account === "PLATFORM_REVENUE")).toBeUndefined();
+  });
+});
 
 describe("order totals with extras", () => {
   it("adds extras to the base and splits on the combined total", () => {
