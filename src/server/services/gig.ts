@@ -129,21 +129,39 @@ export async function reportGig(gigId: string, reporter: GigActor) {
   await audit({ actorId: reporter.id, action: "gig.report", entity: "Gig", entityId: gigId });
 }
 
+/** Fuzzy (typo-tolerant) text match via pg_trgm; falls back to ILIKE if trigram is unavailable. */
+async function fuzzyTextWhere(q: string): Promise<Prisma.GigWhereInput> {
+  const ilike: Prisma.GigWhereInput = {
+    OR: [
+      { title: { contains: q, mode: "insensitive" } },
+      { description: { contains: q, mode: "insensitive" } },
+      { tags: { has: q.toLowerCase() } },
+    ],
+  };
+  try {
+    const like = `%${q}%`;
+    const rows = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "Gig"
+      WHERE status = 'ACTIVE' AND "deletedAt" IS NULL
+        AND (title % ${q} OR description % ${q}
+             OR title ILIKE ${like} OR description ILIKE ${like}
+             OR ${q.toLowerCase()} = ANY(tags))
+      ORDER BY GREATEST(similarity(title, ${q}), similarity(description, ${q})) DESC
+      LIMIT 200`;
+    return { id: { in: rows.map((r) => r.id) } };
+  } catch {
+    return ilike;
+  }
+}
+
 export async function listPublicGigs(opts: GigFilters = {}) {
   const q = opts.q?.trim();
+  const textWhere = q ? await fuzzyTextWhere(q) : {};
   const where: Prisma.GigWhereInput = {
     status: "ACTIVE",
     deletedAt: null,
     ...(opts.categorySlug ? { category: { slug: opts.categorySlug } } : {}),
-    ...(q
-      ? {
-          OR: [
-            { title: { contains: q, mode: "insensitive" } },
-            { description: { contains: q, mode: "insensitive" } },
-            { tags: { has: q.toLowerCase() } },
-          ],
-        }
-      : {}),
+    ...textWhere,
     ...(opts.minUzs != null || opts.maxUzs != null
       ? {
           packages: {
