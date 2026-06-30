@@ -33,8 +33,8 @@ test("drafts: seller saves a draft (not public) then publishes it", async ({ bro
   await seller.goto(`/uz/gigs/${slug}`);
   await expect(seller.getByText("Sahifa topilmadi")).toBeVisible();
 
-  // It shows on the seller dashboard with a Publish action.
-  await seller.goto("/uz/dashboard");
+  // It shows on the seller dashboard (gig list) with a Publish action.
+  await seller.goto("/uz/dashboard/seller");
   await expect(seller.getByText(title)).toBeVisible();
 
   // Publishing a draft sends it to moderation (PENDING_REVIEW) — the API call succeeds.
@@ -60,8 +60,8 @@ test("duplication: seller duplicates a gig into a new draft", async ({ browser }
   });
   expect(res.ok(), `duplicate -> ${res.status()}`).toBeTruthy();
 
-  // The clone appears on the dashboard with a "(copy)" suffix on the title.
-  await seller.goto("/uz/dashboard");
+  // The clone appears on the seller dashboard (gig list) with a "(copy)" suffix.
+  await seller.goto("/uz/dashboard/seller");
   await expect(seller.getByText(/\(copy\)/).first()).toBeVisible();
 
   await ctx.close();
