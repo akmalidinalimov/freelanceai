@@ -94,9 +94,24 @@ model User {
   savedSearches  SavedSearch[]
   referredBy     User?   @relation("Referrals", fields: [referredById], references: [id])
   referrals      User[]  @relation("Referrals")
+  following      Follow[] @relation("Following")
+  followers      Follow[] @relation("Followers")
 
   @@index([role])
   @@index([referredById])
+}
+
+// A buyer following a seller/creator → notified when the seller publishes a new gig.
+model Follow {
+  id         String   @id @default(cuid())
+  followerId String
+  follower   User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  sellerId   String
+  seller     User     @relation("Followers", fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([followerId, sellerId])
+  @@index([sellerId])
 }
 
 // A buyer's saved search; a cron job notifies them when new matching gigs appear.

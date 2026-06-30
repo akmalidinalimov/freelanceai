@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { stripContactInfo } from "@/lib/sanitize";
 import { Errors } from "@/lib/api";
 import { gigEditWhereForUser } from "@/lib/authz";
+import { notifyFollowersOfNewGig } from "@/server/services/follow";
 
 export type GigSort = "newest" | "price_asc" | "price_desc" | "popular";
 export interface GigFilters {
@@ -235,6 +236,11 @@ async function moderateGig(gigId: string, admin: GigActor, status: "ACTIVE" | "R
   const res = await prisma.gig.updateMany({ where: { id: gigId, deletedAt: null }, data: { status } });
   if (res.count === 0) throw Errors.notFound("Gig not found");
   await audit({ actorId: admin.id, action, entity: "Gig", entityId: gigId });
+  // A newly-approved gig is now public — let the seller's followers know (best-effort).
+  if (status === "ACTIVE") {
+    const gig = await prisma.gig.findUnique({ where: { id: gigId }, select: { sellerId: true, title: true, slug: true } });
+    if (gig) await notifyFollowersOfNewGig(gig.sellerId, gig.title, gig.slug).catch(() => {});
+  }
 }
 
 export const approveGig = (gigId: string, admin: GigActor) =>

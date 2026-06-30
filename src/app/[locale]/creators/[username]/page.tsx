@@ -3,8 +3,10 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getPublicProfile } from "@/server/services/profile";
+import { isFollowing } from "@/server/services/follow";
 import { getCurrentUser } from "@/lib/session";
 import { ContactSellerButton } from "@/components/contact-seller-button";
+import { FollowButton } from "@/components/follow-button";
 import { VerifiedBadge } from "@/components/verified-badge";
 
 export async function generateMetadata({
@@ -47,6 +49,7 @@ export default async function CreatorProfilePage({
   const me = await getCurrentUser().catch(() => null);
   const viewer = !me ? "guest" : me.id === user.id ? "owner" : "buyer";
   const contactGigId = gigs[0]?.id;
+  const following = me && viewer === "buyer" ? await isFollowing(me.id, user.id) : false;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -69,6 +72,7 @@ export default async function CreatorProfilePage({
               </span>
             )}
             {user.kycStatus === "VERIFIED" && <VerifiedBadge label={t("verified")} />}
+            {viewer === "buyer" && <FollowButton sellerId={user.id} initialFollowing={following} />}
           </div>
           {profile && profile.ratingCount > 0 ? (
             <div className="mt-1 flex items-center gap-2 text-sm">

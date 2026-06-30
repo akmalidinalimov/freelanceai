@@ -83,3 +83,18 @@ test("seller payout request: complete an order, seller requests, admin fulfils",
   await adminCtx.close();
   await sellerCtx.close();
 });
+
+test("follow: a buyer can follow and unfollow a creator", async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const buyer = await ctx.newPage();
+  await loginAs(buyer, "e2e_buyer");
+  await buyer.goto("/uz/creators/e2e_seller");
+
+  await buyer.getByRole("button", { name: "Kuzatish" }).click();
+  await expect(buyer.getByRole("button", { name: "Kuzatilmoqda" })).toBeVisible();
+
+  await buyer.getByRole("button", { name: "Kuzatilmoqda" }).click();
+  await expect(buyer.getByRole("button", { name: "Kuzatish" })).toBeVisible();
+
+  await ctx.close();
+});

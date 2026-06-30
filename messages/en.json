@@ -386,6 +386,8 @@
     "services": "Services",
     "memberSince": "On the platform since",
     "verified": "Verified",
+    "follow": "Follow",
+    "following": "Following",
     "noReviews": "No reviews yet",
     "noGigs": "No active services yet.",
     "editTitle": "Edit your profile",
