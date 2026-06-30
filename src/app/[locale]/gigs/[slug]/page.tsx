@@ -160,12 +160,13 @@ export default async function GigDetailPage({
         {gig.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-2">
             {gig.tags.map((tag) => (
-              <span
+              <Link
                 key={tag}
-                className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))]"
+                href={`/gigs?q=${encodeURIComponent(tag)}`}
+                className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--primary))]/15 hover:text-[hsl(var(--primary))]"
               >
                 {tag}
-              </span>
+              </Link>
             ))}
           </div>
         )}

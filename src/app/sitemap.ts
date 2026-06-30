@@ -19,6 +19,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .findMany({ select: { slug: true }, take: 100 })
     .catch(() => [] as { slug: string }[]);
 
+  // Creators with a public username and at least one active gig.
+  const creators = await prisma.user
+    .findMany({
+      where: { username: { not: null }, gigs: { some: { status: "ACTIVE", deletedAt: null } } },
+      select: { username: true, updatedAt: true },
+      take: 1000,
+    })
+    .catch(() => [] as { username: string | null; updatedAt: Date }[]);
+
   const entries: MetadataRoute.Sitemap = [];
   for (const loc of LOCALES) {
     entries.push({ url: `${base}/${loc}`, changeFrequency: "weekly", priority: 1 });
@@ -36,6 +45,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: g.updatedAt,
         changeFrequency: "weekly",
         priority: 0.6,
+      });
+    }
+    for (const u of creators) {
+      if (!u.username) continue;
+      entries.push({
+        url: `${base}/${loc}/creators/${u.username}`,
+        lastModified: u.updatedAt,
+        changeFrequency: "weekly",
+        priority: 0.5,
       });
     }
   }
