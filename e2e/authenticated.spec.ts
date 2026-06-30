@@ -243,7 +243,7 @@ test("gig editing: seller creates then edits a gig; the edit form reflects the c
 
   // The owner edit page is pre-filled with the new title (works regardless of gig status).
   await seller.goto(`/uz/dashboard/seller/gigs/${id}/edit`);
-  await expect(seller.getByDisplayValue(newTitle)).toBeVisible();
+  await expect(seller.getByPlaceholder("Masalan: Men professional AI video yarataman")).toHaveValue(newTitle);
 
   await sellerCtx.close();
 });
