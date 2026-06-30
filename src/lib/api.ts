@@ -36,7 +36,8 @@ export class ApiError extends Error {
   constructor(
     public readonly code: ApiErrorCode,
     message: string,
-    public readonly fields?: Record<string, string>
+    public readonly fields?: Record<string, string>,
+    public readonly retryAfterSec?: number
   ) {
     super(message);
     this.name = "ApiError";
@@ -53,7 +54,8 @@ export const Errors = {
   validation: (fields: Record<string, string>, m = "Validation failed") =>
     new ApiError("VALIDATION", m, fields),
   conflict: (m = "Conflict") => new ApiError("CONFLICT", m),
-  rateLimited: (m = "Too many requests") => new ApiError("RATE_LIMITED", m),
+  rateLimited: (m = "Too many requests — please slow down and try again in a moment.", retryAfterSec?: number) =>
+    new ApiError("RATE_LIMITED", m, undefined, retryAfterSec),
   internal: (m = "Internal error") => new ApiError("INTERNAL", m),
 };
 
@@ -84,9 +86,11 @@ export function ok<T>(data: T, init?: ResponseInit): NextResponse {
  */
 export function errorResponse(err: unknown): NextResponse {
   if (err instanceof ApiError) {
+    const headers: Record<string, string> =
+      err.code === "RATE_LIMITED" ? { "Retry-After": String(err.retryAfterSec ?? 60) } : {};
     return NextResponse.json(
       { ok: false, error: { code: err.code, message: err.message, fields: err.fields } } satisfies ApiResult<never>,
-      { status: err.status }
+      { status: err.status, headers }
     );
   }
   // Unhandled: log with a correlation id (full detail server-side) and return it to the

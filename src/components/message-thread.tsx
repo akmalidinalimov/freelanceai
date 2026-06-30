@@ -34,6 +34,7 @@ export function MessageThread({
   const [input, setInput] = useState("");
   const [files, setFiles] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const seen = useRef<Set<string>>(new Set(initial.map((m) => m.id)));
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +87,7 @@ export function MessageThread({
     const body = input.trim();
     if ((!body && files.length === 0) || busy) return;
     setBusy(true);
+    setSendError(null);
     try {
       const r = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
@@ -97,9 +99,11 @@ export function MessageThread({
         append([j.data.message]);
         setInput("");
         setFiles([]);
+      } else {
+        setSendError(j.error?.message ?? t("sendFailed"));
       }
     } catch {
-      /* ignore */
+      setSendError(t("sendFailed"));
     } finally {
       setBusy(false);
     }
@@ -170,6 +174,7 @@ export function MessageThread({
           {t("send")}
         </Button>
       </div>
+      {sendError && <p className="mt-2 text-sm text-red-600" role="alert">{sendError}</p>}
     </div>
   );
 }

@@ -329,6 +329,7 @@
     "placeholder": "Xabar yozing...",
     "send": "Yuborish",
     "attach": "Fayl biriktirish",
+    "sendFailed": "Yuborib boʻlmadi. Birozdan soʻng qayta urinib koʻring.",
     "contact": "Bogʻlanish",
     "inbox": "Xabarlar",
     "inboxEmpty": "Hali suhbatlar yoʻq.",

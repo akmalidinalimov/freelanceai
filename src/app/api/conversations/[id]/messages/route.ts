@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ok, errorResponse, parseInput, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { listConversationMessages, postConversationMessage } from "@/server/services/message";
 
 /** Poll messages in a conversation (optionally only those after ?after=<ISO>). */
@@ -35,7 +35,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!isSameOrigin(request)) throw Errors.forbidden("Cross-origin request rejected");
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
-    if (!rateLimit(`msg:${clientIp(request)}`, 30, 60_000)) throw Errors.rateLimited();
+    enforceRateLimit(`msg:${clientIp(request)}`, 30, 60_000);
     const { id } = await params;
     const input = parseInput(schema, await request.json().catch(() => ({})));
     const message = await postConversationMessage(id, user, input.body ?? "", input.fileUrls ?? []);

@@ -329,6 +329,7 @@
     "placeholder": "Write a message...",
     "send": "Send",
     "attach": "Attach file",
+    "sendFailed": "Couldn't send. Please try again in a moment.",
     "contact": "Contact freelancer",
     "inbox": "Messages",
     "inboxEmpty": "No conversations yet.",

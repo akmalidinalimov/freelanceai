@@ -3,7 +3,7 @@ import { defineHandler } from "@/lib/handler";
 import { ok, Errors } from "@/lib/api";
 import { requireSeller, requireActive } from "@/lib/authz";
 import { presignUpload } from "@/lib/media";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 
 const schema = z
   .object({
@@ -21,9 +21,7 @@ export const POST = defineHandler({ auth: true, schema }, async ({ user, body, r
   if (!user) throw Errors.unauthenticated();
   if (SELLER_PREFIXES.has(body.prefix)) requireSeller(user);
   else requireActive(user);
-  if (!rateLimit(`media:${clientIp(request)}`, 30, 60_000)) {
-    throw Errors.rateLimited();
-  }
+  enforceRateLimit(`media:${clientIp(request)}`, 30, 60_000);
   try {
     const result = await presignUpload(body.prefix, body.contentType, body.size);
     return ok(result);
