@@ -102,6 +102,78 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
   return gig;
 }
 
+/**
+ * Update an existing gig (owner or admin). Replaces packages + extras wholesale (no Order FK
+ * references them — orders snapshot tier/title/extras), overwrites FAQ, and sanitizes text.
+ * Status is left unchanged.
+ */
+export async function updateGig(gigId: string, user: GigActor, input: CreateGigInput) {
+  const owned = await prisma.gig.findFirst({
+    where: gigEditWhereForUser(gigId, user),
+    select: { id: true },
+  });
+  if (!owned) throw Errors.notFound("Gig not found");
+
+  const title = stripContactInfo(input.title).text;
+  const description = stripContactInfo(input.description).text;
+  const faq = (input.faq ?? [])
+    .slice(0, 10)
+    .map((f) => ({ q: stripContactInfo(f.q).text.slice(0, 200), a: stripContactInfo(f.a).text.slice(0, 1000) }))
+    .filter((f) => f.q && f.a);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.gigPackage.deleteMany({ where: { gigId } });
+    await tx.gigExtra.deleteMany({ where: { gigId } });
+    await tx.gig.update({
+      where: { id: gigId },
+      data: {
+        title,
+        description,
+        coverUrl: input.coverUrl || null,
+        galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
+        categoryId: input.categoryId || null,
+        tags: input.tags ?? [],
+        faq,
+        packages: {
+          create: input.packages.map((p) => ({
+            tier: p.tier,
+            title: p.title,
+            description: p.description,
+            priceUzs: p.priceUzs,
+            deliveryDays: p.deliveryDays,
+            revisions: p.revisions,
+          })),
+        },
+        extras: {
+          create: (input.extras ?? [])
+            .slice(0, 6)
+            .filter((e) => e.title.trim() && e.priceUzs >= 1000)
+            .map((e, i) => ({
+              title: stripContactInfo(e.title).text.slice(0, 80),
+              priceUzs: Math.round(e.priceUzs),
+              deliveryDays: Math.max(0, Math.min(60, e.deliveryDays ?? 0)),
+              position: i,
+            })),
+        },
+      },
+    });
+  });
+  await audit({ actorId: user.id, action: "gig.update", entity: "Gig", entityId: gigId });
+}
+
+/** Fetch a gig for its owner to edit (includes packages + extras). */
+export async function getGigForEdit(gigId: string, user: GigActor) {
+  const gig = await prisma.gig.findFirst({
+    where: gigEditWhereForUser(gigId, user),
+    include: {
+      packages: { orderBy: { tier: "asc" } },
+      extras: { orderBy: { position: "asc" } },
+    },
+  });
+  if (!gig) throw Errors.notFound("Gig not found");
+  return gig;
+}
+
 export function listSellerGigs(sellerId: string) {
   return prisma.gig.findMany({
     where: { sellerId, deletedAt: null },

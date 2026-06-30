@@ -91,6 +91,9 @@
   },
   "Gig": {
     "createTitle": "Create a gig",
+    "editGigTitle": "Edit gig",
+    "edit": "Edit",
+    "saveChanges": "Save changes",
     "titleLabel": "Title",
     "titlePh": "e.g. I will create a professional AI video",
     "descLabel": "Description",

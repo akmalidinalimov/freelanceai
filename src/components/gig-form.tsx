@@ -20,21 +20,45 @@ interface PkgState {
 
 const emptyPkg: PkgState = { title: "", priceUzs: "", deliveryDays: "", revisions: "1" };
 
-export function GigForm({ locale, categories }: { locale: string; categories: Category[] }) {
+export interface GigInitial {
+  title: string;
+  description: string;
+  categoryId: string;
+  tags: string;
+  coverUrl?: string;
+  galleryUrls: string[];
+  faq: { q: string; a: string }[];
+  extras: { title: string; priceUzs: string; deliveryDays: string }[];
+  packages: Partial<Record<Tier, PkgState>>;
+}
+
+export function GigForm({
+  locale,
+  categories,
+  gigId,
+  initial,
+}: {
+  locale: string;
+  categories: Category[];
+  gigId?: string;
+  initial?: GigInitial;
+}) {
   const t = useTranslations("Gig");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [tags, setTags] = useState("");
-  const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
-  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
-  const [faq, setFaq] = useState<{ q: string; a: string }[]>([]);
-  const [extras, setExtras] = useState<{ title: string; priceUzs: string; deliveryDays: string }[]>([]);
-  const [pkgs, setPkgs] = useState<Record<Tier, PkgState>>({
-    BASIC: { ...emptyPkg },
-    STANDARD: { ...emptyPkg },
-    PREMIUM: { ...emptyPkg },
-  });
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
+  const [tags, setTags] = useState(initial?.tags ?? "");
+  const [coverUrl, setCoverUrl] = useState<string | undefined>(initial?.coverUrl);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(initial?.galleryUrls ?? []);
+  const [faq, setFaq] = useState<{ q: string; a: string }[]>(initial?.faq ?? []);
+  const [extras, setExtras] = useState<{ title: string; priceUzs: string; deliveryDays: string }[]>(
+    initial?.extras ?? []
+  );
+  const [pkgs, setPkgs] = useState<Record<Tier, PkgState>>(() => ({
+    BASIC: initial?.packages?.BASIC ?? { ...emptyPkg },
+    STANDARD: initial?.packages?.STANDARD ?? { ...emptyPkg },
+    PREMIUM: initial?.packages?.PREMIUM ?? { ...emptyPkg },
+  }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,8 +87,8 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
 
     setBusy(true);
     try {
-      const r = await fetch("/api/gigs", {
-        method: "POST",
+      const r = await fetch(gigId ? `/api/gigs/${gigId}` : "/api/gigs", {
+        method: gigId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title.trim(),
@@ -300,7 +324,7 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <Button type="submit" size="lg" disabled={busy}>
-        {busy ? t("publishing") : t("publish")}
+        {busy ? t("publishing") : gigId ? t("saveChanges") : t("publish")}
       </Button>
     </form>
   );

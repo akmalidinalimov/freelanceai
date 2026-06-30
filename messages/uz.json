@@ -91,6 +91,9 @@
   },
   "Gig": {
     "createTitle": "Yangi xizmat yaratish",
+    "editGigTitle": "Xizmatni tahrirlash",
+    "edit": "Tahrirlash",
+    "saveChanges": "Oʻzgarishlarni saqlash",
     "titleLabel": "Sarlavha",
     "titlePh": "Masalan: Men professional AI video yarataman",
     "descLabel": "Tavsif",

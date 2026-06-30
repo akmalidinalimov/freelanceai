@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 /** Pause / resume / delete actions for a gig row on the creator dashboard. */
 export function GigRowActions({ gigId, status }: { gigId: string; status: string }) {
@@ -23,6 +24,9 @@ export function GigRowActions({ gigId, status }: { gigId: string; status: string
 
   return (
     <span className="flex items-center gap-2 text-xs">
+      <Link href={`/dashboard/seller/gigs/${gigId}/edit`} className="text-[hsl(var(--primary))] hover:underline">
+        {t("edit")}
+      </Link>
       {status === "ACTIVE" ? (
         <button onClick={() => act("pause")} disabled={busy} className="hover:underline">
           {t("pause")}
