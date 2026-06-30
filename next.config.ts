@@ -11,10 +11,17 @@ const nextConfig: NextConfig = {
     // Allow Telegram profile photos and (later) our media CDN.
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
-  // Conservative, non-breaking security headers. We intentionally omit X-Frame-Options and a
-  // strict CSP: the Telegram Mini App + login widget and the R2 media domain make those
-  // high-risk to apply blind — they're a tracked follow-up that needs visual verification.
+  // Security headers. The CSP is intentionally scoped to clickjacking/injection directives
+  // that do NOT constrain script/style/img loading: `frame-ancestors` (allowlisting the
+  // Telegram Mini App while blocking all other embedders — this replaces X-Frame-Options,
+  // which can't allowlist Telegram), plus `object-src`/`base-uri`. A full content CSP
+  // (script-src/style-src/img-src) is a separate follow-up that must ship Report-Only first.
   async headers() {
+    const csp = [
+      "base-uri 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
+    ].join("; ");
     return [
       {
         source: "/:path*",
@@ -23,6 +30,7 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+          { key: "Content-Security-Policy", value: csp },
         ],
       },
     ];
