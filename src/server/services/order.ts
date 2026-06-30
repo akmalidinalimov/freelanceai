@@ -93,6 +93,19 @@ export async function createOrder(
   return order;
 }
 
+/** Re-order: place a fresh order for the same gig + package as a past order of the buyer's. */
+export async function reorderOrder(orderId: string, user: User): Promise<string> {
+  const prev = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { buyerId: true, gigId: true, packageTier: true },
+  });
+  if (!prev) throw Errors.notFound("Order not found");
+  if (prev.buyerId !== user.id) throw Errors.forbidden();
+  // createOrder reads the current gig (price/availability), so a reorder always reflects today's terms.
+  const fresh = await createOrder(user.id, prev.gigId, prev.packageTier);
+  return fresh.id;
+}
+
 export function listBuyerOrders(buyerId: string) {
   return prisma.order.findMany({
     where: { buyerId },

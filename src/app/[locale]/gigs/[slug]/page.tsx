@@ -3,6 +3,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getGigBySlug, incrementGigViews, listRelatedGigs } from "@/server/services/gig";
+import { VerifiedBadge } from "@/components/verified-badge";
 
 export async function generateMetadata({
   params,
@@ -137,6 +138,11 @@ export default async function GigDetailPage({
           {gig.seller.sellerProfile?.level && gig.seller.sellerProfile.level !== "NEW" && (
             <span className="ml-2 rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
               {tp(`level.${gig.seller.sellerProfile.level}`)}
+            </span>
+          )}
+          {gig.seller.kycStatus === "VERIFIED" && (
+            <span className="ml-2 inline-block align-middle">
+              <VerifiedBadge label={tp("verified")} />
             </span>
           )}
         </p>

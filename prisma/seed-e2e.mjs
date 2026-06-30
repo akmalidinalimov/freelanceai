@@ -13,7 +13,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { id: "e2e_seller" },
-    update: { isSeller: true, status: "ACTIVE" },
+    update: { isSeller: true, status: "ACTIVE", kycStatus: "VERIFIED" },
     create: {
       id: "e2e_seller",
       firstName: "E2E Seller",
@@ -22,6 +22,7 @@ async function main() {
       role: "BUYER",
       status: "ACTIVE",
       onboardingCompleted: true,
+      kycStatus: "VERIFIED",
     },
   });
 

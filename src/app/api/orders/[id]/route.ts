@@ -8,13 +8,14 @@ import {
   acceptOrder,
   requestRevision,
   cancelOrder,
+  reorderOrder,
 } from "@/server/services/order";
 import { confirmOrderPayment } from "@/server/services/payments";
 import { openDispute } from "@/server/services/dispute";
 
 const schema = z
   .object({
-    action: z.enum(["deliver", "accept", "revision", "cancel", "confirm_payment", "dispute"]),
+    action: z.enum(["deliver", "accept", "revision", "cancel", "confirm_payment", "dispute", "reorder"]),
     message: z.string().max(2000).optional(),
     fileUrls: z.array(z.string().url()).max(10).optional(),
     reason: z.string().max(1000).optional(),
@@ -53,6 +54,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       case "dispute":
         await openDispute(id, user, body.reason ?? "");
         break;
+      case "reorder": {
+        const newOrderId = await reorderOrder(id, user);
+        return ok({ done: true, orderId: newOrderId });
+      }
     }
     return ok({ done: true });
   } catch (err) {

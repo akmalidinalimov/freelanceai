@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { GalleryUpload } from "@/components/gallery-upload";
 
@@ -29,6 +30,7 @@ export function OrderActions({
   checkoutUrl?: string | null;
 }) {
   const t = useTranslations("Order");
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<string[]>([]);
@@ -44,8 +46,11 @@ export function OrderActions({
         body: JSON.stringify({ action, ...body }),
       });
       const j = await r.json();
-      if (j.ok) window.location.reload();
-      else {
+      if (j.ok) {
+        // Reorder returns a fresh order id → navigate to it; otherwise refresh in place.
+        if (j.data?.orderId) router.push(`/orders/${j.data.orderId}`);
+        else window.location.reload();
+      } else {
         setError(j.error?.message ?? t("error"));
         setBusy(false);
       }
@@ -63,6 +68,11 @@ export function OrderActions({
 
   return (
     <div className="space-y-3">
+      {isBuyer && status === "COMPLETED" && (
+        <Button variant="outline" onClick={() => act("reorder")} disabled={busy}>
+          {t("reorder")}
+        </Button>
+      )}
       {status === "PENDING_PAYMENT" &&
         (isAdmin ? (
           <div className="space-y-2 rounded-xl border border-[hsl(var(--border))] p-4">

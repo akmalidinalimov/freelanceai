@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { getPublicProfile } from "@/server/services/profile";
 import { getCurrentUser } from "@/lib/session";
 import { ContactSellerButton } from "@/components/contact-seller-button";
+import { VerifiedBadge } from "@/components/verified-badge";
 
 export async function generateMetadata({
   params,
@@ -67,6 +68,7 @@ export default async function CreatorProfilePage({
                 {t(`level.${profile.level}`)}
               </span>
             )}
+            {user.kycStatus === "VERIFIED" && <VerifiedBadge label={t("verified")} />}
           </div>
           {profile && profile.ratingCount > 0 ? (
             <div className="mt-1 flex items-center gap-2 text-sm">

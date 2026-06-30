@@ -36,6 +36,7 @@ export async function getPublicProfile(username: string) {
       username: true,
       image: true,
       photoUrl: true,
+      kycStatus: true,
       createdAt: true,
     },
   });
