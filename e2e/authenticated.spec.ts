@@ -45,6 +45,13 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
   await buyer.getByRole("button", { name: "Sharh yuborish" }).click();
   await expect(buyer.getByText("Sizning sharhingiz")).toBeVisible();
 
+  // Seller replies to the review on their gig.
+  await seller.goto("/uz/gigs/e2e-gig");
+  await seller.getByRole("button", { name: "Javob berish" }).first().click();
+  await seller.getByPlaceholder("Javob yozing...").fill("Thank you for your order!");
+  await seller.getByRole("button", { name: "Javob yuborish" }).click();
+  await expect(seller.getByText("Ijrochi javobi")).toBeVisible();
+
   await buyerCtx.close();
   await sellerCtx.close();
   await adminCtx.close();
@@ -93,4 +100,64 @@ test("admin can open the settlements console", async ({ browser }) => {
   await admin.goto("/uz/admin/settlements");
   await expect(admin.getByRole("heading", { name: "Hisob-kitoblar" })).toBeVisible();
   await ctx.close();
+});
+
+test("dispute: buyer disputes → admin refunds → order cancelled", async ({ browser }) => {
+  const buyerCtx = await browser.newContext();
+  const buyer = await buyerCtx.newPage();
+  await loginAs(buyer, "e2e_buyer");
+  await buyer.goto("/uz/gigs/e2e-gig");
+  await buyer.getByRole("button", { name: "Buyurtma berish" }).click();
+  await buyer.waitForURL(/\/uz\/orders\/.+/);
+  const orderUrl = buyer.url();
+
+  // Admin confirms payment so the order is active.
+  const adminCtx = await browser.newContext();
+  const admin = await adminCtx.newPage();
+  await loginAs(admin, "e2e_admin");
+  await admin.goto(orderUrl);
+  await admin.getByRole("button", { name: "Toʻlov qabul qilindi" }).click();
+  await expect(admin.getByText("Jarayonda").first()).toBeVisible();
+
+  // Buyer opens a dispute.
+  await buyer.goto(orderUrl);
+  await buyer.getByRole("button", { name: "Muammo haqida xabar berish" }).click();
+  await buyer.getByPlaceholder("Muammoni tasvirlang...").fill("Not as described, please refund.");
+  await buyer.getByRole("button", { name: "Nizo ochish" }).click();
+  await expect(buyer.getByText(/chiqmoqda/).first()).toBeVisible();
+
+  // Admin refunds → order becomes cancelled.
+  await admin.goto("/uz/admin/disputes");
+  await admin.getByRole("button", { name: "Buyurtmachiga qaytarish" }).first().click();
+  await buyer.goto(orderUrl);
+  await expect(buyer.getByText("Bekor qilingan").first()).toBeVisible();
+
+  await buyerCtx.close();
+  await adminCtx.close();
+});
+
+test("moderation: a new gig is PENDING then admin approves it", async ({ browser }) => {
+  const sellerCtx = await browser.newContext();
+  const seller = await sellerCtx.newPage();
+  await loginAs(seller, "e2e_seller");
+  const title = `E2E moderation gig ${Date.now()}`;
+  const res = await seller.request.post("/api/gigs", {
+    data: {
+      title,
+      description: "A seeded gig used to exercise the moderation approval flow end to end.",
+      packages: [{ tier: "BASIC", title: "Basic", priceUzs: 50000, deliveryDays: 2, revisions: 1 }],
+    },
+  });
+  expect(res.ok()).toBeTruthy();
+
+  const adminCtx = await browser.newContext();
+  const admin = await adminCtx.newPage();
+  await loginAs(admin, "e2e_admin");
+  await admin.goto("/uz/admin/moderation");
+  await expect(admin.getByText(title)).toBeVisible();
+  await admin.getByRole("button", { name: "Tasdiqlash" }).first().click();
+  await expect(admin.getByText(title)).toHaveCount(0);
+
+  await sellerCtx.close();
+  await adminCtx.close();
 });
