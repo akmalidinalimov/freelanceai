@@ -18,7 +18,7 @@ export function BecomeCreatorButton({ locale }: { locale: string }) {
         body: JSON.stringify({ intent: "sell" }),
       });
       const j = await r.json();
-      if (j.ok) window.location.href = `/${locale}/dashboard/seller`;
+      if (j.ok) window.location.href = `/${locale}/dashboard/seller/gigs/new`;
       else setBusy(false);
     } catch {
       setBusy(false);

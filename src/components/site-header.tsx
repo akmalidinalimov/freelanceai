@@ -24,12 +24,14 @@ export async function SiteHeader() {
           >
             {t("Nav.explore")}
           </Link>
-          <Link
-            href="/sell"
-            className="hidden text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] sm:inline"
-          >
-            {t("Nav.becomeSeller")}
-          </Link>
+          {!user?.isSeller && (
+            <Link
+              href="/sell"
+              className="hidden text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] sm:inline"
+            >
+              {t("Nav.becomeSeller")}
+            </Link>
+          )}
           <LocaleSwitcher />
 
           {user ? (
