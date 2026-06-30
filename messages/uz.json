@@ -246,6 +246,17 @@
     "empty": "Hali xabarlar yoʻq. Salomlashing 👋"
   },
   "Admin": {
+    "dashboard": "Admin paneli",
+    "gmv": "Umumiy savdo (GMV)",
+    "platformRevenue": "Platforma daromadi",
+    "orders": "Buyurtmalar",
+    "users": "Foydalanuvchilar",
+    "sellers": "Ijrochilar",
+    "activeGigs": "Faol xizmatlar",
+    "coupons": "Promo-kodlar",
+    "ledgerIntegrity": "Buxgalteriya yaxlitligi",
+    "ledgerOk": "✓ {n} ta buyurtma balansi toʻgʻri (har biri nolga teng).",
+    "ledgerBad": "⚠ {n} ta buyurtmada balans nolga teng emas — tekshiring.",
     "title": "Hisob-kitoblar",
     "pendingPayments": "Tasdiqlanadigan toʻlovlar",
     "noPending": "Tasdiqlashni kutayotgan toʻlovlar yoʻq.",

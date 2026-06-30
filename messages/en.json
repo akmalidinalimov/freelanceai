@@ -246,6 +246,17 @@
     "empty": "No messages yet. Say hello 👋"
   },
   "Admin": {
+    "dashboard": "Admin dashboard",
+    "gmv": "GMV (gross sales)",
+    "platformRevenue": "Platform revenue",
+    "orders": "Orders",
+    "users": "Users",
+    "sellers": "Sellers",
+    "activeGigs": "Active gigs",
+    "coupons": "Promo codes",
+    "ledgerIntegrity": "Ledger integrity",
+    "ledgerOk": "✓ {n} orders balanced (each nets to zero).",
+    "ledgerBad": "⚠ {n} orders do not net to zero — investigate.",
     "title": "Settlements",
     "pendingPayments": "Payments to confirm",
     "noPending": "No payments awaiting confirmation.",
