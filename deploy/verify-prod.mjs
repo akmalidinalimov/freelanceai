@@ -4,25 +4,34 @@
 import { execSync } from "child_process";
 
 const BASE = (process.env.E2E_BASE_URL ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
-process.stdout.write(`Waiting for ${BASE} to come up`);
-let up = false;
-for (let i = 0; i < 45; i++) {
+// The VPS rebuild tears down the old container before the new one serves, so the site
+// 502s mid-deploy. Give the swap time to BEGIN, then require several consecutive healthy
+// responses so we verify the NEW container once it's stably up (not the old one pre-swap).
+const GRACE_MS = 45000;
+process.stdout.write(`Grace ${GRACE_MS / 1000}s for container swap`);
+await sleep(GRACE_MS);
+
+process.stdout.write(`\nWaiting for ${BASE} to be stably healthy`);
+let streak = 0;
+const NEED = 3; // consecutive healthy checks
+for (let i = 0; i < 60; i++) {
   try {
-    const r = await fetch(`${BASE}/uz/gigs`, { redirect: "manual" });
-    if (r.status === 200) {
-      up = true;
-      break;
-    }
+    const r = await fetch(`${BASE}/api/health`, { redirect: "manual" });
+    const body = r.status === 200 ? await r.json().catch(() => ({})) : {};
+    if (r.status === 200 && body?.data?.db === "up") streak++;
+    else streak = 0;
   } catch {
-    /* not up yet */
+    streak = 0;
   }
-  await new Promise((res) => setTimeout(res, 20000));
-  process.stdout.write(".");
+  process.stdout.write(streak >= NEED ? "✓" : streak > 0 ? "+" : ".");
+  if (streak >= NEED) break;
+  await sleep(10000);
 }
-console.log(up ? " up ✅" : " TIMEOUT ❌");
-if (!up) {
-  console.log("\n❌ POST-DEPLOY VERIFY FAILED — prod did not return 200 in time");
+console.log(streak >= NEED ? " up ✅" : " TIMEOUT ❌");
+if (streak < NEED) {
+  console.log("\n❌ POST-DEPLOY VERIFY FAILED — prod did not become stably healthy in time");
   process.exit(1);
 }
 
