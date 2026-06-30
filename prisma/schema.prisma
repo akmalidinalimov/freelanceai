@@ -240,6 +240,7 @@ model Gig {
   coverUrl    String?
   galleryUrls String[]  @default([])
   faq         Json?     // [{ q, a }] seller-managed FAQ
+  requirementPrompts Json? // ["question", ...] structured requirement questions
   views       Int       @default(0)
   featured     Boolean   @default(false)
   featuredUntil DateTime?
@@ -355,6 +356,7 @@ model Order {
   couponCode   String?
   discountUzs  Int         @default(0) // platform-funded discount on the buyer's payment
   requirements String?
+  requirementAnswers Json?    // [{ q, a }] answers to the gig's requirement prompts
   requirementFileUrls String[] @default([])
   status       OrderStatus @default(PENDING_PAYMENT)
   dueAt        DateTime?

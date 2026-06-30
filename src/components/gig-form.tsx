@@ -29,6 +29,7 @@ export interface GigInitial {
   galleryUrls: string[];
   faq: { q: string; a: string }[];
   extras: { title: string; priceUzs: string; deliveryDays: string }[];
+  requirementPrompts: string[];
   packages: Partial<Record<Tier, PkgState>>;
 }
 
@@ -54,6 +55,7 @@ export function GigForm({
   const [extras, setExtras] = useState<{ title: string; priceUzs: string; deliveryDays: string }[]>(
     initial?.extras ?? []
   );
+  const [reqPrompts, setReqPrompts] = useState<string[]>(initial?.requirementPrompts ?? []);
   const [pkgs, setPkgs] = useState<Record<Tier, PkgState>>(() => ({
     BASIC: initial?.packages?.BASIC ?? { ...emptyPkg },
     STANDARD: initial?.packages?.STANDARD ?? { ...emptyPkg },
@@ -114,6 +116,7 @@ export function GigForm({
             }))
             .filter((e) => e.title && e.priceUzs >= 1000)
             .slice(0, 6),
+          requirementPrompts: reqPrompts.map((p) => p.trim()).filter(Boolean).slice(0, 8),
           packages,
         }),
       });
@@ -275,6 +278,39 @@ export function GigForm({
               className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
             >
               + {t("extraAdd")}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-medium">{t("requirements")}</p>
+        <div className="flex flex-col gap-2">
+          {reqPrompts.map((p, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                className={`${field} flex-1`}
+                placeholder={t("requirementQ")}
+                value={p}
+                onChange={(e) => setReqPrompts((arr) => arr.map((x, j) => (j === i ? e.target.value : x)))}
+              />
+              <button
+                type="button"
+                aria-label={t("faqRemove")}
+                onClick={() => setReqPrompts((arr) => arr.filter((_, j) => j !== i))}
+                className="shrink-0 rounded-md border border-[hsl(var(--border))] px-2 text-sm"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {reqPrompts.length < 8 && (
+            <button
+              type="button"
+              onClick={() => setReqPrompts((arr) => [...arr, ""])}
+              className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
+            >
+              + {t("requirementAdd")}
             </button>
           )}
         </div>

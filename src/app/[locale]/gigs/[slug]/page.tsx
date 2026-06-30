@@ -290,6 +290,7 @@ export default async function GigDetailPage({
             priceUzs: e.priceUzs,
             deliveryDays: e.deliveryDays,
           }))}
+          requirementPrompts={Array.isArray(gig.requirementPrompts) ? (gig.requirementPrompts as string[]) : []}
         />
       </aside>
     </div>

@@ -23,7 +23,8 @@ export async function createOrder(
   requirements?: string,
   requirementFileUrls: string[] = [],
   extraIds: string[] = [],
-  couponCode?: string
+  couponCode?: string,
+  requirementAnswers: { q: string; a: string }[] = []
 ) {
   const gig = await prisma.gig.findFirst({
     where: { id: gigId, status: "ACTIVE" },
@@ -78,6 +79,9 @@ export async function createOrder(
         couponCode: appliedCode,
         discountUzs,
         requirements: requirements?.trim() || null,
+        requirementAnswers: requirementAnswers.length
+          ? requirementAnswers.map((a) => ({ q: a.q.slice(0, 200), a: a.a.slice(0, 1000) })).filter((a) => a.a)
+          : undefined,
         requirementFileUrls: requirementFileUrls.slice(0, 10),
         // Awaiting (manual) payment confirmation before work begins.
         status: "PENDING_PAYMENT",

@@ -11,6 +11,10 @@ const schema = z
     requirementFileUrls: z.array(z.string().url()).max(10).optional(),
     extraIds: z.array(z.string().min(1).max(40)).max(6).optional(),
     couponCode: z.string().max(24).optional(),
+    requirementAnswers: z
+      .array(z.object({ q: z.string().max(200), a: z.string().max(1000) }))
+      .max(8)
+      .optional(),
   })
   .strict();
 
@@ -24,7 +28,8 @@ export const POST = defineHandler({ auth: true, schema }, async ({ user, body })
     body.requirements,
     body.requirementFileUrls ?? [],
     body.extraIds ?? [],
-    body.couponCode
+    body.couponCode,
+    body.requirementAnswers ?? []
   );
   return ok({ id: order.id });
 });

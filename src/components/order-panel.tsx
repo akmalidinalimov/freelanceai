@@ -28,12 +28,14 @@ export function OrderPanel({
   viewer,
   packages,
   extras = [],
+  requirementPrompts = [],
 }: {
   gigId: string;
   locale: string;
   viewer: "guest" | "buyer" | "owner";
   packages: Pkg[];
   extras?: Extra[];
+  requirementPrompts?: string[];
 }) {
   const t = useTranslations("Gig");
   const to = useTranslations("Order");
@@ -41,6 +43,7 @@ export function OrderPanel({
   const [requirements, setRequirements] = useState("");
   const [reqFiles, setReqFiles] = useState<string[]>([]);
   const [coupon, setCoupon] = useState("");
+  const [answers, setAnswers] = useState<Record<number, string>>({});
   const [chosenExtras, setChosenExtras] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +79,9 @@ export function OrderPanel({
           requirementFileUrls: reqFiles,
           extraIds: extras.filter((e) => chosenExtras.has(e.id)).map((e) => e.id),
           couponCode: coupon.trim() || undefined,
+          requirementAnswers: requirementPrompts
+            .map((q, i) => ({ q, a: (answers[i] ?? "").trim() }))
+            .filter((x) => x.a),
         }),
       });
       const j = await r.json();
@@ -157,6 +163,16 @@ export function OrderPanel({
         <>
           {viewer === "buyer" && (
             <>
+              {requirementPrompts.map((q, i) => (
+                <label key={i} className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">{q}</span>
+                  <textarea
+                    value={answers[i] ?? ""}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [i]: e.target.value }))}
+                    className="min-h-16 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+                  />
+                </label>
+              ))}
               <textarea
                 value={requirements}
                 onChange={(e) => setRequirements(e.target.value)}

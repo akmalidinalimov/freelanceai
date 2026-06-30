@@ -47,6 +47,7 @@ export default async function EditGigPage({ params }: { params: Promise<{ locale
       priceUzs: String(e.priceUzs),
       deliveryDays: e.deliveryDays ? String(e.deliveryDays) : "",
     })),
+    requirementPrompts: Array.isArray(gig.requirementPrompts) ? (gig.requirementPrompts as string[]) : [],
     packages,
   };
 

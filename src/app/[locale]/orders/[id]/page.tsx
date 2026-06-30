@@ -123,6 +123,16 @@ export default async function OrderPage({
         </div>
         <div className="rounded-xl border border-[hsl(var(--border))] p-5">
           <p className="mb-1 text-sm font-medium">{t("requirements")}</p>
+          {Array.isArray(order.requirementAnswers) && order.requirementAnswers.length > 0 && (
+            <div className="mb-2 space-y-2">
+              {(order.requirementAnswers as { q: string; a: string }[]).map((qa, i) => (
+                <div key={i}>
+                  <p className="text-xs font-medium">{qa.q}</p>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))]">{qa.a}</p>
+                </div>
+              ))}
+            </div>
+          )}
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
             {order.requirements || t("noRequirements")}
           </p>

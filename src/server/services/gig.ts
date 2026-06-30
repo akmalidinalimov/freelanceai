@@ -47,7 +47,16 @@ export interface CreateGigInput {
   locale?: string;
   faq?: GigFaqItem[];
   extras?: GigExtraInput[];
+  requirementPrompts?: string[];
   packages: GigPackageInput[];
+}
+
+/** Sanitize + cap a gig's requirement question list. */
+function cleanPrompts(prompts: string[] | undefined): string[] {
+  return (prompts ?? [])
+    .slice(0, 8)
+    .map((p) => stripContactInfo(p).text.slice(0, 200).trim())
+    .filter(Boolean);
 }
 
 /** Create a gig with its packages. New gigs are ACTIVE (moderation comes later). */
@@ -69,6 +78,7 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       coverUrl: input.coverUrl || null,
       galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
       faq: faq.length ? faq : undefined,
+      requirementPrompts: cleanPrompts(input.requirementPrompts),
       categoryId: input.categoryId || null,
       tags: input.tags ?? [],
       locale: input.locale ?? "uz",
@@ -134,6 +144,7 @@ export async function updateGig(gigId: string, user: GigActor, input: CreateGigI
         categoryId: input.categoryId || null,
         tags: input.tags ?? [],
         faq,
+        requirementPrompts: cleanPrompts(input.requirementPrompts),
         packages: {
           create: input.packages.map((p) => ({
             tier: p.tier,
