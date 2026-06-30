@@ -54,6 +54,15 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
   await seller.getByRole("button", { name: "Javob yuborish" }).click();
   await expect(seller.getByText("Ijrochi javobi")).toBeVisible();
 
+  // Buyer tips the seller on the completed order (preset; regex avoids number-format issues).
+  await buyer.goto(orderUrl);
+  await buyer.getByRole("button", { name: /\+10/ }).click();
+  await expect(buyer.getByText("Rahmat! Choychaqa yuborildi.")).toBeVisible();
+
+  // Seller has in-app notifications from the order events (e.g. the new review).
+  await seller.goto("/uz/notifications");
+  await expect(seller.getByText("Yangi sharh")).toBeVisible();
+
   await buyerCtx.close();
   await sellerCtx.close();
   await adminCtx.close();
@@ -200,4 +209,69 @@ test("moderation: a new gig is PENDING then admin approves it", async ({ browser
 
   await sellerCtx.close();
   await adminCtx.close();
+});
+
+test("gig editing: seller creates then edits a gig; the edit form reflects the change", async ({ browser }) => {
+  const sellerCtx = await browser.newContext();
+  const seller = await sellerCtx.newPage();
+  await loginAs(seller, "e2e_seller");
+  await seller.goto("/uz/dashboard");
+  const origin = new URL(seller.url()).origin;
+
+  const title = `E2E edit gig ${Date.now().toString(36)}`;
+  const created = await seller.request.post("/api/gigs", {
+    headers: { Origin: origin },
+    data: {
+      title,
+      description: "A gig created to exercise the editing flow from end to end.",
+      packages: [{ tier: "BASIC", title: "Basic", priceUzs: 50000, deliveryDays: 2, revisions: 1 }],
+    },
+  });
+  expect(created.ok(), `create -> ${created.status()}`).toBeTruthy();
+  const id = (await created.json()).data.id as string;
+
+  const newTitle = `${title} EDITED`;
+  const edited = await seller.request.patch(`/api/gigs/${id}`, {
+    headers: { Origin: origin },
+    data: {
+      title: newTitle,
+      description: "An edited description that is comfortably long enough to validate.",
+      packages: [{ tier: "BASIC", title: "Basic", priceUzs: 75000, deliveryDays: 3, revisions: 2 }],
+    },
+  });
+  expect(edited.ok(), `edit -> ${edited.status()}`).toBeTruthy();
+
+  // The owner edit page is pre-filled with the new title (works regardless of gig status).
+  await seller.goto(`/uz/dashboard/seller/gigs/${id}/edit`);
+  await expect(seller.getByDisplayValue(newTitle)).toBeVisible();
+
+  await sellerCtx.close();
+});
+
+test("coupon: admin creates a code, buyer orders with it, discount shows on the order", async ({ browser }) => {
+  const adminCtx = await browser.newContext();
+  const admin = await adminCtx.newPage();
+  await loginAs(admin, "e2e_admin");
+  await admin.goto("/uz/dashboard");
+  const adminOrigin = new URL(admin.url()).origin;
+  const code = `E2E${Date.now().toString(36).toUpperCase()}`;
+  const made = await admin.request.post("/api/admin/coupons", {
+    headers: { Origin: adminOrigin },
+    data: { code, percentOff: 10 },
+  });
+  expect(made.ok(), `coupon -> ${made.status()}`).toBeTruthy();
+
+  // Buyer orders e2e-gig with the coupon via the order panel.
+  const buyerCtx = await browser.newContext();
+  const buyer = await buyerCtx.newPage();
+  await loginAs(buyer, "e2e_buyer");
+  await buyer.goto("/uz/gigs/e2e-gig");
+  await buyer.getByPlaceholder("Promo-kod (ixtiyoriy)").fill(code);
+  await buyer.getByRole("button", { name: "Buyurtma berish" }).click();
+  await buyer.waitForURL(/\/uz\/orders\/.+/);
+  // The order page shows the applied discount line.
+  await expect(buyer.getByText(/Chegirma/)).toBeVisible();
+
+  await adminCtx.close();
+  await buyerCtx.close();
 });
