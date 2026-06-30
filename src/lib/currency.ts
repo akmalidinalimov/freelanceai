@@ -14,7 +14,12 @@ export function approxRub(uzs: number): number {
   return Math.round(uzs / UZS_PER_RUB);
 }
 
+// Pinned locale so the formatting is identical on the server and the client — a bare
+// `.toLocaleString()` uses the runtime's default locale, which differs between Node and
+// the browser and caused a React hydration mismatch (#418) in the client OrderPanel.
+const groupFmt = new Intl.NumberFormat("en-US");
+
 /** "≈ $12 · ≈ ₽1,120" — a compact dual-currency hint for a UZS amount. */
 export function approxPrice(uzs: number): string {
-  return `≈ $${approxUsd(uzs).toLocaleString()} · ≈ ₽${approxRub(uzs).toLocaleString()}`;
+  return `≈ $${groupFmt.format(approxUsd(uzs))} · ≈ ₽${groupFmt.format(approxRub(uzs))}`;
 }
