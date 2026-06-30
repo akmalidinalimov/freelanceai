@@ -50,6 +50,11 @@
     "saved": "Saqlandi ✓",
     "delete": "Oʻchirish"
   },
+  "Errors": {
+    "notFoundTitle": "Sahifa topilmadi",
+    "notFoundDesc": "Siz qidirayotgan sahifa mavjud emas.",
+    "goHome": "Bosh sahifaga"
+  },
   "Cancel": {
     "title": "Bekor qilish soʻrovi",
     "request": "Bekor qilishni soʻrash",

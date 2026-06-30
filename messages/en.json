@@ -50,6 +50,11 @@
     "saved": "Saved ✓",
     "delete": "Delete"
   },
+  "Errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundDesc": "The page you're looking for doesn't exist.",
+    "goHome": "Go home"
+  },
   "Cancel": {
     "title": "Cancellation request",
     "request": "Request cancellation",
