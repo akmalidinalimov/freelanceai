@@ -216,6 +216,10 @@
     "amount": "Amount",
     "recentPayouts": "Recent payouts",
     "noPayouts": "No payouts yet.",
+    "moderation": "Gig moderation",
+    "approve": "Approve",
+    "reject": "Reject",
+    "noPendingGigs": "No gigs awaiting review.",
     "error": "Something went wrong."
   },
   "Profile": {

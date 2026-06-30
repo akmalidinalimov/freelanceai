@@ -221,6 +221,7 @@ model Category {
 
 enum GigStatus {
   DRAFT
+  PENDING_REVIEW
   ACTIVE
   PAUSED
   REJECTED

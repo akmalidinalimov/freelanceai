@@ -29,6 +29,6 @@ const schema = z
 export const POST = defineHandler({ auth: true, schema }, async ({ user, body }) => {
   if (!user) throw Errors.unauthenticated();
   requireSeller(user);
-  const gig = await createGig(user.id, body);
+  const gig = await createGig(user.id, body, user.role === "ADMIN");
   return ok({ id: gig.id, slug: gig.slug });
 });

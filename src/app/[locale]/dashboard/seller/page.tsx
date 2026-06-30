@@ -34,9 +34,14 @@ export default async function SellerDashboardPage({
         <h1 className="text-3xl font-bold">{t("creator")}</h1>
         <div className="flex gap-2">
           {user.role === "ADMIN" && (
-            <Link href="/admin/settlements">
-              <Button variant="outline">{ta("title")}</Button>
-            </Link>
+            <>
+              <Link href="/admin/settlements">
+                <Button variant="outline">{ta("title")}</Button>
+              </Link>
+              <Link href="/admin/moderation">
+                <Button variant="outline">{ta("moderation")}</Button>
+              </Link>
+            </>
           )}
           <Link href="/messages">
             <Button variant="ghost">{tm("inbox")}</Button>

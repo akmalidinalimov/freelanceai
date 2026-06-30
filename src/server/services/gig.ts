@@ -38,7 +38,7 @@ export interface CreateGigInput {
 }
 
 /** Create a gig with its packages. New gigs are ACTIVE (moderation comes later). */
-export async function createGig(sellerId: string, input: CreateGigInput) {
+export async function createGig(sellerId: string, input: CreateGigInput, autoApprove = false) {
   // Strip off-platform contact info from public gig text (anti-escrow-bypass).
   const title = stripContactInfo(input.title).text;
   const description = stripContactInfo(input.description).text;
@@ -53,7 +53,8 @@ export async function createGig(sellerId: string, input: CreateGigInput) {
       categoryId: input.categoryId || null,
       tags: input.tags ?? [],
       locale: input.locale ?? "uz",
-      status: "ACTIVE",
+      // New gigs await moderation; admins (and trusted callers) publish immediately.
+      status: autoApprove ? "ACTIVE" : "PENDING_REVIEW",
       packages: {
         create: input.packages.map((p) => ({
           tier: p.tier,
@@ -97,6 +98,36 @@ export const resumeGig = (gigId: string, user: GigActor) =>
   updateOwnedGig(gigId, user, { status: "ACTIVE" }, "gig.resume");
 export const softDeleteGig = (gigId: string, user: GigActor) =>
   updateOwnedGig(gigId, user, { deletedAt: new Date(), status: "PAUSED" }, "gig.softDelete");
+
+/** Gigs awaiting moderation — admin queue. */
+export function listPendingGigs() {
+  return prisma.gig.findMany({
+    where: { status: "PENDING_REVIEW", deletedAt: null },
+    orderBy: { createdAt: "asc" },
+    take: 100,
+    include: {
+      packages: { orderBy: { priceUzs: "asc" }, take: 1 },
+      seller: { select: { firstName: true, name: true, username: true } },
+    },
+  });
+}
+
+async function moderateGig(gigId: string, admin: GigActor, status: "ACTIVE" | "REJECTED", action: string) {
+  if (admin.role !== "ADMIN") throw Errors.forbidden("Admins only");
+  const res = await prisma.gig.updateMany({ where: { id: gigId, deletedAt: null }, data: { status } });
+  if (res.count === 0) throw Errors.notFound("Gig not found");
+  await audit({ actorId: admin.id, action, entity: "Gig", entityId: gigId });
+}
+
+export const approveGig = (gigId: string, admin: GigActor) =>
+  moderateGig(gigId, admin, "ACTIVE", "gig.approve");
+export const rejectGig = (gigId: string, admin: GigActor) =>
+  moderateGig(gigId, admin, "REJECTED", "gig.reject");
+
+/** Anyone can report a live gig — logged for admin review (non-hiding to prevent griefing). */
+export async function reportGig(gigId: string, reporter: GigActor) {
+  await audit({ actorId: reporter.id, action: "gig.report", entity: "Gig", entityId: gigId });
+}
 
 export async function listPublicGigs(opts: GigFilters = {}) {
   const q = opts.q?.trim();

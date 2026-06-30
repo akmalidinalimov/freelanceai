@@ -216,6 +216,10 @@
     "amount": "Summa",
     "recentPayouts": "Soʻnggi toʻlovlar",
     "noPayouts": "Hali toʻlovlar yoʻq.",
+    "moderation": "Xizmatlar nazorati",
+    "approve": "Tasdiqlash",
+    "reject": "Rad etish",
+    "noPendingGigs": "Tekshiruvdagi xizmatlar yoʻq.",
     "error": "Xatolik yuz berdi."
   },
   "Profile": {
