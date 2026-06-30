@@ -101,6 +101,19 @@ export function tipPostings(amountUzs: number): Posting[] {
   ];
 }
 
+/**
+ * Balanced postings that reverse a confirmed payment, accounting for any platform-funded
+ * discount (so CLIENT_FUNDS is credited back exactly what the buyer paid). Use for refunds
+ * on dispute/cancellation. With discount=0 this equals refundPostings.
+ */
+export function reversalPostings(amountUzs: number, commissionUzs: number, discountUzs = 0): Posting[] {
+  const base =
+    discountUzs > 0
+      ? discountedPaymentPostings(amountUzs, commissionUzs, discountUzs)
+      : paymentPostings(amountUzs, commissionUzs);
+  return base.map((p) => ({ account: p.account, amountUzs: -p.amountUzs }));
+}
+
 /** Balanced postings for paying a seller out. */
 export function payoutPostings(amountUzs: number): Posting[] {
   return [

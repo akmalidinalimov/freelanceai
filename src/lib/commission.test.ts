@@ -5,11 +5,33 @@ import {
   paymentPostings,
   payoutPostings,
   refundPostings,
+  reversalPostings,
   tipPostings,
   couponDiscount,
   discountedPaymentPostings,
   postingsBalance,
 } from "./commission";
+
+describe("reversal postings (discount-aware refund)", () => {
+  it("with no discount equals refundPostings and nets the payment to zero", () => {
+    const pay = paymentPostings(100_000, 20_000);
+    const rev = reversalPostings(100_000, 20_000, 0);
+    expect(rev).toEqual(refundPostings(100_000, 20_000));
+    const net = [...pay, ...rev].reduce((s, p) => s + p.amountUzs, 0);
+    expect(net).toBe(0);
+  });
+
+  it("reverses a discounted payment exactly (each account nets to zero)", () => {
+    const pay = discountedPaymentPostings(100_000, 20_000, 8_000);
+    const rev = reversalPostings(100_000, 20_000, 8_000);
+    expect(postingsBalance(rev)).toBe(0);
+    for (const acct of ["CLIENT_FUNDS", "PLATFORM_REVENUE", "SELLER_PAYABLE"] as const) {
+      const p = pay.find((x) => x.account === acct)!.amountUzs;
+      const r = rev.find((x) => x.account === acct)!.amountUzs;
+      expect(p + r).toBe(0);
+    }
+  });
+});
 
 describe("coupon discount + discounted postings", () => {
   it("percent and fixed discounts, capped at the commission", () => {

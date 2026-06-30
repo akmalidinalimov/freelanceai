@@ -3,6 +3,16 @@
     "title": "Bildirishnomalar",
     "empty": "Hozircha bildirishnoma yoʻq."
   },
+  "Cancel": {
+    "title": "Bekor qilish soʻrovi",
+    "request": "Bekor qilishni soʻrash",
+    "reasonPh": "Sababini yozing...",
+    "submit": "Yuborish",
+    "cancel": "Yopish",
+    "waiting": "Boshqa tomon tasdiqlashini kutmoqda.",
+    "approve": "Tasdiqlash",
+    "decline": "Rad etish"
+  },
   "Brand": {
     "name": "FreelanceAI",
     "tagline": "Markaziy Osiyoning AI-ijodkorlar bozori"

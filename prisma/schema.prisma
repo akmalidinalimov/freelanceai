@@ -370,10 +370,30 @@ model Order {
   transactions Transaction[]
   ledgerEntries LedgerEntry[]
   dispute      Dispute?
+  cancellation CancellationRequest?
 
   @@index([buyerId])
   @@index([sellerId])
   @@index([status])
+}
+
+enum CancellationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+// Mutual (consensual) order cancellation — distinct from a dispute (which an admin resolves).
+// One party requests; the other party (or an admin) approves → CANCELLED + ledger reversal.
+model CancellationRequest {
+  id            String             @id @default(cuid())
+  orderId       String             @unique
+  order         Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  requestedById String
+  reason        String
+  status        CancellationStatus @default(PENDING)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 }
 
 // Seller's review OF the buyer (the other half of two-way reviews). Author is the order's seller.

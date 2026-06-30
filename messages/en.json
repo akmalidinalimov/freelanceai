@@ -3,6 +3,16 @@
     "title": "Notifications",
     "empty": "No notifications yet."
   },
+  "Cancel": {
+    "title": "Cancellation request",
+    "request": "Request cancellation",
+    "reasonPh": "Describe the reason...",
+    "submit": "Send",
+    "cancel": "Close",
+    "waiting": "Waiting for the other party to confirm.",
+    "approve": "Approve",
+    "decline": "Decline"
+  },
   "Brand": {
     "name": "FreelanceAI",
     "tagline": "Central Asia's marketplace for AI creators"

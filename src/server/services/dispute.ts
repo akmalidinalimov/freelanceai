@@ -4,7 +4,7 @@ import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
-import { refundPostings } from "@/lib/commission";
+import { reversalPostings } from "@/lib/commission";
 import { notify } from "@/server/services/notification";
 
 const NAME = { select: { firstName: true, name: true, username: true } } as const;
@@ -68,12 +68,12 @@ export async function resolveDispute(
             provider: "MANUAL",
             type: "REFUND",
             status: "SUCCEEDED",
-            amountUzs: order.amountUzs,
+            amountUzs: order.amountUzs - order.discountUzs,
             idempotencyKey: idem,
           },
         });
         await tx.ledgerEntry.createMany({
-          data: refundPostings(order.amountUzs, order.commissionUzs).map((p) => ({
+          data: reversalPostings(order.amountUzs, order.commissionUzs, order.discountUzs).map((p) => ({
             orderId: order.id,
             account: p.account,
             amountUzs: p.amountUzs,

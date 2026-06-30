@@ -8,6 +8,9 @@ import { getOrderConversationId, listConversationMessages } from "@/server/servi
 import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
 import { DisputeBox } from "@/components/dispute-box";
+import { CancellationBox } from "@/components/cancellation-box";
+import { getOrderCancellation } from "@/server/services/cancellation";
+import { canTransition } from "@/lib/order-state";
 import { ReviewForm } from "@/components/review-form";
 import { BuyerReviewForm } from "@/components/buyer-review-form";
 import { Stars } from "@/components/stars";
@@ -31,6 +34,7 @@ export default async function OrderPage({
   const review = await getOrderReview(order.id);
   const buyerReview = await getOrderBuyerReview(order.id);
   const buyerRating = await getBuyerRating(order.buyerId);
+  const cancellation = await getOrderCancellation(order.id);
   const conversationId = await getOrderConversationId(order.id);
   const initialMessages = (await listConversationMessages(conversationId, user)).map((m) => ({
     id: m.id,
@@ -173,6 +177,21 @@ export default async function OrderPage({
       <div className="mt-4">
         <DisputeBox orderId={order.id} status={order.status} />
       </div>
+
+      {(role === "buyer" || role === "seller") && (
+        <div className="mt-4">
+          <CancellationBox
+            orderId={order.id}
+            currentUserId={user.id}
+            pending={
+              cancellation?.status === "PENDING"
+                ? { requestedById: cancellation.requestedById, reason: cancellation.reason }
+                : null
+            }
+            canRequest={canTransition(order.status, "CANCELLED") && cancellation?.status !== "PENDING"}
+          />
+        </div>
+      )}
 
       {order.status === "COMPLETED" && (
         <div className="mt-6">
