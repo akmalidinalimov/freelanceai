@@ -37,6 +37,14 @@
     "assign": "Assign to collection",
     "uncategorized": "Uncategorized"
   },
+  "Referral": {
+    "inviteTitle": "Invite friends",
+    "inviteDesc": "People who sign up via this link are counted as your referrals.",
+    "invited": "{n} invited",
+    "invitedTitle": "You've been invited!",
+    "invitedDesc": "Welcome to FreelanceAI — the AI creators marketplace.",
+    "getStarted": "Get started"
+  },
   "Cancel": {
     "title": "Cancellation request",
     "request": "Request cancellation",

@@ -58,6 +58,8 @@ model User {
   status     UserStatus @default(ACTIVE)
   onboardingCompleted Boolean @default(false)
   kycStatus  KycStatus @default(NONE)
+  referralCode String? @unique
+  referredById String?
   // Notification preferences (where to mirror in-app messages).
   notifyTelegram Boolean @default(true)
   notifyEmail    Boolean @default(false)
@@ -82,8 +84,11 @@ model User {
   notifications  Notification[]
   auditLogs      AuditLog[]
   collections    Collection[]
+  referredBy     User?   @relation("Referrals", fields: [referredById], references: [id])
+  referrals      User[]  @relation("Referrals")
 
   @@index([role])
+  @@index([referredById])
 }
 
 model Session {

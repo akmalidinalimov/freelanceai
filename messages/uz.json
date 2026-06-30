@@ -37,6 +37,14 @@
     "assign": "Toʻplamga qoʻshish",
     "uncategorized": "Toʻplamsiz"
   },
+  "Referral": {
+    "inviteTitle": "Doʻstlarni taklif qiling",
+    "inviteDesc": "Ushbu havola orqali roʻyxatdan oʻtganlar sizning takliflaringizga qoʻshiladi.",
+    "invited": "{n} ta taklif qilingan",
+    "invitedTitle": "Sizni taklif qilishdi!",
+    "invitedDesc": "FreelanceAI — AI ijodkorlar bozoriga xush kelibsiz.",
+    "getStarted": "Boshlash"
+  },
   "Cancel": {
     "title": "Bekor qilish soʻrovi",
     "request": "Bekor qilishni soʻrash",

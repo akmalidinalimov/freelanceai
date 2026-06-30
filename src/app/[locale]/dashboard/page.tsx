@@ -1,9 +1,11 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listBuyerOrders } from "@/server/services/order";
 import { listSavedGigs } from "@/server/services/saved";
+import { getReferralInfo, applyReferral } from "@/server/services/referral";
 import { formatUzs } from "@/lib/utils";
 
 export default async function DashboardPage({
@@ -20,6 +22,14 @@ export default async function DashboardPage({
   const tm = await getTranslations("Message");
   const ts = await getTranslations("Settings");
   const tg = await getTranslations("Gig");
+  const tr = await getTranslations("Referral");
+  // Attribute a pending referral (set-once) from the `ref` cookie, then load the invite info.
+  const ref = (await cookies()).get("ref")?.value;
+  if (ref) await applyReferral(user.id, ref);
+  const referral = await getReferralInfo(user.id);
+  const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
+  const referralUrl = referral.code ? `${origin}/${locale}/r/${referral.code}` : null;
+
   const orders = await listBuyerOrders(user.id);
   const saved = await listSavedGigs(user.id);
 
@@ -69,6 +79,24 @@ export default async function DashboardPage({
           </ul>
         )}
       </div>
+
+      {referralUrl && (
+        <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="font-semibold">{tr("inviteTitle")}</h3>
+            <span className="text-sm text-[hsl(var(--muted-foreground))]">
+              {tr("invited", { n: referral.count })}
+            </span>
+          </div>
+          <p className="mb-2 text-sm text-[hsl(var(--muted-foreground))]">{tr("inviteDesc")}</p>
+          <input
+            readOnly
+            value={referralUrl}
+            aria-label={tr("inviteTitle")}
+            className="w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+          />
+        </div>
+      )}
 
       <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
         <div className="mb-3 flex items-center justify-between">
