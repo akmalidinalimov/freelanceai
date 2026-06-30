@@ -9,6 +9,7 @@ import { getSellerEarnings } from "@/server/services/payments";
 import { getSellerStats } from "@/server/services/analytics";
 import { getOwnProfile } from "@/server/services/profile";
 import { formatUzs } from "@/lib/utils";
+import { PayoutRequestButton } from "@/components/payout-request-button";
 
 export default async function SellerDashboardPage({
   params,
@@ -118,6 +119,11 @@ export default async function SellerDashboardPage({
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Withdraw available balance */}
+      <div className="mb-4">
+        <PayoutRequestButton availableUzs={earnings.availableUzs} />
       </div>
 
       {/* Gigs */}

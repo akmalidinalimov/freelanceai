@@ -5,9 +5,11 @@ import {
   listPendingPayments,
   listSellerBalances,
   listRecentPayouts,
+  listPayoutRequests,
 } from "@/server/services/payments";
 import { formatUzs } from "@/lib/utils";
 import { ConfirmPaymentButton, PayoutForm } from "@/components/admin-settlement-actions";
+import { FulfillPayoutButton } from "@/components/fulfill-payout-button";
 
 export default async function SettlementsPage({
   params,
@@ -19,10 +21,11 @@ export default async function SettlementsPage({
   await requireAdminUser(locale);
   const t = await getTranslations("Admin");
 
-  const [pending, balances, payouts] = await Promise.all([
+  const [pending, balances, payouts, requests] = await Promise.all([
     listPendingPayments(),
     listSellerBalances(),
     listRecentPayouts(),
+    listPayoutRequests(),
   ]);
 
   const card = "rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5";
@@ -64,6 +67,31 @@ export default async function SettlementsPage({
       </section>
 
       {/* Seller balances → record payout */}
+      {/* Seller-requested payouts awaiting fulfilment */}
+      <section className={`mb-5 ${card}`}>
+        <h2 className="mb-3 font-semibold">
+          {t("payoutRequests")} ({requests.length})
+        </h2>
+        {requests.length === 0 ? (
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("noRequests")}</p>
+        ) : (
+          <ul className="divide-y divide-[hsl(var(--border))]">
+            {requests.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div className="text-sm">
+                  <span className="font-medium">{r.seller}</span>
+                  <span className="text-[hsl(var(--muted-foreground))]"> · {r.cardMasked}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold tabular-nums">{formatUzs(r.amountUzs)} so&apos;m</span>
+                  <FulfillPayoutButton requestId={r.id} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <section className={`mb-5 ${card}`}>
         <h2 className="mb-3 font-semibold">{t("sellerBalances")}</h2>
         {balances.length === 0 ? (

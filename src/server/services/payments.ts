@@ -314,3 +314,73 @@ export async function listRecentPayouts(take = 20) {
     createdAt: p.createdAt.toISOString(),
   }));
 }
+
+/** Seller requests a withdrawal of their full available balance (status REQUESTED). */
+export async function requestPayout(seller: User) {
+  const { availableUzs } = await getSellerEarnings(seller.id);
+  if (availableUzs <= 0) throw Errors.validation({ amount: "No withdrawable balance" });
+  const existing = await prisma.payoutRequest.findFirst({
+    where: { sellerId: seller.id, status: "REQUESTED" },
+  });
+  if (existing) throw Errors.conflict("You already have a pending payout request");
+  const u = await prisma.user.findUnique({
+    where: { id: seller.id },
+    select: { payoutCardMasked: true },
+  });
+  const req = await prisma.payoutRequest.create({
+    data: {
+      sellerId: seller.id,
+      amountUzs: availableUzs,
+      cardMasked: u?.payoutCardMasked ?? "—",
+      status: "REQUESTED",
+    },
+  });
+  await audit({ actorId: seller.id, action: "payout.request", entity: "PayoutRequest", entityId: req.id });
+  return req;
+}
+
+/** Pending (seller-requested) payouts awaiting admin action. */
+export async function listPayoutRequests() {
+  const rows = await prisma.payoutRequest.findMany({
+    where: { status: "REQUESTED" },
+    orderBy: { createdAt: "asc" },
+    include: { seller: NAME_SELECT },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    seller: displayName(r.seller),
+    amountUzs: r.amountUzs,
+    cardMasked: r.cardMasked,
+    createdAt: r.createdAt.toISOString(),
+  }));
+}
+
+/** Admin fulfils a seller's payout request: REQUESTED → PAID + balanced ledger postings. */
+export async function fulfillPayoutRequest(admin: User, requestId: string) {
+  if (admin.role !== "ADMIN") throw Errors.forbidden("Only an admin can pay out");
+  const req = await prisma.payoutRequest.findUnique({ where: { id: requestId } });
+  if (!req || req.status !== "REQUESTED") throw Errors.conflict("No such pending payout request");
+
+  const [completed, payouts] = await Promise.all([
+    prisma.order.aggregate({ where: { sellerId: req.sellerId, status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
+    prisma.payoutRequest.aggregate({ where: { sellerId: req.sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
+  ]);
+  const available = (completed._sum.sellerNetUzs ?? 0) - (payouts._sum.amountUzs ?? 0);
+  if (req.amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payoutRequest.update({
+      where: { id: requestId },
+      data: { status: "PAID", processedBy: admin.id },
+    });
+    await tx.ledgerEntry.createMany({
+      data: payoutPostings(req.amountUzs).map((p) => ({
+        account: p.account,
+        amountUzs: p.amountUzs,
+        userId: req.sellerId,
+        memo: `Payout request ${requestId} to seller ${req.sellerId}`,
+      })),
+    });
+  });
+  await audit({ actorId: admin.id, action: "payout.fulfill", entity: "PayoutRequest", entityId: requestId });
+}

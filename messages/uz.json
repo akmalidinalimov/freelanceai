@@ -52,6 +52,12 @@
     "saved": "Saqlandi ✓",
     "delete": "Oʻchirish"
   },
+  "Payout": {
+    "available": "Yechib olish mumkin",
+    "request": "Toʻlovni soʻrash",
+    "requested": "Toʻlov soʻraldi ✓",
+    "error": "Xatolik yuz berdi"
+  },
   "Errors": {
     "notFoundTitle": "Sahifa topilmadi",
     "notFoundDesc": "Siz qidirayotgan sahifa mavjud emas.",
@@ -365,6 +371,8 @@
     "cardPh": "8600 **** **** 1234",
     "amount": "Summa",
     "recentPayouts": "Soʻnggi toʻlovlar",
+    "payoutRequests": "Toʻlov soʻrovlari",
+    "noRequests": "Toʻlov soʻrovlari yoʻq",
     "noPayouts": "Hali toʻlovlar yoʻq.",
     "moderation": "Xizmatlar nazorati",
     "approve": "Tasdiqlash",

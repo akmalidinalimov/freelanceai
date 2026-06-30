@@ -52,6 +52,12 @@
     "saved": "Saved ✓",
     "delete": "Delete"
   },
+  "Payout": {
+    "available": "Available to withdraw",
+    "request": "Request payout",
+    "requested": "Payout requested ✓",
+    "error": "Something went wrong"
+  },
   "Errors": {
     "notFoundTitle": "Page not found",
     "notFoundDesc": "The page you're looking for doesn't exist.",
@@ -365,6 +371,8 @@
     "cardPh": "8600 **** **** 1234",
     "amount": "Amount",
     "recentPayouts": "Recent payouts",
+    "payoutRequests": "Payout requests",
+    "noRequests": "No payout requests",
     "noPayouts": "No payouts yet.",
     "moderation": "Gig moderation",
     "approve": "Approve",
