@@ -71,7 +71,12 @@ export default async function DashboardPage({
       </div>
 
       <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
-        <h3 className="mb-3 font-semibold">{t("saved")}</h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-semibold">{t("saved")}</h3>
+          <Link href="/dashboard/saved" className="text-sm text-[hsl(var(--primary))] hover:underline">
+            {t("manageSaved")}
+          </Link>
+        </div>
         {saved.length === 0 ? (
           <p className="text-sm text-[hsl(var(--muted-foreground))]">{tg("noSaved")}</p>
         ) : (

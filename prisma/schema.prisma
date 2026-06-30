@@ -81,6 +81,7 @@ model User {
   payoutRequests PayoutRequest[]
   notifications  Notification[]
   auditLogs      AuditLog[]
+  collections    Collection[]
 
   @@index([role])
 }
@@ -293,14 +294,28 @@ model Coupon {
 }
 
 model SavedGig {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  gigId     String
-  gig       Gig      @relation(fields: [gigId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gigId        String
+  gig          Gig         @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  collectionId String?
+  collection   Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
 
   @@unique([userId, gigId])
+  @@index([userId])
+}
+
+// Named lists for organizing a buyer's saved gigs.
+model Collection {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime   @default(now())
+  savedGigs SavedGig[]
+
   @@index([userId])
 }
 

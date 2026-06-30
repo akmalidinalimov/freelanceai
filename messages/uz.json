@@ -27,6 +27,16 @@
     "filter": "Filtr",
     "none": "Yozuvlar yoʻq."
   },
+  "Collections": {
+    "title": "Saqlangan xizmatlar",
+    "all": "Barchasi",
+    "create": "Yaratish",
+    "newPh": "Yangi toʻplam nomi",
+    "delete": "Oʻchirish",
+    "confirmDelete": "Toʻplam oʻchirilsinmi?",
+    "assign": "Toʻplamga qoʻshish",
+    "uncategorized": "Toʻplamsiz"
+  },
   "Cancel": {
     "title": "Bekor qilish soʻrovi",
     "request": "Bekor qilishni soʻrash",
@@ -108,6 +118,7 @@
     "orders": "Faol buyurtmalar",
     "messages": "Xabarlar",
     "saved": "Saqlangan xizmatlar",
+    "manageSaved": "Boshqarish",
     "spend": "Xarajatlar",
     "earnings": "Daromad",
     "held": "Saqlanmoqda",

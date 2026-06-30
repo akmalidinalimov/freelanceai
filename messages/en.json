@@ -27,6 +27,16 @@
     "filter": "Filter",
     "none": "No entries."
   },
+  "Collections": {
+    "title": "Saved gigs",
+    "all": "All",
+    "create": "Create",
+    "newPh": "New collection name",
+    "delete": "Delete",
+    "confirmDelete": "Delete this collection?",
+    "assign": "Assign to collection",
+    "uncategorized": "Uncategorized"
+  },
   "Cancel": {
     "title": "Cancellation request",
     "request": "Request cancellation",
@@ -108,6 +118,7 @@
     "orders": "Active orders",
     "messages": "Messages",
     "saved": "Saved gigs",
+    "manageSaved": "Manage",
     "spend": "Spending",
     "earnings": "Earnings",
     "held": "Held",
