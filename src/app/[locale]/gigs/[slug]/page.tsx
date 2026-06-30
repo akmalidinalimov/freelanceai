@@ -33,6 +33,7 @@ import { ContactSellerButton } from "@/components/contact-seller-button";
 import { SaveButton } from "@/components/save-button";
 import { ReviewReply } from "@/components/review-reply";
 import { RecentlyViewedTracker } from "@/components/recently-viewed-tracker";
+import { FeatureGigButton } from "@/components/feature-gig-button";
 
 const TIER_ORDER = { BASIC: 0, STANDARD: 1, PREMIUM: 2 } as const;
 
@@ -87,7 +88,15 @@ export default async function GigDetailPage({
             ))}
           </div>
         )}
-        <h1 className="text-3xl font-bold">{gig.title}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          {gig.featured && (
+            <span className="rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-xs font-bold text-[hsl(var(--primary-foreground))]">
+              ★ {t("featured")}
+            </span>
+          )}
+          {me?.role === "ADMIN" && <FeatureGigButton gigId={gig.id} featured={gig.featured} />}
+        </div>
+        <h1 className="mt-2 text-3xl font-bold">{gig.title}</h1>
         <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
           {t("byCreator")}{" "}
           {gig.seller.username ? (

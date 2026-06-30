@@ -159,6 +159,33 @@ export async function reportGig(gigId: string, reporter: GigActor) {
   await audit({ actorId: reporter.id, action: "gig.report", entity: "Gig", entityId: gigId });
 }
 
+/** Admin-only: feature/unfeature a gig (boosts it in listings for `days`). */
+export async function setGigFeatured(gigId: string, admin: GigActor, featured: boolean, days = 30) {
+  if (admin.role !== "ADMIN") throw Errors.forbidden("Admins only");
+  const featuredUntil = featured ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : null;
+  const res = await prisma.gig.updateMany({ where: { id: gigId, deletedAt: null }, data: { featured, featuredUntil } });
+  if (res.count === 0) throw Errors.notFound("Gig not found");
+  await audit({ actorId: admin.id, action: featured ? "gig.feature" : "gig.unfeature", entity: "Gig", entityId: gigId });
+}
+
+/** Featured, non-expired active gigs for the home row. */
+export function listFeaturedGigs(take = 8) {
+  return prisma.gig.findMany({
+    where: {
+      status: "ACTIVE",
+      deletedAt: null,
+      featured: true,
+      OR: [{ featuredUntil: null }, { featuredUntil: { gt: new Date() } }],
+    },
+    orderBy: { createdAt: "desc" },
+    take,
+    include: {
+      packages: { orderBy: { priceUzs: "asc" }, take: 1 },
+      seller: { select: { firstName: true, username: true, name: true } },
+    },
+  });
+}
+
 /** Fuzzy (typo-tolerant) text match via pg_trgm; falls back to ILIKE if trigram is unavailable. */
 async function fuzzyTextWhere(q: string): Promise<Prisma.GigWhereInput> {
   const ilike: Prisma.GigWhereInput = {
@@ -208,7 +235,7 @@ export async function listPublicGigs(opts: GigFilters = {}) {
 
   const gigs = await prisma.gig.findMany({
     where,
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }, { id: "desc" }],
     take: opts.take ?? 48,
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },

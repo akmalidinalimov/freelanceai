@@ -241,6 +241,8 @@ model Gig {
   galleryUrls String[]  @default([])
   faq         Json?     // [{ q, a }] seller-managed FAQ
   views       Int       @default(0)
+  featured     Boolean   @default(false)
+  featuredUntil DateTime?
   locale      String    @default("uz")
   status      GigStatus @default(DRAFT)
   deletedAt   DateTime?

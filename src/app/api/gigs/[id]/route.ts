@@ -9,10 +9,13 @@ import {
   approveGig,
   rejectGig,
   reportGig,
+  setGigFeatured,
 } from "@/server/services/gig";
 
 const schema = z
-  .object({ action: z.enum(["pause", "resume", "delete", "approve", "reject", "report"]) })
+  .object({
+    action: z.enum(["pause", "resume", "delete", "approve", "reject", "report", "feature", "unfeature"]),
+  })
   .strict();
 
 /** Owner gig management + admin moderation (approve/reject) + report. Authz enforced in the service. */
@@ -28,6 +31,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     else if (action === "delete") await softDeleteGig(id, user);
     else if (action === "approve") await approveGig(id, user);
     else if (action === "reject") await rejectGig(id, user);
+    else if (action === "feature") await setGigFeatured(id, user, true);
+    else if (action === "unfeature") await setGigFeatured(id, user, false);
     else await reportGig(id, user);
     return ok({ done: true });
   } catch (err) {

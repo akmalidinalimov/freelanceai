@@ -120,6 +120,11 @@ export default async function GigsPage({
                 className="relative flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-colors hover:border-[hsl(var(--primary))]"
               >
                 <SaveHeart gigId={g.id} locale={locale} initialSaved={savedSet.has(g.id)} isGuest={!me} />
+                {g.featured && (
+                  <span className="absolute left-2 top-2 z-10 rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--primary-foreground))]">
+                    ★ {tg("featured")}
+                  </span>
+                )}
                 <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-2xl font-bold text-[hsl(var(--primary))]">
                   {g.coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
