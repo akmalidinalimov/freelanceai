@@ -129,6 +129,20 @@ export default async function GigDetailPage({
           </div>
         )}
 
+        {Array.isArray(gig.faq) && gig.faq.length > 0 && (
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl font-semibold">{t("faq")}</h2>
+            <div className="space-y-2">
+              {(gig.faq as { q: string; a: string }[]).map((f, i) => (
+                <details key={i} className="rounded-xl border border-[hsl(var(--border))] p-4">
+                  <summary className="cursor-pointer text-sm font-medium">{f.q}</summary>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-[hsl(var(--muted-foreground))]">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
+
         {reviews.length > 0 && (
           <div className="mt-8">
             <h2 className="mb-4 text-xl font-semibold">

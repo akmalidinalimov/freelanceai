@@ -26,6 +26,11 @@ export interface GigPackageInput {
   revisions: number;
 }
 
+export interface GigFaqItem {
+  q: string;
+  a: string;
+}
+
 export interface CreateGigInput {
   title: string;
   description: string;
@@ -34,6 +39,7 @@ export interface CreateGigInput {
   categoryId?: string;
   tags?: string[];
   locale?: string;
+  faq?: GigFaqItem[];
   packages: GigPackageInput[];
 }
 
@@ -42,6 +48,11 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
   // Strip off-platform contact info from public gig text (anti-escrow-bypass).
   const title = stripContactInfo(input.title).text;
   const description = stripContactInfo(input.description).text;
+  // Sanitize FAQ text (anti-escrow-bypass); cap at 10 entries.
+  const faq = (input.faq ?? [])
+    .slice(0, 10)
+    .map((f) => ({ q: stripContactInfo(f.q).text.slice(0, 200), a: stripContactInfo(f.a).text.slice(0, 1000) }))
+    .filter((f) => f.q && f.a);
   const gig = await prisma.gig.create({
     data: {
       sellerId,
@@ -50,6 +61,7 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       description,
       coverUrl: input.coverUrl || null,
       galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
+      faq: faq.length ? faq : undefined,
       categoryId: input.categoryId || null,
       tags: input.tags ?? [],
       locale: input.locale ?? "uz",

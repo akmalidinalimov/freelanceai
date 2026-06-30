@@ -28,6 +28,7 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
   const [tags, setTags] = useState("");
   const [coverUrl, setCoverUrl] = useState<string | undefined>(undefined);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [faq, setFaq] = useState<{ q: string; a: string }[]>([]);
   const [pkgs, setPkgs] = useState<Record<Tier, PkgState>>({
     BASIC: { ...emptyPkg },
     STANDARD: { ...emptyPkg },
@@ -75,6 +76,11 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
             .map((s) => s.trim())
             .filter(Boolean)
             .slice(0, 8),
+          faq:
+            faq
+              .map((f) => ({ q: f.q.trim(), a: f.a.trim() }))
+              .filter((f) => f.q && f.a)
+              .slice(0, 10) || undefined,
           packages,
         }),
       });
@@ -151,6 +157,47 @@ export function GigForm({ locale, categories }: { locale: string; categories: Ca
             placeholder={t("tagsPh")}
           />
         </label>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-medium">{t("faq")}</p>
+        <div className="flex flex-col gap-2">
+          {faq.map((f, i) => (
+            <div key={i} className="flex flex-col gap-1 rounded-lg border border-[hsl(var(--border))] p-2">
+              <div className="flex gap-2">
+                <input
+                  className={field}
+                  placeholder={t("faqQ")}
+                  value={f.q}
+                  onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, q: e.target.value } : x)))}
+                />
+                <button
+                  type="button"
+                  aria-label={t("faqRemove")}
+                  onClick={() => setFaq((arr) => arr.filter((_, j) => j !== i))}
+                  className="shrink-0 rounded-md border border-[hsl(var(--border))] px-2 text-sm"
+                >
+                  ×
+                </button>
+              </div>
+              <textarea
+                className={`${field} min-h-16`}
+                placeholder={t("faqA")}
+                value={f.a}
+                onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, a: e.target.value } : x)))}
+              />
+            </div>
+          ))}
+          {faq.length < 10 && (
+            <button
+              type="button"
+              onClick={() => setFaq((arr) => [...arr, { q: "", a: "" }])}
+              className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
+            >
+              + {t("faqAdd")}
+            </button>
+          )}
+        </div>
       </div>
 
       <div>

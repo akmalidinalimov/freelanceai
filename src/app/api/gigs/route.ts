@@ -21,6 +21,10 @@ const schema = z
     galleryUrls: z.array(z.string().url()).max(8).optional(),
     categoryId: z.string().optional(),
     tags: z.array(z.string().min(1).max(30)).max(8).optional(),
+    faq: z
+      .array(z.object({ q: z.string().min(1).max(200), a: z.string().min(1).max(1000) }))
+      .max(10)
+      .optional(),
     packages: z.array(packageSchema).min(1).max(3),
   })
   .strict();
