@@ -8,6 +8,8 @@ import { formatUzs } from "@/lib/utils";
 import { approxPrice } from "@/lib/currency";
 import { SaveHeart } from "@/components/save-heart";
 import { RecentlyViewed } from "@/components/recently-viewed";
+import { listSavedSearches, searchLink } from "@/server/services/saved-search";
+import { SaveSearchButton, DeleteSavedSearch } from "@/components/saved-search-controls";
 import type { Locale } from "@/i18n/routing";
 
 export default async function GigsPage({
@@ -47,6 +49,14 @@ export default async function GigsPage({
 
   const me = await getCurrentUser().catch(() => null);
   const savedSet = me ? await listSavedGigIds(me.id) : new Set<string>();
+  const savedSearches = me ? await listSavedSearches(me.id) : [];
+  const hasFilters = Boolean(sp.q || sp.category || minUzs != null || maxUzs != null);
+  const currentFilters = {
+    q: sp.q || undefined,
+    categorySlug: sp.category || undefined,
+    minUzs: Number.isFinite(minUzs) ? minUzs : undefined,
+    maxUzs: Number.isFinite(maxUzs) ? maxUzs : undefined,
+  };
 
   const field =
     "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
@@ -100,7 +110,33 @@ export default async function GigsPage({
         >
           {tg("apply")}
         </button>
+        {me && hasFilters && <SaveSearchButton filters={currentFilters} />}
       </form>
+
+      {savedSearches.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-[hsl(var(--muted-foreground))]">{tg("savedSearches")}:</span>
+          {savedSearches.map((s) => (
+            <span
+              key={s.id}
+              className="flex items-center gap-1 rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs"
+            >
+              <Link
+                href={searchLink({
+                  q: s.q ?? undefined,
+                  categorySlug: s.categorySlug ?? undefined,
+                  minUzs: s.minUzs ?? undefined,
+                  maxUzs: s.maxUzs ?? undefined,
+                })}
+                className="hover:underline"
+              >
+                {s.q || s.categorySlug || `${s.minUzs ?? ""}–${s.maxUzs ?? ""}`}
+              </Link>
+              <DeleteSavedSearch id={s.id} />
+            </span>
+          ))}
+        </div>
+      )}
 
       {!sp.q && !sp.category && <RecentlyViewed />}
 

@@ -45,6 +45,11 @@
     "invitedDesc": "Welcome to FreelanceAI — the AI creators marketplace.",
     "getStarted": "Get started"
   },
+  "SavedSearch": {
+    "save": "Save search",
+    "saved": "Saved ✓",
+    "delete": "Delete"
+  },
   "Cancel": {
     "title": "Cancellation request",
     "request": "Request cancellation",
@@ -179,6 +184,7 @@
     "faqRemove": "Remove",
     "views": "views",
     "recentlyViewed": "Recently viewed",
+    "savedSearches": "Saved searches",
     "extras": "Extras",
     "extraTitle": "Extra title",
     "extraDays": "+days",

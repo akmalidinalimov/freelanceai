@@ -45,6 +45,11 @@
     "invitedDesc": "FreelanceAI — AI ijodkorlar bozoriga xush kelibsiz.",
     "getStarted": "Boshlash"
   },
+  "SavedSearch": {
+    "save": "Qidiruvni saqlash",
+    "saved": "Saqlandi ✓",
+    "delete": "Oʻchirish"
+  },
   "Cancel": {
     "title": "Bekor qilish soʻrovi",
     "request": "Bekor qilishni soʻrash",
@@ -179,6 +184,7 @@
     "faqRemove": "Oʻchirish",
     "views": "koʻrish",
     "recentlyViewed": "Yaqinda koʻrilgan",
+    "savedSearches": "Saqlangan qidiruvlar",
     "extras": "Qoʻshimcha xizmatlar",
     "extraTitle": "Qoʻshimcha nomi",
     "extraDays": "+kun",

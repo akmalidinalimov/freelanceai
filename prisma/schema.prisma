@@ -84,11 +84,27 @@ model User {
   notifications  Notification[]
   auditLogs      AuditLog[]
   collections    Collection[]
+  savedSearches  SavedSearch[]
   referredBy     User?   @relation("Referrals", fields: [referredById], references: [id])
   referrals      User[]  @relation("Referrals")
 
   @@index([role])
   @@index([referredById])
+}
+
+// A buyer's saved search; a cron job notifies them when new matching gigs appear.
+model SavedSearch {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  q             String?
+  categorySlug  String?
+  minUzs        Int?
+  maxUzs        Int?
+  lastCheckedAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Session {

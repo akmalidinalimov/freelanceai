@@ -76,6 +76,7 @@ const CHECKS = [
   { group: "API", name: "admin create coupon", method: "POST", path: "/api/admin/coupons", origin: true, expect: 401 },
   { group: "API", name: "admin user action", method: "POST", path: "/api/admin/users/abc", origin: true, expect: 401 },
   { group: "API", name: "collections", method: "POST", path: "/api/collections", origin: true, expect: 401 },
+  { group: "API", name: "saved searches", method: "POST", path: "/api/saved-searches", origin: true, expect: 401 },
 ];
 
 const ok = (expect, status) => (Array.isArray(expect) ? expect.includes(status) : expect === status);

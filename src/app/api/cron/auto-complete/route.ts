@@ -1,8 +1,9 @@
 import { autoCompleteDeliveredOrders } from "@/server/services/order";
+import { checkSavedSearches } from "@/server/services/saved-search";
 
 /**
- * Scheduled job endpoint: auto-complete deliveries the buyer never acted on.
- * Protected by a shared CRON_SECRET (Bearer). Called by .github/workflows/auto-complete.yml.
+ * Scheduled job endpoint (every ~6h): auto-complete stale deliveries + notify users about
+ * new gigs matching their saved searches. Protected by a shared CRON_SECRET (Bearer).
  */
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -11,5 +12,6 @@ export async function POST(request: Request) {
     return new Response("unauthorized", { status: 401 });
   }
   const completed = await autoCompleteDeliveredOrders(3);
-  return Response.json({ completed });
+  const searchAlerts = await checkSavedSearches().catch(() => 0);
+  return Response.json({ completed, searchAlerts });
 }

@@ -45,6 +45,11 @@
     "invitedDesc": "Добро пожаловать на FreelanceAI — маркетплейс AI-креаторов.",
     "getStarted": "Начать"
   },
+  "SavedSearch": {
+    "save": "Сохранить поиск",
+    "saved": "Сохранено ✓",
+    "delete": "Удалить"
+  },
   "Cancel": {
     "title": "Запрос на отмену",
     "request": "Запросить отмену",
@@ -179,6 +184,7 @@
     "faqRemove": "Удалить",
     "views": "просмотров",
     "recentlyViewed": "Недавно просмотренные",
+    "savedSearches": "Сохранённые поиски",
     "extras": "Доп. услуги",
     "extraTitle": "Название доп. услуги",
     "extraDays": "+дней",
