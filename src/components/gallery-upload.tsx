@@ -20,7 +20,7 @@ export function GalleryUpload({
 }: {
   value: string[];
   onChange: (urls: string[]) => void;
-  prefix?: "gigs" | "portfolio" | "deliveries" | "requirements";
+  prefix?: "gigs" | "portfolio" | "deliveries" | "requirements" | "messages";
   label?: string;
   video?: boolean;
 }) {

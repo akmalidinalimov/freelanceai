@@ -19,7 +19,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-const schema = z.object({ body: z.string().min(1).max(2000) }).strict();
+const schema = z
+  .object({
+    body: z.string().max(2000).optional(),
+    fileUrls: z.array(z.string().url()).max(5).optional(),
+  })
+  .strict()
+  .refine((d) => (d.body && d.body.trim()) || (d.fileUrls && d.fileUrls.length > 0), {
+    message: "Message is empty",
+  });
 
 /** Send a message in a conversation. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +38,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!rateLimit(`msg:${clientIp(request)}`, 30, 60_000)) throw Errors.rateLimited();
     const { id } = await params;
     const input = parseInput(schema, await request.json().catch(() => ({})));
-    const message = await postConversationMessage(id, user, input.body);
+    const message = await postConversationMessage(id, user, input.body ?? "", input.fileUrls ?? []);
     return ok({ message });
   } catch (err) {
     return errorResponse(err);

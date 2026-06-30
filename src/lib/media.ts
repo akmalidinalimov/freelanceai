@@ -63,7 +63,7 @@ function privateBucketFor(prefix: string): string | undefined {
  * `r2-private:<key>` ref that only the access-controlled proxy can resolve (no public URL exists).
  */
 export async function presignUpload(
-  prefix: "gigs" | "portfolio" | "deliveries" | "requirements",
+  prefix: "gigs" | "portfolio" | "deliveries" | "requirements" | "messages",
   contentType: string,
   size: number
 ): Promise<PresignResult> {

@@ -3,14 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { GalleryUpload } from "@/components/gallery-upload";
 
 export interface Msg {
   id: string;
   body: string | null;
+  fileUrls?: string[];
   senderId: string;
   sender: { firstName: string | null; name: string | null; username: string | null };
   createdAt: string;
 }
+
+const isVideo = (u: string) => /\.(mp4|webm)$/i.test(u);
 
 function senderName(m: Msg) {
   return m.sender.firstName ?? m.sender.name ?? m.sender.username ?? "";
@@ -28,6 +32,7 @@ export function MessageThread({
   const t = useTranslations("Message");
   const [messages, setMessages] = useState<Msg[]>(initial);
   const [input, setInput] = useState("");
+  const [files, setFiles] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const seen = useRef<Set<string>>(new Set(initial.map((m) => m.id)));
   const endRef = useRef<HTMLDivElement>(null);
@@ -79,18 +84,19 @@ export function MessageThread({
 
   async function send() {
     const body = input.trim();
-    if (!body || busy) return;
+    if ((!body && files.length === 0) || busy) return;
     setBusy(true);
     try {
       const r = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({ body: body || undefined, fileUrls: files }),
       });
       const j = await r.json();
       if (j.ok) {
         append([j.data.message]);
         setInput("");
+        setFiles([]);
       }
     } catch {
       /* ignore */
@@ -119,7 +125,23 @@ export function MessageThread({
                   }`}
                 >
                   {!mine && <p className="mb-0.5 text-xs opacity-70">{senderName(m)}</p>}
-                  <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                  {m.body && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
+                  {m.fileUrls && m.fileUrls.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {m.fileUrls.map((u) => (
+                        <a key={u} href={u} target="_blank" rel="noreferrer">
+                          {isVideo(u) ? (
+                            <span className="flex h-16 w-16 items-center justify-center rounded bg-black/20 text-lg">
+                              ▶
+                            </span>
+                          ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={u} alt="" loading="lazy" className="h-16 w-16 rounded object-cover" />
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -128,7 +150,10 @@ export function MessageThread({
         <div ref={endRef} />
       </div>
 
-      <div className="flex gap-2">
+      <div className="mb-2">
+        <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
+      </div>
+      <div className="flex items-center gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -141,7 +166,7 @@ export function MessageThread({
           placeholder={t("placeholder")}
           className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
         />
-        <Button onClick={send} disabled={busy || !input.trim()}>
+        <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
           {t("send")}
         </Button>
       </div>

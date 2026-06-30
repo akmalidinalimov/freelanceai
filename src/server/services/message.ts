@@ -82,16 +82,22 @@ export async function listConversationMessages(
 }
 
 /** Post a message in a conversation; best-effort Telegram notify to the other participant. */
-export async function postConversationMessage(conversationId: string, user: User, body: string) {
+export async function postConversationMessage(
+  conversationId: string,
+  user: User,
+  body: string,
+  fileUrls: string[] = []
+) {
   const trimmed = body.trim();
-  if (!trimmed) throw Errors.validation({ body: "Message is empty" });
+  const files = fileUrls.slice(0, 5);
+  if (!trimmed && files.length === 0) throw Errors.validation({ body: "Message is empty" });
   if (trimmed.length > 2000) throw Errors.validation({ body: "Message is too long" });
   // Strip off-platform contact info (anti-escrow-bypass).
-  const text = stripContactInfo(trimmed).text;
+  const text = trimmed ? stripContactInfo(trimmed).text : null;
 
   const { convo, buyerId, sellerId } = await authzConversation(conversationId, user);
   const message = await prisma.message.create({
-    data: { conversationId, senderId: user.id, body: text },
+    data: { conversationId, senderId: user.id, body: text, fileUrls: files },
     include: { sender: SENDER_SELECT },
   });
 
@@ -100,6 +106,7 @@ export async function postConversationMessage(conversationId: string, user: User
     id: message.id,
     conversationId,
     body: message.body,
+    fileUrls: message.fileUrls,
     senderId: message.senderId,
     sender: {
       firstName: message.sender.firstName,
@@ -118,7 +125,8 @@ export async function postConversationMessage(conversationId: string, user: User
     if (other) {
       const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
       const ctx = convo.gig?.title ? ` "${convo.gig.title}"` : "";
-      const preview = text.length > 160 ? `${text.slice(0, 160)}…` : text;
+      const previewText = text ?? (files.length ? "📎 fayl" : "");
+      const preview = previewText.length > 160 ? `${previewText.slice(0, 160)}…` : previewText;
       const link = `${origin}/uz/messages/${conversationId}`;
       // Respect the recipient's notification preferences.
       if (other.notifyTelegram && other.telegramId) {

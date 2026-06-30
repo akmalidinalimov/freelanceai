@@ -14,6 +14,7 @@ export interface BusMessage {
   id: string;
   conversationId: string;
   body: string | null;
+  fileUrls: string[];
   senderId: string;
   sender: { firstName: string | null; name: string | null; username: string | null };
   createdAt: string;

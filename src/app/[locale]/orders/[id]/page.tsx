@@ -39,6 +39,7 @@ export default async function OrderPage({
   const initialMessages = (await listConversationMessages(conversationId, user)).map((m) => ({
     id: m.id,
     body: m.body,
+    fileUrls: m.fileUrls,
     senderId: m.senderId,
     sender: { firstName: m.sender.firstName, name: m.sender.name, username: m.sender.username },
     createdAt: m.createdAt.toISOString(),

@@ -328,6 +328,7 @@
     "title": "Messages",
     "placeholder": "Write a message...",
     "send": "Send",
+    "attach": "Attach file",
     "contact": "Contact freelancer",
     "inbox": "Messages",
     "inboxEmpty": "No conversations yet.",
