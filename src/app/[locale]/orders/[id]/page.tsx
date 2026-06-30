@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { getOrderForUser } from "@/server/services/order";
-import { getOrderReview } from "@/server/services/review";
+import { getOrderReview, getOrderBuyerReview, getBuyerRating } from "@/server/services/review";
 import { getOrderConversationId, listConversationMessages } from "@/server/services/message";
 import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
 import { DisputeBox } from "@/components/dispute-box";
 import { ReviewForm } from "@/components/review-form";
+import { BuyerReviewForm } from "@/components/buyer-review-form";
 import { Stars } from "@/components/stars";
 import { MessageThread } from "@/components/message-thread";
 import { TipButton } from "@/components/tip-button";
@@ -28,6 +29,8 @@ export default async function OrderPage({
   if (!order) notFound();
 
   const review = await getOrderReview(order.id);
+  const buyerReview = await getOrderBuyerReview(order.id);
+  const buyerRating = await getBuyerRating(order.buyerId);
   const conversationId = await getOrderConversationId(order.id);
   const initialMessages = (await listConversationMessages(conversationId, user)).map((m) => ({
     id: m.id,
@@ -105,6 +108,14 @@ export default async function OrderPage({
           <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
             {role === "buyer" ? t("seller") : t("buyer")}: {cpName}
           </p>
+          {role === "seller" && buyerRating.count > 0 && (
+            <div className="mt-1 flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
+              <Stars value={buyerRating.avg} />
+              <span className="tabular-nums">
+                {buyerRating.avg.toFixed(1)} ({buyerRating.count})
+              </span>
+            </div>
+          )}
         </div>
         <div className="rounded-xl border border-[hsl(var(--border))] p-5">
           <p className="mb-1 text-sm font-medium">{t("requirements")}</p>
@@ -177,6 +188,19 @@ export default async function OrderPage({
           {role === "buyer" && (
             <div className="mt-4">
               <TipButton orderId={order.id} />
+            </div>
+          )}
+          {role === "seller" && (
+            <div className="mt-4">
+              {buyerReview ? (
+                <div className="rounded-xl border border-[hsl(var(--border))] p-5">
+                  <p className="mb-1 text-sm font-medium">{tr("yourBuyerReview")}</p>
+                  <Stars value={buyerReview.rating} className="text-lg" />
+                  {buyerReview.comment && <p className="mt-2 text-sm">{buyerReview.comment}</p>}
+                </div>
+              ) : (
+                <BuyerReviewForm orderId={order.id} />
+              )}
             </div>
           )}
         </div>

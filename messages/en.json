@@ -226,6 +226,8 @@
   },
   "Review": {
     "leaveReview": "Leave a review",
+    "reviewBuyer": "Review the buyer",
+    "yourBuyerReview": "Your review of the buyer",
     "commentPh": "Share your experience (optional)...",
     "submit": "Submit review",
     "submitting": "Submitting...",

@@ -366,6 +366,7 @@ model Order {
   deliveries   OrderDelivery[]
   conversation Conversation?
   review       Review?
+  buyerReview  BuyerReview?
   transactions Transaction[]
   ledgerEntries LedgerEntry[]
   dispute      Dispute?
@@ -373,6 +374,19 @@ model Order {
   @@index([buyerId])
   @@index([sellerId])
   @@index([status])
+}
+
+// Seller's review OF the buyer (the other half of two-way reviews). Author is the order's seller.
+model BuyerReview {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  buyerId   String // the buyer being reviewed
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@index([buyerId])
 }
 
 model OrderDelivery {

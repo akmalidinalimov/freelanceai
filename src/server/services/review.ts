@@ -44,6 +44,39 @@ export function getOrderReview(orderId: string) {
   return prisma.review.findUnique({ where: { orderId } });
 }
 
+/** Seller reviews the buyer on a COMPLETED order (one per order). */
+export async function createBuyerReview(orderId: string, seller: User, rating: number, comment?: string) {
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    throw Errors.validation({ rating: "Rating must be 1–5" });
+  }
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw Errors.notFound("Order not found");
+  if (order.sellerId !== seller.id && seller.role !== "ADMIN") throw Errors.forbidden();
+  if (order.status !== "COMPLETED") throw Errors.conflict("Only completed orders can be reviewed");
+  const existing = await prisma.buyerReview.findUnique({ where: { orderId } });
+  if (existing) throw Errors.conflict("This order's buyer is already reviewed");
+
+  const review = await prisma.buyerReview.create({
+    data: { orderId, buyerId: order.buyerId, rating, comment: comment?.trim() || null },
+  });
+  await audit({ actorId: seller.id, action: "buyerReview.create", entity: "Order", entityId: orderId });
+  return review;
+}
+
+export function getOrderBuyerReview(orderId: string) {
+  return prisma.buyerReview.findUnique({ where: { orderId } });
+}
+
+/** A buyer's reputation (avg rating + count) from sellers' reviews. */
+export async function getBuyerRating(buyerId: string) {
+  const agg = await prisma.buyerReview.aggregate({
+    where: { buyerId },
+    _avg: { rating: true },
+    _count: true,
+  });
+  return { avg: agg._avg.rating ?? 0, count: agg._count };
+}
+
 /** Reviews for a gig + average/count + star distribution, for the public gig page. */
 export async function getGigReviews(gigId: string) {
   const [reviews, agg, grouped] = await Promise.all([

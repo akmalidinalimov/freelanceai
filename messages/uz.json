@@ -226,6 +226,8 @@
   },
   "Review": {
     "leaveReview": "Sharh qoldiring",
+    "reviewBuyer": "Buyurtmachini baholang",
+    "yourBuyerReview": "Buyurtmachi haqidagi sharhingiz",
     "commentPh": "Taassurotingiz bilan boʻlishing (ixtiyoriy)...",
     "submit": "Sharh yuborish",
     "submitting": "Yuborilmoqda...",
