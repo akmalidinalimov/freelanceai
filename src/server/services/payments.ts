@@ -165,6 +165,7 @@ export interface SellerBalanceRow {
   lifetimeUzs: number;
   paidUzs: number;
   availableUzs: number;
+  payoutCardMasked: string | null;
 }
 
 /** Sellers with a positive withdrawable balance (completed earnings minus payouts). */
@@ -193,10 +194,15 @@ export async function listSellerBalances(): Promise<SellerBalanceRow[]> {
 
   const sellers = await prisma.user.findMany({
     where: { id: { in: rows.map((r) => r.sellerId) } },
-    select: { id: true, firstName: true, name: true, username: true },
+    select: { id: true, firstName: true, name: true, username: true, payoutCardMasked: true },
   });
   const nameMap = new Map(sellers.map((s) => [s.id, displayName(s)]));
-  return rows.map((r) => ({ ...r, name: nameMap.get(r.sellerId) ?? r.sellerId }));
+  const cardMap = new Map(sellers.map((s) => [s.id, s.payoutCardMasked]));
+  return rows.map((r) => ({
+    ...r,
+    name: nameMap.get(r.sellerId) ?? r.sellerId,
+    payoutCardMasked: cardMap.get(r.sellerId) ?? null,
+  }));
 }
 
 /** Record a (manual) payout to a seller: PayoutRequest PAID + balanced ledger postings. */

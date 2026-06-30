@@ -407,6 +407,16 @@
     "email": "Email",
     "emailHint": "Emailga xat olish",
     "noEmail": "Hisobingizga email qoʻshing",
+    "kycTitle": "Tasdiqlash (KYC)",
+    "phone": "Telefon raqami",
+    "phoneHint": "Toʻlovlar va buyurtma yangiliklari uchun kerak",
+    "kycNone": "Boshlanmagan",
+    "kycPending": "Kutilmoqda",
+    "kycVerified": "Tasdiqlangan",
+    "payoutTitle": "Toʻlov maʼlumotlari",
+    "payoutCard": "Toʻlov kartasi",
+    "payoutCardHint": "Uzcard/Humo — faqat oxirgi 4 raqam saqlanadi",
+    "save": "Saqlash",
     "saved": "Saqlandi ✓"
   },
   "Dispute": {

@@ -29,10 +29,18 @@ export function ConfirmPaymentButton({ orderId }: { orderId: string }) {
   );
 }
 
-export function PayoutForm({ sellerId, availableUzs }: { sellerId: string; availableUzs: number }) {
+export function PayoutForm({
+  sellerId,
+  availableUzs,
+  defaultCard,
+}: {
+  sellerId: string;
+  availableUzs: number;
+  defaultCard?: string | null;
+}) {
   const t = useTranslations("Admin");
   const [amount, setAmount] = useState(String(availableUzs));
-  const [card, setCard] = useState("");
+  const [card, setCard] = useState(defaultCard ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

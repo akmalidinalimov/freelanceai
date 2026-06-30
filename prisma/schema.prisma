@@ -58,6 +58,8 @@ model User {
   status     UserStatus @default(ACTIVE)
   onboardingCompleted Boolean @default(false)
   kycStatus  KycStatus @default(NONE)
+  // Seller payout destination — only the masked card is stored (last 4), never the full PAN.
+  payoutCardMasked String?
   referralCode String? @unique
   referredById String?
   // Notification preferences (where to mirror in-app messages).

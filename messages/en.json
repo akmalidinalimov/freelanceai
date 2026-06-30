@@ -407,6 +407,16 @@
     "email": "Email",
     "emailHint": "Get an email",
     "noEmail": "Add an email to your account to enable",
+    "kycTitle": "Verification (KYC)",
+    "phone": "Phone number",
+    "phoneHint": "Required for payouts and order updates",
+    "kycNone": "Not started",
+    "kycPending": "Pending",
+    "kycVerified": "Verified",
+    "payoutTitle": "Payout details",
+    "payoutCard": "Payout card",
+    "payoutCardHint": "Uzcard/Humo — only the last 4 digits are stored",
+    "save": "Save",
     "saved": "Saved ✓"
   },
   "Dispute": {

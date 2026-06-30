@@ -15,7 +15,10 @@ export default async function SettingsPage({
   const user = await requireOnboardedUser(locale);
   const t = await getTranslations("Settings");
 
-  const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { notifyPrefs: true } });
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { notifyPrefs: true, phone: true, payoutCardMasked: true, kycStatus: true },
+  });
   const p = (dbUser?.notifyPrefs as { orders?: boolean; messages?: boolean; reviews?: boolean } | null) ?? null;
   const prefs = { orders: p?.orders ?? true, messages: p?.messages ?? true, reviews: p?.reviews ?? true };
 
@@ -24,7 +27,15 @@ export default async function SettingsPage({
       <h1 className="mb-2 text-2xl font-bold">{t("title")}</h1>
       <p className="mb-6 text-sm text-[hsl(var(--muted-foreground))]">{t("notifyTitle")}</p>
       <SettingsForm
-        initial={{ notifyTelegram: user.notifyTelegram, notifyEmail: user.notifyEmail, prefs }}
+        initial={{
+          notifyTelegram: user.notifyTelegram,
+          notifyEmail: user.notifyEmail,
+          prefs,
+          phone: dbUser?.phone ?? "",
+          payoutCardMasked: dbUser?.payoutCardMasked ?? "",
+          kycStatus: dbUser?.kycStatus ?? "NONE",
+        }}
+        isSeller={user.isSeller}
         hasEmail={Boolean(user.email)}
         hasTelegram={Boolean(user.telegramId)}
       />

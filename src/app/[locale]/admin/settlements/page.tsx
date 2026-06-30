@@ -78,7 +78,7 @@ export default async function SettlementsPage({
                     {t("available")}: {formatUzs(b.availableUzs)} so&apos;m
                   </span>
                 </div>
-                <PayoutForm sellerId={b.sellerId} availableUzs={b.availableUzs} />
+                <PayoutForm sellerId={b.sellerId} availableUzs={b.availableUzs} defaultCard={b.payoutCardMasked} />
               </li>
             ))}
           </ul>
