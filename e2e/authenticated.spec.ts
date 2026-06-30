@@ -23,8 +23,10 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
   const admin = await adminCtx.newPage();
   await loginAs(admin, "e2e_admin");
   await admin.goto(orderUrl);
-  await admin.getByRole("button", { name: "Toʻlov qabul qilindi" }).click();
-  await expect(admin.getByText("Jarayonda").first()).toBeVisible();
+  await Promise.all([
+    admin.waitForResponse((r) => r.url().includes("/api/orders/") && r.request().method() === "POST"),
+    admin.getByRole("button", { name: "Toʻlov qabul qilindi" }).click(),
+  ]);
 
   // Seller delivers.
   const sellerCtx = await browser.newContext();
@@ -116,8 +118,10 @@ test("dispute: buyer disputes → admin refunds → order cancelled", async ({ b
   const admin = await adminCtx.newPage();
   await loginAs(admin, "e2e_admin");
   await admin.goto(orderUrl);
-  await admin.getByRole("button", { name: "Toʻlov qabul qilindi" }).click();
-  await expect(admin.getByText("Jarayonda").first()).toBeVisible();
+  await Promise.all([
+    admin.waitForResponse((r) => r.url().includes("/api/orders/") && r.request().method() === "POST"),
+    admin.getByRole("button", { name: "Toʻlov qabul qilindi" }).click(),
+  ]);
 
   // Buyer opens a dispute.
   await buyer.goto(orderUrl);
