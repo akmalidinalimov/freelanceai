@@ -22,6 +22,24 @@ const nextConfig: NextConfig = {
       "object-src 'none'",
       "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
     ].join("; ");
+    // Report-Only "discovery" policy: actionable directives (img/connect/frame/font) are
+    // tightened to 'self' so the browser REPORTS every external resource the app loads
+    // (covers from R2, the Telegram login widget iframe, etc.) without blocking anything.
+    // script/style stay loose because Report-Only can't apply Next's per-request nonce, so
+    // tightening them would only produce false positives. Violations POST to /api/csp-report.
+    const cspReportOnly = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data:",
+      "font-src 'self' data:",
+      "connect-src 'self'",
+      "frame-src 'self'",
+      "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "report-uri /api/csp-report",
+    ].join("; ");
     return [
       {
         source: "/:path*",
@@ -31,6 +49,7 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
           { key: "Content-Security-Policy", value: csp },
+          { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
         ],
       },
     ];
