@@ -16,7 +16,7 @@ export function GalleryUpload({
 }: {
   value: string[];
   onChange: (urls: string[]) => void;
-  prefix?: "gigs" | "portfolio" | "deliveries";
+  prefix?: "gigs" | "portfolio" | "deliveries" | "requirements";
   label?: string;
 }) {
   const t = useTranslations("Gig");

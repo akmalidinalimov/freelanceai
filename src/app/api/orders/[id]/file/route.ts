@@ -19,7 +19,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const order = await getOrderForUser(id, user).catch(() => null);
     if (!order) throw Errors.notFound("Order not found");
 
-    const allowed = order.deliveries.some((d) => d.fileUrls.includes(url));
+    const allowed =
+      order.deliveries.some((d) => d.fileUrls.includes(url)) ||
+      order.requirementFileUrls.includes(url);
     if (!allowed) throw Errors.forbidden("File is not part of this order");
 
     const key = keyFromPublicUrl(url);

@@ -54,6 +54,37 @@ export default async function OrderPage({
         </span>
       </div>
 
+      {!["CANCELLED", "DISPUTED"].includes(order.status) && (
+        <div className="mb-6 flex items-center gap-1">
+          {(["PENDING_PAYMENT", "IN_PROGRESS", "DELIVERED", "COMPLETED"] as const).map((s, i) => {
+            const idx =
+              ({ PENDING_PAYMENT: 0, PAID: 1, IN_PROGRESS: 1, REVISION: 1, DELIVERED: 2, COMPLETED: 3 } as Record<string, number>)[
+                order.status
+              ] ?? 0;
+            const done = i <= idx;
+            return (
+              <div key={s} className="flex flex-1 items-center gap-2">
+                <div
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                    done
+                      ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                      : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
+                  }`}
+                >
+                  {i + 1}
+                </div>
+                <span
+                  className={`hidden text-xs sm:inline ${done ? "font-medium" : "text-[hsl(var(--muted-foreground))]"}`}
+                >
+                  {t(`status.${s}`)}
+                </span>
+                {i < 3 && <div className="h-px flex-1 bg-[hsl(var(--border))]" />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-[hsl(var(--border))] p-5">
           <p className="text-sm text-[hsl(var(--muted-foreground))]">{order.packageTitle}</p>
@@ -69,6 +100,19 @@ export default async function OrderPage({
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
             {order.requirements || t("noRequirements")}
           </p>
+          {order.requirementFileUrls.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {order.requirementFileUrls.map((url, i) => (
+                <a
+                  key={url}
+                  href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
+                  className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary))] hover:underline"
+                >
+                  {t("file")} {i + 1}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

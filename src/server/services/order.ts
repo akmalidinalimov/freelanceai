@@ -13,7 +13,13 @@ function commissionPct(): number {
 }
 
 /** Place an order on a gig package. No payment yet → starts IN_PROGRESS. */
-export async function createOrder(buyerId: string, gigId: string, tier: PackageTier, requirements?: string) {
+export async function createOrder(
+  buyerId: string,
+  gigId: string,
+  tier: PackageTier,
+  requirements?: string,
+  requirementFileUrls: string[] = []
+) {
   const gig = await prisma.gig.findFirst({
     where: { id: gigId, status: "ACTIVE" },
     include: { packages: { where: { tier } } },
@@ -35,6 +41,7 @@ export async function createOrder(buyerId: string, gigId: string, tier: PackageT
       commissionUzs,
       sellerNetUzs,
       requirements: requirements?.trim() || null,
+      requirementFileUrls: requirementFileUrls.slice(0, 10),
       // Awaiting (manual) payment confirmation before work begins.
       status: "PENDING_PAYMENT",
       dueAt: new Date(Date.now() + pkg.deliveryDays * 24 * 60 * 60 * 1000),

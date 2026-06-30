@@ -167,6 +167,7 @@
     "deliverTitle": "Deliver your work",
     "deliverPh": "Add a message for the buyer...",
     "deliverFiles": "Attach files (optional)",
+    "requirementFiles": "Reference files (optional)",
     "file": "File",
     "deliver": "Deliver",
     "accept": "Accept & complete",

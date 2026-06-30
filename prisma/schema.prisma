@@ -318,6 +318,7 @@ model Order {
   commissionUzs Int        @default(0)
   sellerNetUzs Int         @default(0)
   requirements String?
+  requirementFileUrls String[] @default([])
   status       OrderStatus @default(PENDING_PAYMENT)
   dueAt        DateTime?
   deliveredAt  DateTime?

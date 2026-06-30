@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { GalleryUpload } from "@/components/gallery-upload";
 import { formatUzs } from "@/lib/utils";
 
 interface Pkg {
@@ -29,6 +30,7 @@ export function OrderPanel({
   const to = useTranslations("Order");
   const [tier, setTier] = useState<Pkg["tier"]>(packages[0]?.tier ?? "BASIC");
   const [requirements, setRequirements] = useState("");
+  const [reqFiles, setReqFiles] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +48,12 @@ export function OrderPanel({
       const r = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gigId, tier, requirements: requirements.trim() || undefined }),
+        body: JSON.stringify({
+          gigId,
+          tier,
+          requirements: requirements.trim() || undefined,
+          requirementFileUrls: reqFiles,
+        }),
       });
       const j = await r.json();
       if (j.ok) window.location.href = `/${locale}/orders/${j.data.id}`;
@@ -100,12 +107,20 @@ export function OrderPanel({
       ) : (
         <>
           {viewer === "buyer" && (
-            <textarea
-              value={requirements}
-              onChange={(e) => setRequirements(e.target.value)}
-              placeholder={to("requirementsPh")}
-              className="min-h-24 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
-            />
+            <>
+              <textarea
+                value={requirements}
+                onChange={(e) => setRequirements(e.target.value)}
+                placeholder={to("requirementsPh")}
+                className="min-h-24 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+              />
+              <GalleryUpload
+                value={reqFiles}
+                onChange={setReqFiles}
+                prefix="requirements"
+                label={to("requirementFiles")}
+              />
+            </>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button className="w-full" size="lg" onClick={placeOrder} disabled={busy}>
