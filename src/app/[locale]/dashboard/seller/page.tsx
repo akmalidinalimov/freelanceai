@@ -1,12 +1,12 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { DashCard } from "@/components/dash-card";
 import { GigRowActions } from "@/components/gig-row-actions";
 import { requireSellerUser } from "@/lib/auth-guards";
 import { listSellerGigs } from "@/server/services/gig";
 import { listSellerOrders, autoCompleteDeliveredOrders } from "@/server/services/order";
 import { getSellerEarnings } from "@/server/services/payments";
+import { getSellerStats } from "@/server/services/analytics";
 import { formatUzs } from "@/lib/utils";
 
 export default async function SellerDashboardPage({
@@ -30,6 +30,7 @@ export default async function SellerDashboardPage({
   const gigs = await listSellerGigs(user.id);
   const orders = await listSellerOrders(user.id);
   const earnings = await getSellerEarnings(user.id);
+  const stats = await getSellerStats(user.id);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -139,9 +140,24 @@ export default async function SellerDashboardPage({
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <DashCard title={t("analytics")} />
-        <DashCard title={t("reviews")} />
+      {/* Analytics */}
+      <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+        <h3 className="mb-3 font-semibold">{t("analytics")}</h3>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            { label: t("statViews"), value: stats.views.toLocaleString() },
+            { label: t("statOrders"), value: stats.totalOrders.toLocaleString() },
+            { label: t("statActive"), value: stats.active.toLocaleString() },
+            { label: t("statCompleted"), value: stats.completed.toLocaleString() },
+            { label: t("statActiveGigs"), value: stats.activeGigs.toLocaleString() },
+            { label: t("statConversion"), value: `${stats.conversionPct}%` },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3">
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">{s.label}</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{s.value}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
