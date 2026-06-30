@@ -3,6 +3,24 @@
     "title": "Bildirishnomalar",
     "empty": "Hozircha bildirishnoma yoʻq."
   },
+  "AdminUsers": {
+    "title": "Foydalanuvchilar",
+    "searchPh": "Ism, username yoki email...",
+    "search": "Qidirish",
+    "none": "Foydalanuvchilar topilmadi.",
+    "user": "Foydalanuvchi",
+    "role": "Rol",
+    "status": "Holat",
+    "orders": "Buyurtmalar",
+    "sales": "Sotuvlar",
+    "actions": "Amallar",
+    "seller": "Ijrochi",
+    "buyer": "Buyurtmachi",
+    "suspend": "Bloklash",
+    "unsuspend": "Blokdan chiqarish",
+    "makeSeller": "Ijrochi qilish",
+    "removeSeller": "Ijrochilikni olib tashlash"
+  },
   "Cancel": {
     "title": "Bekor qilish soʻrovi",
     "request": "Bekor qilishni soʻrash",

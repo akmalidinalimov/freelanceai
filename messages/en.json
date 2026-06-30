@@ -3,6 +3,24 @@
     "title": "Notifications",
     "empty": "No notifications yet."
   },
+  "AdminUsers": {
+    "title": "Users",
+    "searchPh": "Name, username or email...",
+    "search": "Search",
+    "none": "No users found.",
+    "user": "User",
+    "role": "Role",
+    "status": "Status",
+    "orders": "Orders",
+    "sales": "Sales",
+    "actions": "Actions",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "suspend": "Suspend",
+    "unsuspend": "Reactivate",
+    "makeSeller": "Make seller",
+    "removeSeller": "Remove seller"
+  },
   "Cancel": {
     "title": "Cancellation request",
     "request": "Request cancellation",
