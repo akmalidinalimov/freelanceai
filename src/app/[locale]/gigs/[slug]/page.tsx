@@ -58,6 +58,7 @@ export default async function GigDetailPage({
 
   const seller = gig.seller.firstName ?? gig.seller.name ?? gig.seller.username ?? "";
   const packages = [...gig.packages].sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier]);
+  const tierLabel = { BASIC: t("basic"), STANDARD: t("standard"), PREMIUM: t("premium") } as const;
   const { reviews, avg, count, distribution } = await getGigReviews(gig.id);
 
   return (
@@ -143,6 +144,50 @@ export default async function GigDetailPage({
                 {tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {packages.length > 1 && (
+          <div className="mt-8 overflow-x-auto">
+            <h2 className="mb-3 text-xl font-semibold">{t("comparePackages")}</h2>
+            <table className="w-full min-w-[460px] border-collapse text-sm">
+              <thead>
+                <tr>
+                  <th className="p-3" />
+                  {packages.map((p) => (
+                    <th key={p.tier} className="border-b border-[hsl(var(--border))] p-3 text-left font-semibold">
+                      {tierLabel[p.tier]}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("price")}</td>
+                  {packages.map((p) => (
+                    <td key={p.tier} className="p-3 font-semibold tabular-nums">
+                      {formatUzs(p.priceUzs)} so&apos;m
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("daysDelivery")}</td>
+                  {packages.map((p) => (
+                    <td key={p.tier} className="p-3 tabular-nums">
+                      {p.deliveryDays}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("revisionsLabel")}</td>
+                  {packages.map((p) => (
+                    <td key={p.tier} className="p-3 tabular-nums">
+                      {p.revisions}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
           </div>
         )}
 
