@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { GalleryUpload } from "@/components/gallery-upload";
 import { formatUzs } from "@/lib/utils";
+import { approxPrice } from "@/lib/currency";
 
 interface Pkg {
   tier: "BASIC" | "STANDARD" | "PREMIUM";
@@ -118,8 +119,13 @@ export function OrderPanel({
         <div className="rounded-xl border border-[hsl(var(--border))] p-5">
           <div className="flex items-center justify-between">
             <span className="font-semibold">{selected.title}</span>
-            <span className="text-xl font-bold tabular-nums">
-              {formatUzs(selected.priceUzs)} so&apos;m
+            <span className="text-right">
+              <span className="block text-xl font-bold tabular-nums">
+                {formatUzs(selected.priceUzs)} so&apos;m
+              </span>
+              <span className="block text-xs font-normal text-[hsl(var(--muted-foreground))]">
+                {approxPrice(selected.priceUzs)}
+              </span>
             </span>
           </div>
           {selected.description && (

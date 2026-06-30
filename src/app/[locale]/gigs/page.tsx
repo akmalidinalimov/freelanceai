@@ -5,6 +5,7 @@ import { listPublicGigs, type GigSort } from "@/server/services/gig";
 import { getCurrentUser } from "@/lib/session";
 import { listSavedGigIds } from "@/server/services/saved";
 import { formatUzs } from "@/lib/utils";
+import { approxPrice } from "@/lib/currency";
 import { SaveHeart } from "@/components/save-heart";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import type { Locale } from "@/i18n/routing";
@@ -139,6 +140,7 @@ export default async function GigsPage({
                 <p className="mt-auto pt-2 text-sm font-semibold tabular-nums">
                   {tg("from")} {formatUzs(from)} so&apos;m
                 </p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">{approxPrice(from)}</p>
               </Link>
             );
           })}
