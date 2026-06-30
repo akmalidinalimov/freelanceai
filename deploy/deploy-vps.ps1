@@ -2,6 +2,9 @@
 # Hostinger API directly. Reads the Hostinger token from .mcp.json and the deploy
 # secrets from .env.deploy.local (both git-ignored). Secrets are sent to the API only —
 # never printed. Safe to commit (contains no secrets).
+# By default, runs the full post-deploy verification once the app is live. Pass
+# -SkipVerify to only submit the deploy (fire-and-forget).
+param([switch]$SkipVerify)
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $vmId = 1411263
@@ -37,3 +40,12 @@ $headers = @{ Authorization = "Bearer $hToken"; Accept = "application/json" }
 $uri = "https://developers.hostinger.com/api/vps/v1/virtual-machines/$vmId/docker"
 $resp = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -ContentType "application/json" -Body $bytes
 "deploy submitted: action id=$($resp.id) name=$($resp.name) state=$($resp.state)"
+
+# Post-deploy verification: wait for the new build to come up, then run the full prod
+# check suite (smoke + deep sweep + R2). Skips only if -SkipVerify was passed.
+if (-not $SkipVerify) {
+  Write-Host "`n--- Post-deploy verification (waits for prod, then smoke + deep sweep + R2) ---"
+  node "$root\deploy\verify-prod.mjs"
+  if ($LASTEXITCODE -ne 0) { throw "Post-deploy verification FAILED (see output above)" }
+  Write-Host "`nDeploy + verification complete."
+}
