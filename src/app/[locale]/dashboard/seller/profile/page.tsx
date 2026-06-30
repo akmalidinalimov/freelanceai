@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { requireSellerUser } from "@/lib/auth-guards";
 import { getOwnProfile } from "@/server/services/profile";
 import { ProfileForm } from "@/components/profile-form";
+import { PortfolioEditor } from "@/components/portfolio-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,15 @@ export default async function EditProfilePage({
           aiTools: (profile?.aiTools ?? []).join(", "),
         }}
       />
+      <div className="mt-8">
+        <PortfolioEditor
+          items={(profile?.portfolio ?? []).map((p) => ({
+            id: p.id,
+            mediaUrl: p.mediaUrl,
+            caption: p.caption,
+          }))}
+        />
+      </div>
     </div>
   );
 }

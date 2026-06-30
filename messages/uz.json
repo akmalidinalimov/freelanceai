@@ -245,6 +245,11 @@
     "save": "Saqlash",
     "saved": "Saqlandi ✓",
     "viewPublic": "Ommaviy profil",
+    "portfolio": "Portfolio",
+    "portfolioType": "Rasm formati notoʻgʻri",
+    "portfolioSize": "Rasm hajmi katta (maks. 8MB)",
+    "portfolioError": "Yuklashda xatolik",
+    "portfolioRemove": "Oʻchirish",
     "level": {
       "NEW": "Yangi ijrochi",
       "LEVEL_1": "1-daraja",

@@ -245,6 +245,11 @@
     "save": "Сохранить",
     "saved": "Сохранено ✓",
     "viewPublic": "Открытый профиль",
+    "portfolio": "Портфолио",
+    "portfolioType": "Неверный формат изображения",
+    "portfolioSize": "Файл слишком большой (макс. 8 МБ)",
+    "portfolioError": "Ошибка загрузки",
+    "portfolioRemove": "Удалить",
     "level": {
       "NEW": "Новый",
       "LEVEL_1": "Уровень 1",

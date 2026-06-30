@@ -117,6 +117,26 @@ export default async function CreatorProfilePage({
         </div>
       )}
 
+      {/* Portfolio */}
+      {(profile?.portfolio?.length ?? 0) > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold">{t("portfolio")}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {profile!.portfolio.map((p) => (
+              <div key={p.id} className="overflow-hidden rounded-lg border border-[hsl(var(--border))]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={p.mediaUrl}
+                  alt={p.caption ?? ""}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Their gigs */}
       <h2 className="mb-4 text-xl font-semibold">{t("services")}</h2>
       {gigs.length === 0 ? (

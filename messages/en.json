@@ -245,6 +245,11 @@
     "save": "Save",
     "saved": "Saved ✓",
     "viewPublic": "View public profile",
+    "portfolio": "Portfolio",
+    "portfolioType": "Unsupported image format",
+    "portfolioSize": "File too large (max 8MB)",
+    "portfolioError": "Upload failed",
+    "portfolioRemove": "Remove",
     "level": {
       "NEW": "New seller",
       "LEVEL_1": "Level 1",
