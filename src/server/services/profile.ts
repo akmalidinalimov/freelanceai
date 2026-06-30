@@ -1,6 +1,23 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { stripContactInfo } from "@/lib/sanitize";
+import { computeSellerLevel } from "@/lib/seller-level";
+
+/** Recompute a seller's rating aggregate + level from completed orders and reviews. */
+export async function recomputeSellerStats(sellerId: string) {
+  const [completed, agg] = await Promise.all([
+    prisma.order.count({ where: { sellerId, status: "COMPLETED" } }),
+    prisma.review.aggregate({ where: { gig: { sellerId } }, _avg: { rating: true }, _count: true }),
+  ]);
+  const ratingAvg = agg._avg.rating ?? 0;
+  const ratingCount = agg._count;
+  const level = computeSellerLevel(completed, ratingAvg, ratingCount);
+  await prisma.sellerProfile.upsert({
+    where: { userId: sellerId },
+    create: { userId: sellerId, ratingAvg, ratingCount, level },
+    update: { ratingAvg, ratingCount, level },
+  });
+}
 
 /**
  * Public seller storefront by username. 404s (returns null) for non-sellers,

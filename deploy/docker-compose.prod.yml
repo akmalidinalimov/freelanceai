@@ -32,7 +32,7 @@ services:
     command:
       # --accept-data-loss is needed to add the User.email unique index (safe: all
       # existing rows have email=NULL). TODO: switch to `prisma migrate deploy`.
-      - "apk add --no-cache wget ca-certificates openssl && wget -O schema.prisma https://raw.githubusercontent.com/akmalidinalimov/freelanceai/main/prisma/schema.prisma && npx -y prisma@6.19.3 db push --schema=schema.prisma --skip-generate --accept-data-loss"
+      - "apk add --no-cache wget ca-certificates openssl && wget -O schema.prisma https://raw.githubusercontent.com/akmalidinalimov/freelanceai/main/prisma/schema.prisma && npx -y prisma@6.19.3 db push --schema=schema.prisma --skip-generate --accept-data-loss && (printf 'CREATE EXTENSION IF NOT EXISTS pg_trgm;\\nCREATE INDEX IF NOT EXISTS gig_title_trgm ON \"Gig\" USING gin (title gin_trgm_ops);\\nCREATE INDEX IF NOT EXISTS gig_description_trgm ON \"Gig\" USING gin (description gin_trgm_ops);' | npx -y prisma@6.19.3 db execute --stdin --schema=schema.prisma || echo 'trgm setup skipped')"
     restart: "no"
 
   app:

@@ -43,6 +43,7 @@ export default async function GigDetailPage({
   setRequestLocale(locale);
   const t = await getTranslations("Gig");
   const tr = await getTranslations("Review");
+  const tp = await getTranslations("Profile");
 
   const gig = await getGigBySlug(slug);
   if (!gig) notFound();
@@ -96,6 +97,11 @@ export default async function GigDetailPage({
             seller
           )}
           {gig.category ? ` · ${gig.category.nameUz}` : ""}
+          {gig.seller.sellerProfile?.level && gig.seller.sellerProfile.level !== "NEW" && (
+            <span className="ml-2 rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
+              {tp(`level.${gig.seller.sellerProfile.level}`)}
+            </span>
+          )}
         </p>
         {count > 0 && (
           <div className="mt-2 flex items-center gap-2 text-sm">

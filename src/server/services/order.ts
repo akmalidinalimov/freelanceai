@@ -6,6 +6,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { computeSplit } from "@/lib/commission";
+import { recomputeSellerStats } from "@/server/services/profile";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -107,6 +108,7 @@ export async function acceptOrder(orderId: string, buyer: User) {
   if (order.buyerId !== buyer.id && buyer.role !== "ADMIN") throw Errors.forbidden();
   assertTransition(order.status, "COMPLETED");
   await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED", completedAt: new Date() } });
+  await recomputeSellerStats(order.sellerId);
   await audit({ actorId: buyer.id, action: "order.complete", entity: "Order", entityId: orderId });
 }
 

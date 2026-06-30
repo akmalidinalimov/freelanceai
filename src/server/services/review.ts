@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
+import { recomputeSellerStats } from "@/server/services/profile";
 
 /** A buyer reviews a COMPLETED order once; recomputes the seller's rating aggregate. */
 export async function createReview(
@@ -25,17 +26,8 @@ export async function createReview(
     data: { orderId, gigId: order.gigId, authorId, rating, comment: comment?.trim() || null },
   });
 
-  // Recompute the seller's overall rating across all their gigs.
-  const agg = await prisma.review.aggregate({
-    where: { gig: { sellerId: order.sellerId } },
-    _avg: { rating: true },
-    _count: true,
-  });
-  await prisma.sellerProfile.upsert({
-    where: { userId: order.sellerId },
-    create: { userId: order.sellerId, ratingAvg: agg._avg.rating ?? 0, ratingCount: agg._count },
-    update: { ratingAvg: agg._avg.rating ?? 0, ratingCount: agg._count },
-  });
+  // Recompute the seller's rating aggregate + level.
+  await recomputeSellerStats(order.sellerId);
 
   await audit({ actorId: authorId, action: "review.create", entity: "Review", entityId: review.id });
   return review;
