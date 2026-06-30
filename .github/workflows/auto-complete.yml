@@ -1,0 +1,22 @@
+name: auto-complete
+
+# Auto-completes delivered orders the buyer never acted on. Needs the repo secret
+# CRON_SECRET to match the app's CRON_SECRET env (set both to the same value).
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger auto-complete
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET repo secret not set — skipping (lazy completion still runs on dashboard load)."
+            exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://freelanceai.aicreator.academy/api/cron/auto-complete

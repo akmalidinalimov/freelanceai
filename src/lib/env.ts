@@ -29,6 +29,8 @@ const envSchema = z
     // Email provider (Resend) — optional; email notifications no-op until set.
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().optional(),
+    // Shared secret for the scheduled cron endpoint (auto-complete).
+    CRON_SECRET: z.string().optional(),
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     // Runtime bot username (public); used for the bot deep-link login.
     TELEGRAM_BOT_USERNAME: z.string().optional(),

@@ -120,6 +120,16 @@ export async function requestRevision(orderId: string, buyer: User) {
   await audit({ actorId: buyer.id, action: "order.revision", entity: "Order", entityId: orderId });
 }
 
+/** Auto-complete deliveries the buyer didn't act on after `days`. Returns the count completed. */
+export async function autoCompleteDeliveredOrders(days = 3): Promise<number> {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const res = await prisma.order.updateMany({
+    where: { status: "DELIVERED", deliveredAt: { lt: cutoff } },
+    data: { status: "COMPLETED", completedAt: new Date() },
+  });
+  return res.count;
+}
+
 /** Buyer or seller cancels an active order → CANCELLED. */
 export async function cancelOrder(orderId: string, user: User) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });

@@ -5,7 +5,7 @@ import { DashCard } from "@/components/dash-card";
 import { GigRowActions } from "@/components/gig-row-actions";
 import { requireSellerUser } from "@/lib/auth-guards";
 import { listSellerGigs } from "@/server/services/gig";
-import { listSellerOrders } from "@/server/services/order";
+import { listSellerOrders, autoCompleteDeliveredOrders } from "@/server/services/order";
 import { getSellerEarnings } from "@/server/services/payments";
 import { formatUzs } from "@/lib/utils";
 
@@ -25,6 +25,8 @@ export default async function SellerDashboardPage({
   const tm = await getTranslations("Message");
   const tp = await getTranslations("Profile");
   const td = await getTranslations("Dispute");
+  // Lazy fallback so overdue deliveries complete even without the scheduled cron.
+  await autoCompleteDeliveredOrders().catch(() => 0);
   const gigs = await listSellerGigs(user.id);
   const orders = await listSellerOrders(user.id);
   const earnings = await getSellerEarnings(user.id);
