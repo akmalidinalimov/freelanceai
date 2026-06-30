@@ -126,11 +126,17 @@ test("dispute: buyer disputes → admin refunds → order cancelled", async ({ b
   await buyer.getByRole("button", { name: "Nizo ochish" }).click();
   await expect(buyer.getByText(/chiqmoqda/).first()).toBeVisible();
 
-  // Admin refunds → order becomes cancelled.
+  // Admin refunds → order becomes cancelled. Wait for the refund POST to finish (the click
+  // dispatches the fetch but doesn't await it) before reading the buyer's order.
   await admin.goto("/uz/admin/disputes");
-  await admin.getByRole("button", { name: "Buyurtmachiga qaytarish" }).first().click();
+  await Promise.all([
+    admin.waitForResponse(
+      (r) => r.url().includes("/api/admin/disputes/") && r.request().method() === "POST"
+    ),
+    admin.getByRole("button", { name: "Buyurtmachiga qaytarish" }).first().click(),
+  ]);
   await buyer.goto(orderUrl);
-  await expect(buyer.getByText("Bekor qilingan").first()).toBeVisible();
+  await expect(buyer.getByText("Bekor qilingan").first()).toBeVisible({ timeout: 15000 });
 
   await buyerCtx.close();
   await adminCtx.close();
@@ -140,15 +146,18 @@ test("moderation: a new gig is PENDING then admin approves it", async ({ browser
   const sellerCtx = await browser.newContext();
   const seller = await sellerCtx.newPage();
   await loginAs(seller, "e2e_seller");
+  await seller.goto("/uz/dashboard");
+  const origin = new URL(seller.url()).origin;
   const title = `E2E moderation gig ${Date.now()}`;
   const res = await seller.request.post("/api/gigs", {
+    headers: { Origin: origin },
     data: {
       title,
       description: "A seeded gig used to exercise the moderation approval flow end to end.",
       packages: [{ tier: "BASIC", title: "Basic", priceUzs: 50000, deliveryDays: 2, revisions: 1 }],
     },
   });
-  expect(res.ok()).toBeTruthy();
+  expect(res.ok(), `create gig -> ${res.status()}`).toBeTruthy();
 
   const adminCtx = await browser.newContext();
   const admin = await adminCtx.newPage();
