@@ -1,7 +1,7 @@
 import { errorResponse, Errors } from "@/lib/api";
 import { getCurrentUser } from "@/lib/session";
 import { getOrderForUser } from "@/server/services/order";
-import { keyFromPublicUrl, getObject } from "@/lib/media";
+import { resolveStoredFile, getObject } from "@/lib/media";
 
 /**
  * Access-controlled download proxy for an order's delivery files. Only the order's
@@ -24,8 +24,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       order.requirementFileUrls.includes(url);
     if (!allowed) throw Errors.forbidden("File is not part of this order");
 
-    const key = keyFromPublicUrl(url);
-    const obj = key ? await getObject(key) : null;
+    const resolved = resolveStoredFile(url);
+    const obj = resolved ? await getObject(resolved.key, resolved.bucket) : null;
     if (!obj) throw Errors.notFound("File not found");
 
     return new Response(obj.body, {

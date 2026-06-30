@@ -65,7 +65,10 @@ export function GalleryUpload({
       <div className="flex flex-wrap gap-2">
         {value.map((url, i) => (
           <div key={url} className="relative h-20 w-28 overflow-hidden rounded-lg border border-[hsl(var(--border))]">
-            {isVideoUrl(url) ? (
+            {url.startsWith("r2-private:") ? (
+              // Private deliverable: no public URL to render — show a file chip.
+              <div className="flex h-full w-full items-center justify-center bg-[hsl(var(--muted))] text-lg">📎</div>
+            ) : isVideoUrl(url) ? (
               <div className="flex h-full w-full items-center justify-center bg-[hsl(var(--muted))] text-lg">▶</div>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element

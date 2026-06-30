@@ -32,6 +32,7 @@ export async function GET() {
         db,
         trgm,
         media: mediaConfigured(),
+        privateMedia: Boolean(process.env.S3_PRIVATE_BUCKET),
         email: emailConfigured(),
         version: process.env.APP_VERSION ?? "dev",
       },

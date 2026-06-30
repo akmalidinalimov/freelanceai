@@ -23,6 +23,8 @@ const envSchema = z
     // Cloudflare R2 (S3-compatible) media storage
     S3_ENDPOINT: z.string().url().optional(),
     S3_BUCKET: z.string().optional(),
+    // Optional separate private bucket for delivery files (no public access).
+    S3_PRIVATE_BUCKET: z.string().optional(),
     S3_ACCESS_KEY_ID: z.string().optional(),
     S3_SECRET_ACCESS_KEY: z.string().optional(),
     S3_PUBLIC_BASE_URL: z.string().url().optional(),

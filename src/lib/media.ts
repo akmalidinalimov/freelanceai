@@ -50,7 +50,18 @@ export interface PresignResult {
   key: string;
 }
 
-/** Validate type/size and return a presigned PUT + the eventual public URL. */
+const PRIVATE_REF = "r2-private:";
+
+/** Delivery files go to the private bucket (no public URL) when one is configured. */
+function privateBucketFor(prefix: string): string | undefined {
+  return prefix === "deliveries" ? process.env.S3_PRIVATE_BUCKET || undefined : undefined;
+}
+
+/**
+ * Validate type/size and return a presigned PUT + the value to STORE. For public prefixes the
+ * stored value is the public URL; for deliveries on the private bucket it's an opaque
+ * `r2-private:<key>` ref that only the access-controlled proxy can resolve (no public URL exists).
+ */
 export async function presignUpload(
   prefix: "gigs" | "portfolio" | "deliveries" | "requirements",
   contentType: string,
@@ -64,14 +75,14 @@ export async function presignUpload(
   const max = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
   if (!Number.isFinite(size) || size <= 0 || size > max) throw new Error("too_large");
 
+  const privateBucket = privateBucketFor(prefix);
+  const bucket = privateBucket ?? process.env.S3_BUCKET;
   const key = `${prefix}/${crypto.randomBytes(16).toString("hex")}.${EXT[contentType]}`;
-  const command = new PutObjectCommand({
-    Bucket: process.env.S3_BUCKET,
-    Key: key,
-    ContentType: contentType,
-  });
+  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
   const uploadUrl = await getSignedUrl(r2(), command, { expiresIn: 300 });
-  const publicUrl = `${process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "")}/${key}`;
+  const publicUrl = privateBucket
+    ? `${PRIVATE_REF}${key}`
+    : `${process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "")}/${key}`;
   return { uploadUrl, publicUrl, key };
 }
 
@@ -82,17 +93,34 @@ export function keyFromPublicUrl(url: string): string | null {
   return url.slice(base.length + 1);
 }
 
+/** Is this a private-bucket reference (vs a public URL)? */
+export function isPrivateRef(stored: string): boolean {
+  return stored.startsWith(PRIVATE_REF);
+}
+
+/** Resolve a stored file value (public URL or `r2-private:` ref) to its bucket + key. */
+export function resolveStoredFile(stored: string): { bucket: string; key: string } | null {
+  if (isPrivateRef(stored)) {
+    const key = stored.slice(PRIVATE_REF.length);
+    const bucket = process.env.S3_PRIVATE_BUCKET;
+    return bucket && key ? { bucket, key } : null;
+  }
+  const key = keyFromPublicUrl(stored);
+  const bucket = process.env.S3_BUCKET;
+  return key && bucket ? { bucket, key } : null;
+}
+
 /**
  * Fetch an object from R2 server-side (authenticated with our creds) for an access-controlled
- * proxy download. Works whether the bucket is public or private — so switching deliverables to a
- * private bucket later needs no code change.
+ * proxy download. Works against either the public or the private bucket.
  */
 export async function getObject(
-  key: string
+  key: string,
+  bucket: string | undefined = process.env.S3_BUCKET
 ): Promise<{ body: ReadableStream; contentType: string } | null> {
-  if (!mediaConfigured()) return null;
+  if (!mediaConfigured() || !bucket) return null;
   try {
-    const res = await r2().send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }));
+    const res = await r2().send(new GetObjectCommand({ Bucket: bucket, Key: key }));
     if (!res.Body) return null;
     return {
       body: (res.Body as { transformToWebStream: () => ReadableStream }).transformToWebStream(),
