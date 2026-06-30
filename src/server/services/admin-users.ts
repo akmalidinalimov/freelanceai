@@ -104,3 +104,33 @@ export async function setUserSeller(admin: User, userId: string, isSeller: boole
     entityId: userId,
   });
 }
+
+/** Users awaiting KYC review (phone captured → kycStatus PENDING). */
+export function listPendingKyc() {
+  return prisma.user.findMany({
+    where: { kycStatus: "PENDING" },
+    orderBy: { updatedAt: "desc" },
+    take: 100,
+    select: {
+      id: true,
+      firstName: true,
+      name: true,
+      username: true,
+      phone: true,
+      isSeller: true,
+      payoutCardMasked: true,
+    },
+  });
+}
+
+/** Approve or reject a user's KYC. */
+export async function setUserKyc(admin: User, userId: string, status: "VERIFIED" | "REJECTED") {
+  await loadTarget(admin, userId);
+  await prisma.user.update({ where: { id: userId }, data: { kycStatus: status } });
+  await audit({
+    actorId: admin.id,
+    action: status === "VERIFIED" ? "admin.kyc.approve" : "admin.kyc.reject",
+    entity: "User",
+    entityId: userId,
+  });
+}
