@@ -21,6 +21,13 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "object-src 'none'",
       "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
+      // Enforced now — verified to have no external deps: SSE/API are same-origin (connect),
+      // the app embeds no iframes (frame; login is a Telegram deeplink, not a widget), and
+      // there are no external/web fonts (font). img/script/style stay Report-Only (the
+      // R2/Telegram image allowlist + Next's script nonce are the attended next step).
+      "connect-src 'self'",
+      "frame-src 'self'",
+      "font-src 'self' data:",
     ].join("; ");
     // Report-Only "discovery" policy: actionable directives (img/connect/frame/font) are
     // tightened to 'self' so the browser REPORTS every external resource the app loads
