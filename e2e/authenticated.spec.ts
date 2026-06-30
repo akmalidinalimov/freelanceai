@@ -148,7 +148,8 @@ test("moderation: a new gig is PENDING then admin approves it", async ({ browser
   await loginAs(seller, "e2e_seller");
   await seller.goto("/uz/dashboard");
   const origin = new URL(seller.url()).origin;
-  const title = `E2E moderation gig ${Date.now()}`;
+  // base36 suffix (alphanumeric) so the sanitizer doesn't redact it as a phone number.
+  const title = `E2E moderation gig ${Date.now().toString(36)}`;
   const res = await seller.request.post("/api/gigs", {
     headers: { Origin: origin },
     data: {
