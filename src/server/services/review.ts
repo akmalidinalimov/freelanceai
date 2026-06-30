@@ -5,6 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { stripContactInfo } from "@/lib/sanitize";
+import { notify } from "@/server/services/notification";
 
 /** A buyer reviews a COMPLETED order once; recomputes the seller's rating aggregate. */
 export async function createReview(
@@ -32,6 +33,10 @@ export async function createReview(
   await recomputeSellerStats(order.sellerId);
 
   await audit({ actorId: authorId, action: "review.create", entity: "Review", entityId: review.id });
+  await notify(order.sellerId, "review.new", "Yangi sharh", {
+    body: `Buyurtmangizga ${rating}★ sharh qoldirildi.`,
+    link: `/orders/${orderId}`,
+  });
   return review;
 }
 

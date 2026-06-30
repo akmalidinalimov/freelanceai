@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { NotificationBell } from "@/components/notification-bell";
 import { getCurrentUser } from "@/lib/session";
 
 export async function SiteHeader() {
@@ -33,6 +34,7 @@ export async function SiteHeader() {
 
           {user ? (
             <>
+              <NotificationBell />
               <Link href="/dashboard">
                 <Button size="sm" variant="outline">
                   {t("Nav.dashboard")}

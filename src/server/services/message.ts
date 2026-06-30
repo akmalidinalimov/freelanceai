@@ -6,6 +6,7 @@ import { tgSendMessage } from "@/lib/telegram-bot";
 import { stripContactInfo } from "@/lib/sanitize";
 import { sendEmail } from "@/lib/email";
 import { publishMessage } from "@/lib/message-bus";
+import { notify } from "@/server/services/notification";
 
 const SENDER_SELECT = { select: { id: true, firstName: true, name: true, username: true } } as const;
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -126,6 +127,11 @@ export async function postConversationMessage(conversationId: string, user: User
       if (other.notifyEmail && other.email) {
         void sendEmail(other.email, `New message${ctx}`, `${preview}\n\nOpen: ${link}`);
       }
+      // In-app notification (always, independent of Telegram/email prefs).
+      await notify(otherId, "message.new", `Yangi xabar${ctx}`, {
+        body: preview,
+        link: `/messages/${conversationId}`,
+      });
     }
   }
   return message;

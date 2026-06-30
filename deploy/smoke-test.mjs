@@ -66,6 +66,8 @@ const CHECKS = [
   { group: "API", name: "update settings", method: "PATCH", path: "/api/me/settings", origin: true, expect: 401 },
   { group: "API", name: "conversation messages", method: "GET", path: "/api/conversations/abc/messages", expect: 401 },
   { group: "API", name: "conversation SSE stream", method: "GET", path: "/api/conversations/abc/stream", expect: 401 },
+  { group: "API", name: "notifications list", method: "GET", path: "/api/notifications", expect: 401 },
+  { group: "API", name: "notifications mark-read", method: "POST", path: "/api/notifications/read", origin: true, expect: 401 },
 ];
 
 const ok = (expect, status) => (Array.isArray(expect) ? expect.includes(status) : expect === status);

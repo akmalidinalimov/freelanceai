@@ -1,4 +1,8 @@
 {
+  "Notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet."
+  },
   "Brand": {
     "name": "FreelanceAI",
     "tagline": "Central Asia's marketplace for AI creators"

@@ -4,6 +4,7 @@ import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { paymentPostings, payoutPostings } from "@/lib/commission";
+import { notify } from "@/server/services/notification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
 
@@ -53,6 +54,10 @@ export async function confirmOrderPayment(orderId: string, actor: User) {
   });
 
   await audit({ actorId: actor.id, action: "order.payment.confirm", entity: "Order", entityId: orderId });
+  await notify(order.sellerId, "order.paid", "Toʻlov tasdiqlandi", {
+    body: "Buyurtma toʻlovi tasdiqlandi — ishni boshlang.",
+    link: `/orders/${orderId}`,
+  });
 }
 
 export interface SellerEarnings {

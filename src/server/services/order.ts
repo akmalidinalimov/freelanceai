@@ -7,6 +7,7 @@ import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { computeSplit } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
+import { notify } from "@/server/services/notification";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -99,6 +100,10 @@ export async function deliverOrder(orderId: string, seller: User, message: strin
     prisma.order.update({ where: { id: orderId }, data: { status: "DELIVERED", deliveredAt: new Date() } }),
   ]);
   await audit({ actorId: seller.id, action: "order.deliver", entity: "Order", entityId: orderId });
+  await notify(order.buyerId, "order.delivered", "Buyurtmangiz topshirildi", {
+    body: "Ijrochi ishni topshirdi — koʻrib chiqing va qabul qiling.",
+    link: `/orders/${orderId}`,
+  });
 }
 
 /** Buyer accepts a delivery → COMPLETED. */
@@ -110,6 +115,10 @@ export async function acceptOrder(orderId: string, buyer: User) {
   await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED", completedAt: new Date() } });
   await recomputeSellerStats(order.sellerId);
   await audit({ actorId: buyer.id, action: "order.complete", entity: "Order", entityId: orderId });
+  await notify(order.sellerId, "order.completed", "Buyurtma yakunlandi", {
+    body: "Buyurtmachi ishni qabul qildi. Mablagʻ hisobingizga oʻtkazildi.",
+    link: `/orders/${orderId}`,
+  });
 }
 
 /** Buyer requests changes → REVISION. */

@@ -5,6 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { refundPostings } from "@/lib/commission";
+import { notify } from "@/server/services/notification";
 
 const NAME = { select: { firstName: true, name: true, username: true } } as const;
 
@@ -25,6 +26,11 @@ export async function openDispute(orderId: string, user: User, reason: string) {
     prisma.order.update({ where: { id: orderId }, data: { status: "DISPUTED" } }),
   ]);
   await audit({ actorId: user.id, action: "dispute.open", entity: "Order", entityId: orderId });
+  const otherId = user.id === order.buyerId ? order.sellerId : order.buyerId;
+  await notify(otherId, "dispute.opened", "Nizo ochildi", {
+    body: "Buyurtma boʻyicha nizo ochildi — administrator koʻrib chiqadi.",
+    link: `/orders/${orderId}`,
+  });
 }
 
 export function listOpenDisputes() {

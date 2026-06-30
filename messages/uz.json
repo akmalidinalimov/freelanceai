@@ -1,4 +1,8 @@
 {
+  "Notifications": {
+    "title": "Bildirishnomalar",
+    "empty": "Hozircha bildirishnoma yoʻq."
+  },
   "Brand": {
     "name": "FreelanceAI",
     "tagline": "Markaziy Osiyoning AI-ijodkorlar bozori"

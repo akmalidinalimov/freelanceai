@@ -1,4 +1,8 @@
 {
+  "Notifications": {
+    "title": "Уведомления",
+    "empty": "Уведомлений пока нет."
+  },
   "Brand": {
     "name": "FreelanceAI",
     "tagline": "Маркетплейс AI-креаторов Центральной Азии"
