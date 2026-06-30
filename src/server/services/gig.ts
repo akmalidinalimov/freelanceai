@@ -226,3 +226,22 @@ export function getGigBySlug(slug: string) {
     },
   });
 }
+
+/** Bump a gig's view counter; best-effort (never blocks or throws on the page). */
+export async function incrementGigViews(gigId: string) {
+  await prisma.gig.update({ where: { id: gigId }, data: { views: { increment: 1 } } }).catch(() => {});
+}
+
+/** Active gigs by id, preserving the given id order — for the "recently viewed" row. */
+export async function getGigsByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+  const gigs = await prisma.gig.findMany({
+    where: { id: { in: ids.slice(0, 12) }, status: "ACTIVE", deletedAt: null },
+    include: {
+      packages: { orderBy: { priceUzs: "asc" }, take: 1 },
+      seller: { select: { firstName: true, username: true, name: true } },
+    },
+  });
+  const order = new Map(ids.map((id, i) => [id, i]));
+  return gigs.sort((a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99));
+}

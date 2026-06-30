@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { getGigBySlug } from "@/server/services/gig";
+import { getGigBySlug, incrementGigViews } from "@/server/services/gig";
 
 export async function generateMetadata({
   params,
@@ -32,6 +32,7 @@ import { Stars } from "@/components/stars";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { SaveButton } from "@/components/save-button";
 import { ReviewReply } from "@/components/review-reply";
+import { RecentlyViewedTracker } from "@/components/recently-viewed-tracker";
 
 const TIER_ORDER = { BASIC: 0, STANDARD: 1, PREMIUM: 2 } as const;
 
@@ -48,6 +49,7 @@ export default async function GigDetailPage({
 
   const gig = await getGigBySlug(slug);
   if (!gig) notFound();
+  await incrementGigViews(gig.id);
 
   const me = await getCurrentUser();
   const viewer = !me ? "guest" : me.id === gig.sellerId ? "owner" : "buyer";
@@ -59,6 +61,7 @@ export default async function GigDetailPage({
 
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_360px]">
+      <RecentlyViewedTracker gigId={gig.id} />
       <div>
         <div className="mb-5 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-5xl font-bold text-[hsl(var(--primary))]">
           {gig.coverUrl ? (
@@ -110,6 +113,11 @@ export default async function GigDetailPage({
             <span className="font-medium">{avg.toFixed(1)}</span>
             <span className="text-[hsl(var(--muted-foreground))]">({count})</span>
           </div>
+        )}
+        {viewer === "owner" && (
+          <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">
+            👁 {gig.views} {t("views")}
+          </p>
         )}
         <div className="mt-4 flex gap-2">
           <ContactSellerButton gigId={gig.id} locale={locale} viewer={viewer} />

@@ -115,6 +115,8 @@
     "faqA": "Answer",
     "faqAdd": "Add question",
     "faqRemove": "Remove",
+    "views": "views",
+    "recentlyViewed": "Recently viewed",
     "error": "Something went wrong.",
     "createGig": "Create a gig",
     "noGigs": "No gigs yet. Create your first!",

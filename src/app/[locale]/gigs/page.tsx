@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 import { listSavedGigIds } from "@/server/services/saved";
 import { formatUzs } from "@/lib/utils";
 import { SaveHeart } from "@/components/save-heart";
+import { RecentlyViewed } from "@/components/recently-viewed";
 import type { Locale } from "@/i18n/routing";
 
 export default async function GigsPage({
@@ -98,6 +99,8 @@ export default async function GigsPage({
           {tg("apply")}
         </button>
       </form>
+
+      {!sp.q && !sp.category && <RecentlyViewed />}
 
       <p className="mb-4 text-sm text-[hsl(var(--muted-foreground))]">
         {gigs.length} {tg("results")}
