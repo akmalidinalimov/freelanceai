@@ -98,3 +98,34 @@ test("follow: a buyer can follow and unfollow a creator", async ({ browser }) =>
 
   await ctx.close();
 });
+
+test("custom offer: seller sends an offer, buyer accepts → order", async ({ browser }) => {
+  // Buyer contacts the seller → a direct gig conversation.
+  const buyerCtx = await browser.newContext();
+  const buyer = await buyerCtx.newPage();
+  await loginAs(buyer, "e2e_buyer");
+  await buyer.goto("/uz/gigs/e2e-gig");
+  await buyer.getByRole("button", { name: "Bogʻlanish" }).click();
+  await buyer.waitForURL(/\/uz\/messages\/.+/);
+  const convId = buyer.url().split("/messages/")[1];
+  const origin = new URL(buyer.url()).origin;
+
+  // Seller sends a custom offer into that conversation.
+  const sellerCtx = await browser.newContext();
+  const seller = await sellerCtx.newPage();
+  await loginAs(seller, "e2e_seller");
+  await seller.goto("/uz/dashboard");
+  const sent = await seller.request.post(`/api/conversations/${convId}/offers`, {
+    headers: { Origin: origin },
+    data: { title: "Custom AI promo", priceUzs: 300000, deliveryDays: 5, revisions: 2 },
+  });
+  expect((await sent.json()).ok, "offer create").toBeTruthy();
+
+  // Buyer opens the thread, accepts the offer → redirected to a new order.
+  await buyer.goto(`/uz/messages/${convId}`);
+  await buyer.getByRole("button", { name: "Qabul qilib buyurtma berish" }).first().click();
+  await buyer.waitForURL(/\/uz\/orders\/.+/);
+
+  await buyerCtx.close();
+  await sellerCtx.close();
+});

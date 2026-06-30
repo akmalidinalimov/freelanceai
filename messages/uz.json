@@ -52,6 +52,21 @@
     "saved": "Saqlandi ✓",
     "delete": "Oʻchirish"
   },
+  "Offer": {
+    "title": "Maxsus takliflar",
+    "offerTitle": "Taklif nomi",
+    "price": "Narx (UZS)",
+    "days": "Yetkazish kunlari",
+    "revisions": "Tahrirlar",
+    "send": "Taklif yuborish",
+    "none": "Hozircha takliflar yoʻq",
+    "daysShort": "kun",
+    "revShort": "tahrir",
+    "accept": "Qabul qilib buyurtma berish",
+    "decline": "Rad etish",
+    "error": "Xatolik yuz berdi",
+    "status": { "PENDING": "Kutilmoqda", "ACCEPTED": "Qabul qilindi", "DECLINED": "Rad etildi" }
+  },
   "Payout": {
     "available": "Yechib olish mumkin",
     "request": "Toʻlovni soʻrash",

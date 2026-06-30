@@ -93,6 +93,34 @@ export async function createOrder(
   return order;
 }
 
+/** Create a PENDING_PAYMENT order from an accepted custom offer (custom price, no extras). */
+export async function createOrderFromOffer(offer: {
+  buyerId: string;
+  sellerId: string;
+  gigId: string;
+  title: string;
+  priceUzs: number;
+  deliveryDays: number;
+}) {
+  const { amountUzs, commissionUzs, sellerNetUzs } = orderTotals(offer.priceUzs, [], commissionPct());
+  const order = await prisma.order.create({
+    data: {
+      gigId: offer.gigId,
+      buyerId: offer.buyerId,
+      sellerId: offer.sellerId,
+      packageTier: "BASIC",
+      packageTitle: offer.title,
+      amountUzs,
+      commissionUzs,
+      sellerNetUzs,
+      status: "PENDING_PAYMENT",
+      dueAt: new Date(Date.now() + offer.deliveryDays * 24 * 60 * 60 * 1000),
+    },
+  });
+  await audit({ actorId: offer.buyerId, action: "order.create.offer", entity: "Order", entityId: order.id });
+  return order;
+}
+
 /** Re-order: place a fresh order for the same gig + package as a past order of the buyer's. */
 export async function reorderOrder(orderId: string, user: User): Promise<string> {
   const prev = await prisma.order.findUnique({

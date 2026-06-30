@@ -52,6 +52,21 @@
     "saved": "Saved ✓",
     "delete": "Delete"
   },
+  "Offer": {
+    "title": "Custom offers",
+    "offerTitle": "Offer title",
+    "price": "Price (UZS)",
+    "days": "Delivery days",
+    "revisions": "Revisions",
+    "send": "Send offer",
+    "none": "No offers yet",
+    "daysShort": "days",
+    "revShort": "rev.",
+    "accept": "Accept & order",
+    "decline": "Decline",
+    "error": "Something went wrong",
+    "status": { "PENDING": "Pending", "ACCEPTED": "Accepted", "DECLINED": "Declined" }
+  },
   "Payout": {
     "available": "Available to withdraw",
     "request": "Request payout",
