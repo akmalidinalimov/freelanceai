@@ -28,7 +28,7 @@ export default async function GigsPage({
   const tn = await getTranslations("Nav");
   const tg = await getTranslations("Gig");
 
-  const sort = (["newest", "price_asc", "price_desc"] as const).includes(sp.sort as GigSort)
+  const sort = (["newest", "price_asc", "price_desc", "popular"] as const).includes(sp.sort as GigSort)
     ? (sp.sort as GigSort)
     : "newest";
   const minUzs = sp.min ? Number(sp.min) : undefined;
@@ -89,6 +89,7 @@ export default async function GigsPage({
         />
         <select name="sort" defaultValue={sort} className={field} aria-label={tg("sort")}>
           <option value="newest">{tg("sortNewest")}</option>
+          <option value="popular">{tg("sortPopular")}</option>
           <option value="price_asc">{tg("sortPriceLow")}</option>
           <option value="price_desc">{tg("sortPriceHigh")}</option>
         </select>

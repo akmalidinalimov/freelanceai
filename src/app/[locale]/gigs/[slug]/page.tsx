@@ -61,8 +61,30 @@ export default async function GigDetailPage({
   const tierLabel = { BASIC: t("basic"), STANDARD: t("standard"), PREMIUM: t("premium") } as const;
   const { reviews, avg, count, distribution } = await getGigReviews(gig.id);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: gig.title,
+    description: gig.description.slice(0, 200),
+    ...(gig.coverUrl ? { image: gig.coverUrl } : {}),
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "UZS",
+      price: packages[0]?.priceUzs ?? 0,
+      availability: "https://schema.org/InStock",
+    },
+    ...(count > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: avg.toFixed(1), reviewCount: count } }
+      : {}),
+  };
+
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_360px]">
+      <script
+        type="application/ld+json"
+        // Structured data for search engines (Product + offers + rating).
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <RecentlyViewedTracker gigId={gig.id} />
       <div>
         <div className="mb-5 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-5xl font-bold text-[hsl(var(--primary))]">

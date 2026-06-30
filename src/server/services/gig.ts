@@ -7,7 +7,7 @@ import { stripContactInfo } from "@/lib/sanitize";
 import { Errors } from "@/lib/api";
 import { gigEditWhereForUser } from "@/lib/authz";
 
-export type GigSort = "newest" | "price_asc" | "price_desc";
+export type GigSort = "newest" | "price_asc" | "price_desc" | "popular";
 export interface GigFilters {
   q?: string;
   categorySlug?: string;
@@ -305,9 +305,14 @@ export async function listPublicGigs(opts: GigFilters = {}) {
       : {}),
   };
 
+  const orderBy: Prisma.GigOrderByWithRelationInput[] =
+    opts.sort === "popular"
+      ? [{ featured: "desc" }, { orders: { _count: "desc" } }, { createdAt: "desc" }]
+      : [{ featured: "desc" }, { createdAt: "desc" }, { id: "desc" }];
+
   const gigs = await prisma.gig.findMany({
     where,
-    orderBy: [{ featured: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    orderBy,
     take: opts.take ?? 48,
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },

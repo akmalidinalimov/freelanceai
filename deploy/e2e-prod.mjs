@@ -38,6 +38,10 @@ r = await get("/uz/gigs?category=ai-video");
 check("category filter narrows", r.status === 200 && countCovers(r.body) > 0 && countCovers(r.body) < 16, `(${countCovers(r.body)})`);
 r = await get("/uz/gigs?min=400000&sort=price_asc");
 check("price + sort filters", r.status === 200, `(${r.status})`);
+r = await get("/uz/gigs?sort=popular");
+check("sort by popular", r.status === 200 && countCovers(r.body) > 0, `(${countCovers(r.body)})`);
+r = await get("/uz/categories/ai-video");
+check("category landing page", r.status === 200 && countCovers(r.body) > 0, `(${r.status}, ${countCovers(r.body)})`);
 r = await get("/uz/gigs?q=zzzznotarealthing");
 check("no-match search empty", r.status === 200 && countCovers(r.body) === 0, `(${countCovers(r.body)})`);
 
