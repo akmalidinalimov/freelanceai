@@ -106,7 +106,7 @@ export default async function GigDetailPage({
                 className="aspect-video overflow-hidden rounded-lg border border-[hsl(var(--border))]"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="h-full w-full object-cover" />
+                <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </a>
             ))}
           </div>

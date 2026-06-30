@@ -92,7 +92,7 @@ export default async function HomePage({
                   <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-xl font-bold text-[hsl(var(--primary))]">
                     {g.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={g.coverUrl} alt="" className="h-full w-full object-cover" />
+                      <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     ) : (
                       g.title.slice(0, 1).toUpperCase()
                     )}
