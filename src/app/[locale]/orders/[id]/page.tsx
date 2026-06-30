@@ -83,9 +83,7 @@ export default async function OrderPage({
                     {d.fileUrls.map((url, i) => (
                       <a
                         key={url}
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
                         className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary))] hover:underline"
                       >
                         {t("file")} {i + 1}

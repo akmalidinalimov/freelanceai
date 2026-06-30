@@ -1,6 +1,6 @@
 import "server-only";
 import crypto from "crypto";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
@@ -73,4 +73,32 @@ export async function presignUpload(
   const uploadUrl = await getSignedUrl(r2(), command, { expiresIn: 300 });
   const publicUrl = `${process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "")}/${key}`;
   return { uploadUrl, publicUrl, key };
+}
+
+/** Map a stored public URL back to its R2 object key (or null if it isn't one of ours). */
+export function keyFromPublicUrl(url: string): string | null {
+  const base = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
+  if (!base || !url.startsWith(`${base}/`)) return null;
+  return url.slice(base.length + 1);
+}
+
+/**
+ * Fetch an object from R2 server-side (authenticated with our creds) for an access-controlled
+ * proxy download. Works whether the bucket is public or private — so switching deliverables to a
+ * private bucket later needs no code change.
+ */
+export async function getObject(
+  key: string
+): Promise<{ body: ReadableStream; contentType: string } | null> {
+  if (!mediaConfigured()) return null;
+  try {
+    const res = await r2().send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }));
+    if (!res.Body) return null;
+    return {
+      body: (res.Body as { transformToWebStream: () => ReadableStream }).transformToWebStream(),
+      contentType: res.ContentType ?? "application/octet-stream",
+    };
+  } catch {
+    return null;
+  }
 }
