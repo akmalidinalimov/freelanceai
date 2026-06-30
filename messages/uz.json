@@ -192,7 +192,11 @@
     "pickRating": "Iltimos, baho tanlang.",
     "error": "Xatolik yuz berdi.",
     "yourReview": "Sizning sharhingiz",
-    "reviews": "Sharhlar"
+    "reviews": "Sharhlar",
+    "reply": "Javob berish",
+    "replyPh": "Javob yozing...",
+    "sendReply": "Javob yuborish",
+    "sellerReply": "Ijrochi javobi"
   },
   "Message": {
     "title": "Xabarlar",

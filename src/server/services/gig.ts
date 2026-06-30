@@ -143,10 +143,10 @@ async function fuzzyTextWhere(q: string): Promise<Prisma.GigWhereInput> {
     const rows = await prisma.$queryRaw<{ id: string }[]>`
       SELECT id FROM "Gig"
       WHERE status = 'ACTIVE' AND "deletedAt" IS NULL
-        AND (title % ${q} OR description % ${q}
+        AND (${q} <% title OR ${q} <% description
              OR title ILIKE ${like} OR description ILIKE ${like}
              OR ${q.toLowerCase()} = ANY(tags))
-      ORDER BY GREATEST(similarity(title, ${q}), similarity(description, ${q})) DESC
+      ORDER BY GREATEST(word_similarity(${q}, title), word_similarity(${q}, description)) DESC
       LIMIT 200`;
     return { id: { in: rows.map((r) => r.id) } };
   } catch {

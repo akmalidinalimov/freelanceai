@@ -1,8 +1,10 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { recomputeSellerStats } from "@/server/services/profile";
+import { stripContactInfo } from "@/lib/sanitize";
 
 /** A buyer reviews a COMPLETED order once; recomputes the seller's rating aggregate. */
 export async function createReview(
@@ -37,9 +39,9 @@ export function getOrderReview(orderId: string) {
   return prisma.review.findUnique({ where: { orderId } });
 }
 
-/** Reviews for a gig + its average/count, for the public gig page. */
+/** Reviews for a gig + average/count + star distribution, for the public gig page. */
 export async function getGigReviews(gigId: string) {
-  const [reviews, agg] = await Promise.all([
+  const [reviews, agg, grouped] = await Promise.all([
     prisma.review.findMany({
       where: { gigId },
       orderBy: { createdAt: "desc" },
@@ -47,6 +49,25 @@ export async function getGigReviews(gigId: string) {
       include: { author: { select: { firstName: true, name: true, username: true } } },
     }),
     prisma.review.aggregate({ where: { gigId }, _avg: { rating: true }, _count: true }),
+    prisma.review.groupBy({ by: ["rating"], where: { gigId }, _count: true }),
   ]);
-  return { reviews, avg: agg._avg.rating ?? 0, count: agg._count };
+  const distribution = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: grouped.find((g) => g.rating === star)?._count ?? 0,
+  }));
+  return { reviews, avg: agg._avg.rating ?? 0, count: agg._count, distribution };
+}
+
+/** Seller replies to a review on their gig (sanitized; one response). */
+export async function addSellerReply(reviewId: string, seller: User, response: string) {
+  const text = stripContactInfo(response.trim()).text;
+  if (!text) throw Errors.validation({ response: "Reply is empty" });
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    include: { gig: { select: { sellerId: true } } },
+  });
+  if (!review) throw Errors.notFound("Review not found");
+  if (review.gig.sellerId !== seller.id && seller.role !== "ADMIN") throw Errors.forbidden();
+  await prisma.review.update({ where: { id: reviewId }, data: { sellerResponse: text } });
+  await audit({ actorId: seller.id, action: "review.reply", entity: "Review", entityId: reviewId });
 }

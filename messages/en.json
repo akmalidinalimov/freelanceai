@@ -192,7 +192,11 @@
     "pickRating": "Please pick a rating.",
     "error": "Something went wrong.",
     "yourReview": "Your review",
-    "reviews": "Reviews"
+    "reviews": "Reviews",
+    "reply": "Reply",
+    "replyPh": "Write a reply...",
+    "sendReply": "Send reply",
+    "sellerReply": "Seller's reply"
   },
   "Message": {
     "title": "Messages",

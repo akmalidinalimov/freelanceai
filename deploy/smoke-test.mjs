@@ -57,6 +57,7 @@ const CHECKS = [
   { group: "API", name: "delivery file proxy", method: "GET", path: "/api/orders/abc/file?u=x", expect: 401 },
   { group: "API", name: "cron auto-complete", method: "POST", path: "/api/cron/auto-complete", expect: 401 },
   { group: "API", name: "create review", method: "POST", path: "/api/reviews", origin: true, expect: 401 },
+  { group: "API", name: "reply to review", method: "POST", path: "/api/reviews/abc", origin: true, expect: 401 },
   { group: "API", name: "save gig", method: "POST", path: "/api/saved", origin: true, expect: 401 },
   { group: "API", name: "admin payout", method: "POST", path: "/api/admin/payouts", origin: true, expect: 401 },
   { group: "API", name: "resolve dispute", method: "POST", path: "/api/admin/disputes/abc", origin: true, expect: 401 },

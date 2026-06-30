@@ -31,6 +31,7 @@ import { OrderPanel } from "@/components/order-panel";
 import { Stars } from "@/components/stars";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { SaveButton } from "@/components/save-button";
+import { ReviewReply } from "@/components/review-reply";
 
 const TIER_ORDER = { BASIC: 0, STANDARD: 1, PREMIUM: 2 } as const;
 
@@ -54,7 +55,7 @@ export default async function GigDetailPage({
 
   const seller = gig.seller.firstName ?? gig.seller.name ?? gig.seller.username ?? "";
   const packages = [...gig.packages].sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier]);
-  const { reviews, avg, count } = await getGigReviews(gig.id);
+  const { reviews, avg, count, distribution } = await getGigReviews(gig.id);
 
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_360px]">
@@ -133,6 +134,20 @@ export default async function GigDetailPage({
             <h2 className="mb-4 text-xl font-semibold">
               {tr("reviews")} ({count})
             </h2>
+            <div className="mb-4 max-w-sm space-y-1">
+              {distribution.map((d) => (
+                <div key={d.star} className="flex items-center gap-2 text-xs">
+                  <span className="w-6 tabular-nums">{d.star}★</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded bg-[hsl(var(--muted))]">
+                    <div
+                      className="h-full bg-[hsl(var(--primary))]"
+                      style={{ width: `${count ? (d.count / count) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="w-6 text-right tabular-nums text-[hsl(var(--muted-foreground))]">{d.count}</span>
+                </div>
+              ))}
+            </div>
             <ul className="space-y-4">
               {reviews.map((rv) => (
                 <li key={rv.id} className="rounded-xl border border-[hsl(var(--border))] p-4">
@@ -143,6 +158,13 @@ export default async function GigDetailPage({
                     </span>
                   </div>
                   {rv.comment && <p className="mt-2 text-sm">{rv.comment}</p>}
+                  {rv.sellerResponse && (
+                    <div className="mt-2 rounded-lg bg-[hsl(var(--muted))]/40 p-2 text-sm">
+                      <span className="font-medium">{tr("sellerReply")}: </span>
+                      {rv.sellerResponse}
+                    </div>
+                  )}
+                  {viewer === "owner" && !rv.sellerResponse && <ReviewReply reviewId={rv.id} />}
                 </li>
               ))}
             </ul>
