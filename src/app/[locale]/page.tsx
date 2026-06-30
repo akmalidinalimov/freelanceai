@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { listPublicGigs } from "@/server/services/gig";
+import { listPublicGigs, listFeaturedGigs } from "@/server/services/gig";
 import { formatUzs } from "@/lib/utils";
 
 // Rendered per-request: the featured row reads live gigs from the DB.
@@ -26,6 +26,7 @@ export default async function HomePage({
   setRequestLocale(locale);
   const t = await getTranslations();
   const featured = await listPublicGigs({ take: 8 }).catch(() => []);
+  const featuredGigs = await listFeaturedGigs(4).catch(() => []);
 
   return (
     <div className="mx-auto max-w-6xl px-4">
@@ -69,6 +70,40 @@ export default async function HomePage({
           ))}
         </div>
       </section>
+
+      {/* Featured gigs */}
+      {featuredGigs.length > 0 && (
+        <section className="py-6">
+          <h2 className="mb-6 text-2xl font-semibold">★ {t("Gig.featured")}</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredGigs.map((g) => {
+              const from = g.packages[0]?.priceUzs ?? 0;
+              const seller = g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "";
+              return (
+                <Link
+                  key={g.id}
+                  href={`/gigs/${g.slug}`}
+                  className="flex flex-col rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--card))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
+                >
+                  <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-xl font-bold text-[hsl(var(--primary))]">
+                    {g.coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    ) : (
+                      g.title.slice(0, 1).toUpperCase()
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-sm font-medium">{g.title}</p>
+                  <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{seller}</p>
+                  <p className="mt-auto pt-2 text-sm font-semibold tabular-nums">
+                    {t("Gig.from")} {formatUzs(from)} so&apos;m
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Popular gigs */}
       {featured.length > 0 && (
