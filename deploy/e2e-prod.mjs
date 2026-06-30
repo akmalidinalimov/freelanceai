@@ -87,6 +87,10 @@ check("POST /api/cron/auto-complete (no secret) -> 401", (await mut("POST", "/ap
 console.log("\n[seo + ops]");
 r = await get("/sitemap.xml");
 check("sitemap.xml", r.status === 200 && r.body.includes("/uz/gigs/"));
+check("sitemap has categories", r.body.includes("/categories/"));
+const sec = await fetch(B + "/uz", { redirect: "manual" });
+check("security header nosniff", sec.headers.get("x-content-type-options") === "nosniff");
+check("security header referrer-policy", (sec.headers.get("referrer-policy") ?? "").includes("strict-origin"));
 r = await get("/robots.txt");
 check("robots.txt", r.status === 200 && r.body.includes("Sitemap"));
 if (slug) check("gig has <title>", (await get(`/uz/gigs/${slug}`)).body.toLowerCase().includes("<title>"));

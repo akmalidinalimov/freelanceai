@@ -15,10 +15,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     .catch(() => [] as { slug: string; updatedAt: Date }[]);
 
+  const categories = await prisma.category
+    .findMany({ select: { slug: true }, take: 100 })
+    .catch(() => [] as { slug: string }[]);
+
   const entries: MetadataRoute.Sitemap = [];
   for (const loc of LOCALES) {
     entries.push({ url: `${base}/${loc}`, changeFrequency: "weekly", priority: 1 });
     entries.push({ url: `${base}/${loc}/gigs`, changeFrequency: "daily", priority: 0.8 });
+    for (const c of categories) {
+      entries.push({
+        url: `${base}/${loc}/categories/${c.slug}`,
+        changeFrequency: "weekly",
+        priority: 0.7,
+      });
+    }
     for (const g of gigs) {
       entries.push({
         url: `${base}/${loc}/gigs/${g.slug}`,
