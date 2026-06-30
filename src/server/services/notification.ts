@@ -50,3 +50,13 @@ export async function markNotificationsRead(userId: string): Promise<void> {
     data: { readAt: new Date() },
   });
 }
+
+/** Delete a single notification — scoped to the owner (no IDOR). */
+export async function deleteNotification(userId: string, id: string): Promise<void> {
+  await prisma.notification.deleteMany({ where: { id, userId } });
+}
+
+/** Delete all of the current user's notifications. */
+export async function clearNotifications(userId: string): Promise<void> {
+  await prisma.notification.deleteMany({ where: { userId } });
+}

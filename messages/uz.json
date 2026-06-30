@@ -1,7 +1,9 @@
 {
   "Notifications": {
     "title": "Bildirishnomalar",
-    "empty": "Hozircha bildirishnoma yoʻq."
+    "empty": "Hozircha bildirishnoma yoʻq.",
+    "clearAll": "Hammasini tozalash",
+    "delete": "Oʻchirish"
   },
   "AdminUsers": {
     "title": "Foydalanuvchilar",

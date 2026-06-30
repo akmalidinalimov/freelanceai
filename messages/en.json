@@ -1,7 +1,9 @@
 {
   "Notifications": {
     "title": "Notifications",
-    "empty": "No notifications yet."
+    "empty": "No notifications yet.",
+    "clearAll": "Clear all",
+    "delete": "Delete"
   },
   "AdminUsers": {
     "title": "Users",
