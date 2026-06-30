@@ -51,6 +51,21 @@ async function main() {
     },
   });
 
+  // Dedicated user for the KYC code-verification test (has an email channel).
+  await prisma.user.upsert({
+    where: { id: "e2e_verify" },
+    update: { email: "e2e-verify@example.com", kycStatus: "NONE" },
+    create: {
+      id: "e2e_verify",
+      firstName: "E2E Verify",
+      username: "e2e_verify",
+      email: "e2e-verify@example.com",
+      role: "BUYER",
+      status: "ACTIVE",
+      onboardingCompleted: true,
+    },
+  });
+
   await prisma.gig.upsert({
     where: { id: "e2e_gig" },
     update: { status: "ACTIVE" },

@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     update_id?: number;
     message?: {
       text?: string;
+      contact?: { phone_number?: string; user_id?: number };
       from?: {
         id: number;
         is_bot?: boolean;
@@ -47,6 +48,28 @@ export async function POST(request: Request) {
 
   const from = update.message?.from;
   const text = update.message?.text ?? "";
+  const contact = update.message?.contact;
+
+  // KYC phone share: the user tapped the "share phone" button (requestContact). Telegram
+  // gives us their already-verified phone. Only accept the user's OWN contact.
+  if (from && !from.is_bot && contact?.phone_number) {
+    if (contact.user_id === from.id) {
+      const res = await prisma.user.updateMany({
+        where: { telegramId: String(from.id) },
+        data: { phone: contact.phone_number, kycStatus: "VERIFIED" },
+      });
+      void tgSendMessage(
+        from.id,
+        res.count > 0 ? "✅ Telefon raqamingiz tasdiqlandi." : "Hisob topilmadi. Avval saytga kiring.",
+        { remove_keyboard: true }
+      );
+    } else {
+      void tgSendMessage(from.id, "Iltimos, faqat oʻzingizning kontaktingizni ulashing.", {
+        remove_keyboard: true,
+      });
+    }
+    return NextResponse.json({ ok: true });
+  }
 
   if (from && !from.is_bot && text.startsWith("/start")) {
     const payload = text.split(/\s+/)[1];

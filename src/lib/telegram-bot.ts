@@ -11,16 +11,29 @@ function api(method: string): string {
   return `https://api.telegram.org/bot${token}/${method}`;
 }
 
-export async function tgSendMessage(chatId: number | string, text: string): Promise<void> {
+export async function tgSendMessage(
+  chatId: number | string,
+  text: string,
+  replyMarkup?: Record<string, unknown>
+): Promise<void> {
   try {
     await fetch(api("sendMessage"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text }),
+      body: JSON.stringify({ chat_id: chatId, text, ...(replyMarkup ? { reply_markup: replyMarkup } : {}) }),
     });
   } catch (err) {
     console.error("tgSendMessage failed", err);
   }
+}
+
+/** Prompt the user to share their (Telegram-verified) phone via a one-tap contact button. */
+export async function tgRequestContact(chatId: number | string, prompt: string): Promise<void> {
+  await tgSendMessage(chatId, prompt, {
+    keyboard: [[{ text: "📱 Telefon raqamni ulashish", request_contact: true }]],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  });
 }
 
 /** Register the webhook (called once during setup). */

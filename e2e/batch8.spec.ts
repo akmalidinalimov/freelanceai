@@ -68,6 +68,41 @@ test("admin KYC: a user submits a phone, admin approves it", async ({ browser })
   await adminCtx.close();
 });
 
+test("kyc verify: request an email code and confirm → verified", async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const u = await ctx.newPage();
+  await loginAs(u, "e2e_verify"); // seeded with an email channel
+  await u.goto("/uz/dashboard");
+  const origin = new URL(u.url()).origin;
+
+  // Request a code (E2E_TEST_AUTH=1 → the API returns the code so the test can use it).
+  const reqRes = await u.request.post("/api/me/verify", {
+    headers: { Origin: origin },
+    data: { action: "requestEmailCode" },
+  });
+  const reqJson = await reqRes.json();
+  expect(reqJson.ok, JSON.stringify(reqJson)).toBeTruthy();
+  const code = reqJson.data.code as string;
+  expect(code).toMatch(/^\d{6}$/);
+
+  // A wrong code is rejected.
+  const bad = await u.request.post("/api/me/verify", {
+    headers: { Origin: origin },
+    data: { action: "verifyCode", code: code === "000000" ? "111111" : "000000" },
+  });
+  expect((await bad.json()).ok).toBeFalsy();
+
+  // The right code verifies.
+  const ok = await u.request.post("/api/me/verify", {
+    headers: { Origin: origin },
+    data: { action: "verifyCode", code },
+  });
+  const okJson = await ok.json();
+  expect(okJson.data?.verified, JSON.stringify(okJson)).toBe(true);
+
+  await ctx.close();
+});
+
 test("payme webhook: Create→Perform settles the order", async ({ browser }) => {
   test.skip(!process.env.PAYME_KEY, "needs PAYME_KEY");
   const { ctx, url, id } = await placeOrder(browser);

@@ -27,6 +27,7 @@ export default async function AdminKycPage({ params }: { params: Promise<{ local
           <thead>
             <tr className="border-b border-[hsl(var(--border))] text-left text-xs text-[hsl(var(--muted-foreground))]">
               <th className="py-2">User</th>
+              <th>Telegram</th>
               <th>Phone</th>
               <th>Seller</th>
               <th>Payout card</th>
@@ -37,6 +38,10 @@ export default async function AdminKycPage({ params }: { params: Promise<{ local
             {pending.map((u) => (
               <tr key={u.id} className="border-b border-[hsl(var(--border))]">
                 <td className="py-2 font-medium">{name(u)}</td>
+                <td className="font-mono text-xs">
+                  {u.username ? `@${u.username}` : "—"}
+                  {u.telegramId ? ` · ${u.telegramId}` : ""}
+                </td>
                 <td className="font-mono">{u.phone ?? "—"}</td>
                 <td>{u.isSeller ? "✓" : "—"}</td>
                 <td className="font-mono">{u.payoutCardMasked ?? "—"}</td>

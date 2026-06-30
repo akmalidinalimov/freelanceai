@@ -116,6 +116,7 @@ export function listPendingKyc() {
       firstName: true,
       name: true,
       username: true,
+      telegramId: true,
       phone: true,
       isSeller: true,
       payoutCardMasked: true,

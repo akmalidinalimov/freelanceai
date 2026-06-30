@@ -419,6 +419,17 @@
     "payoutCard": "Payout card",
     "payoutCardHint": "Uzcard/Humo — only the last 4 digits are stored",
     "save": "Save",
+    "verifyTitle": "Verify your identity",
+    "verifyHint": "Confirm your phone via Telegram (one tap) or get a 6-digit code by Telegram or email.",
+    "verifyVerified": "Identity verified ✓",
+    "verifySharePhone": "Share phone via Telegram",
+    "verifyCodeTg": "Code via Telegram",
+    "verifyCodeEmail": "Code via email",
+    "verifyCodePh": "6-digit code",
+    "verifyConfirm": "Confirm",
+    "contactSent": "Open Telegram and tap “Share my phone”.",
+    "codeSent": "Code sent — enter it below.",
+    "verifyError": "Something went wrong. Try again.",
     "saved": "Saved ✓"
   },
   "Dispute": {

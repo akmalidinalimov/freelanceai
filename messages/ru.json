@@ -419,6 +419,17 @@
     "payoutCard": "Карта для выплат",
     "payoutCardHint": "Uzcard/Humo — хранятся только последние 4 цифры",
     "save": "Сохранить",
+    "verifyTitle": "Подтвердите личность",
+    "verifyHint": "Подтвердите телефон через Telegram (в одно касание) или получите 6-значный код по Telegram или email.",
+    "verifyVerified": "Личность подтверждена ✓",
+    "verifySharePhone": "Поделиться номером в Telegram",
+    "verifyCodeTg": "Код в Telegram",
+    "verifyCodeEmail": "Код на email",
+    "verifyCodePh": "6-значный код",
+    "verifyConfirm": "Подтвердить",
+    "contactSent": "Откройте Telegram и нажмите «Поделиться номером».",
+    "codeSent": "Код отправлен — введите его ниже.",
+    "verifyError": "Что-то пошло не так. Попробуйте снова.",
     "saved": "Сохранено ✓"
   },
   "Dispute": {

@@ -419,6 +419,17 @@
     "payoutCard": "Toʻlov kartasi",
     "payoutCardHint": "Uzcard/Humo — faqat oxirgi 4 raqam saqlanadi",
     "save": "Saqlash",
+    "verifyTitle": "Shaxsingizni tasdiqlang",
+    "verifyHint": "Telefoningizni Telegram orqali (bir tegish) tasdiqlang yoki Telegram/email orqali 6 xonali kod oling.",
+    "verifyVerified": "Shaxs tasdiqlandi ✓",
+    "verifySharePhone": "Telegram orqali raqamni ulashish",
+    "verifyCodeTg": "Telegram orqali kod",
+    "verifyCodeEmail": "Email orqali kod",
+    "verifyCodePh": "6 xonali kod",
+    "verifyConfirm": "Tasdiqlash",
+    "contactSent": "Telegramni oching va “Raqamni ulashish” tugmasini bosing.",
+    "codeSent": "Kod yuborildi — quyiga kiriting.",
+    "verifyError": "Xatolik yuz berdi. Qayta urinib koʻring.",
     "saved": "Saqlandi ✓"
   },
   "Dispute": {

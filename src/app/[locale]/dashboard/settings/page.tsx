@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/settings-form";
+import { KycVerify } from "@/components/kyc-verify";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,13 @@ export default async function SettingsPage({
         hasEmail={Boolean(user.email)}
         hasTelegram={Boolean(user.telegramId)}
       />
+      <div className="mt-4">
+        <KycVerify
+          kycStatus={dbUser?.kycStatus ?? "NONE"}
+          hasTelegram={Boolean(user.telegramId)}
+          hasEmail={Boolean(user.email)}
+        />
+      </div>
     </div>
   );
 }

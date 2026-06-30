@@ -60,6 +60,11 @@ model User {
   kycStatus  KycStatus @default(NONE)
   // Seller payout destination — only the masked card is stored (last 4), never the full PAN.
   payoutCardMasked String?
+  // One-time verification code (KYC), hashed. Delivered via Telegram bot or email.
+  verifyCodeHash      String?
+  verifyCodeExpiresAt DateTime?
+  verifyAttempts      Int       @default(0)
+  verifyChannel       String? // "telegram" | "email" — channel of the pending code
   referralCode String? @unique
   referredById String?
   // Notification preferences (where to mirror in-app messages).
