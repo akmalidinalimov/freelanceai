@@ -7,6 +7,7 @@ import { listSellerGigs } from "@/server/services/gig";
 import { listSellerOrders, autoCompleteDeliveredOrders } from "@/server/services/order";
 import { getSellerEarnings } from "@/server/services/payments";
 import { getSellerStats } from "@/server/services/analytics";
+import { getOwnProfile } from "@/server/services/profile";
 import { formatUzs } from "@/lib/utils";
 
 export default async function SellerDashboardPage({
@@ -31,6 +32,16 @@ export default async function SellerDashboardPage({
   const orders = await listSellerOrders(user.id);
   const earnings = await getSellerEarnings(user.id);
   const stats = await getSellerStats(user.id);
+  const profile = await getOwnProfile(user.id);
+
+  // Onboarding checklist (computed from existing data; hidden once complete).
+  const checklist = [
+    { key: "profile", done: Boolean(profile?.headline || profile?.bio), href: "/dashboard/seller/profile" },
+    { key: "gig", done: gigs.length > 0, href: "/dashboard/seller/gigs/new" },
+    { key: "active", done: gigs.some((g) => g.status === "ACTIVE"), href: "/dashboard/seller" },
+    { key: "sale", done: stats.completed > 0, href: "/dashboard/seller" },
+  ];
+  const onboardingComplete = checklist.every((c) => c.done);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -61,6 +72,34 @@ export default async function SellerDashboardPage({
           </Link>
         </div>
       </div>
+
+      {!onboardingComplete && (
+        <div className="mb-4 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">
+          <h3 className="mb-3 font-semibold">{t("checklistTitle")}</h3>
+          <ul className="space-y-2">
+            {checklist.map((c) => (
+              <li key={c.key} className="flex items-center gap-2 text-sm">
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${
+                    c.done
+                      ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                      : "border border-[hsl(var(--border))]"
+                  }`}
+                >
+                  {c.done ? "✓" : ""}
+                </span>
+                {c.done ? (
+                  <span className="text-[hsl(var(--muted-foreground))] line-through">{t(`ck_${c.key}`)}</span>
+                ) : (
+                  <Link href={c.href} className="text-[hsl(var(--primary))] hover:underline">
+                    {t(`ck_${c.key}`)}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Earnings */}
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
