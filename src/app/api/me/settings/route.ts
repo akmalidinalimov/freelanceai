@@ -7,6 +7,10 @@ const schema = z
   .object({
     notifyTelegram: z.boolean().optional(),
     notifyEmail: z.boolean().optional(),
+    notifyPrefs: z
+      .object({ orders: z.boolean(), messages: z.boolean(), reviews: z.boolean() })
+      .partial()
+      .optional(),
   })
   .strict();
 

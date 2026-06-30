@@ -347,6 +347,10 @@
   "Settings": {
     "title": "Sozlamalar",
     "notifyTitle": "Yangi xabarlar haqida qayerda xabar beraylik?",
+    "categories": "Qaysi hodisalar haqida xabar berilsin",
+    "cat_orders": "Buyurtmalar",
+    "cat_messages": "Xabarlar",
+    "cat_reviews": "Sharhlar",
     "telegram": "Telegram",
     "telegramHint": "Botdan xabar olish",
     "email": "Email",

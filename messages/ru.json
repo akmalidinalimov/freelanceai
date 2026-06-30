@@ -347,6 +347,10 @@
   "Settings": {
     "title": "Настройки",
     "notifyTitle": "Куда уведомлять о новых сообщениях?",
+    "categories": "О каких событиях уведомлять",
+    "cat_orders": "Заказы",
+    "cat_messages": "Сообщения",
+    "cat_reviews": "Отзывы",
     "telegram": "Telegram",
     "telegramHint": "Сообщение от бота",
     "email": "Эл. почта",

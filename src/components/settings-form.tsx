@@ -3,21 +3,38 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
+interface Prefs {
+  orders: boolean;
+  messages: boolean;
+  reviews: boolean;
+}
+
 export function SettingsForm({
   initial,
   hasEmail,
   hasTelegram,
 }: {
-  initial: { notifyTelegram: boolean; notifyEmail: boolean };
+  initial: { notifyTelegram: boolean; notifyEmail: boolean; prefs: Prefs };
   hasEmail: boolean;
   hasTelegram: boolean;
 }) {
   const t = useTranslations("Settings");
   const [tg, setTg] = useState(initial.notifyTelegram);
   const [em, setEm] = useState(initial.notifyEmail);
+  const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
   const [saved, setSaved] = useState(false);
 
-  async function save(next: { notifyTelegram?: boolean; notifyEmail?: boolean }) {
+  function togglePref(key: keyof Prefs, value: boolean) {
+    const next = { ...prefs, [key]: value };
+    setPrefs(next);
+    save({ notifyPrefs: next });
+  }
+
+  async function save(next: {
+    notifyTelegram?: boolean;
+    notifyEmail?: boolean;
+    notifyPrefs?: Prefs;
+  }) {
     setSaved(false);
     const r = await fetch("/api/me/settings", {
       method: "PATCH",
@@ -65,6 +82,18 @@ export function SettingsForm({
           }}
         />
       </label>
+      <p className="pt-2 text-sm font-medium">{t("categories")}</p>
+      {(["orders", "messages", "reviews"] as const).map((key) => (
+        <label key={key} className={row}>
+          <span className="font-medium">{t(`cat_${key}`)}</span>
+          <input
+            type="checkbox"
+            className="h-5 w-5"
+            checked={prefs[key]}
+            onChange={(e) => togglePref(key, e.target.checked)}
+          />
+        </label>
+      ))}
       {saved && <p className="text-sm text-green-600">{t("saved")}</p>}
     </div>
   );

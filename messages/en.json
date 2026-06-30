@@ -347,6 +347,10 @@
   "Settings": {
     "title": "Settings",
     "notifyTitle": "Where should we notify you about new messages?",
+    "categories": "Which events to be notified about",
+    "cat_orders": "Orders",
+    "cat_messages": "Messages",
+    "cat_reviews": "Reviews",
     "telegram": "Telegram",
     "telegramHint": "Get a DM from the bot",
     "email": "Email",

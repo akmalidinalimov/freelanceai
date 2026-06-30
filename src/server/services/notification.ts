@@ -6,6 +6,13 @@ import { logger } from "@/lib/logger";
  * In-app notifications. `notify` is best-effort (a failure here must never break the
  * order/review/message flow that triggered it), so it swallows + logs errors.
  */
+/** Map a notification type to a user-mutable category. */
+export function notificationCategory(type: string): "messages" | "reviews" | "orders" {
+  if (type.startsWith("message.")) return "messages";
+  if (type.startsWith("review.")) return "reviews";
+  return "orders"; // order.*, dispute.*, cancellation.*
+}
+
 export async function notify(
   userId: string,
   type: string,
@@ -13,6 +20,10 @@ export async function notify(
   opts?: { body?: string; link?: string }
 ): Promise<void> {
   try {
+    // Respect the recipient's per-category mutes (default: everything on).
+    const u = await prisma.user.findUnique({ where: { id: userId }, select: { notifyPrefs: true } });
+    const prefs = (u?.notifyPrefs as Record<string, boolean> | null) ?? null;
+    if (prefs && prefs[notificationCategory(type)] === false) return;
     await prisma.notification.create({
       data: { userId, type, title, body: opts?.body ?? null, link: opts?.link ?? null },
     });
