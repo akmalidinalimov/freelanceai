@@ -252,5 +252,18 @@
     "emailHint": "Get an email",
     "noEmail": "Add an email to your account to enable",
     "saved": "Saved ✓"
+  },
+  "Dispute": {
+    "open": "Report a problem",
+    "title": "What went wrong?",
+    "reasonPh": "Describe the issue...",
+    "reasonRequired": "Please describe the issue.",
+    "submit": "Open dispute",
+    "underReview": "Dispute opened — under admin review.",
+    "error": "Something went wrong.",
+    "refund": "Refund buyer",
+    "release": "Release to seller",
+    "adminTitle": "Open disputes",
+    "noDisputes": "No open disputes."
   }
 }

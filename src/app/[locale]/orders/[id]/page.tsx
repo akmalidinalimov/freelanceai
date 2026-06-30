@@ -7,6 +7,7 @@ import { getOrderReview } from "@/server/services/review";
 import { getOrderConversationId, listConversationMessages } from "@/server/services/message";
 import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
+import { DisputeBox } from "@/components/dispute-box";
 import { ReviewForm } from "@/components/review-form";
 import { Stars } from "@/components/stars";
 import { MessageThread } from "@/components/message-thread";
@@ -102,6 +103,10 @@ export default async function OrderPage({
       </div>
 
       <OrderActions orderId={order.id} status={order.status} role={role} />
+
+      <div className="mt-4">
+        <DisputeBox orderId={order.id} status={order.status} />
+      </div>
 
       {order.status === "COMPLETED" && (
         <div className="mt-6">

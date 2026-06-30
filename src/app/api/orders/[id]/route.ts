@@ -10,12 +10,14 @@ import {
   cancelOrder,
 } from "@/server/services/order";
 import { confirmOrderPayment } from "@/server/services/payments";
+import { openDispute } from "@/server/services/dispute";
 
 const schema = z
   .object({
-    action: z.enum(["deliver", "accept", "revision", "cancel", "confirm_payment"]),
+    action: z.enum(["deliver", "accept", "revision", "cancel", "confirm_payment", "dispute"]),
     message: z.string().max(2000).optional(),
     fileUrls: z.array(z.string().url()).max(10).optional(),
+    reason: z.string().max(1000).optional(),
   })
   .strict();
 
@@ -47,6 +49,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         break;
       case "confirm_payment":
         await confirmOrderPayment(id, user);
+        break;
+      case "dispute":
+        await openDispute(id, user, body.reason ?? "");
         break;
     }
     return ok({ done: true });

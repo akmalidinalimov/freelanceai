@@ -24,6 +24,7 @@ export default async function SellerDashboardPage({
   const ta = await getTranslations("Admin");
   const tm = await getTranslations("Message");
   const tp = await getTranslations("Profile");
+  const td = await getTranslations("Dispute");
   const gigs = await listSellerGigs(user.id);
   const orders = await listSellerOrders(user.id);
   const earnings = await getSellerEarnings(user.id);
@@ -40,6 +41,9 @@ export default async function SellerDashboardPage({
               </Link>
               <Link href="/admin/moderation">
                 <Button variant="outline">{ta("moderation")}</Button>
+              </Link>
+              <Link href="/admin/disputes">
+                <Button variant="outline">{td("adminTitle")}</Button>
               </Link>
             </>
           )}

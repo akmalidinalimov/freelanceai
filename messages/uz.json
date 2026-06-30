@@ -252,5 +252,18 @@
     "emailHint": "Emailga xat olish",
     "noEmail": "Hisobingizga email qoʻshing",
     "saved": "Saqlandi ✓"
+  },
+  "Dispute": {
+    "open": "Muammo haqida xabar berish",
+    "title": "Nima boʻldi?",
+    "reasonPh": "Muammoni tasvirlang...",
+    "reasonRequired": "Iltimos, muammoni tasvirlang.",
+    "submit": "Nizo ochish",
+    "underReview": "Nizo ochildi — administrator koʻrib chiqmoqda.",
+    "error": "Xatolik yuz berdi.",
+    "refund": "Buyurtmachiga qaytarish",
+    "release": "Ijrochiga berish",
+    "adminTitle": "Ochiq nizolar",
+    "noDisputes": "Ochiq nizolar yoʻq."
   }
 }

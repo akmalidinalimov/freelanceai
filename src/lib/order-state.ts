@@ -7,12 +7,13 @@ import type { OrderStatus } from "@prisma/client";
 export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   PENDING_PAYMENT: ["PAID", "CANCELLED"],
   PAID: ["IN_PROGRESS", "CANCELLED"],
-  IN_PROGRESS: ["DELIVERED", "CANCELLED"],
-  DELIVERED: ["COMPLETED", "REVISION"],
-  REVISION: ["DELIVERED", "CANCELLED"],
+  IN_PROGRESS: ["DELIVERED", "CANCELLED", "DISPUTED"],
+  DELIVERED: ["COMPLETED", "REVISION", "DISPUTED"],
+  REVISION: ["DELIVERED", "CANCELLED", "DISPUTED"],
   COMPLETED: [],
   CANCELLED: [],
-  DISPUTED: [],
+  // Admin resolves a dispute by refunding (→CANCELLED) or releasing (→COMPLETED).
+  DISPUTED: ["CANCELLED", "COMPLETED"],
 };
 
 export function canTransition(from: OrderStatus, to: OrderStatus): boolean {

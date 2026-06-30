@@ -3,6 +3,7 @@ import {
   computeSplit,
   paymentPostings,
   payoutPostings,
+  refundPostings,
   postingsBalance,
 } from "./commission";
 
@@ -43,6 +44,18 @@ describe("double-entry postings always balance", () => {
 
   it("payout postings sum to zero", () => {
     expect(postingsBalance(payoutPostings(80_000))).toBe(0);
+  });
+
+  it("refund reverses a payment exactly (payment + refund nets to zero)", () => {
+    const { commissionUzs } = computeSplit(100_000, 20);
+    const pay = paymentPostings(100_000, commissionUzs);
+    const refund = refundPostings(100_000, commissionUzs);
+    expect(postingsBalance(refund)).toBe(0);
+    expect(postingsBalance([...pay, ...refund])).toBe(0);
+    // every account returns to net zero
+    const byAccount: Record<string, number> = {};
+    for (const p of [...pay, ...refund]) byAccount[p.account] = (byAccount[p.account] ?? 0) + p.amountUzs;
+    for (const v of Object.values(byAccount)) expect(v).toBe(0);
   });
 
   it("a full payment + payout cycle nets to zero across the ledger", () => {

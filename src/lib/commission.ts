@@ -35,6 +35,14 @@ export function paymentPostings(amountUzs: number, commissionUzs: number): Posti
   ];
 }
 
+/** Balanced postings that reverse a payment (refund on dispute). */
+export function refundPostings(amountUzs: number, commissionUzs: number): Posting[] {
+  return paymentPostings(amountUzs, commissionUzs).map((p) => ({
+    account: p.account,
+    amountUzs: -p.amountUzs,
+  }));
+}
+
 /** Balanced postings for paying a seller out. */
 export function payoutPostings(amountUzs: number): Posting[] {
   return [
