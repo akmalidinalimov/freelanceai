@@ -185,6 +185,7 @@
     "deliveryDays": "Delivery (days)",
     "revisions": "Revisions",
     "publish": "Publish",
+    "saveDraft": "Save draft",
     "publishing": "Publishing...",
     "needPackage": "Fill in at least one package price.",
     "faq": "FAQ",

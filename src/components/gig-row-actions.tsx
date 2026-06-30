@@ -9,7 +9,7 @@ export function GigRowActions({ gigId, status }: { gigId: string; status: string
   const t = useTranslations("Gig");
   const [busy, setBusy] = useState(false);
 
-  async function act(action: "pause" | "resume" | "delete") {
+  async function act(action: "pause" | "resume" | "delete" | "publish") {
     if (action === "delete" && !window.confirm(t("confirmDelete"))) return;
     setBusy(true);
     const r = await fetch(`/api/gigs/${gigId}`, {
@@ -27,6 +27,11 @@ export function GigRowActions({ gigId, status }: { gigId: string; status: string
       <Link href={`/dashboard/seller/gigs/${gigId}/edit`} className="text-[hsl(var(--primary))] hover:underline">
         {t("edit")}
       </Link>
+      {status === "DRAFT" && (
+        <button onClick={() => act("publish")} disabled={busy} className="font-medium text-[hsl(var(--primary))] hover:underline">
+          {t("publish")}
+        </button>
+      )}
       {status === "ACTIVE" ? (
         <button onClick={() => act("pause")} disabled={busy} className="hover:underline">
           {t("pause")}

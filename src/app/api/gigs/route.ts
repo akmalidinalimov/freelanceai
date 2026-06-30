@@ -36,6 +36,7 @@ const schema = z
       .max(6)
       .optional(),
     requirementPrompts: z.array(z.string().min(1).max(200)).max(8).optional(),
+    draft: z.boolean().optional(),
     packages: z.array(packageSchema).min(1).max(3),
   })
   .strict();

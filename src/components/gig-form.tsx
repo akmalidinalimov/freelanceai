@@ -68,8 +68,8 @@ export function GigForm({
     setPkgs((p) => ({ ...p, [tier]: { ...p[tier], [field]: value } }));
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(e: React.FormEvent | null, draft = false) {
+    e?.preventDefault();
     setError(null);
 
     const packages = (Object.keys(pkgs) as Tier[])
@@ -117,6 +117,7 @@ export function GigForm({
             .filter((e) => e.title && e.priceUzs >= 1000)
             .slice(0, 6),
           requirementPrompts: reqPrompts.map((p) => p.trim()).filter(Boolean).slice(0, 8),
+          draft: gigId ? undefined : draft,
           packages,
         }),
       });
@@ -143,7 +144,7 @@ export function GigForm({
   };
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5">
+    <form onSubmit={(e) => submit(e, false)} className="flex flex-col gap-5">
       <MediaUpload value={coverUrl} onChange={setCoverUrl} />
       <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
 
@@ -359,9 +360,16 @@ export function GigForm({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <Button type="submit" size="lg" disabled={busy}>
-        {busy ? t("publishing") : gigId ? t("saveChanges") : t("publish")}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" size="lg" disabled={busy}>
+          {busy ? t("publishing") : gigId ? t("saveChanges") : t("publish")}
+        </Button>
+        {!gigId && (
+          <Button type="button" size="lg" variant="outline" disabled={busy} onClick={() => submit(null, true)}>
+            {t("saveDraft")}
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

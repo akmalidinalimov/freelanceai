@@ -48,6 +48,7 @@ export interface CreateGigInput {
   faq?: GigFaqItem[];
   extras?: GigExtraInput[];
   requirementPrompts?: string[];
+  draft?: boolean;
   packages: GigPackageInput[];
 }
 
@@ -82,8 +83,8 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       categoryId: input.categoryId || null,
       tags: input.tags ?? [],
       locale: input.locale ?? "uz",
-      // New gigs await moderation; admins (and trusted callers) publish immediately.
-      status: autoApprove ? "ACTIVE" : "PENDING_REVIEW",
+      // Drafts stay private; otherwise new gigs await moderation (admins publish immediately).
+      status: input.draft ? "DRAFT" : autoApprove ? "ACTIVE" : "PENDING_REVIEW",
       extras: {
         create: (input.extras ?? [])
           .slice(0, 6)
@@ -244,6 +245,17 @@ export const rejectGig = (gigId: string, admin: GigActor) =>
 /** Anyone can report a live gig — logged for admin review (non-hiding to prevent griefing). */
 export async function reportGig(gigId: string, reporter: GigActor) {
   await audit({ actorId: reporter.id, action: "gig.report", entity: "Gig", entityId: gigId });
+}
+
+/** Publish a DRAFT gig — owner → PENDING_REVIEW, admin → ACTIVE. */
+export async function publishGig(gigId: string, user: GigActor) {
+  const status = user.role === "ADMIN" ? "ACTIVE" : "PENDING_REVIEW";
+  const res = await prisma.gig.updateMany({
+    where: { ...gigEditWhereForUser(gigId, user), status: "DRAFT", deletedAt: null },
+    data: { status },
+  });
+  if (res.count === 0) throw Errors.notFound("Draft gig not found");
+  await audit({ actorId: user.id, action: "gig.publish", entity: "Gig", entityId: gigId });
 }
 
 /** Admin-only: feature/unfeature a gig (boosts it in listings for `days`). */

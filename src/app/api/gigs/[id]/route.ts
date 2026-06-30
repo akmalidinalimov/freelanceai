@@ -11,11 +11,22 @@ import {
   reportGig,
   setGigFeatured,
   updateGig,
+  publishGig,
 } from "@/server/services/gig";
 
 const schema = z
   .object({
-    action: z.enum(["pause", "resume", "delete", "approve", "reject", "report", "feature", "unfeature"]),
+    action: z.enum([
+      "pause",
+      "resume",
+      "delete",
+      "approve",
+      "reject",
+      "report",
+      "feature",
+      "unfeature",
+      "publish",
+    ]),
   })
   .strict();
 
@@ -70,6 +81,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     else if (action === "reject") await rejectGig(id, user);
     else if (action === "feature") await setGigFeatured(id, user, true);
     else if (action === "unfeature") await setGigFeatured(id, user, false);
+    else if (action === "publish") await publishGig(id, user);
     else await reportGig(id, user);
     return ok({ done: true });
   } catch (err) {
