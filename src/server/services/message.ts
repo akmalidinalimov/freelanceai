@@ -4,7 +4,7 @@ import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { tgSendMessage } from "@/lib/telegram-bot";
 import { stripContactInfo } from "@/lib/sanitize";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, renderBrandedEmail } from "@/lib/email";
 import { publishMessage } from "@/lib/message-bus";
 import { notify } from "@/server/services/notification";
 
@@ -133,7 +133,12 @@ export async function postConversationMessage(
         void tgSendMessage(other.telegramId, `💬 New message${ctx}\n\n${preview}\n\n${link}`);
       }
       if (other.notifyEmail && other.email) {
-        void sendEmail(other.email, `New message${ctx}`, `${preview}\n\nOpen: ${link}`);
+        const { text, html } = renderBrandedEmail({
+          title: `New message${ctx}`,
+          lines: [preview],
+          button: { label: "Open conversation", url: link },
+        });
+        void sendEmail(other.email, `New message${ctx}`, text, html);
       }
       // In-app notification (always, independent of Telegram/email prefs).
       await notify(otherId, "message.new", `Yangi xabar${ctx}`, {
