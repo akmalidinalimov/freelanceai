@@ -12,6 +12,7 @@ import {
   setGigFeatured,
   updateGig,
   publishGig,
+  duplicateGig,
 } from "@/server/services/gig";
 
 const schema = z
@@ -26,6 +27,7 @@ const schema = z
       "feature",
       "unfeature",
       "publish",
+      "duplicate",
     ]),
   })
   .strict();
@@ -82,6 +84,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     else if (action === "feature") await setGigFeatured(id, user, true);
     else if (action === "unfeature") await setGigFeatured(id, user, false);
     else if (action === "publish") await publishGig(id, user);
+    else if (action === "duplicate") await duplicateGig(id, user);
     else await reportGig(id, user);
     return ok({ done: true });
   } catch (err) {

@@ -247,6 +247,38 @@ export async function reportGig(gigId: string, reporter: GigActor) {
   await audit({ actorId: reporter.id, action: "gig.report", entity: "Gig", entityId: gigId });
 }
 
+/** Duplicate an owned gig into a new DRAFT (title + " (copy)"). */
+export async function duplicateGig(gigId: string, user: GigActor) {
+  const src = await prisma.gig.findFirst({
+    where: { ...gigEditWhereForUser(gigId, user), deletedAt: null },
+    include: { packages: true, extras: true },
+  });
+  if (!src) throw Errors.notFound("Gig not found");
+  const input: CreateGigInput = {
+    title: `${src.title} (copy)`.slice(0, 80),
+    description: src.description,
+    coverUrl: src.coverUrl ?? undefined,
+    galleryUrls: src.galleryUrls,
+    categoryId: src.categoryId ?? undefined,
+    tags: src.tags,
+    faq: Array.isArray(src.faq) ? (src.faq as unknown as GigFaqItem[]) : undefined,
+    requirementPrompts: Array.isArray(src.requirementPrompts)
+      ? (src.requirementPrompts as unknown as string[])
+      : undefined,
+    extras: src.extras.map((e) => ({ title: e.title, priceUzs: e.priceUzs, deliveryDays: e.deliveryDays })),
+    draft: true,
+    packages: src.packages.map((p) => ({
+      tier: p.tier,
+      title: p.title,
+      description: p.description ?? undefined,
+      priceUzs: p.priceUzs,
+      deliveryDays: p.deliveryDays,
+      revisions: p.revisions,
+    })),
+  };
+  return createGig(user.id, input);
+}
+
 /** Publish a DRAFT gig — owner → PENDING_REVIEW, admin → ACTIVE. */
 export async function publishGig(gigId: string, user: GigActor) {
   const status = user.role === "ADMIN" ? "ACTIVE" : "PENDING_REVIEW";
