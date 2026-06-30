@@ -39,7 +39,23 @@ export function MessageThread({
     setMessages((prev) => [...prev, ...fresh]);
   }
 
-  // Poll for new messages every 5s.
+  // Realtime: subscribe to the conversation's SSE stream; new messages arrive instantly.
+  // EventSource auto-reconnects if the connection drops.
+  useEffect(() => {
+    const es = new EventSource(`/api/conversations/${conversationId}/stream`);
+    es.onmessage = (e) => {
+      try {
+        append([JSON.parse(e.data) as Msg]);
+      } catch {
+        /* ignore malformed event */
+      }
+    };
+    return () => es.close();
+    // append is stable (uses refs + functional setState); only re-subscribe per conversation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
+
+  // Slow fallback poll (20s) — a safety net in case the SSE stream is buffered by a proxy.
   useEffect(() => {
     const tick = async () => {
       const last = messages[messages.length - 1]?.createdAt;
@@ -53,7 +69,7 @@ export function MessageThread({
         /* ignore transient poll errors */
       }
     };
-    const interval = setInterval(tick, 5000);
+    const interval = setInterval(tick, 20000);
     return () => clearInterval(interval);
   }, [conversationId, messages]);
 

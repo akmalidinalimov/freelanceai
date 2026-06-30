@@ -5,6 +5,7 @@ import { Errors } from "@/lib/api";
 import { tgSendMessage } from "@/lib/telegram-bot";
 import { stripContactInfo } from "@/lib/sanitize";
 import { sendEmail } from "@/lib/email";
+import { publishMessage } from "@/lib/message-bus";
 
 const SENDER_SELECT = { select: { id: true, firstName: true, name: true, username: true } } as const;
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -25,6 +26,16 @@ async function authzConversation(conversationId: string, user: Pick<User, "id" |
   const isParty = user.id === buyerId || user.id === sellerId || user.role === "ADMIN";
   if (!isParty) throw Errors.notFound("Conversation not found"); // 404 hides existence
   return { convo, buyerId, sellerId };
+}
+
+/** Boolean access check for a conversation (used by the SSE stream endpoint). */
+export async function canAccessConversation(conversationId: string, user: Pick<User, "id" | "role">) {
+  try {
+    await authzConversation(conversationId, user);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Upsert the conversation tied to an order; returns its id. */
@@ -81,6 +92,20 @@ export async function postConversationMessage(conversationId: string, user: User
   const message = await prisma.message.create({
     data: { conversationId, senderId: user.id, body: text },
     include: { sender: SENDER_SELECT },
+  });
+
+  // Push to any open SSE streams for this conversation (realtime delivery).
+  publishMessage({
+    id: message.id,
+    conversationId,
+    body: message.body,
+    senderId: message.senderId,
+    sender: {
+      firstName: message.sender.firstName,
+      name: message.sender.name,
+      username: message.sender.username,
+    },
+    createdAt: message.createdAt.toISOString(),
   });
 
   const otherId = user.id === buyerId ? sellerId : user.id === sellerId ? buyerId : null;

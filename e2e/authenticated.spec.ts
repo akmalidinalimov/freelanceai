@@ -146,6 +146,32 @@ test("dispute: buyer disputes → admin refunds → order cancelled", async ({ b
   await adminCtx.close();
 });
 
+test("realtime: a sent message appears on the other party's open thread via SSE", async ({ browser }) => {
+  const buyerCtx = await browser.newContext();
+  const buyer = await buyerCtx.newPage();
+  await loginAs(buyer, "e2e_buyer");
+  await buyer.goto("/uz/gigs/e2e-gig");
+  await buyer.getByRole("button", { name: "Bogʻlanish" }).click();
+  await buyer.waitForURL(/\/uz\/messages\/.+/);
+  const convoUrl = buyer.url();
+
+  // Seller opens the same conversation; give the EventSource a moment to connect.
+  const sellerCtx = await browser.newContext();
+  const seller = await sellerCtx.newPage();
+  await loginAs(seller, "e2e_seller");
+  await seller.goto(convoUrl);
+  await seller.waitForTimeout(2000);
+
+  // Buyer sends; the seller receives it pushed over SSE without reloading the page.
+  // 15s < the 20s fallback poll, so a pass here proves the SSE path specifically.
+  await buyer.getByPlaceholder("Xabar yozing...").fill("realtime via sse");
+  await buyer.getByRole("button", { name: "Yuborish" }).click();
+  await expect(seller.getByText("realtime via sse")).toBeVisible({ timeout: 15000 });
+
+  await buyerCtx.close();
+  await sellerCtx.close();
+});
+
 test("moderation: a new gig is PENDING then admin approves it", async ({ browser }) => {
   const sellerCtx = await browser.newContext();
   const seller = await sellerCtx.newPage();
