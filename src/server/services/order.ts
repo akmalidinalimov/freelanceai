@@ -5,9 +5,10 @@ import { orderWhereForUser, assertFound } from "@/lib/authz";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
-import { orderTotals } from "@/lib/commission";
+import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { notify } from "@/server/services/notification";
+import { findValidCoupon } from "@/server/services/coupon";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -21,7 +22,8 @@ export async function createOrder(
   tier: PackageTier,
   requirements?: string,
   requirementFileUrls: string[] = [],
-  extraIds: string[] = []
+  extraIds: string[] = [],
+  couponCode?: string
 ) {
   const gig = await prisma.gig.findFirst({
     where: { id: gigId, status: "ACTIVE" },
@@ -41,26 +43,47 @@ export async function createOrder(
     selectedExtras.map((e) => ({ priceUzs: e.priceUzs, deliveryDays: e.deliveryDays })),
     commissionPct()
   );
-  const order = await prisma.order.create({
-    data: {
-      gigId: gig.id,
-      buyerId,
-      sellerId: gig.sellerId,
-      packageTier: tier,
-      packageTitle: pkg.title,
-      amountUzs,
-      commissionUzs,
-      sellerNetUzs,
-      extrasUzs,
-      extrasSnapshot: selectedExtras.length
-        ? selectedExtras.map((e) => ({ title: e.title, priceUzs: e.priceUzs }))
-        : undefined,
-      requirements: requirements?.trim() || null,
-      requirementFileUrls: requirementFileUrls.slice(0, 10),
-      // Awaiting (manual) payment confirmation before work begins.
-      status: "PENDING_PAYMENT",
-      dueAt: new Date(Date.now() + (pkg.deliveryDays + extraDays) * 24 * 60 * 60 * 1000),
-    },
+
+  // Apply a promo code if one is valid (platform-funded; capped so the platform keeps ≥0).
+  let discountUzs = 0;
+  let appliedCode: string | null = null;
+  let couponId: string | null = null;
+  if (couponCode?.trim()) {
+    const coupon = await findValidCoupon(couponCode);
+    if (coupon) {
+      discountUzs = couponDiscount(coupon, amountUzs, commissionUzs);
+      if (discountUzs > 0) {
+        appliedCode = coupon.code;
+        couponId = coupon.id;
+      }
+    }
+  }
+
+  const order = await prisma.$transaction(async (tx) => {
+    if (couponId) await tx.coupon.update({ where: { id: couponId }, data: { uses: { increment: 1 } } });
+    return tx.order.create({
+      data: {
+        gigId: gig.id,
+        buyerId,
+        sellerId: gig.sellerId,
+        packageTier: tier,
+        packageTitle: pkg.title,
+        amountUzs,
+        commissionUzs,
+        sellerNetUzs,
+        extrasUzs,
+        extrasSnapshot: selectedExtras.length
+          ? selectedExtras.map((e) => ({ title: e.title, priceUzs: e.priceUzs }))
+          : undefined,
+        couponCode: appliedCode,
+        discountUzs,
+        requirements: requirements?.trim() || null,
+        requirementFileUrls: requirementFileUrls.slice(0, 10),
+        // Awaiting (manual) payment confirmation before work begins.
+        status: "PENDING_PAYMENT",
+        dueAt: new Date(Date.now() + (pkg.deliveryDays + extraDays) * 24 * 60 * 60 * 1000),
+      },
+    });
   });
   await audit({ actorId: buyerId, action: "order.create", entity: "Order", entityId: order.id });
   return order;

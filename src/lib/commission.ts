@@ -52,6 +52,39 @@ export function paymentPostings(amountUzs: number, commissionUzs: number): Posti
   ];
 }
 
+/**
+ * Compute a platform-funded discount from a coupon, capped so the platform never pays
+ * out of pocket beyond its own commission (discount ≤ commission) and never below 0.
+ */
+export function couponDiscount(
+  coupon: { percentOff?: number | null; amountOffUzs?: number | null },
+  subtotalUzs: number,
+  commissionUzs: number
+): number {
+  const raw = coupon.percentOff
+    ? Math.round((subtotalUzs * coupon.percentOff) / 100)
+    : Math.max(0, coupon.amountOffUzs ?? 0);
+  return Math.max(0, Math.min(raw, commissionUzs, subtotalUzs));
+}
+
+/**
+ * Balanced postings for a payment with a platform-funded discount: the buyer pays
+ * (amount − discount), the seller is still owed their full net, and the platform's
+ * revenue is reduced by the discount. Still sums to zero.
+ */
+export function discountedPaymentPostings(
+  amountUzs: number,
+  commissionUzs: number,
+  discountUzs: number
+): Posting[] {
+  const sellerNetUzs = amountUzs - commissionUzs;
+  return [
+    { account: "CLIENT_FUNDS", amountUzs: amountUzs - discountUzs },
+    { account: "PLATFORM_REVENUE", amountUzs: -(commissionUzs - discountUzs) },
+    { account: "SELLER_PAYABLE", amountUzs: -sellerNetUzs },
+  ];
+}
+
 /** Balanced postings that reverse a payment (refund on dispute). */
 export function refundPostings(amountUzs: number, commissionUzs: number): Posting[] {
   return paymentPostings(amountUzs, commissionUzs).map((p) => ({

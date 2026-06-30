@@ -40,6 +40,7 @@ export function OrderPanel({
   const [tier, setTier] = useState<Pkg["tier"]>(packages[0]?.tier ?? "BASIC");
   const [requirements, setRequirements] = useState("");
   const [reqFiles, setReqFiles] = useState<string[]>([]);
+  const [coupon, setCoupon] = useState("");
   const [chosenExtras, setChosenExtras] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +75,7 @@ export function OrderPanel({
           requirements: requirements.trim() || undefined,
           requirementFileUrls: reqFiles,
           extraIds: extras.filter((e) => chosenExtras.has(e.id)).map((e) => e.id),
+          couponCode: coupon.trim() || undefined,
         }),
       });
       const j = await r.json();
@@ -166,6 +168,12 @@ export function OrderPanel({
                 onChange={setReqFiles}
                 prefix="requirements"
                 label={to("requirementFiles")}
+              />
+              <input
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
+                placeholder={to("couponPh")}
+                className="h-10 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm uppercase"
               />
             </>
           )}

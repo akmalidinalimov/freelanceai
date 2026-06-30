@@ -271,6 +271,22 @@ model GigExtra {
   @@index([gigId])
 }
 
+// Platform-funded promo codes applied at checkout. The seller is always paid in full;
+// the discount reduces what the buyer pays and the platform's commission.
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  percentOff  Int? // 1-100
+  amountOffUzs Int? // fixed UZS off
+  active      Boolean   @default(true)
+  maxUses     Int       @default(100)
+  uses        Int       @default(0)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([code])
+}
+
 model SavedGig {
   id        String   @id @default(cuid())
   userId    String
@@ -334,6 +350,8 @@ model Order {
   sellerNetUzs Int         @default(0)
   extrasUzs    Int         @default(0)
   extrasSnapshot Json?     // [{ title, priceUzs }] selected add-ons
+  couponCode   String?
+  discountUzs  Int         @default(0) // platform-funded discount on the buyer's payment
   requirements String?
   requirementFileUrls String[] @default([])
   status       OrderStatus @default(PENDING_PAYMENT)

@@ -6,8 +6,30 @@ import {
   payoutPostings,
   refundPostings,
   tipPostings,
+  couponDiscount,
+  discountedPaymentPostings,
   postingsBalance,
 } from "./commission";
+
+describe("coupon discount + discounted postings", () => {
+  it("percent and fixed discounts, capped at the commission", () => {
+    expect(couponDiscount({ percentOff: 10 }, 100_000, 20_000)).toBe(10_000);
+    expect(couponDiscount({ amountOffUzs: 50_000 }, 100_000, 20_000)).toBe(20_000); // capped at commission
+    expect(couponDiscount({ percentOff: 10 }, 100_000, 5_000)).toBe(5_000); // capped at commission
+  });
+
+  it("discounted payment still balances; seller paid in full, platform absorbs the discount", () => {
+    const p = discountedPaymentPostings(100_000, 20_000, 8_000);
+    expect(postingsBalance(p)).toBe(0);
+    expect(p.find((x) => x.account === "CLIENT_FUNDS")?.amountUzs).toBe(92_000);
+    expect(p.find((x) => x.account === "PLATFORM_REVENUE")?.amountUzs).toBe(-12_000);
+    expect(p.find((x) => x.account === "SELLER_PAYABLE")?.amountUzs).toBe(-80_000);
+  });
+
+  it("zero discount equals a plain payment", () => {
+    expect(discountedPaymentPostings(100_000, 20_000, 0)).toEqual(paymentPostings(100_000, 20_000));
+  });
+});
 
 describe("tip postings", () => {
   it("credit the seller in full with no commission, balanced to zero", () => {

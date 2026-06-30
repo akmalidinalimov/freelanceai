@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
-import { paymentPostings, payoutPostings, tipPostings } from "@/lib/commission";
+import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
 import { notify } from "@/server/services/notification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -35,13 +35,18 @@ export async function confirmOrderPayment(orderId: string, actor: User) {
         provider: "MANUAL",
         type: "PAYMENT_IN",
         status: "SUCCEEDED",
-        amountUzs: order.amountUzs,
+        // What the buyer actually pays (net of any platform-funded discount).
+        amountUzs: order.amountUzs - order.discountUzs,
         idempotencyKey,
       },
     });
 
+    const postings =
+      order.discountUzs > 0
+        ? discountedPaymentPostings(order.amountUzs, order.commissionUzs, order.discountUzs)
+        : paymentPostings(order.amountUzs, order.commissionUzs);
     await tx.ledgerEntry.createMany({
-      data: paymentPostings(order.amountUzs, order.commissionUzs).map((p) => ({
+      data: postings.map((p) => ({
         orderId,
         account: p.account,
         amountUzs: p.amountUzs,

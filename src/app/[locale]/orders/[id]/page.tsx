@@ -97,6 +97,11 @@ export default async function OrderPage({
               {t("extras")}: +{formatUzs(order.extrasUzs)} so&apos;m
             </p>
           )}
+          {order.discountUzs > 0 && (
+            <p className="mt-1 text-xs font-medium text-[hsl(var(--primary))]">
+              {t("discount")} {order.couponCode ? `(${order.couponCode})` : ""}: −{formatUzs(order.discountUzs)} so&apos;m
+            </p>
+          )}
           <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
             {role === "buyer" ? t("seller") : t("buyer")}: {cpName}
           </p>
