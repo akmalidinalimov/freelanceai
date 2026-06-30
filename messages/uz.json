@@ -21,6 +21,12 @@
     "makeSeller": "Ijrochi qilish",
     "removeSeller": "Ijrochilikni olib tashlash"
   },
+  "AdminAudit": {
+    "title": "Audit jurnali",
+    "filterPh": "Amal boʻyicha filtrlash...",
+    "filter": "Filtr",
+    "none": "Yozuvlar yoʻq."
+  },
   "Cancel": {
     "title": "Bekor qilish soʻrovi",
     "request": "Bekor qilishni soʻrash",
@@ -289,6 +295,7 @@
     "sellers": "Ijrochilar",
     "activeGigs": "Faol xizmatlar",
     "coupons": "Promo-kodlar",
+    "audit": "Audit",
     "ledgerIntegrity": "Buxgalteriya yaxlitligi",
     "ledgerOk": "✓ {n} ta buyurtma balansi toʻgʻri (har biri nolga teng).",
     "ledgerBad": "⚠ {n} ta buyurtmada balans nolga teng emas — tekshiring.",

@@ -52,6 +52,25 @@ export async function listUsersForAdmin(query?: string) {
   }));
 }
 
+/** Admin: recent audit-log entries, optionally filtered by action substring. */
+export async function listAuditLogs(action?: string) {
+  const a = action?.trim();
+  const logs = await prisma.auditLog.findMany({
+    where: a ? { action: { contains: a, mode: "insensitive" } } : {},
+    orderBy: { createdAt: "desc" },
+    take: 200,
+    include: { actor: { select: { firstName: true, name: true, username: true } } },
+  });
+  return logs.map((l) => ({
+    id: l.id,
+    actor: l.actor ? displayName(l.actor) : "system",
+    action: l.action,
+    entity: l.entity,
+    entityId: l.entityId,
+    createdAt: l.createdAt,
+  }));
+}
+
 /** Guard: admin-only, and never act on another admin or on yourself. */
 async function loadTarget(admin: User, userId: string) {
   if (admin.role !== "ADMIN") throw Errors.forbidden("Admins only");

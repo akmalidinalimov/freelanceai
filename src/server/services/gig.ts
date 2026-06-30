@@ -189,7 +189,11 @@ export function listSellerGigs(sellerId: string) {
   return prisma.gig.findMany({
     where: { sellerId, deletedAt: null },
     orderBy: { createdAt: "desc" },
-    include: { packages: { orderBy: { priceUzs: "asc" }, take: 1 }, category: true },
+    include: {
+      packages: { orderBy: { priceUzs: "asc" }, take: 1 },
+      category: true,
+      _count: { select: { orders: true } },
+    },
   });
 }
 

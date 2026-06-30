@@ -104,6 +104,12 @@ export default async function SellerDashboardPage({
                     <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
                       {g.status}
                     </span>
+                    <span
+                      className="hidden tabular-nums text-xs sm:inline"
+                      title={`${g.views} ${tg("views")} · ${g._count.orders} ${t("statOrders")}`}
+                    >
+                      👁 {g.views.toLocaleString()} · 🛒 {g._count.orders}
+                    </span>
                     <span className="tabular-nums">
                       {tg("from")} {formatUzs(from)} so&apos;m
                     </span>

@@ -21,6 +21,12 @@
     "makeSeller": "Make seller",
     "removeSeller": "Remove seller"
   },
+  "AdminAudit": {
+    "title": "Audit log",
+    "filterPh": "Filter by action...",
+    "filter": "Filter",
+    "none": "No entries."
+  },
   "Cancel": {
     "title": "Cancellation request",
     "request": "Request cancellation",
@@ -289,6 +295,7 @@
     "sellers": "Sellers",
     "activeGigs": "Active gigs",
     "coupons": "Promo codes",
+    "audit": "Audit",
     "ledgerIntegrity": "Ledger integrity",
     "ledgerOk": "✓ {n} orders balanced (each nets to zero).",
     "ledgerBad": "⚠ {n} orders do not net to zero — investigate.",
