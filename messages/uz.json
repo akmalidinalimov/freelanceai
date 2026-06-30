@@ -205,6 +205,7 @@
     "feature": "Tavsiya qilish",
     "unfeature": "Tavsiyani olib tashlash",
     "comparePackages": "Paketlarni solishtirish",
+    "relatedTitle": "Oʻxshash xizmatlar",
     "requirements": "Talablar (savollar)",
     "requirementQ": "Savol (masalan: Brend rangi?)",
     "requirementAdd": "Savol qoʻshish",

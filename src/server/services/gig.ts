@@ -299,6 +299,21 @@ export async function setGigFeatured(gigId: string, admin: GigActor, featured: b
   await audit({ actorId: admin.id, action: featured ? "gig.feature" : "gig.unfeature", entity: "Gig", entityId: gigId });
 }
 
+/** Other active gigs in the same category (excluding this one) — for the "similar gigs" row. */
+export function listRelatedGigs(gigId: string, categoryId: string | null, take = 6) {
+  return prisma.gig.findMany({
+    where: {
+      status: "ACTIVE",
+      deletedAt: null,
+      id: { not: gigId },
+      ...(categoryId ? { categoryId } : {}),
+    },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take,
+    include: { packages: { orderBy: { priceUzs: "asc" }, take: 1 } },
+  });
+}
+
 /** Featured, non-expired active gigs for the home row. */
 export function listFeaturedGigs(take = 8) {
   return prisma.gig.findMany({

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { getGigBySlug, incrementGigViews } from "@/server/services/gig";
+import { getGigBySlug, incrementGigViews, listRelatedGigs } from "@/server/services/gig";
 
 export async function generateMetadata({
   params,
@@ -60,6 +60,7 @@ export default async function GigDetailPage({
   const packages = [...gig.packages].sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier]);
   const tierLabel = { BASIC: t("basic"), STANDARD: t("standard"), PREMIUM: t("premium") } as const;
   const { reviews, avg, count, distribution } = await getGigReviews(gig.id);
+  const related = await listRelatedGigs(gig.id, gig.categoryId);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -266,6 +267,34 @@ export default async function GigDetailPage({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {related.length > 0 && (
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl font-semibold">{t("relatedTitle")}</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {related.map((g) => (
+                <Link
+                  key={g.id}
+                  href={`/gigs/${g.slug}`}
+                  className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-2 transition-colors hover:border-[hsl(var(--primary))]"
+                >
+                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary))]">
+                    {g.coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    ) : (
+                      g.title.slice(0, 1).toUpperCase()
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-xs font-medium">{g.title}</p>
+                  <p className="mt-auto pt-1 text-xs font-semibold tabular-nums">
+                    {t("from")} {formatUzs(g.packages[0]?.priceUzs ?? 0)}
+                  </p>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>
