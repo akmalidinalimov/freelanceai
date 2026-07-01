@@ -108,6 +108,7 @@
   },
   "Nav": {
     "explore": "Services",
+    "creators": "Creators",
     "becomeSeller": "Become a creator",
     "login": "Log in",
     "dashboard": "Dashboard"
@@ -126,6 +127,7 @@
     "step3Body": "Funds are released to the creator once the work is done.",
     "popularTitle": "Popular services",
     "viewAll": "View all",
+    "featuredCreators": "Featured creators",
     "categoriesTitle": "Popular categories",
     "searchHeadline": "What do you want to create? Describe it — we'll find it.",
     "searchSub": "Describe your job in plain words — AI ranks the best-matched creators.",
@@ -419,6 +421,11 @@
     "reject": "Reject",
     "noPendingGigs": "No gigs awaiting review.",
     "error": "Something went wrong."
+  },
+  "Creators": {
+    "title": "AI creators",
+    "sub": "Browse and pick verified AI creators.",
+    "empty": "No creators yet."
   },
   "Browse": {
     "indexTitle": "Browse by specialization",

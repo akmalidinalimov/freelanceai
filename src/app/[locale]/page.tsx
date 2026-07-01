@@ -1,8 +1,10 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { listPublicGigs, listFeaturedGigs } from "@/server/services/gig";
+import { listFeaturedCreators } from "@/server/services/browse";
 import { formatUzs } from "@/lib/utils";
 import { HomeSearch } from "@/components/home-search";
+import { CreatorCard } from "@/components/creator-card";
 
 // Rendered per-request: the featured row reads live gigs from the DB.
 export const dynamic = "force-dynamic";
@@ -57,6 +59,7 @@ export default async function HomePage({
   const t = await getTranslations();
   const featured = await listPublicGigs({ take: 8 }).catch(() => []);
   const featuredGigs = await listFeaturedGigs(4).catch(() => []);
+  const creators = await listFeaturedCreators(4).catch(() => []);
   const fromLabel = t("Gig.from");
 
   return (
@@ -151,6 +154,23 @@ export default async function HomePage({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {featured.map((g) => (
               <GigCard key={g.id} g={g} fromLabel={fromLabel} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Featured creators */}
+      {creators.length > 0 && (
+        <section className="py-10">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="font-display text-2xl font-bold">{t("Home.featuredCreators")}</h2>
+            <Link href="/creators" className="text-sm font-semibold text-[hsl(var(--primary))] hover:underline">
+              {t("Home.viewAll")}
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {creators.map((c, i) => (
+              <CreatorCard key={c.username ?? i} creator={c} />
             ))}
           </div>
         </section>

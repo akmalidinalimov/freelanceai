@@ -34,6 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${base}/${loc}`, changeFrequency: "weekly", priority: 1 });
     entries.push({ url: `${base}/${loc}/gigs`, changeFrequency: "daily", priority: 0.8 });
     entries.push({ url: `${base}/${loc}/browse`, changeFrequency: "weekly", priority: 0.7 });
+    entries.push({ url: `${base}/${loc}/creators`, changeFrequency: "daily", priority: 0.7 });
     for (const s of SPECIALIZATIONS) {
       entries.push({
         url: `${base}/${loc}/browse/${specSlug(s.key)}`,

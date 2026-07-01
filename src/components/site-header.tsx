@@ -11,7 +11,10 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   // Links for the mobile hamburger menu (locale-agnostic hrefs; the i18n Link adds the locale).
-  const navItems: { href: string; label: string }[] = [{ href: "/gigs", label: t("Nav.explore") }];
+  const navItems: { href: string; label: string }[] = [
+    { href: "/gigs", label: t("Nav.explore") },
+    { href: "/creators", label: t("Nav.creators") },
+  ];
   if (!user?.isSeller) navItems.push({ href: "/sell", label: t("Nav.becomeSeller") });
   if (user) {
     navItems.push({ href: "/dashboard", label: t("Nav.dashboard") });
@@ -41,6 +44,12 @@ export async function SiteHeader() {
             className="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
           >
             {t("Nav.explore")}
+          </Link>
+          <Link
+            href="/creators"
+            className="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+          >
+            {t("Nav.creators")}
           </Link>
           {!user?.isSeller && (
             <Link

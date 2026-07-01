@@ -108,6 +108,7 @@
   },
   "Nav": {
     "explore": "Xizmatlar",
+    "creators": "Ijodkorlar",
     "becomeSeller": "Ijodkor bo'lish",
     "login": "Kirish",
     "dashboard": "Boshqaruv paneli"
@@ -126,6 +127,7 @@
     "step3Body": "To'lov ish tugagach ijodkorga o'tkaziladi.",
     "popularTitle": "Ommabop xizmatlar",
     "viewAll": "Barchasini ko'rish",
+    "featuredCreators": "Tanlangan ijodkorlar",
     "categoriesTitle": "Mashhur yo'nalishlar",
     "searchHeadline": "Nima yaratmoqchisiz? Yozing, topamiz.",
     "searchSub": "Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.",
@@ -419,6 +421,11 @@
     "reject": "Rad etish",
     "noPendingGigs": "Tekshiruvdagi xizmatlar yoʻq.",
     "error": "Xatolik yuz berdi."
+  },
+  "Creators": {
+    "title": "AI ijodkorlar",
+    "sub": "Tasdiqlangan AI-ijodkorlarni koʻring va tanlang.",
+    "empty": "Hozircha ijodkorlar yoʻq."
   },
   "Browse": {
     "indexTitle": "Yoʻnalishlar boʻyicha koʻrish",

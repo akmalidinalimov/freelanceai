@@ -35,6 +35,7 @@ const CHECKS = [
   { group: "Search", name: "browse index", method: "GET", path: "/uz/browse", expect: 200 },
   { group: "Search", name: "browse specialization", method: "GET", path: "/uz/browse/fashion", expect: 200 },
   { group: "Search", name: "browse unknown -> 404", method: "GET", path: "/uz/browse/__nope__", expect: 404 },
+  { group: "Profiles", name: "creators index", method: "GET", path: "/uz/creators", expect: 200 },
   { group: "Gigs", name: "missing gig -> 404", method: "GET", path: "/uz/gigs/__nope__", expect: 404 },
   { group: "Profiles", name: "creator profile", method: "GET", path: "/uz/creators/studio_aurora", expect: 200, contains: "Studio Aurora" },
   { group: "Profiles", name: "missing creator -> 404", method: "GET", path: "/uz/creators/__nope__", expect: 404 },
