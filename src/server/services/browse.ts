@@ -76,6 +76,11 @@ export async function listFeaturedCreators(limit = 8): Promise<BrowseCreator[]> 
   return rows.map(toCreator);
 }
 
+/** Count of active seller accounts (for the hero's live-creator eyebrow). */
+export function countActiveCreators(): Promise<number> {
+  return prisma.sellerProfile.count({ where: { user: { isSeller: true, status: "ACTIVE" } } });
+}
+
 /** All active sellers for the /creators index, best-rated first. */
 export async function listAllCreators(take = 60): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
