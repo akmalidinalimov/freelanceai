@@ -71,7 +71,11 @@
     "accept": "Accept & order",
     "decline": "Decline",
     "error": "Something went wrong",
-    "status": { "PENDING": "Pending", "ACCEPTED": "Accepted", "DECLINED": "Declined" }
+    "status": {
+      "PENDING": "Pending",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined"
+    }
   },
   "Payout": {
     "available": "Available to withdraw",
@@ -144,7 +148,13 @@
     "catBranding": "logo, identity",
     "catMotion": "logo animation, intro",
     "catEdit": "retouch, upscale",
-    "tickerItems": ["Dilnoza just delivered an AI ad video", "Kamila received a 5★ review", "new order: talking-head avatar", "PixelUz online — 12 jobs in progress", "Sardor started a logo project"],
+    "tickerItems": [
+      "Dilnoza just delivered an AI ad video",
+      "Kamila received a 5★ review",
+      "new order: talking-head avatar",
+      "PixelUz online — 12 jobs in progress",
+      "Sardor started a logo project"
+    ],
     "searchSub": "Describe your job in plain words — AI ranks the best-matched creators.",
     "searchAssistant": "FreelanceAI assistant",
     "searchPlaceholder": "Describe the work you need…",
@@ -472,7 +482,8 @@
     "match": "match",
     "ex1": "AI ad video",
     "ex2": "product photography",
-    "ex3": "logo & branding"
+    "ex3": "logo & branding",
+    "rateLimited": "Too many searches. Please wait a moment and try again."
   },
   "Profile": {
     "about": "About",

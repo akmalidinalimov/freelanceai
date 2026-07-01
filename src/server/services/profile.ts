@@ -58,7 +58,13 @@ async function getPublicProfileUncached(username: string) {
     }),
   ]);
 
-  return { user, profile, gigs };
+  // Never let the Instagram OAuth token (or the numeric IG user id) enter the public
+  // storefront payload / data cache — the carousel only needs the PortfolioItem rows.
+  const safeProfile = profile
+    ? { ...profile, instagramTokenEnc: undefined, instagramUserId: undefined }
+    : null;
+
+  return { user, profile: safeProfile, gigs };
 }
 
 // Public storefront cached 60s per username (page still renders per-request for the
@@ -112,14 +118,18 @@ export async function addPortfolioItem(
     create: { userId },
     update: {},
   });
-  const count = await prisma.portfolioItem.count({ where: { profileId: profile.id } });
+  // Only manual uploads count against the cap; Instagram-synced items live outside it
+  // (positions 100+) so connecting IG can't block the seller from uploading their own work.
+  const count = await prisma.portfolioItem.count({
+    where: { profileId: profile.id, source: "upload" },
+  });
   if (count >= PORTFOLIO_MAX) throw Errors.validation({ portfolio: "Portfolio is full" });
   return prisma.portfolioItem.create({
     data: {
       profileId: profile.id,
       mediaUrl,
       mediaType: mediaType === "video" ? "video" : "image",
-      caption: caption?.trim() || null,
+      caption: caption ? stripContactInfo(caption).text.trim() || null : null,
       position: count,
     },
   });

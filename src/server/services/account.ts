@@ -1,9 +1,11 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { decryptPII } from "@/lib/pii-crypto";
+import { deleteStoredFile } from "@/lib/media";
 import { sellerAvailableUzs } from "@/server/services/payments";
 
 /**
@@ -82,10 +84,15 @@ export async function exportOwnData(userId: string) {
     ]);
   if (!user) throw Errors.notFound("Account not found");
 
+  // Never surface the Instagram OAuth token (a live credential) in a portability export.
+  const sellerProfile = profile
+    ? { ...profile, instagramTokenEnc: undefined, instagramUserId: undefined }
+    : null;
+
   return {
     exportedAt: new Date().toISOString(),
     account: { ...user, phone: decryptPII(user.phone) },
-    sellerProfile: profile,
+    sellerProfile,
     gigs,
     ordersAsBuyer,
     ordersAsSeller,
@@ -121,6 +128,13 @@ export async function deleteOwnAccount(user: User) {
     }
   }
 
+  // Collect re-hosted media URLs up front so we can purge the R2 objects after the DB
+  // rows go (deleting rows alone would leave portfolio/Instagram images publicly reachable).
+  const portfolioMedia = await prisma.portfolioItem.findMany({
+    where: { profile: { userId: user.id } },
+    select: { mediaUrl: true },
+  });
+
   await prisma.$transaction([
     // Unpublish the catalog footprint.
     prisma.gig.updateMany({
@@ -137,6 +151,13 @@ export async function deleteOwnAccount(user: User) {
         aiTools: [],
         specializations: [],
         instagramUsername: null,
+        // Revoke Instagram: without this the sync cron keeps refreshing the token and
+        // re-importing this (now deleted) user's photos into the anonymized shell.
+        instagramUserId: null,
+        instagramTokenEnc: null,
+        instagramTokenExpiresAt: null,
+        instagramSyncedAt: null,
+        instagramSyncStatus: null,
       },
     }),
     // Remove social/preference footprint.
@@ -168,13 +189,16 @@ export async function deleteOwnAccount(user: User) {
         verifyCodeExpiresAt: null,
         verifyChannel: null,
         referralCode: null,
-        notifyPrefs: undefined,
+        notifyPrefs: Prisma.DbNull,
         notifyTelegram: false,
         notifyEmail: false,
         status: "DELETED",
       },
     }),
   ]);
+
+  // Purge re-hosted media from R2 (best-effort; never blocks the deletion).
+  await Promise.all(portfolioMedia.map((m) => deleteStoredFile(m.mediaUrl)));
 
   await audit({ actorId: user.id, action: "account.delete", entity: "User", entityId: user.id });
 }

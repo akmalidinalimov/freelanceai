@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { rateLimitInfo } from "@/lib/rate-limit";
 import { matchCreators } from "@/server/services/match";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { Stars } from "@/components/stars";
@@ -31,7 +33,16 @@ export default async function SearchPage({
   const tp = await getTranslations("Profile");
 
   const query = (q ?? "").trim();
-  const data = query ? await matchCreators(query, { locale }) : null;
+  // This page runs the full match pipeline unauthenticated, so throttle by IP here too —
+  // otherwise it's an un-rate-limited bypass of the /api/search/match limit.
+  let limited = false;
+  if (query) {
+    const h = await headers();
+    const ip =
+      h.get("cf-connecting-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    limited = !rateLimitInfo(`search-ssr:${ip}`, 30, 60_000).ok;
+  }
+  const data = query && !limited ? await matchCreators(query, { locale }) : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -66,6 +77,10 @@ export default async function SearchPage({
             </Link>
           ))}
         </div>
+      )}
+
+      {limited && (
+        <p className="mt-7 text-sm text-[hsl(var(--muted-foreground))]">{t("rateLimited")}</p>
       )}
 
       {data && (

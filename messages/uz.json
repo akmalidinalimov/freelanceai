@@ -71,7 +71,11 @@
     "accept": "Qabul qilib buyurtma berish",
     "decline": "Rad etish",
     "error": "Xatolik yuz berdi",
-    "status": { "PENDING": "Kutilmoqda", "ACCEPTED": "Qabul qilindi", "DECLINED": "Rad etildi" }
+    "status": {
+      "PENDING": "Kutilmoqda",
+      "ACCEPTED": "Qabul qilindi",
+      "DECLINED": "Rad etildi"
+    }
   },
   "Payout": {
     "available": "Yechib olish mumkin",
@@ -144,7 +148,13 @@
     "catBranding": "logo, identika",
     "catMotion": "logo animatsiya, intro",
     "catEdit": "retush, upscale",
-    "tickerItems": ["Dilnoza hozirgina AI reklama roligini yetkazdi", "Kamila 5★ sharh oldi", "yangi buyurtma: talking-head avatar", "PixelUz onlayn — 12 ta ish jarayonda", "Sardor logotip loyihasini boshladi"],
+    "tickerItems": [
+      "Dilnoza hozirgina AI reklama roligini yetkazdi",
+      "Kamila 5★ sharh oldi",
+      "yangi buyurtma: talking-head avatar",
+      "PixelUz onlayn — 12 ta ish jarayonda",
+      "Sardor logotip loyihasini boshladi"
+    ],
     "searchSub": "Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.",
     "searchAssistant": "FreelanceAI yordamchi",
     "searchPlaceholder": "Kerakli ishni tasvirlang…",
@@ -472,7 +482,8 @@
     "match": "moslik",
     "ex1": "AI reklama roligi",
     "ex2": "mahsulot fotosurati",
-    "ex3": "logotip va brending"
+    "ex3": "logotip va brending",
+    "rateLimited": "Juda koʻp qidiruv. Bir oz kutib, qayta urinib koʻring."
   },
   "Profile": {
     "about": "Haqida",

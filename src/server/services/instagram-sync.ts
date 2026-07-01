@@ -2,7 +2,15 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { decryptPII, encryptPII } from "@/lib/pii-crypto";
 import { fetchMedia, refreshToken } from "@/lib/instagram";
-import { uploadFromUrl } from "@/lib/media";
+import { uploadFromUrl, deleteStoredFile } from "@/lib/media";
+import { stripContactInfo } from "@/lib/sanitize";
+
+/** IG captions are user text and can carry @handles / phones / t.me links — strip them
+ * (the marketplace anti-off-platform rule) before storing, same as gigs/bios/messages. */
+function cleanCaption(caption?: string | null): string | null {
+  if (!caption) return null;
+  return stripContactInfo(caption).text.slice(0, 300).trim() || null;
+}
 
 /**
  * Instagram portfolio sync: pull the creator's latest media, re-host images to R2
@@ -22,6 +30,7 @@ export async function syncInstagramForSeller(userId: string): Promise<{ synced: 
 
   try {
     const media = await fetchMedia(token, IG_ITEM_LIMIT);
+    const fetchedIds = new Set(media.map((m) => m.id));
     let synced = 0;
     for (const m of media) {
       // Videos: store the poster (thumbnail); images/carousels: the media itself.
@@ -35,7 +44,7 @@ export async function syncInstagramForSeller(userId: string): Promise<{ synced: 
         // Already re-hosted — refresh the caption/permalink only (image is stable in R2).
         await prisma.portfolioItem.update({
           where: { id: existing.id },
-          data: { caption: m.caption?.slice(0, 300) ?? null, permalink: m.permalink ?? null },
+          data: { caption: cleanCaption(m.caption), permalink: m.permalink ?? null },
         });
         continue;
       }
@@ -46,7 +55,7 @@ export async function syncInstagramForSeller(userId: string): Promise<{ synced: 
           profileId: profile.id,
           mediaUrl: publicUrl,
           mediaType: m.media_type === "VIDEO" ? "video" : "image",
-          caption: m.caption?.slice(0, 300) ?? null,
+          caption: cleanCaption(m.caption),
           source: "instagram",
           externalId: m.id,
           permalink: m.permalink ?? null,
@@ -54,6 +63,16 @@ export async function syncInstagramForSeller(userId: string): Promise<{ synced: 
         },
       });
       synced++;
+    }
+    // Reconcile: drop synced items no longer in the latest IG set (post deleted on IG,
+    // or aged past our 12-item mirror), and purge their re-hosted R2 objects.
+    const stale = await prisma.portfolioItem.findMany({
+      where: { profileId: profile.id, source: "instagram", externalId: { notIn: [...fetchedIds] } },
+      select: { id: true, mediaUrl: true },
+    });
+    if (stale.length > 0) {
+      await prisma.portfolioItem.deleteMany({ where: { id: { in: stale.map((s) => s.id) } } });
+      await Promise.all(stale.map((s) => deleteStoredFile(s.mediaUrl)));
     }
     await prisma.sellerProfile.update({
       where: { userId },
@@ -73,6 +92,12 @@ export async function syncInstagramForSeller(userId: string): Promise<{ synced: 
 export async function disconnectInstagram(userId: string): Promise<void> {
   const profile = await prisma.sellerProfile.findUnique({ where: { userId }, select: { id: true } });
   if (!profile) return;
+  // Grab the re-hosted media URLs before the rows go, so we can purge the R2 objects too —
+  // ToS/Privacy promise the synced media is deleted, not just the DB references.
+  const synced = await prisma.portfolioItem.findMany({
+    where: { profileId: profile.id, source: "instagram" },
+    select: { mediaUrl: true },
+  });
   await prisma.$transaction([
     prisma.portfolioItem.deleteMany({ where: { profileId: profile.id, source: "instagram" } }),
     prisma.sellerProfile.update({
@@ -86,6 +111,7 @@ export async function disconnectInstagram(userId: string): Promise<void> {
       },
     }),
   ]);
+  await Promise.all(synced.map((s) => deleteStoredFile(s.mediaUrl)));
 }
 
 /**
@@ -94,7 +120,8 @@ export async function disconnectInstagram(userId: string): Promise<void> {
  */
 export async function instagramCronPass(): Promise<{ refreshed: number; synced: number; failed: number }> {
   const connected = await prisma.sellerProfile.findMany({
-    where: { instagramTokenEnc: { not: null } },
+    // Only active accounts — never keep syncing a suspended/deleted user's Instagram.
+    where: { instagramTokenEnc: { not: null }, user: { status: "ACTIVE" } },
     select: { userId: true, instagramTokenEnc: true, instagramTokenExpiresAt: true },
     take: 200,
   });

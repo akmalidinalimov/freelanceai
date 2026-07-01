@@ -1,6 +1,6 @@
 import "server-only";
 import crypto from "crypto";
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
@@ -93,10 +93,17 @@ export async function presignUpload(
  */
 export async function uploadFromUrl(prefix: string, sourceUrl: string): Promise<string> {
   if (!mediaConfigured()) throw new Error("media_not_configured");
-  const res = await fetch(sourceUrl);
+  // Only fetch https CDN URLs, and bound the work: reject oversized bodies by their
+  // declared Content-Length before buffering, and abort a stalled CDN after 15s so a
+  // sequential cron pass can't hang. Defense-in-depth against SSRF / memory bombs even
+  // though callers only pass Instagram Graph media URLs today.
+  if (!/^https:\/\//i.test(sourceUrl)) throw new Error("bad_scheme");
+  const res = await fetch(sourceUrl, { signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error(`fetch_source_${res.status}`);
   const contentType = res.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
   if (!IMAGE_TYPES.includes(contentType)) throw new Error("unsupported_type");
+  const declared = Number(res.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) throw new Error("too_large");
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.byteLength === 0 || buf.byteLength > MAX_IMAGE_BYTES) throw new Error("too_large");
   const key = `${prefix}/${crypto.randomBytes(16).toString("hex")}.${EXT[contentType]}`;
@@ -109,6 +116,23 @@ export async function uploadFromUrl(prefix: string, sourceUrl: string): Promise<
     })
   );
   return `${process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "")}/${key}`;
+}
+
+/**
+ * Best-effort delete of a stored media object (public URL or `r2-private:` ref) from R2.
+ * Used when a user disconnects Instagram or deletes their account, so re-hosted copies
+ * don't outlive the DB rows. Never throws — a missing object or transient error is
+ * swallowed so it can't block the surrounding transaction/response.
+ */
+export async function deleteStoredFile(stored: string): Promise<void> {
+  if (!mediaConfigured()) return;
+  const resolved = resolveStoredFile(stored);
+  if (!resolved) return;
+  try {
+    await r2().send(new DeleteObjectCommand({ Bucket: resolved.bucket, Key: resolved.key }));
+  } catch {
+    // best-effort
+  }
 }
 
 /** Map a stored public URL back to its R2 object key (or null if it isn't one of ours). */
