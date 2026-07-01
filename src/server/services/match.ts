@@ -36,21 +36,34 @@ export interface MatchResult {
 
 const LEVEL_RANK: Record<string, number> = { NEW: 0, LEVEL_1: 1, LEVEL_2: 2, TOP_RATED: 3 };
 
-/** Parse a free-text brief into detected specializations + expanded lexical terms. */
+/** Lowercase + strip Uzbek apostrophe variants (oʻyin/o'yin → oyin) so queries match the
+ * apostrophe-less taxonomy synonyms, and Cyrillic/Latin both normalize consistently. */
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/['`ʻʼ‘’]/g, "");
+}
+
+/**
+ * Parse a free-text brief into detected specializations + expanded lexical terms.
+ * Matching is TOKEN-based, not substring: a single-word synonym must appear as a whole
+ * query token (so "it" no longer fires on "ed**it**ing", "art" no longer fires on
+ * "st**art**ap"); multi-word synonyms match as a phrase within the normalized query.
+ */
 export function parseIntent(query: string, locale = "uz"): Intent {
-  const q = query.toLowerCase();
-  const terms = new Set<string>();
-  q.split(/[^\p{L}\p{N}]+/u)
-    .filter((w) => w.length >= 3)
-    .forEach((w) => terms.add(w));
+  const normQ = normalize(query);
+  const tokens = normQ.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const matchTokens = new Set(tokens.filter((w) => w.length >= 2)); // whole-word synonym match
+  const terms = new Set<string>(tokens.filter((w) => w.length >= 3)); // lexical/tag expansion
   const specKeys: string[] = [];
   const specLabels: string[] = [];
   for (const s of SPECIALIZATIONS) {
-    const hay = [s.uz, s.ru, s.en, ...s.synonyms].map((x) => x.toLowerCase());
-    if (hay.some((w) => q.includes(w))) {
+    const names = [s.uz, s.ru, s.en, ...s.synonyms].map(normalize).filter(Boolean);
+    const hit = names.some((w) =>
+      /[\s-]/.test(w) ? normQ.includes(w) : matchTokens.has(w)
+    );
+    if (hit) {
       specKeys.push(s.key);
       specLabels.push(specLabel(s.key, locale));
-      s.synonyms.forEach((w) => terms.add(w.toLowerCase()));
+      s.synonyms.forEach((w) => terms.add(normalize(w)));
     }
   }
   return { terms: [...terms], specKeys, specLabels };
@@ -187,19 +200,24 @@ export async function matchCreators(
       gigCategorySlugs: gigCatBy.get(u.id) ?? [],
       orderCategorySlugs: orderCatBy.get(u.id) ?? [],
     });
-    // proven niche match lifts ranking; declared-only is capped (anti-gaming)
+    // Ranking tiers (anti-gaming): proven (delivered work) > supported (has gigs, no
+    // orders) > declared-only. A tagged-but-never-delivered niche cannot top a proven one.
     const provenKeys = intent.specKeys.filter((k) => evidence.get(k)?.proven);
+    const supportedKeys = intent.specKeys.filter((k) => evidence.get(k)?.supported);
     const declaredOnlyKeys = intent.specKeys.filter((k) => {
       const e = evidence.get(k);
-      return e?.declared && !e.proven;
+      return e?.declared && !e.proven && !e.supported;
     });
-    const matchedKeys = [...provenKeys, ...declaredOnlyKeys];
+    const matchedKeys = [...provenKeys, ...supportedKeys, ...declaredOnlyKeys];
     const completed = completedBy.get(u.id) ?? 0;
     // Cap above 1 so matching MULTIPLE proven niches (e.g. fashion + video) outranks a
     // single-niche match even before proof/quality separate brand-new creators.
     const relevance = Math.min(
       1.5,
-      (rel.get(u.id) ?? 0) + provenKeys.length * 0.5 + declaredOnlyKeys.length * 0.25
+      (rel.get(u.id) ?? 0) +
+        provenKeys.length * 0.5 +
+        supportedKeys.length * 0.25 +
+        declaredOnlyKeys.length * 0.15
     );
     const proof = Math.min(1, Math.log10(1 + completed) / 2); // ~100 orders → 1
     const quality =
@@ -207,6 +225,9 @@ export async function matchCreators(
       Math.min(1, (p?.ratingCount ?? 0) / 30) * 0.15 +
       (LEVEL_RANK[p?.level ?? "NEW"] / 3) * 0.15;
     const raw = 0.5 * relevance + 0.25 * proof + 0.25 * quality;
+    // Display score compresses the top band so several strong matches don't all render
+    // "100%" and lose their ordering; raw components stay exact for eval/debug.
+    const display = raw >= 1 ? 0.9 + (Math.min(raw, 1.25) - 1) * 0.28 : raw * 0.9;
     return {
       sellerId: u.id,
       username: u.username,
@@ -218,7 +239,7 @@ export async function matchCreators(
       ratingCount: p?.ratingCount ?? 0,
       completedOrders: completed,
       matchedSpecs: matchedKeys.map((k) => specLabel(k, locale)),
-      score: Math.round(Math.max(0.05, Math.min(1, raw)) * 100),
+      score: Math.round(Math.max(0.05, Math.min(0.99, display)) * 100),
       components: {
         relevance: Math.round(relevance * 100) / 100,
         proof: Math.round(proof * 100) / 100,

@@ -12,7 +12,11 @@ export interface SpecEvidence {
   declared: boolean;
   fromGigs: number;
   fromOrders: number;
+  /** Backed by real delivered work (completed orders in the spec's category). Earns the ✓. */
   proven: boolean;
+  /** Has active gigs/tags in the spec but no delivered orders yet — a weaker signal than
+   * proven and easily self-authored, so it ranks below proven and never earns the ✓. */
+  supported: boolean;
 }
 
 export interface EvidenceInput {
@@ -27,7 +31,7 @@ export function computeSpecEvidence(input: EvidenceInput): Map<string, SpecEvide
   const ensure = (k: string): SpecEvidence => {
     let e = m.get(k);
     if (!e) {
-      e = { key: k, declared: false, fromGigs: 0, fromOrders: 0, proven: false };
+      e = { key: k, declared: false, fromGigs: 0, fromOrders: 0, proven: false, supported: false };
       m.set(k, e);
     }
     return e;
@@ -54,7 +58,14 @@ export function computeSpecEvidence(input: EvidenceInput): Map<string, SpecEvide
     }
   }
 
-  for (const e of m.values()) e.proven = e.fromOrders > 0 || e.fromGigs > 0;
+  // Proof requires DELIVERED work — completed orders in the spec's category. Active gigs
+  // and gig tags are self-authored and editable after moderation (keyword-stuffing risk),
+  // so they only make a spec "supported", never proven. This is the anti-gaming rule from
+  // docs/search-ai-spec.md: a declared/tagged niche cannot top a genuinely proven one.
+  for (const e of m.values()) {
+    e.proven = e.fromOrders > 0;
+    e.supported = !e.proven && e.fromGigs > 0;
+  }
   return m;
 }
 
