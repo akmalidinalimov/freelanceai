@@ -29,6 +29,16 @@ const SELLERS = [
   { id: "demo_s6", firstName: "Qora Quti Studio", username: "qoraquti" },
 ];
 
+// Declared specializations (keys from src/lib/specializations.ts) + headline per seller.
+const SELLER_PROFILES = {
+  demo_s1: { headline: "AI video va mahsulot fotosurati — e-commerce uchun", specializations: ["ai_video", "product_photo", "ecommerce"] },
+  demo_s2: { headline: "Brending va moda uchun AI vizuallar", specializations: ["ai_image", "branding", "fashion"] },
+  demo_s3: { headline: "AI video, avatar va ovoz dublyaji", specializations: ["ai_video", "ai_avatar", "voiceover"] },
+  demo_s4: { headline: "AI art, personaj va oʻyin grafikasi", specializations: ["ai_image", "ai_video", "gaming"] },
+  demo_s5: { headline: "Reels, explainer va korporativ taqdimotlar", specializations: ["ai_video", "presentation", "corporate"] },
+  demo_s6: { headline: "Brending, retush va moda vizuallari", specializations: ["branding", "image_edit", "fashion"] },
+};
+
 // prices/days/revisions are [BASIC, STANDARD, PREMIUM]
 const GIGS = [
   {
@@ -53,7 +63,7 @@ const GIGS = [
     slug: "brending-uchun-ai-rasm-toplami", seller: "demo_s2", cat: "ai-image",
     title: "Brending uchun AI rasm to'plami",
     description: "Brendingiz uslubiga mos AI rasmlar to'plami — ijtimoiy tarmoq, sayt va reklama uchun. Yagona vizual til bilan.",
-    tags: ["ai image", "brending", "visual", "social"], prices: [120000, 300000, 600000], days: [2, 3, 5], revs: [2, 3, 5],
+    tags: ["ai image", "brending", "visual", "social", "moda", "fashion"], prices: [120000, 300000, 600000], days: [2, 3, 5], revs: [2, 3, 5],
   },
   {
     slug: "ai-fantasy-art-illustration", seller: "demo_s4", cat: "ai-image",
@@ -77,7 +87,7 @@ const GIGS = [
     slug: "ai-reklama-banner-kreativ", seller: "demo_s6", cat: "ai-ads",
     title: "AI reklama bannerlari va kreativlar",
     description: "Targetlangan reklama uchun yuqori konversiyali banner va kreativlar to'plami. A/B test uchun bir nechta variant.",
-    tags: ["ads", "banner", "creative", "performance"], prices: [180000, 400000, 800000], days: [2, 4, 6], revs: [2, 3, 5],
+    tags: ["ads", "banner", "creative", "performance", "moda", "fashion"], prices: [180000, 400000, 800000], days: [2, 4, 6], revs: [2, 3, 5],
   },
   {
     slug: "ai-ugc-talking-head-reklama", seller: "demo_s5", cat: "ai-ugc",
@@ -152,6 +162,14 @@ async function main() {
         onboardingCompleted: true,
       },
     });
+    const prof = SELLER_PROFILES[s.id];
+    if (prof) {
+      await prisma.sellerProfile.upsert({
+        where: { userId: s.id },
+        update: { headline: prof.headline, specializations: prof.specializations },
+        create: { userId: s.id, headline: prof.headline, specializations: prof.specializations },
+      });
+    }
   }
 
   const publicBase = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");

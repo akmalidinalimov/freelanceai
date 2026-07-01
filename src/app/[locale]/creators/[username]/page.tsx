@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { getPublicProfile } from "@/server/services/profile";
+import { getPublicProfile, getProvenSpecKeys } from "@/server/services/profile";
 import { isFollowing } from "@/server/services/follow";
 import { getCurrentUser } from "@/lib/session";
 import { ContactSellerButton } from "@/components/contact-seller-button";
@@ -46,6 +46,11 @@ export default async function CreatorProfilePage({
   const name = user.firstName ?? user.name ?? user.username ?? "";
   const avatar = user.image ?? user.photoUrl ?? null;
   const memberYear = new Date(user.createdAt).getFullYear();
+
+  const proven =
+    (profile?.specializations?.length ?? 0) > 0
+      ? await getProvenSpecKeys(user.id)
+      : new Set<string>();
 
   const me = await getCurrentUser().catch(() => null);
   const viewer = !me ? "guest" : me.id === user.id ? "owner" : "buyer";
@@ -100,14 +105,23 @@ export default async function CreatorProfilePage({
         <div className="mb-8">
           <h2 className="mb-2 font-semibold">{t("specializations")}</h2>
           <div className="flex flex-wrap gap-2">
-            {profile!.specializations.map((k) => (
-              <span
-                key={k}
-                className="rounded-full bg-[hsl(var(--primary))]/10 px-3 py-1 text-xs font-medium text-[hsl(var(--primary))]"
-              >
-                {specLabel(k, locale)}
-              </span>
-            ))}
+            {profile!.specializations.map((k) => {
+              const ok = proven.has(k);
+              return (
+                <span
+                  key={k}
+                  title={ok ? t("specVerified") : undefined}
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    ok
+                      ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
+                      : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
+                  }`}
+                >
+                  {ok && "✓ "}
+                  {specLabel(k, locale)}
+                </span>
+              );
+            })}
           </div>
         </div>
       )}

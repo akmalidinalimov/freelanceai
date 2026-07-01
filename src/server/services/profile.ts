@@ -4,6 +4,7 @@ import { Errors } from "@/lib/api";
 import { stripContactInfo } from "@/lib/sanitize";
 import { computeSellerLevel } from "@/lib/seller-level";
 import { sanitizeSpecKeys } from "@/lib/specializations";
+import { provenSpecKeys } from "@/lib/niche-evidence";
 
 const PORTFOLIO_MAX = 12;
 
@@ -57,6 +58,31 @@ export async function getPublicProfile(username: string) {
   ]);
 
   return { user, profile, gigs };
+}
+
+/**
+ * Spec keys a seller has *proven* (evidence beyond declaration: active gig tags/category
+ * or completed-order categories). Drives the ✓ "verified specialization" marker.
+ */
+export async function getProvenSpecKeys(sellerId: string): Promise<Set<string>> {
+  const [gigs, orders] = await Promise.all([
+    prisma.gig.findMany({
+      where: { sellerId, status: "ACTIVE", deletedAt: null },
+      select: { tags: true, category: { select: { slug: true } } },
+      take: 100,
+    }),
+    prisma.order.findMany({
+      where: { sellerId, status: "COMPLETED" },
+      select: { gig: { select: { category: { select: { slug: true } } } } },
+      take: 200,
+    }),
+  ]);
+  return provenSpecKeys({
+    declared: [],
+    gigTags: gigs.flatMap((g) => g.tags),
+    gigCategorySlugs: gigs.map((g) => g.category?.slug).filter((s): s is string => !!s),
+    orderCategorySlugs: orders.map((o) => o.gig.category?.slug).filter((s): s is string => !!s),
+  });
 }
 
 export function getOwnProfile(userId: string) {

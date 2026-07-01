@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { SPECIALIZATIONS, specLabel } from "@/lib/specializations";
+import { computeSpecEvidence } from "@/lib/niche-evidence";
 
 /**
  * S1 creator matching — "describe your job → best-matched creators".
@@ -150,12 +151,53 @@ export async function matchCreators(
   });
   const completedBy = new Map(completedRows.map((r) => [r.sellerId, r._count]));
 
+  // niche evidence: active gig tags/category + completed-order categories per candidate
+  const uids = users.map((u) => u.id);
+  const [gigRows, orderCatRows] = await Promise.all([
+    prisma.gig.findMany({
+      where: { sellerId: { in: uids }, status: "ACTIVE", deletedAt: null },
+      select: { sellerId: true, tags: true, category: { select: { slug: true } } },
+      take: 400,
+    }),
+    prisma.order.findMany({
+      where: { sellerId: { in: uids }, status: "COMPLETED" },
+      select: { sellerId: true, gig: { select: { category: { select: { slug: true } } } } },
+      take: 400,
+    }),
+  ]);
+  const gigTagsBy = new Map<string, string[]>();
+  const gigCatBy = new Map<string, string[]>();
+  for (const g of gigRows) {
+    if (g.tags.length) gigTagsBy.set(g.sellerId, [...(gigTagsBy.get(g.sellerId) ?? []), ...g.tags]);
+    if (g.category?.slug) gigCatBy.set(g.sellerId, [...(gigCatBy.get(g.sellerId) ?? []), g.category.slug]);
+  }
+  const orderCatBy = new Map<string, string[]>();
+  for (const o of orderCatRows) {
+    const slug = o.gig.category?.slug;
+    if (slug) orderCatBy.set(o.sellerId, [...(orderCatBy.get(o.sellerId) ?? []), slug]);
+  }
+
   const results: MatchResult[] = users.map((u) => {
     const p = u.sellerProfile;
     const specs = p?.specializations ?? declaredBySeller.get(u.id) ?? [];
-    const matchedKeys = specs.filter((k) => intent.specKeys.includes(k));
+    const evidence = computeSpecEvidence({
+      declared: specs,
+      gigTags: gigTagsBy.get(u.id) ?? [],
+      gigCategorySlugs: gigCatBy.get(u.id) ?? [],
+      orderCategorySlugs: orderCatBy.get(u.id) ?? [],
+    });
+    // proven niche match lifts ranking; declared-only is capped (anti-gaming)
+    const provenKeys = intent.specKeys.filter((k) => evidence.get(k)?.proven);
+    const declaredOnlyKeys = intent.specKeys.filter((k) => {
+      const e = evidence.get(k);
+      return e?.declared && !e.proven;
+    });
+    const matchedKeys = [...provenKeys, ...declaredOnlyKeys];
     const completed = completedBy.get(u.id) ?? 0;
-    const relevance = Math.min(1, (rel.get(u.id) ?? 0) + matchedKeys.length * 0.4);
+    const relevance = Math.min(
+      1,
+      (rel.get(u.id) ?? 0) + provenKeys.length * 0.5 + declaredOnlyKeys.length * 0.25
+    );
     const proof = Math.min(1, Math.log10(1 + completed) / 2); // ~100 orders → 1
     const quality =
       ((p?.ratingAvg ?? 0) / 5) * 0.7 +
