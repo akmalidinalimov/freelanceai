@@ -405,6 +405,22 @@
     "noPendingGigs": "Tekshiruvdagi xizmatlar yoʻq.",
     "error": "Xatolik yuz berdi."
   },
+  "Search": {
+    "title": "Ijodkor topish",
+    "subtitle": "Kerakli ishni oddiy tilda yozing — AI eng mos ijodkorlarni tartiblab beradi.",
+    "placeholder": "Masalan: kosmetika uchun 15s AI reklama roligi…",
+    "button": "Qidirish",
+    "understood": "Tushundim",
+    "resultsCount": "Eng mos {count} ijodkor",
+    "noResults": "Mos ijodkor topilmadi. Boshqacha yozib koʻring.",
+    "reasonSpecs": "{specs} boʻyicha tajriba",
+    "reasonGeneric": "AI ijodkori",
+    "orders": "{count} buyurtma",
+    "match": "moslik",
+    "ex1": "AI reklama roligi",
+    "ex2": "mahsulot fotosurati",
+    "ex3": "logotip va brending"
+  },
   "Profile": {
     "about": "Haqida",
     "skills": "Koʻnikmalar",

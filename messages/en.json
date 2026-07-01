@@ -405,6 +405,22 @@
     "noPendingGigs": "No gigs awaiting review.",
     "error": "Something went wrong."
   },
+  "Search": {
+    "title": "Find a creator",
+    "subtitle": "Describe your job in plain words — AI ranks the best-matched creators.",
+    "placeholder": "e.g. 15s AI ad video for cosmetics…",
+    "button": "Search",
+    "understood": "Understood",
+    "resultsCount": "Top {count} creators",
+    "noResults": "No matching creators found. Try rephrasing.",
+    "reasonSpecs": "experience in {specs}",
+    "reasonGeneric": "AI creator",
+    "orders": "{count} orders",
+    "match": "match",
+    "ex1": "AI ad video",
+    "ex2": "product photography",
+    "ex3": "logo & branding"
+  },
   "Profile": {
     "about": "About",
     "skills": "Skills",
