@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
@@ -49,7 +50,7 @@ function toCreator(p: SellerRow): BrowseCreator {
 }
 
 /** Active sellers who declared a given specialization key, best first. */
-export async function listCreatorsBySpecialization(key: string): Promise<BrowseCreator[]> {
+async function listCreatorsBySpecializationUncached(key: string): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
     where: { specializations: { has: key }, user: { isSeller: true, status: "ACTIVE" } },
     select: sellerSelect,
@@ -60,7 +61,7 @@ export async function listCreatorsBySpecialization(key: string): Promise<BrowseC
 }
 
 /** Featured creators for the homepage rail: active sellers with at least one live gig. */
-export async function listFeaturedCreators(limit = 8): Promise<BrowseCreator[]> {
+async function listFeaturedCreatorsUncached(limit = 8): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
     where: {
       user: {
@@ -77,12 +78,12 @@ export async function listFeaturedCreators(limit = 8): Promise<BrowseCreator[]> 
 }
 
 /** Count of active seller accounts (for the hero's live-creator eyebrow). */
-export function countActiveCreators(): Promise<number> {
+function countActiveCreatorsUncached(): Promise<number> {
   return prisma.sellerProfile.count({ where: { user: { isSeller: true, status: "ACTIVE" } } });
 }
 
 /** All active sellers for the /creators index, best-rated first. */
-export async function listAllCreators(take = 60): Promise<BrowseCreator[]> {
+async function listAllCreatorsUncached(take = 60): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
     where: { user: { isSeller: true, status: "ACTIVE" } },
     select: sellerSelect,
@@ -91,3 +92,19 @@ export async function listAllCreators(take = 60): Promise<BrowseCreator[]> {
   });
   return rows.map(toCreator);
 }
+
+// Hot anonymous discovery reads, cached 60s per args (home rail, /creators, /browse/[spec]).
+export const listCreatorsBySpecialization = unstable_cache(
+  listCreatorsBySpecializationUncached,
+  ["creators-by-spec"],
+  { revalidate: 60 }
+);
+export const listFeaturedCreators = unstable_cache(listFeaturedCreatorsUncached, ["featured-creators"], {
+  revalidate: 60,
+});
+export const countActiveCreators = unstable_cache(countActiveCreatorsUncached, ["creator-count"], {
+  revalidate: 300,
+});
+export const listAllCreators = unstable_cache(listAllCreatorsUncached, ["all-creators"], {
+  revalidate: 60,
+});

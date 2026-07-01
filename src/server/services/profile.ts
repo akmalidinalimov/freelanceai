@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Errors } from "@/lib/api";
 import { stripContactInfo } from "@/lib/sanitize";
@@ -28,7 +29,7 @@ export async function recomputeSellerStats(sellerId: string) {
  * Public seller storefront by username. 404s (returns null) for non-sellers,
  * suspended/deleted accounts — existence is never revealed (DATA-PROTECTION).
  */
-export async function getPublicProfile(username: string) {
+async function getPublicProfileUncached(username: string) {
   const user = await prisma.user.findFirst({
     where: { username, isSeller: true, status: "ACTIVE" },
     select: {
@@ -59,6 +60,13 @@ export async function getPublicProfile(username: string) {
 
   return { user, profile, gigs };
 }
+
+// Public storefront cached 60s per username (page still renders per-request for the
+// viewer-specific bits — follow state etc. — those are separate uncached calls).
+// Date fields deserialize as strings; the page already wraps createdAt in new Date().
+export const getPublicProfile = unstable_cache(getPublicProfileUncached, ["public-profile"], {
+  revalidate: 60,
+});
 
 /**
  * Spec keys a seller has *proven* (evidence beyond declaration: active gig tags/category

@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, User } from "@prisma/client";
 import { uniqueSlug } from "@/lib/slug";
@@ -321,7 +322,7 @@ export function listRelatedGigs(gigId: string, categoryId: string | null, take =
 }
 
 /** Featured, non-expired active gigs for the home row. */
-export function listFeaturedGigs(take = 8) {
+function listFeaturedGigsUncached(take = 8) {
   return prisma.gig.findMany({
     where: {
       status: "ACTIVE",
@@ -363,7 +364,7 @@ async function fuzzyTextWhere(q: string): Promise<Prisma.GigWhereInput> {
   }
 }
 
-export async function listPublicGigs(opts: GigFilters = {}) {
+async function listPublicGigsUncached(opts: GigFilters = {}) {
   const q = opts.q?.trim();
   const textWhere = q ? await fuzzyTextWhere(q) : {};
   const where: Prisma.GigWhereInput = {
@@ -410,6 +411,18 @@ export async function listPublicGigs(opts: GigFilters = {}) {
   }
   return gigs;
 }
+
+// Public catalog reads are cached 60s per argument-combination (unstable_cache keys
+// include args). Cuts DB load ~10x on the hot anonymous pages (home, marketplace,
+// categories); worst case a new/edited gig appears with ≤60s delay. NOTE: cached
+// results are serialized, so Date fields come back as strings — public pages must
+// not call Date methods on them directly (they don't today).
+export const listPublicGigs = unstable_cache(listPublicGigsUncached, ["public-gigs"], {
+  revalidate: 60,
+});
+export const listFeaturedGigs = unstable_cache(listFeaturedGigsUncached, ["featured-gigs"], {
+  revalidate: 60,
+});
 
 export function getGigBySlug(slug: string) {
   return prisma.gig.findFirst({
