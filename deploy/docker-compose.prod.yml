@@ -54,7 +54,9 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
     entrypoint: ["sh", "-c"]
     command:
-      - "apk add --no-cache curl ca-certificates && while true; do F=db-$$(date +%a).dump; echo \"[backup] dumping $$F\"; if pg_dump -h db -U freelanceai -d freelanceai -Fc -f /tmp/$$F; then if [ -n \"$$S3_ENDPOINT\" ] && [ -n \"$$S3_PRIVATE_BUCKET\" ]; then curl -sf --aws-sigv4 aws:amz:auto:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" -X PUT --data-binary @/tmp/$$F \"$$S3_ENDPOINT/$$S3_PRIVATE_BUCKET/backups/$$F\" && echo \"[backup] uploaded backups/$$F ($$(du -h /tmp/$$F | cut -f1))\" || echo '[backup] UPLOAD FAILED'; else echo '[backup] no S3 config; kept local only'; fi; rm -f /tmp/$$F; else echo '[backup] DUMP FAILED'; fi; sleep 86400; done"
+      # NB: $${S3_ENDPOINT%/} strips a trailing slash — R2 returns 404 RouteNotFound on
+      # double-slash paths (the app's SDK normalizes this; raw curl does not).
+      - "apk add --no-cache curl ca-certificates && EP=$${S3_ENDPOINT%/} && while true; do F=db-$$(date +%a).dump; echo \"[backup] dumping $$F\"; if pg_dump -h db -U freelanceai -d freelanceai -Fc -f /tmp/$$F; then if [ -n \"$$EP\" ] && [ -n \"$$S3_PRIVATE_BUCKET\" ]; then curl -sf --aws-sigv4 aws:amz:auto:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" -X PUT --data-binary @/tmp/$$F \"$$EP/$$S3_PRIVATE_BUCKET/backups/$$F\" && echo \"[backup] uploaded backups/$$F ($$(du -h /tmp/$$F | cut -f1))\" || echo '[backup] UPLOAD FAILED'; else echo '[backup] no S3 config; kept local only'; fi; rm -f /tmp/$$F; else echo '[backup] DUMP FAILED'; fi; sleep 86400; done"
 
   app:
     # Hostinger's deploy only PULLS images (no build step). Run from a stock node
