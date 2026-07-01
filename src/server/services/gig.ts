@@ -62,6 +62,11 @@ function cleanPrompts(prompts: string[] | undefined): string[] {
     .filter(Boolean);
 }
 
+/** Lowercase + de-dupe tags so they match the (lowercased) search/evidence term set. */
+function normalizeTags(tags?: string[]): string[] {
+  return [...new Set((tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
+}
+
 /** Create a gig with its packages. New gigs are ACTIVE (moderation comes later). */
 export async function createGig(sellerId: string, input: CreateGigInput, autoApprove = false) {
   // Strip off-platform contact info from public gig text (anti-escrow-bypass).
@@ -83,7 +88,7 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       faq: faq.length ? faq : undefined,
       requirementPrompts: cleanPrompts(input.requirementPrompts),
       categoryId: input.categoryId || null,
-      tags: input.tags ?? [],
+      tags: normalizeTags(input.tags),
       locale: input.locale ?? "uz",
       // Drafts stay private; otherwise new gigs await moderation (admins publish immediately).
       status: input.draft ? "DRAFT" : autoApprove ? "ACTIVE" : "PENDING_REVIEW",
@@ -145,7 +150,7 @@ export async function updateGig(gigId: string, user: GigActor, input: CreateGigI
         coverUrl: input.coverUrl || null,
         galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
         categoryId: input.categoryId || null,
-        tags: input.tags ?? [],
+        tags: normalizeTags(input.tags),
         faq,
         requirementPrompts: cleanPrompts(input.requirementPrompts),
         packages: {
@@ -312,6 +317,7 @@ export function listRelatedGigs(gigId: string, categoryId: string | null, take =
     where: {
       status: "ACTIVE",
       deletedAt: null,
+      seller: { status: "ACTIVE" },
       id: { not: gigId },
       ...(categoryId ? { categoryId } : {}),
     },
@@ -327,6 +333,7 @@ function listFeaturedGigsUncached(take = 8) {
     where: {
       status: "ACTIVE",
       deletedAt: null,
+      seller: { status: "ACTIVE" },
       featured: true,
       OR: [{ featuredUntil: null }, { featuredUntil: { gt: new Date() } }],
     },
@@ -370,6 +377,7 @@ async function listPublicGigsUncached(opts: GigFilters = {}) {
   const where: Prisma.GigWhereInput = {
     status: "ACTIVE",
     deletedAt: null,
+    seller: { status: "ACTIVE" },
     ...(opts.categorySlug ? { category: { slug: opts.categorySlug } } : {}),
     ...textWhere,
     ...(opts.minUzs != null || opts.maxUzs != null
@@ -436,7 +444,7 @@ export const listFeaturedGigs = unstable_cache(listFeaturedGigsUncached, ["featu
 
 export function getGigBySlug(slug: string) {
   return prisma.gig.findFirst({
-    where: { slug, status: "ACTIVE", deletedAt: null },
+    where: { slug, status: "ACTIVE", deletedAt: null, seller: { status: "ACTIVE" } },
     include: {
       packages: { orderBy: { priceUzs: "asc" } },
       extras: { orderBy: { position: "asc" } },
@@ -463,7 +471,7 @@ export async function incrementGigViews(gigId: string) {
 export async function getGigsByIds(ids: string[]) {
   if (ids.length === 0) return [];
   const gigs = await prisma.gig.findMany({
-    where: { id: { in: ids.slice(0, 12) }, status: "ACTIVE", deletedAt: null },
+    where: { id: { in: ids.slice(0, 12) }, status: "ACTIVE", deletedAt: null, seller: { status: "ACTIVE" } },
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },
       seller: { select: { firstName: true, username: true, name: true } },

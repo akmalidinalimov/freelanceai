@@ -171,11 +171,13 @@ export async function matchCreators(
     prisma.gig.findMany({
       where: { sellerId: { in: uids }, status: "ACTIVE", deletedAt: null },
       select: { sellerId: true, tags: true, category: { select: { slug: true } } },
+      orderBy: { createdAt: "desc" }, // deterministic which rows the 400-cap keeps
       take: 400,
     }),
     prisma.order.findMany({
       where: { sellerId: { in: uids }, status: "COMPLETED" },
       select: { sellerId: true, gig: { select: { category: { select: { slug: true } } } } },
+      orderBy: { createdAt: "desc" },
       take: 400,
     }),
   ]);

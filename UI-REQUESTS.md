@@ -41,6 +41,16 @@ English v1 — content is counsel-pending, do not rewrite the text). Please:
 - restyle the pages to the new design system when the redesign lands (typography
   only; keep URLs and content intact — Meta App Review references these URLs)
 
+### 4. "Deleted user" fallback where a counterparty anonymized their account
+After account deletion we keep orders/reviews/messages as anonymous records (names
+nulled). Please show a localized **"Deleted user"** instead of a blank/`—` name in:
+- `src/app/[locale]/orders/[id]/page.tsx` (counterparty name ~line 51)
+- `src/app/[locale]/gigs/[slug]/page.tsx` (review author name ~line 263)
+- `src/app/[locale]/messages/page.tsx` (conversation peer ~line 31)
+Add a shared key (e.g. `Common.deletedUser`) in all three locales. No crash today
+(avatar initial handles `""`), purely cosmetic — a blank name next to a real review
+reads as a bug.
+
 ## → For the platform team
 
 (nothing pending)

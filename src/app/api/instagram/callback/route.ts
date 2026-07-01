@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { encryptPII } from "@/lib/pii-crypto";
+import { readCookie } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
 import { instagramConfigured, exchangeCode, verifyState, fetchMedia } from "@/lib/instagram";
 import { syncInstagramForSeller } from "@/server/services/instagram-sync";
@@ -13,13 +14,16 @@ import { syncInstagramForSeller } from "@/server/services/instagram-sync";
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  // Preserve the user's locale (next-intl cookie) instead of hardcoding /uz.
+  const cookieLocale = readCookie(request, "NEXT_LOCALE");
+  const loc = cookieLocale === "ru" || cookieLocale === "en" ? cookieLocale : "uz";
   const back = (marker: string) =>
-    NextResponse.redirect(new URL(`/uz/dashboard/seller/profile?ig=${marker}`, url.origin));
+    NextResponse.redirect(new URL(`/${loc}/dashboard/seller/profile?ig=${marker}`, url.origin));
 
   if (!instagramConfigured()) return back("unavailable");
 
   const user = await getCurrentUser();
-  if (!user) return NextResponse.redirect(new URL("/uz/login", url.origin));
+  if (!user) return NextResponse.redirect(new URL(`/${loc}/login`, url.origin));
 
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state") ?? "";

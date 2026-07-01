@@ -71,8 +71,8 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
       <p>
         Sensitive fields (phone numbers, Instagram tokens) are encrypted at rest; full card numbers
         are never stored; the database is not exposed to the internet; access to admin functions is
-        allow-listed; money actions are audit-logged; encrypted nightly backups are kept with a
-        7-day rotation.
+        allow-listed; money actions are audit-logged; nightly database backups are kept in
+        private, access-controlled storage (encrypted at rest by the provider) on a 7-day rotation.
       </p>
 
       <h2>5. Your rights and controls</h2>
