@@ -12,6 +12,17 @@ Two independent layers:
 2. **Hostinger weekly VPS snapshots (automatic).** Whole-machine, ~weekly, restorable
    from hPanel / `VPS_restoreBackupV1`. Last resort only.
 
+### Restore drill (rehearsed)
+
+Run `deploy/restore-drill.ps1` — it spins a throwaway `restoredrill` compose project
+on the VPS (scratch Postgres on tmpfs), downloads the newest weekday dump from R2,
+`pg_restore`s it, and prints `[drill] RESULT users=… gigs=…` row counts to the project
+logs. Read logs, compare counts to prod, then DELETE the `restoredrill` project.
+
+- **Last drill: 2026-07-02 — PASS.** `db-Wed.dump` (88KB) restored with exit 0 /
+  0 warnings; counts matched prod (users=13, gigs=22, profiles=12).
+- Re-run the drill after any major schema change and before real-money launch.
+
 ### Restore procedure (logical dump)
 1. Download the dump from R2 (S3 API, private bucket, key `backups/db-<Day>.dump`).
 2. Copy it into the db container's host and run:
