@@ -34,6 +34,7 @@ export default async function EditProfilePage({
           bio: profile?.bio ?? "",
           skills: (profile?.skills ?? []).join(", "),
           aiTools: (profile?.aiTools ?? []).join(", "),
+          specializations: profile?.specializations ?? [],
         }}
       />
       <div className="mt-8">

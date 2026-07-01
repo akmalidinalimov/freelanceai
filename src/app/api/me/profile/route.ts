@@ -10,6 +10,7 @@ const schema = z
     bio: z.string().max(600).optional(),
     skills: z.array(z.string().min(1).max(40)).max(20).optional(),
     aiTools: z.array(z.string().min(1).max(40)).max(20).optional(),
+    specializations: z.array(z.string().min(1).max(40)).max(30).optional(),
   })
   .strict();
 

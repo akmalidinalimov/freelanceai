@@ -245,8 +245,9 @@ model SellerProfile {
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   headline      String?
   bio           String?
-  skills        String[]    @default([])
-  aiTools       String[]    @default([])
+  skills          String[]    @default([])
+  aiTools         String[]    @default([])
+  specializations String[]    @default([])
   level         SellerLevel @default(NEW)
   ratingAvg     Float       @default(0)
   ratingCount   Int         @default(0)

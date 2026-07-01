@@ -408,6 +408,10 @@
   "Profile": {
     "about": "Haqida",
     "skills": "Koʻnikmalar",
+    "specializations": "Mutaxassisliklar",
+    "specializationsHint": "Oʻzingiz zoʻr boʻlgan yoʻnalishlarni tanlang (ixtiyoriy)",
+    "skillsGroup": "Koʻnikmalar",
+    "nichesGroup": "Yoʻnalishlar",
     "services": "Xizmatlar",
     "memberSince": "Platformada",
     "verified": "Tasdiqlangan",

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Errors } from "@/lib/api";
 import { stripContactInfo } from "@/lib/sanitize";
 import { computeSellerLevel } from "@/lib/seller-level";
+import { sanitizeSpecKeys } from "@/lib/specializations";
 
 const PORTFOLIO_MAX = 12;
 
@@ -105,6 +106,7 @@ export interface ProfileInput {
   bio?: string;
   skills?: string[];
   aiTools?: string[];
+  specializations?: string[];
 }
 
 /** Update the caller's own seller profile (level/rating excluded — job-set only). Bio/headline sanitized. */
@@ -114,6 +116,9 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
     ...(input.bio !== undefined ? { bio: stripContactInfo(input.bio).text.trim() || null } : {}),
     ...(input.skills !== undefined ? { skills: input.skills } : {}),
     ...(input.aiTools !== undefined ? { aiTools: input.aiTools } : {}),
+    ...(input.specializations !== undefined
+      ? { specializations: sanitizeSpecKeys(input.specializations) }
+      : {}),
   };
   return prisma.sellerProfile.upsert({
     where: { userId },

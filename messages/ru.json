@@ -408,6 +408,10 @@
   "Profile": {
     "about": "О себе",
     "skills": "Навыки",
+    "specializations": "Специализации",
+    "specializationsHint": "Выберите направления, в которых вы сильны (необязательно)",
+    "skillsGroup": "Навыки",
+    "nichesGroup": "Ниши",
     "services": "Услуги",
     "memberSince": "На платформе с",
     "verified": "Проверенный",

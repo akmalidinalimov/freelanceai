@@ -408,6 +408,10 @@
   "Profile": {
     "about": "About",
     "skills": "Skills",
+    "specializations": "Specializations",
+    "specializationsHint": "Pick the areas you excel at (optional)",
+    "skillsGroup": "Skills",
+    "nichesGroup": "Niches",
     "services": "Services",
     "memberSince": "On the platform since",
     "verified": "Verified",

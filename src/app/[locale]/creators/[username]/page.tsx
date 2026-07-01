@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/session";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { FollowButton } from "@/components/follow-button";
 import { VerifiedBadge } from "@/components/verified-badge";
+import { specLabel } from "@/lib/specializations";
 
 export async function generateMetadata({
   params,
@@ -94,6 +95,22 @@ export default async function CreatorProfilePage({
           )}
         </div>
       </div>
+
+      {(profile?.specializations?.length ?? 0) > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-2 font-semibold">{t("specializations")}</h2>
+          <div className="flex flex-wrap gap-2">
+            {profile!.specializations.map((k) => (
+              <span
+                key={k}
+                className="rounded-full bg-[hsl(var(--primary))]/10 px-3 py-1 text-xs font-medium text-[hsl(var(--primary))]"
+              >
+                {specLabel(k, locale)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {(profile?.bio || (profile?.skills?.length ?? 0) > 0) && (
         <div className="mb-8 grid gap-6 sm:grid-cols-3">
