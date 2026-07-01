@@ -195,8 +195,10 @@ export async function matchCreators(
     });
     const matchedKeys = [...provenKeys, ...declaredOnlyKeys];
     const completed = completedBy.get(u.id) ?? 0;
+    // Cap above 1 so matching MULTIPLE proven niches (e.g. fashion + video) outranks a
+    // single-niche match even before proof/quality separate brand-new creators.
     const relevance = Math.min(
-      1,
+      1.5,
       (rel.get(u.id) ?? 0) + provenKeys.length * 0.5 + declaredOnlyKeys.length * 0.25
     );
     const proof = Math.min(1, Math.log10(1 + completed) / 2); // ~100 orders → 1
