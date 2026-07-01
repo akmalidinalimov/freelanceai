@@ -21,7 +21,8 @@ console.log(`\n=== E2E prod sweep: ${B} ===`);
 console.log("\n[i18n] home renders in 3 locales");
 for (const loc of ["uz", "ru", "en"]) {
   const { status, body } = await get(`/${loc}`);
-  check(`home ${loc}`, status === 200 && body.includes("FreelanceAI") && countCovers(body) > 0, `(${status}, ${countCovers(body)} featured)`);
+  // Home is the AI-concierge search hero (no gig grid); assert it renders + has the creators rail.
+  check(`home ${loc}`, status === 200 && body.includes("FreelanceAI") && body.includes("/creators"), `(${status})`);
 }
 
 // 2. Marketplace + search
