@@ -31,6 +31,7 @@ export interface MatchResult {
   completedOrders: number;
   matchedSpecs: string[]; // localized labels of the creator's specs that matched the query
   score: number; // 0..100 display
+  components: { relevance: number; proof: number; quality: number }; // 0..1 each (debug/eval)
 }
 
 const LEVEL_RANK: Record<string, number> = { NEW: 0, LEVEL_1: 1, LEVEL_2: 2, TOP_RATED: 3 };
@@ -216,6 +217,11 @@ export async function matchCreators(
       completedOrders: completed,
       matchedSpecs: matchedKeys.map((k) => specLabel(k, locale)),
       score: Math.round(Math.max(0.05, Math.min(1, raw)) * 100),
+      components: {
+        relevance: Math.round(relevance * 100) / 100,
+        proof: Math.round(proof * 100) / 100,
+        quality: Math.round(quality * 100) / 100,
+      },
     };
   });
 

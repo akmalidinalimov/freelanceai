@@ -52,6 +52,7 @@ const CHECKS = [
   { group: "Guards", name: "admin settlements gated", method: "GET", path: "/uz/admin/settlements", expect: 307 },
   { group: "Guards", name: "admin moderation gated", method: "GET", path: "/uz/admin/moderation", expect: 307 },
   { group: "Guards", name: "admin disputes gated", method: "GET", path: "/uz/admin/disputes", expect: 307 },
+  { group: "Guards", name: "admin search-debug gated", method: "GET", path: "/uz/admin/search-debug", expect: 307 },
   { group: "Guards", name: "messages inbox gated", method: "GET", path: "/uz/messages", expect: 307 },
   { group: "Guards", name: "edit profile gated", method: "GET", path: "/uz/dashboard/seller/profile", expect: 307 },
   { group: "Guards", name: "settings gated", method: "GET", path: "/uz/dashboard/settings", expect: 307 },
