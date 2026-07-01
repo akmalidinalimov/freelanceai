@@ -45,14 +45,20 @@ export function HomeSearch() {
   const [listening, setListening] = useState(false);
   const stopRef = useRef(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
-  const examples = [t("searchEx1"), t("searchEx2"), t("searchEx3"), t("searchEx4")];
+  const examples = [
+    t("searchEx1"),
+    t("searchEx2"),
+    t("searchEx3"),
+    t("searchEx4"),
+    t("searchEx5"),
+  ];
 
   // typewriter placeholder, stops on focus
   useEffect(() => {
     if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
       return;
     const prefix = t("searchExamplePrefix");
-    const ex = [t("searchEx1"), t("searchEx2"), t("searchEx3"), t("searchEx4")];
+    const ex = [t("searchEx1"), t("searchEx2"), t("searchEx3"), t("searchEx4"), t("searchEx5")];
     let ei = 0;
     let ci = 0;
     let del = false;
@@ -108,10 +114,20 @@ export function HomeSearch() {
     setState("done");
   }
 
+  // Drop the sentence into the box as an editable draft (don't auto-search) so the user
+  // can tweak it before running — these are starting points, not one-tap searches.
   function pickExample(ex: string) {
     stopRef.current = true;
     setQ(ex);
-    run(ex);
+    requestAnimationFrame(() => {
+      const ta = taRef.current;
+      if (!ta) return;
+      ta.focus();
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 96) + "px";
+      const len = ta.value.length;
+      ta.setSelectionRange(len, len);
+    });
   }
 
   function mic() {
