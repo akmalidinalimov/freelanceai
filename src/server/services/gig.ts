@@ -417,9 +417,19 @@ async function listPublicGigsUncached(opts: GigFilters = {}) {
 // categories); worst case a new/edited gig appears with ≤60s delay. NOTE: cached
 // results are serialized, so Date fields come back as strings — public pages must
 // not call Date methods on them directly (they don't today).
-export const listPublicGigs = unstable_cache(listPublicGigsUncached, ["public-gigs"], {
+const listPublicGigsCached = unstable_cache(listPublicGigsUncached, ["public-gigs"], {
   revalidate: 60,
 });
+
+/**
+ * Cache only the bounded hot paths (filterless / category / price / sort). Free-text `q`
+ * has unbounded key cardinality — every distinct query (crawlers included) writes a new
+ * data-cache entry that never evicts, with a near-zero hit rate — so run those uncached.
+ */
+export function listPublicGigs(opts: GigFilters = {}) {
+  if (opts.q?.trim()) return listPublicGigsUncached(opts);
+  return listPublicGigsCached(opts);
+}
 export const listFeaturedGigs = unstable_cache(listFeaturedGigsUncached, ["featured-gigs"], {
   revalidate: 60,
 });

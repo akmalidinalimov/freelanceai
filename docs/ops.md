@@ -23,15 +23,18 @@ logs. Read logs, compare counts to prod, then DELETE the `restoredrill` project.
   0 warnings; counts matched prod (users=13, gigs=22, profiles=12).
 - Re-run the drill after any major schema change and before real-money launch.
 
-### Restore procedure (logical dump)
-1. Download the dump from R2 (S3 API, private bucket, key `backups/db-<Day>.dump`).
-2. Copy it into the db container's host and run:
-   ```
-   pg_restore -h db -U freelanceai -d freelanceai --clean --if-exists db-<Day>.dump
-   ```
-   (e.g. via a one-off `postgres:16-alpine` container on the `freelanceai` compose
-   network, `PGPASSWORD=$POSTGRES_PASSWORD`.)
-3. Redeploy the app (`deploy/deploy-vps.ps1`) and run the verify suite.
+### Restore to production (DESTRUCTIVE — break glass)
+There is no SSH; restore is run as a one-off compose project that joins the prod network.
+Use [deploy/restore-to-prod-compose.yml](../deploy/restore-to-prod-compose.yml):
+1. Create a one-off Hostinger project named **`restoretoprod`** from that file.
+2. Set project env: `POSTGRES_PASSWORD` + the four `S3_*` vars (same as prod), and the
+   safety latch `CONFIRM=RESTORE`.
+3. Start it; read the project logs for `[restore] pg_restore exit=0`. It pulls the newest
+   of the last 7 weekday dumps and `pg_restore --clean --if-exists` into the live DB.
+4. Run `deploy/deploy-vps.ps1` (verify suite), confirm the app, then **DELETE** the project.
+
+The non-destructive rehearsal (`deploy/restore-drill.ps1`, scratch tmpfs DB) shares the
+same download logic, so a green drill is evidence this path works.
 
 ## Migrations (no local database in this repo's dev setup)
 
@@ -54,6 +57,20 @@ the migrate service auto-resolves `0_init` as applied on first run (P3005 fallba
 3. Review the SQL by hand — especially for data-destructive statements.
 4. `npx prisma generate`, typecheck, commit, push, deploy as usual. The migrate
    service applies pending migrations before the app starts.
+
+The P3005 baseline fallback fires **only** when the deploy error is actually P3005
+(existing non-empty DB) — any other migrate failure aborts the deploy with exit 1 rather
+than falsely marking migrations applied.
+
+### Failed migration recovery (break glass)
+If a migration fails partway, Prisma marks it failed and every later deploy aborts with
+P3009 (app never starts → site down). Since there's no SSH, clear it with a one-off
+project from [deploy/migrate-fix-compose.yml](../deploy/migrate-fix-compose.yml):
+1. Create a one-off Hostinger project named **`migratefix`** from that file.
+2. Set project env `POSTGRES_PASSWORD`. Start it once with `MIGRATION_NAME` empty to make
+   it print `prisma migrate status` in the logs and read the failed migration's name.
+3. Set `MIGRATION_NAME=<that name>`, start again — it runs `migrate resolve --rolled-back`.
+4. Fix the migration SQL in the repo, push, redeploy prod, then **DELETE** the project.
 
 ## Uptime monitoring
 

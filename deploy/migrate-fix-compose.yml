@@ -1,0 +1,29 @@
+# EMERGENCY — clear a failed migration so deploys can proceed again.
+#
+# When a migration fails partway, Prisma records it as failed; every later deploy then
+# aborts with P3009 and the app service never starts (site down). Since there's no SSH,
+# this throwaway one-off project is the "hands" that runs `migrate resolve`.
+#
+# Usage (Hostinger MCP), see docs/ops.md "Failed migration recovery":
+#   1. Create a one-off project named "migratefix" from THIS file.
+#   2. Set project env: POSTGRES_PASSWORD (same as prod) and MIGRATION_NAME=<failed folder>.
+#      (Leave MIGRATION_NAME empty first to print `migrate status` and read the name.)
+#   3. Start it, read the logs. It marks the migration rolled-back.
+#   4. Fix the migration SQL in the repo, push, redeploy prod. Then DELETE this project.
+#
+# It joins the prod project's network (external) so it can reach the `db` service.
+services:
+  fix:
+    image: node:24-alpine
+    environment:
+      DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
+      MIGRATION_NAME: ${MIGRATION_NAME:-}
+    entrypoint: ["sh", "-c"]
+    restart: "no"
+    command:
+      - "apk add --no-cache git openssl ca-certificates && rm -rf /srv/mig && git clone --depth 1 -b main https://github.com/akmalidinalimov/freelanceai /srv/mig && cd /srv/mig && if [ -z \"$$MIGRATION_NAME\" ]; then echo '[fix] set MIGRATION_NAME to the failed migration. Current status:'; npx -y prisma@6.19.3 migrate status --schema=prisma/schema.prisma; sleep 120; exit 1; fi && npx -y prisma@6.19.3 migrate resolve --rolled-back \"$$MIGRATION_NAME\" --schema=prisma/schema.prisma && echo \"[fix] marked $$MIGRATION_NAME rolled-back — fix its SQL, push, then redeploy prod\" && sleep 300"
+
+networks:
+  default:
+    name: freelanceai_default
+    external: true
