@@ -13,12 +13,13 @@ export interface NotificationItem {
   createdAt: string;
 }
 
-function ago(iso: string): string {
+/** Relative-time parts; the caller formats with its localized `t` so labels are per-locale. */
+function agoParts(iso: string): { n: number | null; unit: "now" | "minShort" | "hourShort" | "dayShort" } {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return "hozir";
-  if (s < 3600) return `${Math.floor(s / 60)} daq`;
-  if (s < 86400) return `${Math.floor(s / 3600)} soat`;
-  return `${Math.floor(s / 86400)} kun`;
+  if (s < 60) return { n: null, unit: "now" };
+  if (s < 3600) return { n: Math.floor(s / 60), unit: "minShort" };
+  if (s < 86400) return { n: Math.floor(s / 3600), unit: "hourShort" };
+  return { n: Math.floor(s / 86400), unit: "dayShort" };
 }
 
 export function NotificationsList({ initial }: { initial: NotificationItem[] }) {
@@ -70,7 +71,12 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
                 <p className={n.readAt ? "font-medium" : "font-semibold"}>{n.title}</p>
                 {n.body && <p className="truncate text-sm text-[hsl(var(--muted-foreground))]">{n.body}</p>}
               </div>
-              <span className="shrink-0 text-xs text-[hsl(var(--muted-foreground))]">{ago(n.createdAt)}</span>
+              <span className="shrink-0 text-xs text-[hsl(var(--muted-foreground))]">
+                {(() => {
+                  const p = agoParts(n.createdAt);
+                  return p.n === null ? t("now") : `${p.n} ${t(p.unit)}`;
+                })()}
+              </span>
             </div>
           );
           return (

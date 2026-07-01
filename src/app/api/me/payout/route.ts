@@ -1,6 +1,7 @@
 import { ok, errorResponse, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { requestPayout } from "@/server/services/payments";
 
 /** Seller requests a withdrawal of their available balance. */
@@ -10,6 +11,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
     if (!user.isSeller) throw Errors.forbidden("Sellers only");
+    enforceRateLimit(`payout:${user.id}`, 5, 60_000);
     const req = await requestPayout(user);
     return ok({ requested: true, amountUzs: req.amountUzs });
   } catch (err) {

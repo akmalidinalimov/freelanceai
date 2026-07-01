@@ -96,7 +96,8 @@ test("message attachments: a file-only message is accepted and rendered", async 
   const origin = new URL(buyer.url()).origin;
 
   // Body is optional when at least one attachment is present (Batch 6-6).
-  const fileUrl = "https://example.com/e2e-attachment.jpg";
+  // Must be under S3_PUBLIC_BASE_URL (set in the e2e workflow) — attachments are R2-origin only.
+  const fileUrl = "https://r2-test.example.com/messages/e2e-attachment.jpg";
   const sent = await buyer.request.post(`/api/conversations/${convId}/messages`, {
     headers: { Origin: origin },
     data: { fileUrls: [fileUrl] },

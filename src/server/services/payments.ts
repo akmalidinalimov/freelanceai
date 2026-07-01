@@ -157,6 +157,20 @@ export async function tipOrder(orderId: string, buyer: User, amountUzs: number) 
   });
 }
 
+/**
+ * Single source of truth for a seller's withdrawable balance: completed net earnings + tips
+ * − amounts already paid out. Every payout path (UI balance, request, admin fulfil) MUST use
+ * this so the seller-facing balance and the payout ceiling can never disagree.
+ */
+async function sellerAvailableUzs(sellerId: string): Promise<number> {
+  const [completed, payouts, tips] = await Promise.all([
+    prisma.order.aggregate({ where: { sellerId, status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
+    prisma.payoutRequest.aggregate({ where: { sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
+    sellerTipsTotal(sellerId),
+  ]);
+  return (completed._sum.sellerNetUzs ?? 0) + tips - (payouts._sum.amountUzs ?? 0);
+}
+
 export interface SellerEarnings {
   heldUzs: number; // in active orders, not yet releasable
   availableUzs: number; // completed and not yet paid out
@@ -269,11 +283,7 @@ export async function recordPayout(
   if (!Number.isInteger(amountUzs) || amountUzs <= 0) throw Errors.validation({ amountUzs: "Invalid amount" });
   if (!cardMasked || cardMasked.trim().length < 4) throw Errors.validation({ cardMasked: "Card is required" });
 
-  const [completed, payouts] = await Promise.all([
-    prisma.order.aggregate({ where: { sellerId, status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
-    prisma.payoutRequest.aggregate({ where: { sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
-  ]);
-  const available = (completed._sum.sellerNetUzs ?? 0) - (payouts._sum.amountUzs ?? 0);
+  const available = await sellerAvailableUzs(sellerId);
   if (amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
 
   await prisma.$transaction(async (tx) => {
@@ -361,11 +371,7 @@ export async function fulfillPayoutRequest(admin: User, requestId: string) {
   const req = await prisma.payoutRequest.findUnique({ where: { id: requestId } });
   if (!req || req.status !== "REQUESTED") throw Errors.conflict("No such pending payout request");
 
-  const [completed, payouts] = await Promise.all([
-    prisma.order.aggregate({ where: { sellerId: req.sellerId, status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
-    prisma.payoutRequest.aggregate({ where: { sellerId: req.sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
-  ]);
-  const available = (completed._sum.sellerNetUzs ?? 0) - (payouts._sum.amountUzs ?? 0);
+  const available = await sellerAvailableUzs(req.sellerId);
   if (req.amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
 
   await prisma.$transaction(async (tx) => {

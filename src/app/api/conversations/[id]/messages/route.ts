@@ -3,6 +3,7 @@ import { ok, errorResponse, parseInput, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
+import { keyFromPublicUrl } from "@/lib/media";
 import { listConversationMessages, postConversationMessage } from "@/server/services/message";
 
 /** Poll messages in a conversation (optionally only those after ?after=<ISO>). */
@@ -38,6 +39,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     enforceRateLimit(`msg:${clientIp(request)}`, 30, 60_000);
     const { id } = await params;
     const input = parseInput(schema, await request.json().catch(() => ({})));
+    // Only accept attachments that are our own R2 uploads — never arbitrary external URLs
+    // (which would be a stored phishing / IP-tracking / SSRF vector when rendered).
+    if (input.fileUrls?.some((u) => keyFromPublicUrl(u) === null)) {
+      throw Errors.validation({ fileUrls: "Only uploaded files are allowed" });
+    }
     const message = await postConversationMessage(id, user, input.body ?? "", input.fileUrls ?? []);
     return ok({ message });
   } catch (err) {

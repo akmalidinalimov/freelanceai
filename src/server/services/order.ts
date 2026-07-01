@@ -102,6 +102,15 @@ export async function createOrderFromOffer(offer: {
   priceUzs: number;
   deliveryDays: number;
 }) {
+  // Re-validate at accept time — the offer may be stale (gig paused/deleted, seller changed).
+  const gig = await prisma.gig.findFirst({
+    where: { id: offer.gigId, status: "ACTIVE", deletedAt: null },
+    select: { sellerId: true },
+  });
+  if (!gig) throw Errors.notFound("This gig is no longer available");
+  if (gig.sellerId !== offer.sellerId) throw Errors.forbidden("Offer is no longer valid");
+  if (offer.buyerId === offer.sellerId) throw Errors.forbidden("You cannot order your own gig");
+
   const { amountUzs, commissionUzs, sellerNetUzs } = orderTotals(offer.priceUzs, [], commissionPct());
   const order = await prisma.order.create({
     data: {

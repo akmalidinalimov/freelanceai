@@ -65,6 +65,11 @@ test("seller payout request: complete an order, seller requests, admin fulfils",
   await buyer.getByRole("button", { name: "Qabul qilish va yakunlash" }).click();
   await expect(buyer.getByText("Yakunlangan").first()).toBeVisible();
 
+  // Tip the seller — regression for the unified-balance fix: a tipped seller's payout must
+  // still be fulfillable (previously the request included tips but fulfil recomputed without).
+  await buyer.getByRole("button", { name: /\+10/ }).click();
+  await expect(buyer.getByText("Rahmat! Choychaqa yuborildi.")).toBeVisible();
+
   // Seller requests a payout of their available balance.
   const origin = new URL(orderUrl).origin;
   const reqRes = await seller.request.post("/api/me/payout", { headers: { Origin: origin }, data: {} });

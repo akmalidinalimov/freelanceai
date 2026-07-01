@@ -3,7 +3,12 @@
     "title": "Notifications",
     "empty": "No notifications yet.",
     "clearAll": "Clear all",
-    "delete": "Delete"
+    "delete": "Delete",
+    "bellUnread": "Notifications ({count} unread)",
+    "now": "now",
+    "minShort": "min",
+    "hourShort": "h",
+    "dayShort": "d"
   },
   "AdminUsers": {
     "title": "Users",

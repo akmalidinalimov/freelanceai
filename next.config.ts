@@ -8,8 +8,22 @@ const nextConfig: NextConfig = {
   // Produce a minimal standalone server bundle for Docker deployment.
   output: "standalone",
   images: {
-    // Allow Telegram profile photos and (later) our media CDN.
-    remotePatterns: [{ protocol: "https", hostname: "**" }],
+    // Allowlist only the hosts we actually load images from — avatars (Telegram/Google) and
+    // our R2 public bucket — so the /_next/image optimizer can't be used to fetch arbitrary
+    // external URLs (SSRF/bandwidth abuse). R2 host is derived from S3_PUBLIC_BASE_URL.
+    remotePatterns: [
+      { protocol: "https", hostname: "t.me" },
+      { protocol: "https", hostname: "*.telegram.org" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      ...(() => {
+        try {
+          const h = new URL(process.env.S3_PUBLIC_BASE_URL ?? "").hostname;
+          return h ? [{ protocol: "https" as const, hostname: h }] : [];
+        } catch {
+          return [];
+        }
+      })(),
+    ],
   },
   // Security headers. The CSP is intentionally scoped to clickjacking/injection directives
   // that do NOT constrain script/style/img loading: `frame-ancestors` (allowlisting the

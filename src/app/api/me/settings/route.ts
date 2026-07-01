@@ -44,8 +44,7 @@ export const PATCH = defineHandler({ auth: true, schema }, async ({ user, body }
 
 /** Keep only the last 4 digits visible: "8600 **** **** 1234". Never store the full PAN. */
 function maskCard(input: string): string {
-  const digits = input.replace(/\D/g, "");
-  const last4 = digits.slice(-4);
-  const head = digits.slice(0, 4);
-  return `${head} **** **** ${last4}`;
+  // Store ONLY the last 4 digits — never the BIN/head (which identifies the bank + card range).
+  const last4 = input.replace(/\D/g, "").slice(-4);
+  return `**** **** **** ${last4}`;
 }

@@ -34,6 +34,8 @@ jobs:
       TELEGRAM_BOT_USERNAME: e2e_bot
       TELEGRAM_WEBHOOK_SECRET: e2e-webhook-secret-0123456789
       E2E_TEST_AUTH: "1"
+      # Test R2 public base so message-attachment URL validation (keyFromPublicUrl) can pass.
+      S3_PUBLIC_BASE_URL: https://r2-test.example.com
       # Test PSP creds so the Payme/Click webhook signature checks pass in the e2e tests.
       # PAYMENT_PROVIDER is intentionally unset → buyer-facing checkout stays MANUAL.
       PAYME_MERCHANT_ID: e2e_payme_merchant

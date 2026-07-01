@@ -3,7 +3,12 @@
     "title": "Bildirishnomalar",
     "empty": "Hozircha bildirishnoma yoʻq.",
     "clearAll": "Hammasini tozalash",
-    "delete": "Oʻchirish"
+    "delete": "Oʻchirish",
+    "bellUnread": "Bildirishnomalar ({count} oʻqilmagan)",
+    "now": "hozir",
+    "minShort": "daq",
+    "hourShort": "soat",
+    "dayShort": "kun"
   },
   "AdminUsers": {
     "title": "Foydalanuvchilar",

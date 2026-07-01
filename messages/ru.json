@@ -3,7 +3,12 @@
     "title": "Уведомления",
     "empty": "Уведомлений пока нет.",
     "clearAll": "Очистить всё",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "bellUnread": "Уведомления ({count} непрочитанных)",
+    "now": "сейчас",
+    "minShort": "мин",
+    "hourShort": "ч",
+    "dayShort": "дн"
   },
   "AdminUsers": {
     "title": "Пользователи",

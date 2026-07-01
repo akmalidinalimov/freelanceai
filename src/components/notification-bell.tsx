@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 /** Header bell with an unread badge; polls the count every 30s. Links to /notifications. */
 export function NotificationBell() {
+  const t = useTranslations("Notifications");
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export function NotificationBell() {
   return (
     <Link
       href="/notifications"
-      aria-label={`Bildirishnomalar${unread > 0 ? ` (${unread} oʻqilmagan)` : ""}`}
+      aria-label={unread > 0 ? t("bellUnread", { count: unread }) : t("title")}
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-[hsl(var(--muted))]"
     >
       <span aria-hidden className="text-lg">🔔</span>

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ok, errorResponse, parseInput, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { acceptOffer, declineOffer } from "@/server/services/offer";
 
 const schema = z.object({ action: z.enum(["accept", "decline"]) }).strict();
@@ -12,6 +13,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!isSameOrigin(request)) throw Errors.forbidden("Cross-origin request rejected");
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
+    enforceRateLimit(`offer-act:${user.id}`, 20, 60_000);
     const { id } = await params;
     const { action } = parseInput(schema, await request.json().catch(() => ({})));
     if (action === "accept") {
