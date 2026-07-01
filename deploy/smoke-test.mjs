@@ -76,6 +76,8 @@ const CHECKS = [
   { group: "API", name: "contact seller", method: "POST", path: "/api/contact", origin: true, expect: 401 },
   { group: "API", name: "update profile", method: "PATCH", path: "/api/me/profile", origin: true, expect: 401 },
   { group: "API", name: "update settings", method: "PATCH", path: "/api/me/settings", origin: true, expect: 401 },
+  { group: "API", name: "data export", method: "GET", path: "/api/me/export", expect: 401 },
+  { group: "API", name: "account delete", method: "POST", path: "/api/me/delete", origin: true, expect: 401 },
   { group: "API", name: "conversation messages", method: "GET", path: "/api/conversations/abc/messages", expect: 401 },
   { group: "API", name: "conversation SSE stream", method: "GET", path: "/api/conversations/abc/stream", expect: 401 },
   { group: "API", name: "notifications list", method: "GET", path: "/api/notifications", expect: 401 },
