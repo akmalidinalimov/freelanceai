@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Manrope, Unbounded } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale, getTranslations, getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -6,6 +7,19 @@ import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import "../globals.css";
+
+// Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
+const manrope = Manrope({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+const unbounded = Unbounded({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  weight: ["600", "700", "800"],
+  variable: "--font-unbounded",
+  display: "swap",
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -46,7 +60,7 @@ export default async function LocaleLayout({
     ] ?? "Skip to content";
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="flex min-h-screen flex-col">
         <NextIntlClientProvider messages={messages}>
           <a

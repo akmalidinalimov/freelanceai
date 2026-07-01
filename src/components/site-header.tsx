@@ -26,7 +26,10 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+        <Link
+          href="/"
+          className="font-display flex items-center gap-1.5 text-lg font-extrabold tracking-tight"
+        >
           <span className="text-[hsl(var(--primary))]">●</span>
           {t("Brand.name")}
         </Link>
