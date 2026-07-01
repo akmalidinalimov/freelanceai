@@ -126,7 +126,22 @@
     "step3Body": "To'lov ish tugagach ijodkorga o'tkaziladi.",
     "popularTitle": "Ommabop xizmatlar",
     "viewAll": "Barchasini ko'rish",
-    "categoriesTitle": "Mashhur yo'nalishlar"
+    "categoriesTitle": "Mashhur yo'nalishlar",
+    "searchHeadline": "Nima yaratmoqchisiz? Yozing, topamiz.",
+    "searchSub": "Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.",
+    "searchAssistant": "FreelanceAI yordamchi",
+    "searchPlaceholder": "Kerakli ishni tasvirlang…",
+    "searchExamplePrefix": "Masalan: ",
+    "searchButton": "Qidirish",
+    "searchEx1": "AI reklama roligi",
+    "searchEx2": "mahsulot fotosurati",
+    "searchEx3": "logotip va brending",
+    "searchEx4": "talking-head avatar",
+    "orBrowse": "Yoki koʻrib chiqing:",
+    "trustSecure": "✓ Xavfsiz toʻlov",
+    "trustPayment": "Payme · Click · Uzum",
+    "trustVerified": "✓ Tasdiqlangan ijodkorlar",
+    "trustLangs": "oʻzbek · рус · english"
   },
   "Categories": {
     "aiVideo": "AI video",

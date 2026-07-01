@@ -126,7 +126,22 @@
     "step3Body": "Оплата переводится креатору после выполнения работы.",
     "popularTitle": "Популярные услуги",
     "viewAll": "Смотреть все",
-    "categoriesTitle": "Популярные категории"
+    "categoriesTitle": "Популярные категории",
+    "searchHeadline": "Что хотите создать? Опишите — найдём.",
+    "searchSub": "Опишите задачу простыми словами — AI подберёт лучших креаторов.",
+    "searchAssistant": "Помощник FreelanceAI",
+    "searchPlaceholder": "Опишите нужную работу…",
+    "searchExamplePrefix": "Например: ",
+    "searchButton": "Найти",
+    "searchEx1": "AI рекламный ролик",
+    "searchEx2": "предметная фотосъёмка",
+    "searchEx3": "логотип и брендинг",
+    "searchEx4": "talking-head аватар",
+    "orBrowse": "Или посмотрите:",
+    "trustSecure": "✓ Безопасная оплата",
+    "trustPayment": "Payme · Click · Uzum",
+    "trustVerified": "✓ Проверенные креаторы",
+    "trustLangs": "oʻzbek · рус · english"
   },
   "Categories": {
     "aiVideo": "AI-видео",

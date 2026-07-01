@@ -126,7 +126,22 @@
     "step3Body": "Funds are released to the creator once the work is done.",
     "popularTitle": "Popular services",
     "viewAll": "View all",
-    "categoriesTitle": "Popular categories"
+    "categoriesTitle": "Popular categories",
+    "searchHeadline": "What do you want to create? Describe it — we'll find it.",
+    "searchSub": "Describe your job in plain words — AI ranks the best-matched creators.",
+    "searchAssistant": "FreelanceAI assistant",
+    "searchPlaceholder": "Describe the work you need…",
+    "searchExamplePrefix": "e.g. ",
+    "searchButton": "Search",
+    "searchEx1": "AI ad video",
+    "searchEx2": "product photography",
+    "searchEx3": "logo & branding",
+    "searchEx4": "talking-head avatar",
+    "orBrowse": "Or browse:",
+    "trustSecure": "✓ Secure payment",
+    "trustPayment": "Payme · Click · Uzum",
+    "trustVerified": "✓ Verified creators",
+    "trustLangs": "oʻzbek · рус · english"
   },
   "Categories": {
     "aiVideo": "AI video",
