@@ -31,6 +31,7 @@ const SELLERS = [
   { id: "demo_s8", firstName: "MotionBek", username: "motionbek" },
   { id: "demo_s9", firstName: "Aisha Studio", username: "aisha_studio" },
   { id: "demo_s10", firstName: "RenderUz", username: "render_uz" },
+  { id: "demo_s11", firstName: "Malika F.", username: "moda_studio" },
 ];
 
 // Placeholder Instagram (founder's own account, explicitly authorized) shown as the
@@ -117,6 +118,14 @@ const SELLER_PROFILES = {
     skills: ["3D render", "Mahsulot vizuali", "Upakovka dizayni", "Katalog"],
     aiTools: ["Blender", "Midjourney", "Magnific", "KeyShot"],
     specializations: ["render_3d", "product_photo", "ecommerce"],
+    instagramUsername: IG,
+  },
+  demo_s11: {
+    headline: "Moda va fashion AI videolar",
+    bio: "Moda va fashion AI videolar — kiyim brendlari uchun lookbook, reels va podium roliklari. Instagram va TikTok uchun trendga mos vizual hikoyalar; kosmetika va aksessuar brendlari bilan tajriba.",
+    skills: ["Fashion AI video", "Lookbook", "Reels montaj", "Brend hikoyasi"],
+    aiTools: ["Runway", "Kling", "Sora", "Midjourney"],
+    specializations: ["ai_video", "fashion", "ecommerce"],
     instagramUsername: IG,
   },
 };
@@ -248,6 +257,12 @@ const GIGS = [
     title: "3D mahsulot renderi (e-commerce)",
     description: "Onlayn doʻkon uchun fotorealistik 3D mahsulot renderlari. Marketplace talablariga mos, turli rakurs va fonlarda.",
     tags: ["3d", "render", "product", "ecommerce"], prices: [200000, 450000, 900000], days: [3, 5, 8], revs: [1, 2, 3],
+  },
+  {
+    slug: "moda-brendi-uchun-ai-video-lookbook", seller: "demo_s11", cat: "ai-video",
+    title: "Moda brendi uchun AI video va lookbook (reels)",
+    description: "Kiyim va aksessuar brendlari uchun trendga mos AI videolar — lookbook, podium va Instagram reels. Brend uslubida, tez va sifatli.",
+    tags: ["fashion", "moda", "video", "reels", "lookbook", "kiyim"], prices: [280000, 600000, 1200000], days: [3, 5, 7], revs: [1, 2, 3],
   },
 ];
 
