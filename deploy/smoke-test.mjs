@@ -21,6 +21,8 @@ const CHECKS = [
   { group: "i18n", name: "home uz", method: "GET", path: "/uz", expect: 200, contains: "FreelanceAI" },
   { group: "i18n", name: "home ru", method: "GET", path: "/ru", expect: 200, contains: "FreelanceAI" },
   { group: "i18n", name: "home en", method: "GET", path: "/en", expect: 200, contains: "FreelanceAI" },
+  { group: "i18n", name: "home AI search hero", method: "GET", path: "/uz", expect: 200, contains: "yordamchi" },
+  { group: "Search", name: "browse index ru", method: "GET", path: "/ru/browse", expect: 200 },
 
   // --- Marketplace + discovery (Phase 2/3) ---
   { group: "Gigs", name: "marketplace uz", method: "GET", path: "/uz/gigs", expect: 200, contains: "Xizmat qidirish" },

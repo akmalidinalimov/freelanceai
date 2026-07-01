@@ -109,6 +109,8 @@
   "Nav": {
     "explore": "Xizmatlar",
     "creators": "Ijodkorlar",
+    "home": "Bosh",
+    "search": "Qidiruv",
     "becomeSeller": "Ijodkor bo'lish",
     "login": "Kirish",
     "dashboard": "Boshqaruv paneli"

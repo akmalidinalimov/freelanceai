@@ -109,6 +109,8 @@
   "Nav": {
     "explore": "Services",
     "creators": "Creators",
+    "home": "Home",
+    "search": "Search",
     "becomeSeller": "Become a creator",
     "login": "Log in",
     "dashboard": "Dashboard"

@@ -109,6 +109,8 @@
   "Nav": {
     "explore": "Услуги",
     "creators": "Креаторы",
+    "home": "Главная",
+    "search": "Поиск",
     "becomeSeller": "Стать креатором",
     "login": "Войти",
     "dashboard": "Панель"

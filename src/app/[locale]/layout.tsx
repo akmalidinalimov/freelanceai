@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import "../globals.css";
 
 // Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
@@ -70,10 +71,11 @@ export default async function LocaleLayout({
             {skip}
           </a>
           <SiteHeader />
-          <main id="main" className="flex-1">
+          <main id="main" className="flex-1 pb-16 md:pb-0">
             {children}
           </main>
           <SiteFooter />
+          <MobileBottomNav />
         </NextIntlClientProvider>
       </body>
     </html>
