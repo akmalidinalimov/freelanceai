@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { tgSendMessage } from "@/lib/telegram-bot";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { encryptPII } from "@/lib/pii-crypto";
 
 /**
  * Telegram bot webhook. Verified by the secret header. Idempotent (dedups on
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     if (contact.user_id === from.id) {
       const res = await prisma.user.updateMany({
         where: { telegramId: String(from.id) },
-        data: { phone: contact.phone_number, kycStatus: "VERIFIED" },
+        data: { phone: encryptPII(contact.phone_number), kycStatus: "VERIFIED" },
       });
       void tgSendMessage(
         from.id,

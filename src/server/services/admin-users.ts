@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
+import { decryptPII } from "@/lib/pii-crypto";
 
 const displayName = (u: { firstName: string | null; name: string | null; username: string | null }) =>
   u.firstName ?? u.name ?? u.username ?? "";
@@ -106,8 +107,8 @@ export async function setUserSeller(admin: User, userId: string, isSeller: boole
 }
 
 /** Users awaiting KYC review (phone captured → kycStatus PENDING). */
-export function listPendingKyc() {
-  return prisma.user.findMany({
+export async function listPendingKyc() {
+  const rows = await prisma.user.findMany({
     where: { kycStatus: "PENDING" },
     orderBy: { updatedAt: "desc" },
     take: 100,
@@ -122,6 +123,8 @@ export function listPendingKyc() {
       payoutCardMasked: true,
     },
   });
+  // Phone is encrypted at rest; decrypt only here, at the admin review boundary.
+  return rows.map((r) => ({ ...r, phone: decryptPII(r.phone) }));
 }
 
 /** Approve or reject a user's KYC. */

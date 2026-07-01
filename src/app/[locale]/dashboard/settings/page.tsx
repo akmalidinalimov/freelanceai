@@ -3,6 +3,7 @@ import { requireOnboardedUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/settings-form";
 import { KycVerify } from "@/components/kyc-verify";
+import { decryptPII } from "@/lib/pii-crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export default async function SettingsPage({
           notifyTelegram: user.notifyTelegram,
           notifyEmail: user.notifyEmail,
           prefs,
-          phone: dbUser?.phone ?? "",
+          phone: decryptPII(dbUser?.phone) ?? "",
           payoutCardMasked: dbUser?.payoutCardMasked ?? "",
           kycStatus: dbUser?.kycStatus ?? "NONE",
         }}

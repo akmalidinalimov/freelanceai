@@ -2,6 +2,7 @@ import { z } from "zod";
 import { defineHandler } from "@/lib/handler";
 import { ok, Errors } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { encryptPII } from "@/lib/pii-crypto";
 import type { Prisma } from "@prisma/client";
 
 const schema = z
@@ -33,7 +34,7 @@ export const PATCH = defineHandler({ auth: true, schema }, async ({ user, body }
   if (body.notifyPrefs !== undefined) data.notifyPrefs = body.notifyPrefs;
   if (body.payoutCardMasked !== undefined) data.payoutCardMasked = maskCard(body.payoutCardMasked);
   if (body.phone !== undefined) {
-    data.phone = body.phone;
+    data.phone = encryptPII(body.phone); // PII at rest (docs/ops.md)
     // Capturing a phone moves an unstarted KYC into PENDING (admin/SMS verifies later).
     if (user.kycStatus === "NONE") data.kycStatus = "PENDING";
   }
