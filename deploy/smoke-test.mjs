@@ -44,6 +44,8 @@ const CHECKS = [
 
   // --- Auth entry points ---
   { group: "Auth", name: "login page", method: "GET", path: "/uz/login", expect: 200 },
+  { group: "Legal", name: "terms page", method: "GET", path: "/uz/legal/terms", expect: 200, contains: "Terms of Service" },
+  { group: "Legal", name: "privacy page", method: "GET", path: "/uz/legal/privacy", expect: 200, contains: "Privacy Policy" },
   { group: "Auth", name: "become-creator page", method: "GET", path: "/uz/sell", expect: 200 },
 
   // --- Auth-gated pages redirect to login (307) ---

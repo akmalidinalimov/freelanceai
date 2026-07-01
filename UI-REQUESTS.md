@@ -34,6 +34,13 @@ Backend is live (env-gated until Meta setup; see docs/instagram-go-live.md):
   uploads first (they have position < 100).
 - i18n keys under an `Instagram` namespace, all three locales.
 
+### 3. Legal pages — footer links + restyle
+`/[locale]/legal/terms` and `/[locale]/legal/privacy` exist (plain, functional,
+English v1 — content is counsel-pending, do not rewrite the text). Please:
+- add "Terms" + "Privacy" links to `src/components/site-footer.tsx`
+- restyle the pages to the new design system when the redesign lands (typography
+  only; keep URLs and content intact — Meta App Review references these URLs)
+
 ## → For the platform team
 
 (nothing pending)
