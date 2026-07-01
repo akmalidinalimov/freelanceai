@@ -478,6 +478,8 @@
     "editTitle": "Редактировать профиль",
     "headline": "Заголовок",
     "tools": "AI-инструменты",
+    "instagram": "Instagram",
+    "instagramHint": "Имя пользователя Instagram (например: studio.aurora)",
     "commaHint": "Через запятую",
     "save": "Сохранить",
     "saved": "Сохранено ✓",

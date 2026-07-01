@@ -478,6 +478,8 @@
     "editTitle": "Edit your profile",
     "headline": "Headline",
     "tools": "AI tools",
+    "instagram": "Instagram",
+    "instagramHint": "Instagram username (e.g. studio.aurora)",
     "commaHint": "Comma-separated",
     "save": "Save",
     "saved": "Saved ✓",

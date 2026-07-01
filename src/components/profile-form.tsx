@@ -17,6 +17,7 @@ export function ProfileForm({
     skills: string;
     aiTools: string;
     specializations: string[];
+    instagramUsername: string;
   };
 }) {
   const t = useTranslations("Profile");
@@ -25,6 +26,7 @@ export function ProfileForm({
   const [bio, setBio] = useState(initial.bio);
   const [skills, setSkills] = useState(initial.skills);
   const [aiTools, setAiTools] = useState(initial.aiTools);
+  const [instagram, setInstagram] = useState(initial.instagramUsername);
   const [specs, setSpecs] = useState<string[]>(initial.specializations);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -49,6 +51,7 @@ export function ProfileForm({
         skills: toArr(skills),
         aiTools: toArr(aiTools),
         specializations: specs,
+        instagramUsername: instagram.trim().replace(/^@/, ""),
       }),
     });
     const j = await r.json();
@@ -92,6 +95,17 @@ export function ProfileForm({
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("tools")}</span>
         <input value={aiTools} onChange={(e) => setAiTools(e.target.value)} placeholder={t("commaHint")} className={field} />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium">{t("instagram")}</span>
+        <input
+          value={instagram}
+          onChange={(e) => setInstagram(e.target.value)}
+          placeholder={t("instagramHint")}
+          className={field}
+          inputMode="text"
+          autoCapitalize="none"
+        />
       </label>
       <div className="flex flex-col gap-3">
         <div>

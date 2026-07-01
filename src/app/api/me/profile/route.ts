@@ -11,6 +11,7 @@ const schema = z
     skills: z.array(z.string().min(1).max(40)).max(20).optional(),
     aiTools: z.array(z.string().min(1).max(40)).max(20).optional(),
     specializations: z.array(z.string().min(1).max(40)).max(30).optional(),
+    instagramUsername: z.string().max(40).optional(),
   })
   .strict();
 

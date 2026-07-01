@@ -27,16 +27,98 @@ const SELLERS = [
   { id: "demo_s4", firstName: "VividAI", username: "vivid_ai" },
   { id: "demo_s5", firstName: "Sesara Creative", username: "sesara" },
   { id: "demo_s6", firstName: "Qora Quti Studio", username: "qoraquti" },
+  { id: "demo_s7", firstName: "OvozLab", username: "ovozlab" },
+  { id: "demo_s8", firstName: "MotionBek", username: "motionbek" },
+  { id: "demo_s9", firstName: "Aisha Studio", username: "aisha_studio" },
+  { id: "demo_s10", firstName: "RenderUz", username: "render_uz" },
 ];
 
-// Declared specializations (keys from src/lib/specializations.ts) + headline per seller.
+// Placeholder Instagram (founder's own account, explicitly authorized) shown as the
+// "connected" IG on demo creators until the full IG sync (App Review) goes live.
+const IG = "shahlo.alikhanova";
+
+// Ideal reference profiles: headline + bio + skills + AI tools + declared specializations.
 const SELLER_PROFILES = {
-  demo_s1: { headline: "AI video va mahsulot fotosurati — e-commerce uchun", specializations: ["ai_video", "product_photo", "ecommerce"] },
-  demo_s2: { headline: "Brending va moda uchun AI vizuallar", specializations: ["ai_image", "branding", "fashion"] },
-  demo_s3: { headline: "AI video, avatar va ovoz dublyaji", specializations: ["ai_video", "ai_avatar", "voiceover"] },
-  demo_s4: { headline: "AI art, personaj va oʻyin grafikasi", specializations: ["ai_image", "ai_video", "gaming"] },
-  demo_s5: { headline: "Reels, explainer va korporativ taqdimotlar", specializations: ["ai_video", "presentation", "corporate"] },
-  demo_s6: { headline: "Brending, retush va moda vizuallari", specializations: ["branding", "image_edit", "fashion"] },
+  demo_s1: {
+    headline: "AI video va mahsulot fotosurati — brendlar uchun",
+    bio: "Studio Aurora — AI yordamida reklama roliklari va mahsulot fotosuratlari yaratadigan ijodiy studiya. 200+ bajarilgan loyiha; Instagram va TikTok uchun tez, sifatli kontent. Kosmetika, oziq-ovqat va e-commerce brendlari bilan ishlaymiz.",
+    skills: ["AI reklama roligi", "Mahsulot fotosurati", "Video montaj", "Rang koreksiyasi"],
+    aiTools: ["Runway", "Sora", "Midjourney", "Flux"],
+    specializations: ["ai_video", "product_photo", "ecommerce"],
+    instagramUsername: IG,
+  },
+  demo_s2: {
+    headline: "Brending va moda uchun AI vizuallar",
+    bio: "PixelUz — brend identikasi va moda vizuallariga ixtisoslashgan AI dizayn studiyasi. Logotip, rang palitrasi va ijtimoiy tarmoq kontenti — yagona uslubda. Kiyim brendlari uchun lookbook va kampaniya vizuallari.",
+    skills: ["Logotip dizayni", "Brend identikasi", "AI rasm", "Moda vizuallari"],
+    aiTools: ["Midjourney", "Flux", "Adobe Firefly", "Photoshop"],
+    specializations: ["ai_image", "branding", "fashion"],
+    instagramUsername: IG,
+  },
+  demo_s3: {
+    headline: "AI video, avatar va professional ovoz",
+    bio: "NeoMedia — talking-head avatarlar, AI video va oʻzbek/rus ovoz dublyaji boʻyicha toʻliq xizmat. Blogerlar va brendlar uchun izchil raqamli personaj, kinematografik montaj va tabiiy ovoz.",
+    skills: ["Talking-head avatar", "Video montaj", "Ovoz dublyaji", "Ssenariy"],
+    aiTools: ["HeyGen", "ElevenLabs", "Runway", "Kling"],
+    specializations: ["ai_video", "ai_avatar", "voiceover"],
+    instagramUsername: IG,
+  },
+  demo_s4: {
+    headline: "AI art, personaj va oʻyin grafikasi",
+    bio: "VividAI — fantaziya illyustratsiyalari, oʻyin personajlari va concept-art boʻyicha studiya. Kitob muqovasi, oʻyin va brend mascot dizayni; yuqori aniqlikdagi noyob uslub.",
+    skills: ["Personaj dizayni", "Concept art", "Illyustratsiya", "Oʻyin grafikasi"],
+    aiTools: ["Midjourney", "Stable Diffusion", "Flux", "Krita"],
+    specializations: ["ai_image", "gaming", "ai_video"],
+    instagramUsername: IG,
+  },
+  demo_s5: {
+    headline: "Reels, explainer va korporativ taqdimotlar",
+    bio: "Sesara Creative — ijtimoiy tarmoq kontenti, explainer video va investor taqdimotlariga ixtisoslashgan. UGC talking-head reklamalar va pishiq pitch-deck; startaplar hamda korporativ mijozlar bilan.",
+    skills: ["Explainer video", "UGC reklama", "Taqdimot dizayni", "Motion grafika"],
+    aiTools: ["Runway", "Pika", "Gamma", "ElevenLabs"],
+    specializations: ["ai_video", "presentation", "corporate"],
+    instagramUsername: IG,
+  },
+  demo_s6: {
+    headline: "Brending, retush va moda vizuallari",
+    bio: "Qora Quti Studio — brending, professional retush va reklama kreativlari. Moda va e-commerce brendlari uchun yuqori konversiyali banner va vizuallar; rasm tiklash, upscale va fon almashtirish.",
+    skills: ["Brending", "Retush va upscale", "Reklama kreativi", "Fon almashtirish"],
+    aiTools: ["Photoshop", "Magnific", "Flux", "Midjourney"],
+    specializations: ["branding", "image_edit", "fashion"],
+    instagramUsername: IG,
+  },
+  demo_s7: {
+    headline: "AI ovoz, dublyaj va original musiqa",
+    bio: "OvozLab — professional AI ovoz, koʻp tilli dublyaj va original musiqa/jingle. Reklama, video va oʻyinlar uchun oʻzbek, rus va ingliz tillarida tabiiy ovoz.",
+    skills: ["Ovoz dublyaji", "Original musiqa", "Jingle", "Sound dizayn"],
+    aiTools: ["ElevenLabs", "Suno", "Udio", "Adobe Audition"],
+    specializations: ["voiceover", "music_audio", "entertainment"],
+    instagramUsername: IG,
+  },
+  demo_s8: {
+    headline: "Motion-grafika va logo animatsiyasi",
+    bio: "MotionBek — logo animatsiyasi, motion-grafika va dinamik reklama roliklari. Brend intro, ijtimoiy tarmoq animatsiyalari va explainer motion.",
+    skills: ["Logo animatsiyasi", "Motion grafika", "Intro dizayn", "Kinetik tipografiya"],
+    aiTools: ["After Effects", "Runway", "Kling", "Pika"],
+    specializations: ["motion", "ai_video", "ecommerce"],
+    instagramUsername: IG,
+  },
+  demo_s9: {
+    headline: "AI avatar va goʻzallik brendlari uchun UGC",
+    bio: "Aisha Studio — goʻzallik va kosmetika brendlari uchun AI avatar va UGC reklamalar. Ishonarli talking-head modellar va tabiiy mahsulot taqdimoti.",
+    skills: ["AI avatar", "UGC reklama", "Beauty kontent", "Video montaj"],
+    aiTools: ["HeyGen", "Arcads", "Runway", "ElevenLabs"],
+    specializations: ["ai_avatar", "beauty", "ai_video"],
+    instagramUsername: IG,
+  },
+  demo_s10: {
+    headline: "3D render va e-commerce mahsulot vizuallari",
+    bio: "RenderUz — 3D mahsulot renderlari va e-commerce uchun fotorealistik vizuallar. Marketplace kataloglari, upakovka va mahsulot animatsiyasi.",
+    skills: ["3D render", "Mahsulot vizuali", "Upakovka dizayni", "Katalog"],
+    aiTools: ["Blender", "Midjourney", "Magnific", "KeyShot"],
+    specializations: ["render_3d", "product_photo", "ecommerce"],
+    instagramUsername: IG,
+  },
 };
 
 // prices/days/revisions are [BASIC, STANDARD, PREMIUM]
@@ -137,6 +219,36 @@ const GIGS = [
     description: "Mascot, o'yin qahramoni yoki brend personaji uchun izchil dizayn. Turli emotsiya va pozalarda.",
     tags: ["character", "mascot", "game art", "concept"], prices: [220000, 500000, 1000000], days: [3, 6, 9], revs: [1, 2, 3],
   },
+  {
+    slug: "kop-tilli-ai-ovoz-dublyaji", seller: "demo_s7", cat: "voiceover",
+    title: "Koʻp tilli AI ovoz va dublyaj (uz / ru / en)",
+    description: "Reklama, video va prezentatsiya uchun tabiiy AI ovoz. Oʻzbek, rus va ingliz tillarida, turli ohang va tezlikda. Skript ham tayyorlab beramiz.",
+    tags: ["voiceover", "dubbing", "uzbek", "russian", "ovoz"], prices: [130000, 280000, 550000], days: [1, 2, 3], revs: [2, 3, 5],
+  },
+  {
+    slug: "brend-uchun-ai-musiqa-jingle", seller: "demo_s7", cat: "ai-music",
+    title: "Brend uchun original AI musiqa va jingle",
+    description: "Brendingiz uchun original AI musiqa, jingle yoki fon trek. Mualliflik huquqidan xoli, tijoriy foydalanishga tayyor.",
+    tags: ["ai music", "jingle", "branding", "royalty-free"], prices: [220000, 480000, 950000], days: [3, 5, 8], revs: [1, 2, 3],
+  },
+  {
+    slug: "logo-animatsiyasi-motion-grafika", seller: "demo_s8", cat: "ai-video",
+    title: "Logo animatsiyasi va motion-grafika",
+    description: "Brend intro, logo animatsiyasi va ijtimoiy tarmoq uchun motion-grafika. Dinamik, zamonaviy va brendingizga mos.",
+    tags: ["motion", "animation", "logo", "intro"], prices: [180000, 400000, 800000], days: [2, 4, 6], revs: [2, 3, 4],
+  },
+  {
+    slug: "gozallik-brendi-ai-ugc-avatar", seller: "demo_s9", cat: "ai-ugc",
+    title: "Goʻzallik brendi uchun AI UGC avatar reklama",
+    description: "Kosmetika va goʻzallik brendlari uchun ishonarli AI avatar UGC reklamalar. Tabiiy mahsulot taqdimoti, oʻzbek/rus ovozi bilan.",
+    tags: ["ugc", "avatar", "beauty", "kosmetika"], prices: [260000, 560000, 1100000], days: [3, 5, 7], revs: [1, 2, 3],
+  },
+  {
+    slug: "3d-mahsulot-render-ecommerce", seller: "demo_s10", cat: "ai-product",
+    title: "3D mahsulot renderi (e-commerce)",
+    description: "Onlayn doʻkon uchun fotorealistik 3D mahsulot renderlari. Marketplace talablariga mos, turli rakurs va fonlarda.",
+    tags: ["3d", "render", "product", "ecommerce"], prices: [200000, 450000, 900000], days: [3, 5, 8], revs: [1, 2, 3],
+  },
 ];
 
 async function main() {
@@ -164,10 +276,18 @@ async function main() {
     });
     const prof = SELLER_PROFILES[s.id];
     if (prof) {
+      const data = {
+        headline: prof.headline,
+        bio: prof.bio,
+        skills: prof.skills,
+        aiTools: prof.aiTools,
+        specializations: prof.specializations,
+        instagramUsername: prof.instagramUsername,
+      };
       await prisma.sellerProfile.upsert({
         where: { userId: s.id },
-        update: { headline: prof.headline, specializations: prof.specializations },
-        create: { userId: s.id, headline: prof.headline, specializations: prof.specializations },
+        update: data,
+        create: { userId: s.id, ...data },
       });
     }
   }

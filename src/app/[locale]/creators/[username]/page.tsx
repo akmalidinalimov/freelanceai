@@ -93,6 +93,21 @@ export default async function CreatorProfilePage({
             {t("memberSince")} {memberYear}
           </p>
           {profile?.headline && <p className="mt-3 font-medium">{profile.headline}</p>}
+          {profile?.instagramUsername && (
+            <a
+              href={`https://www.instagram.com/${profile.instagramUsername}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-[hsl(var(--border))] px-3 py-1.5 text-xs font-semibold hover:border-[hsl(var(--primary))]"
+            >
+              <span
+                aria-hidden
+                className="inline-block h-3.5 w-3.5 rounded"
+                style={{ background: "linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0)" }}
+              />
+              Instagram · @{profile.instagramUsername}
+            </a>
+          )}
           {contactGigId && viewer !== "owner" && (
             <div className="mt-3">
               <ContactSellerButton gigId={contactGigId} locale={locale} viewer={viewer} />
@@ -126,7 +141,9 @@ export default async function CreatorProfilePage({
         </div>
       )}
 
-      {(profile?.bio || (profile?.skills?.length ?? 0) > 0) && (
+      {(profile?.bio ||
+        (profile?.skills?.length ?? 0) > 0 ||
+        (profile?.aiTools?.length ?? 0) > 0) && (
         <div className="mb-8 grid gap-6 sm:grid-cols-3">
           {profile?.bio && (
             <div className="sm:col-span-2">
@@ -136,21 +153,38 @@ export default async function CreatorProfilePage({
               </p>
             </div>
           )}
-          {(profile?.skills?.length ?? 0) > 0 && (
-            <div>
-              <h2 className="mb-2 font-semibold">{t("skills")}</h2>
-              <div className="flex flex-wrap gap-2">
-                {profile!.skills.map((s) => (
-                  <span
-                    key={s}
-                    className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))]"
-                  >
-                    {s}
-                  </span>
-                ))}
+          <div className="space-y-5">
+            {(profile?.skills?.length ?? 0) > 0 && (
+              <div>
+                <h2 className="mb-2 font-semibold">{t("skills")}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {profile!.skills.map((s) => (
+                    <span
+                      key={s}
+                      className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))]"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            {(profile?.aiTools?.length ?? 0) > 0 && (
+              <div>
+                <h2 className="mb-2 font-semibold">{t("tools")}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {profile!.aiTools.map((s) => (
+                    <span
+                      key={s}
+                      className="rounded-full bg-[hsl(var(--accent))]/10 px-3 py-1 text-xs font-medium text-[hsl(var(--accent))]"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

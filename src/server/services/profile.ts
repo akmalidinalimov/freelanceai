@@ -133,6 +133,7 @@ export interface ProfileInput {
   skills?: string[];
   aiTools?: string[];
   specializations?: string[];
+  instagramUsername?: string;
 }
 
 /** Update the caller's own seller profile (level/rating excluded — job-set only). Bio/headline sanitized. */
@@ -144,6 +145,12 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
     ...(input.aiTools !== undefined ? { aiTools: input.aiTools } : {}),
     ...(input.specializations !== undefined
       ? { specializations: sanitizeSpecKeys(input.specializations) }
+      : {}),
+    ...(input.instagramUsername !== undefined
+      ? {
+          instagramUsername:
+            input.instagramUsername.replace(/[^A-Za-z0-9._]/g, "").slice(0, 30) || null,
+        }
       : {}),
   };
   return prisma.sellerProfile.upsert({
