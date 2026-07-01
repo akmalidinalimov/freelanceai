@@ -86,6 +86,31 @@ export async function presignUpload(
   return { uploadUrl, publicUrl, key };
 }
 
+/**
+ * Server-side re-host: download a remote image (e.g. an Instagram CDN URL, which
+ * expires) and store it in the public bucket. Returns the stable public URL.
+ * Images only; capped at MAX_IMAGE_BYTES.
+ */
+export async function uploadFromUrl(prefix: string, sourceUrl: string): Promise<string> {
+  if (!mediaConfigured()) throw new Error("media_not_configured");
+  const res = await fetch(sourceUrl);
+  if (!res.ok) throw new Error(`fetch_source_${res.status}`);
+  const contentType = res.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
+  if (!IMAGE_TYPES.includes(contentType)) throw new Error("unsupported_type");
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.byteLength === 0 || buf.byteLength > MAX_IMAGE_BYTES) throw new Error("too_large");
+  const key = `${prefix}/${crypto.randomBytes(16).toString("hex")}.${EXT[contentType]}`;
+  await r2().send(
+    new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+      Body: buf,
+      ContentType: contentType,
+    })
+  );
+  return `${process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "")}/${key}`;
+}
+
 /** Map a stored public URL back to its R2 object key (or null if it isn't one of ours). */
 export function keyFromPublicUrl(url: string): string | null {
   const base = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");

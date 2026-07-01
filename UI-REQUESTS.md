@@ -18,6 +18,22 @@ the settings page):
   - On success `{ok:true}` the session is already destroyed server-side → redirect to `/`.
 - i18n: add keys in all three locales under a new `Account` namespace.
 
+### 2. Instagram connect + synced portfolio (profile editor & public profile)
+Backend is live (env-gated until Meta setup; see docs/instagram-go-live.md):
+- **Profile editor** (`src/app/[locale]/dashboard/seller/profile/page.tsx` area):
+  - "Connect Instagram" button → plain link to `GET /api/instagram/connect`
+    (redirects to Instagram; comes back to the editor with `?ig=connected|error|unavailable`
+    — show a toast/badge per marker).
+  - When connected (SellerProfile.instagramUserId set): show "@handle · connected",
+    last-synced time (instagramSyncedAt), and a "Disconnect" button →
+    `POST /api/instagram/disconnect` (removes synced items too — warn in the dialog).
+- **Public profile**: portfolio items now carry `source` ("upload"|"instagram") and
+  `permalink`. Per the approved design-b2-profile.html mockup: horizontal snap
+  carousel; ▶ overlay for `mediaType === "video"` (image is the poster; link out
+  to `permalink`); "↗ Instagram'da koʻrish" link on synced items; keep manual
+  uploads first (they have position < 100).
+- i18n keys under an `Instagram` namespace, all three locales.
+
 ## → For the platform team
 
 (nothing pending)

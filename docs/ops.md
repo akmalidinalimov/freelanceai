@@ -41,13 +41,16 @@ the migrate service auto-resolves `0_init` as applied on first run (P3005 fallba
 
 **To change the schema:**
 1. Edit `prisma/schema.prisma`.
-2. Generate the migration SQL *without* a database:
+2. Generate the migration SQL *without* a database — diff the pre-edit schema (from
+   git) against the edited one (`--from-migrations` would need a shadow DB):
    ```
-   npx prisma migrate diff --from-migrations prisma/migrations \
+   git show HEAD:prisma/schema.prisma > /tmp/old-schema.prisma
+   npx prisma migrate diff --from-schema-datamodel /tmp/old-schema.prisma \
      --to-schema-datamodel prisma/schema.prisma --script \
-     > prisma/migrations/<YYYYMMDDHHMM>_<name>/migration.sql
+     > prisma/migrations/<YYYYMMDD>_<name>/migration.sql
    ```
-   (create the folder first; name must sort after existing ones)
+   (create the folder first; name must sort after existing ones; commit the schema
+   edit and its migration together so HEAD stays a valid "from" for the next one)
 3. Review the SQL by hand — especially for data-destructive statements.
 4. `npx prisma generate`, typecheck, commit, push, deploy as usual. The migrate
    service applies pending migrations before the app starts.

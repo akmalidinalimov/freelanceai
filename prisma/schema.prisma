@@ -249,6 +249,12 @@ model SellerProfile {
   aiTools         String[]    @default([])
   specializations String[]    @default([])
   instagramUsername String?
+  // Instagram sync (Business Login). Token stored encrypted (pii-crypto).
+  instagramUserId        String?
+  instagramTokenEnc      String?
+  instagramTokenExpiresAt DateTime?
+  instagramSyncedAt      DateTime?
+  instagramSyncStatus    String?
   level         SellerLevel @default(NEW)
   ratingAvg     Float       @default(0)
   ratingCount   Int         @default(0)
@@ -267,9 +273,14 @@ model PortfolioItem {
   mediaType String        @default("image") // image | video
   caption   String?
   position  Int           @default(0)
+  // Provenance: manual upload vs Instagram sync (externalId = IG media id, for dedup).
+  source     String   @default("upload") // upload | instagram
+  externalId String?
+  permalink  String?
   createdAt DateTime      @default(now())
 
   @@index([profileId])
+  @@unique([profileId, externalId])
 }
 
 // ---------------------------------------------------------------------------
