@@ -1,0 +1,23 @@
+# Uptime monitor: checks prod health every ~10 minutes. When a run fails, GitHub
+# notifies the repo owner (email/app, per your notification settings) — that's the
+# alert channel; no secrets needed. Also runnable manually via workflow_dispatch.
+name: uptime
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check prod health
+        run: |
+          set -e
+          body=$(curl -sf --max-time 20 --retry 2 --retry-delay 10 https://freelanceai.aicreator.academy/api/health) \
+            || { echo "::error::health endpoint unreachable"; exit 1; }
+          echo "$body"
+          echo "$body" | grep -q '"db":"up"' || { echo "::error::db is not up"; exit 1; }
+          curl -sf --max-time 20 -o /dev/null https://freelanceai.aicreator.academy/uz \
+            || { echo "::error::home page failed"; exit 1; }

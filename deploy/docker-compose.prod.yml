@@ -30,10 +30,31 @@ services:
       DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
     entrypoint: ["sh", "-c"]
     command:
-      # --accept-data-loss is needed to add the User.email unique index (safe: all
-      # existing rows have email=NULL). TODO: switch to `prisma migrate deploy`.
-      - "apk add --no-cache wget ca-certificates openssl && wget -O schema.prisma https://raw.githubusercontent.com/akmalidinalimov/freelanceai/main/prisma/schema.prisma && npx -y prisma@6.19.3 db push --schema=schema.prisma --skip-generate --accept-data-loss && (printf 'CREATE EXTENSION IF NOT EXISTS pg_trgm;\\nCREATE INDEX IF NOT EXISTS gig_title_trgm ON \"Gig\" USING gin (title gin_trgm_ops);\\nCREATE INDEX IF NOT EXISTS gig_description_trgm ON \"Gig\" USING gin (description gin_trgm_ops);' | npx -y prisma@6.19.3 db execute --stdin --schema=schema.prisma || echo 'trgm setup skipped')"
+      # Proper migrations: `prisma migrate deploy` from the repo's prisma/migrations.
+      # On the pre-existing (db push era) database the first deploy fails with P3005
+      # ("database not empty") — the fallback baselines it by marking 0_init applied
+      # (schema already matches), then deploys. Fresh databases run 0_init for real.
+      - "apk add --no-cache git ca-certificates openssl && rm -rf /srv/mig && git clone --depth 1 -b main https://github.com/akmalidinalimov/freelanceai /srv/mig && cd /srv/mig && (npx -y prisma@6.19.3 migrate deploy --schema=prisma/schema.prisma || (echo 'baselining existing db' && npx -y prisma@6.19.3 migrate resolve --applied 0_init --schema=prisma/schema.prisma && npx -y prisma@6.19.3 migrate deploy --schema=prisma/schema.prisma)) && (printf 'CREATE EXTENSION IF NOT EXISTS pg_trgm;\\nCREATE INDEX IF NOT EXISTS gig_title_trgm ON \"Gig\" USING gin (title gin_trgm_ops);\\nCREATE INDEX IF NOT EXISTS gig_description_trgm ON \"Gig\" USING gin (description gin_trgm_ops);' | npx -y prisma@6.19.3 db execute --stdin --schema=prisma/schema.prisma || echo 'trgm setup skipped')"
     restart: "no"
+
+  # Nightly logical backups: pg_dump -> R2 private bucket (backups/db-<Weekday>.dump),
+  # giving 7 rolling daily restore points independent of Hostinger's weekly VPS backups.
+  # First dump runs immediately on start (so every deploy also snapshots), then every 24h.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_PRIVATE_BUCKET: ${S3_PRIVATE_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+    entrypoint: ["sh", "-c"]
+    command:
+      - "apk add --no-cache curl ca-certificates && while true; do F=db-$$(date +%a).dump; echo \"[backup] dumping $$F\"; if pg_dump -h db -U freelanceai -d freelanceai -Fc -f /tmp/$$F; then if [ -n \"$$S3_ENDPOINT\" ] && [ -n \"$$S3_PRIVATE_BUCKET\" ]; then curl -sf --aws-sigv4 aws:amz:auto:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" -X PUT --data-binary @/tmp/$$F \"$$S3_ENDPOINT/$$S3_PRIVATE_BUCKET/backups/$$F\" && echo \"[backup] uploaded backups/$$F ($$(du -h /tmp/$$F | cut -f1))\" || echo '[backup] UPLOAD FAILED'; else echo '[backup] no S3 config; kept local only'; fi; rm -f /tmp/$$F; else echo '[backup] DUMP FAILED'; fi; sleep 86400; done"
 
   app:
     # Hostinger's deploy only PULLS images (no build step). Run from a stock node
