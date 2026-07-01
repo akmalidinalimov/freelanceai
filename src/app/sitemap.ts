@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { SPECIALIZATIONS, specSlug } from "@/lib/specializations";
 
 const LOCALES = ["uz", "ru", "en"] as const;
 
@@ -32,6 +33,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const loc of LOCALES) {
     entries.push({ url: `${base}/${loc}`, changeFrequency: "weekly", priority: 1 });
     entries.push({ url: `${base}/${loc}/gigs`, changeFrequency: "daily", priority: 0.8 });
+    entries.push({ url: `${base}/${loc}/browse`, changeFrequency: "weekly", priority: 0.7 });
+    for (const s of SPECIALIZATIONS) {
+      entries.push({
+        url: `${base}/${loc}/browse/${specSlug(s.key)}`,
+        changeFrequency: "weekly",
+        priority: 0.6,
+      });
+    }
     for (const c of categories) {
       entries.push({
         url: `${base}/${loc}/categories/${c.slug}`,

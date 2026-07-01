@@ -420,6 +420,20 @@
     "noPendingGigs": "Tekshiruvdagi xizmatlar yoʻq.",
     "error": "Xatolik yuz berdi."
   },
+  "Browse": {
+    "indexTitle": "Yoʻnalishlar boʻyicha koʻrish",
+    "indexSub": "Koʻnikma yoki soha boʻyicha AI ijodkorlarni toping.",
+    "skillsGroup": "Koʻnikmalar",
+    "nichesGroup": "Yoʻnalishlar",
+    "metaTitle": "{spec} — AI ijodkorlar",
+    "metaDesc": "{spec} boʻyicha tasdiqlangan AI ijodkorlarni toping.",
+    "heading": "{spec} boʻyicha AI ijodkorlar",
+    "sub": "{spec} yoʻnalishidagi eng zoʻr ijodkorlar.",
+    "allSpecs": "Barcha yoʻnalishlar",
+    "noCreators": "Bu yoʻnalishda hali ijodkor yoʻq.",
+    "searchCta": "Qidiruvda sinab koʻrish",
+    "related": "Boshqa yoʻnalishlar"
+  },
   "Search": {
     "title": "Ijodkor topish",
     "subtitle": "Kerakli ishni oddiy tilda yozing — AI eng mos ijodkorlarni tartiblab beradi.",

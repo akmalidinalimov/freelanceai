@@ -63,6 +63,16 @@ export function getSpec(key: string): Spec | undefined {
   return BY_KEY.get(key);
 }
 
+/** URL slug for a spec key (underscores → hyphens), e.g. "ai_video" → "ai-video". */
+export function specSlug(key: string): string {
+  return key.replace(/_/g, "-");
+}
+
+/** Resolve a URL slug back to its spec, e.g. "food-beverage" → the food_beverage Spec. */
+export function specBySlug(slug: string): Spec | undefined {
+  return BY_KEY.get(slug.replace(/-/g, "_"));
+}
+
 /** Localized label for a spec key; falls back to the key if unknown. */
 export function specLabel(key: string, locale: string): string {
   const s = BY_KEY.get(key);

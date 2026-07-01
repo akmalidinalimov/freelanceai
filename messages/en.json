@@ -420,6 +420,20 @@
     "noPendingGigs": "No gigs awaiting review.",
     "error": "Something went wrong."
   },
+  "Browse": {
+    "indexTitle": "Browse by specialization",
+    "indexSub": "Find AI creators by skill or niche.",
+    "skillsGroup": "Skills",
+    "nichesGroup": "Niches",
+    "metaTitle": "{spec} — AI creators",
+    "metaDesc": "Find verified AI creators specializing in {spec}.",
+    "heading": "{spec} AI creators",
+    "sub": "The best creators specializing in {spec}.",
+    "allSpecs": "All specializations",
+    "noCreators": "No creators in this specialization yet.",
+    "searchCta": "Try it in search",
+    "related": "Other specializations"
+  },
   "Search": {
     "title": "Find a creator",
     "subtitle": "Describe your job in plain words — AI ranks the best-matched creators.",
