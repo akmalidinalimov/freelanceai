@@ -194,6 +194,7 @@ export function OrderPanel({
               <input
                 value={coupon}
                 onChange={(e) => setCoupon(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
+                aria-label={to("couponPh")}
                 placeholder={to("couponPh")}
                 className="h-10 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm uppercase"
               />

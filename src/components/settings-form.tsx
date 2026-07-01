@@ -164,7 +164,7 @@ export function SettingsForm({
         </div>
       )}
 
-      {saved && <p className="text-sm text-green-600">{t("saved")}</p>}
+      {saved && <p className="text-sm text-green-800">{t("saved")}</p>}
     </div>
   );
 }

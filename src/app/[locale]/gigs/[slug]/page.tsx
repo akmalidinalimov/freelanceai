@@ -307,7 +307,7 @@ export default async function GigDetailPage({
       </div>
 
       {/* Packages + order */}
-      <aside>
+      <aside className="lg:sticky lg:top-24 lg:self-start">
         <OrderPanel
           gigId={gig.id}
           locale={locale}

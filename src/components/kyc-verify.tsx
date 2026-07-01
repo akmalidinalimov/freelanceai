@@ -58,7 +58,7 @@ export function KycVerify({
   }
 
   if (verified) {
-    return <p className="text-sm font-medium text-green-600">{t("verifyVerified")}</p>;
+    return <p className="text-sm font-medium text-green-800">{t("verifyVerified")}</p>;
   }
 
   const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
@@ -88,6 +88,7 @@ export function KycVerify({
           className={`${field} w-32`}
           inputMode="numeric"
           maxLength={6}
+          aria-label={t("verifyCodePh")}
           placeholder={t("verifyCodePh")}
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}

@@ -76,6 +76,7 @@ export function GalleryUpload({
             )}
             <button
               type="button"
+              aria-label={t("removeImage")}
               onClick={() => onChange(value.filter((_, j) => j !== i))}
               className="absolute right-1 top-1 rounded bg-black/60 px-1 text-xs leading-none text-white"
             >
@@ -86,6 +87,7 @@ export function GalleryUpload({
         {value.length < MAX && (
           <button
             type="button"
+            aria-label={label || t("addImage")}
             onClick={() => inputRef.current?.click()}
             disabled={busy}
             className="flex h-20 w-28 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-lg text-[hsl(var(--muted-foreground))]"

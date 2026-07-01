@@ -63,7 +63,7 @@ export function ProfileForm({
         <Button onClick={save} disabled={busy}>
           {busy ? "…" : t("save")}
         </Button>
-        {saved && <span className="text-sm text-green-600">{t("saved")}</span>}
+        {saved && <span className="text-sm text-green-800">{t("saved")}</span>}
       </div>
     </div>
   );

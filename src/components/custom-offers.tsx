@@ -29,6 +29,7 @@ export function CustomOffers({
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [days, setDays] = useState("3");
@@ -54,6 +55,7 @@ export function CustomOffers({
       if (j.ok) {
         setTitle("");
         setPrice("");
+        setSent(true);
         router.refresh();
       } else setError(j.error?.message ?? t("error"));
     } catch {
@@ -92,10 +94,20 @@ export function CustomOffers({
 
       {role === "seller" && (
         <div className="mb-4 grid gap-2 sm:grid-cols-2">
-          <input className={field} placeholder={t("offerTitle")} value={title} onChange={(e) => setTitle(e.target.value)} />
+          <input
+            className={field}
+            aria-label={t("offerTitle")}
+            placeholder={t("offerTitle")}
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setSent(false);
+            }}
+          />
           <input
             className={field}
             inputMode="numeric"
+            aria-label={t("price")}
             placeholder={t("price")}
             value={price}
             onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))}
@@ -103,6 +115,7 @@ export function CustomOffers({
           <input
             className={field}
             inputMode="numeric"
+            aria-label={t("days")}
             placeholder={t("days")}
             value={days}
             onChange={(e) => setDays(e.target.value.replace(/\D/g, ""))}
@@ -110,6 +123,7 @@ export function CustomOffers({
           <input
             className={field}
             inputMode="numeric"
+            aria-label={t("revisions")}
             placeholder={t("revisions")}
             value={rev}
             onChange={(e) => setRev(e.target.value.replace(/\D/g, ""))}
@@ -149,6 +163,7 @@ export function CustomOffers({
           ))}
         </ul>
       )}
+      {sent && <p className="mt-2 text-sm font-medium text-green-800">{t("sent")}</p>}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );

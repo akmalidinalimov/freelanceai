@@ -2,7 +2,7 @@
 export function VerifiedBadge({ label }: { label: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600"
+      className="inline-flex items-center gap-1 rounded-full bg-green-600/12 px-2 py-0.5 text-xs font-medium text-green-800"
       title={label}
     >
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden="true">

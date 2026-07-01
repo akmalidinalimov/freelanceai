@@ -9,9 +9,11 @@ export function FollowButton({ sellerId, initialFollowing }: { sellerId: string;
   const t = useTranslations("Profile");
   const [following, setFollowing] = useState(initialFollowing);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
 
   async function toggle() {
     setBusy(true);
+    setError(false);
     try {
       const r = await fetch("/api/follow", {
         method: "POST",
@@ -20,16 +22,20 @@ export function FollowButton({ sellerId, initialFollowing }: { sellerId: string;
       });
       const j = await r.json();
       if (j.ok) setFollowing(j.data.following);
+      else setError(true);
     } catch {
-      /* ignore */
+      setError(true);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Button size="sm" variant={following ? "outline" : "default"} onClick={toggle} disabled={busy}>
-      {following ? t("following") : t("follow")}
-    </Button>
+    <span className="inline-flex items-center gap-2">
+      <Button size="sm" variant={following ? "outline" : "default"} onClick={toggle} disabled={busy}>
+        {following ? t("following") : t("follow")}
+      </Button>
+      {error && <span className="text-xs text-red-600" role="alert">{t("followError")}</span>}
+    </span>
   );
 }

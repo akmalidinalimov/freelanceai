@@ -47,6 +47,7 @@ export function TipButton({ orderId }: { orderId: string }) {
         <input
           className="h-9 w-28 rounded-md border border-[hsl(var(--border))] bg-transparent px-2 text-sm"
           inputMode="numeric"
+          aria-label={t("tipCustom")}
           placeholder={t("tipCustom")}
           value={amount}
           onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
