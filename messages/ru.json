@@ -257,7 +257,8 @@
     "bstatCompleted": "Завершено",
     "bstatSpent": "Всего потрачено, сум",
     "bstatContacted": "Контактов с продавцами",
-    "bstatSaved": "Сохранённые гиги"
+    "bstatSaved": "Сохранённые гиги",
+    "bstatRefunded": "Возвращено, сум"
   },
   "Gig": {
     "createTitle": "Создать услугу",

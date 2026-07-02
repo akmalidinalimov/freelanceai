@@ -79,6 +79,23 @@ export default async function AdminUserDetailPage({
         </Link>
       </p>
 
+      {/* Red flags (trust & safety) */}
+      {d.flags.length > 0 && (
+        <section className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4">
+          <h2 className="mb-2 font-semibold text-red-900">Red flags</h2>
+          <ul className="space-y-1 text-sm text-red-900">
+            {d.flags.map((f) => (
+              <li key={f.id}>
+                <b>{f.severity}</b> · <span className="font-mono">{f.type}</span>
+                {f.details ? (
+                  <span className="ml-1 text-xs">{JSON.stringify(f.details)}</span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* Identity & activity */}
       <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Registered" value={dt(u.createdAt)} />
@@ -105,6 +122,7 @@ export default async function AdminUserDetailPage({
         <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Paid (total)" value={`${formatUzs(d.buyer.paidUzs)} so'm`} />
           <Stat label="Payments made" value={d.buyer.paidCount} />
+          <Stat label="Refunded" value={`${formatUzs(d.buyer.refundedUzs)} so'm (${d.buyer.refundedCount})`} />
           <Stat label="Sellers contacted" value={d.buyer.contactsStarted} />
           <Stat label="Reviews written" value={d.buyer.reviewsWritten} />
         </div>

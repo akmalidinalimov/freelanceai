@@ -7,6 +7,7 @@ import { stripContactInfo } from "@/lib/sanitize";
 import { sendEmail, renderBrandedEmail } from "@/lib/email";
 import { publishMessage } from "@/lib/message-bus";
 import { notify } from "@/server/services/notification";
+import { trackEvent } from "@/server/services/activity";
 
 const SENDER_SELECT = { select: { id: true, firstName: true, name: true, username: true } } as const;
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -93,9 +94,15 @@ export async function postConversationMessage(
   if (!trimmed && files.length === 0) throw Errors.validation({ body: "Message is empty" });
   if (trimmed.length > 2000) throw Errors.validation({ body: "Message is too long" });
   // Strip off-platform contact info (anti-escrow-bypass).
-  const text = trimmed ? stripContactInfo(trimmed).text : null;
+  const stripped = trimmed ? stripContactInfo(trimmed) : null;
+  const text = stripped?.text ?? null;
 
   const { convo, buyerId, sellerId } = await authzConversation(conversationId, user);
+  // Redactions feed the CONTACT_REDACTED red-flag signal — recorded only for a
+  // message that actually posts (after authz), so every flag has visible evidence.
+  if (stripped?.redacted) {
+    void trackEvent("message_redacted", { userId: user.id, entityId: conversationId });
+  }
   const message = await prisma.message.create({
     data: { conversationId, senderId: user.id, body: text, fileUrls: files },
     include: { sender: SENDER_SELECT },

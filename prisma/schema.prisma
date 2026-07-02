@@ -102,6 +102,7 @@ model User {
   following      Follow[] @relation("Following")
   followers      Follow[] @relation("Followers")
   activityEvents ActivityEvent[]
+  flags          UserFlag[]
 
   @@index([role])
   @@index([lastSeenAt])
@@ -558,6 +559,35 @@ model Message {
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])
+  // Transcript reads + last-activity ordering (conversationId, createdAt);
+  // per-user message-rate signals (senderId, createdAt).
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Trust & safety — deterministic fraud/abuse signals, recomputed by the nightly
+// red-flag scan (see src/server/services/red-flags.ts). One row per (user, signal).
+// ---------------------------------------------------------------------------
+
+enum FlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model UserFlag {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // e.g. CONTACT_REDACTED, HIGH_DISPUTE, CONTACTS_NO_ORDERS
+  severity  FlagSeverity
+  details   Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([userId, type])
+  @@index([severity])
 }
 
 // ---------------------------------------------------------------------------

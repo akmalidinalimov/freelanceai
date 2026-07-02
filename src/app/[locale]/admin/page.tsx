@@ -63,6 +63,9 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
           <Link href="/admin/conversations">
             <Button variant="outline" size="sm">Conversations</Button>
           </Link>
+          <Link href="/admin/flags">
+            <Button variant="outline" size="sm">Red flags</Button>
+          </Link>
           <Link href="/admin/audit">
             <Button variant="outline" size="sm">{t("audit")}</Button>
           </Link>

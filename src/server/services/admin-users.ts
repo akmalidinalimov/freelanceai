@@ -121,6 +121,8 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
     recentEvents,
     recentAudit,
     balance,
+    refundAgg,
+    flags,
   ] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], where: { buyerId: userId }, _count: true }),
     prisma.order.groupBy({ by: ["status"], where: { sellerId: userId }, _count: true }),
@@ -153,6 +155,12 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
       select: { action: true, entity: true, entityId: true, createdAt: true },
     }),
     u.isSeller ? sellerAvailableUzs(userId) : Promise.resolve(0),
+    prisma.transaction.aggregate({
+      where: { type: "REFUND", status: "SUCCEEDED", order: { buyerId: userId } },
+      _sum: { amountUzs: true },
+      _count: true,
+    }),
+    prisma.userFlag.findMany({ where: { userId }, orderBy: { severity: "desc" } }),
   ]);
 
   const toMap = (groups: { status: string; _count: number }[]) =>
@@ -186,6 +194,8 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
       lastOrderAt: lastBuyerOrder?.createdAt ?? null,
       lastContactAt: lastConvo?.createdAt ?? null,
       reviewsWritten: u._count.reviewsWritten,
+      refundedUzs: refundAgg._sum.amountUzs ?? 0,
+      refundedCount: refundAgg._count,
     },
     seller: u.isSeller
       ? {
@@ -205,6 +215,7 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
     messagesSent: u._count.messages,
     recentEvents,
     recentAudit,
+    flags,
   };
 }
 

@@ -257,7 +257,8 @@
     "bstatCompleted": "Completed",
     "bstatSpent": "Total spent, soʼm",
     "bstatContacted": "Sellers contacted",
-    "bstatSaved": "Saved gigs"
+    "bstatSaved": "Saved gigs",
+    "bstatRefunded": "Refunded, soʼm"
   },
   "Gig": {
     "createTitle": "Create a gig",

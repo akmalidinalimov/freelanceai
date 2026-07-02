@@ -257,7 +257,8 @@
     "bstatCompleted": "Yakunlangan",
     "bstatSpent": "Jami sarflangan, soʼm",
     "bstatContacted": "Bogʻlangan sotuvchilar",
-    "bstatSaved": "Saqlangan giglar"
+    "bstatSaved": "Saqlangan giglar",
+    "bstatRefunded": "Qaytarilgan, soʼm"
   },
   "Gig": {
     "createTitle": "Yangi xizmat yaratish",

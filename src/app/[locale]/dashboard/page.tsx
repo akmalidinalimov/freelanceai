@@ -59,6 +59,10 @@ export default async function DashboardPage({
           { label: t("bstatActive"), value: bstats.ordersActive.toLocaleString() },
           { label: t("bstatCompleted"), value: bstats.ordersCompleted.toLocaleString() },
           { label: t("bstatSpent"), value: `${formatUzs(bstats.spentUzs)}` },
+          // Refunds are rare — only show the tile when there is something to show.
+          ...(bstats.refundedCount > 0
+            ? [{ label: t("bstatRefunded"), value: `${formatUzs(bstats.refundedUzs)}` }]
+            : []),
           { label: t("bstatContacted"), value: bstats.sellersContacted.toLocaleString() },
           { label: t("bstatSaved"), value: bstats.savedGigs.toLocaleString() },
         ].map((s) => (

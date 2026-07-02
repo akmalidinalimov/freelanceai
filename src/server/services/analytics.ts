@@ -62,6 +62,8 @@ export interface BuyerStats {
   ordersActive: number;
   ordersCompleted: number;
   spentUzs: number; // succeeded payments across their orders
+  refundedUzs: number; // succeeded refunds back to the buyer
+  refundedCount: number;
   sellersContacted: number;
   savedGigs: number;
   reviewsWritten: number;
@@ -69,11 +71,16 @@ export interface BuyerStats {
 
 /** Read-only buyer activity metrics for the buyer dashboard. */
 export async function getBuyerStats(buyerId: string): Promise<BuyerStats> {
-  const [byStatus, paidAgg, contacts, saved, reviews] = await Promise.all([
+  const [byStatus, paidAgg, refundAgg, contacts, saved, reviews] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], where: { buyerId }, _count: true }),
     prisma.transaction.aggregate({
       where: { type: "PAYMENT_IN", status: "SUCCEEDED", order: { buyerId } },
       _sum: { amountUzs: true },
+    }),
+    prisma.transaction.aggregate({
+      where: { type: "REFUND", status: "SUCCEEDED", order: { buyerId } },
+      _sum: { amountUzs: true },
+      _count: true,
     }),
     prisma.conversation.count({ where: { buyerId } }),
     prisma.savedGig.count({ where: { userId: buyerId } }),
@@ -88,6 +95,8 @@ export async function getBuyerStats(buyerId: string): Promise<BuyerStats> {
     ordersActive,
     ordersCompleted: m.COMPLETED ?? 0,
     spentUzs: paidAgg._sum.amountUzs ?? 0,
+    refundedUzs: refundAgg._sum.amountUzs ?? 0,
+    refundedCount: refundAgg._count,
     sellersContacted: contacts,
     savedGigs: saved,
     reviewsWritten: reviews,
