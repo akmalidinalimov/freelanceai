@@ -36,5 +36,6 @@ jobs:
             S3_PUBLIC_BASE_URL=${{ vars.S3_PUBLIC_BASE_URL }}
             NEXT_PUBLIC_BRAND_NAME=${{ vars.NEXT_PUBLIC_BRAND_NAME }}
             NEXT_PUBLIC_BRAND_DOMAIN=${{ vars.NEXT_PUBLIC_BRAND_DOMAIN }}
+            NEXT_PUBLIC_CLARITY_ID=${{ vars.NEXT_PUBLIC_CLARITY_ID || 'x75r7mib33' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

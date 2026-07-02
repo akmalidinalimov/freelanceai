@@ -7,6 +7,7 @@ import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { ClarityAnalytics } from "@/components/clarity-analytics";
 import "../globals.css";
 
 // Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
@@ -77,6 +78,7 @@ export default async function LocaleLayout({
           <SiteFooter />
           <MobileBottomNav />
         </NextIntlClientProvider>
+        <ClarityAnalytics />
       </body>
     </html>
   );

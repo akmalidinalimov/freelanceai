@@ -39,7 +39,9 @@ const nextConfig: NextConfig = {
       // the app embeds no iframes (frame; login is a Telegram deeplink, not a widget), and
       // there are no external/web fonts (font). img/script/style stay Report-Only (the
       // R2/Telegram image allowlist + Next's script nonce are the attended next step).
-      "connect-src 'self'",
+      // Clarity beacons upload session data to *.clarity.ms + c.bing.com (Microsoft's
+      // collector) — required or analytics silently drops every payload.
+      "connect-src 'self' https://*.clarity.ms https://c.bing.com",
       "frame-src 'self'",
       "font-src 'self' data:",
     ].join("; ");
@@ -50,11 +52,11 @@ const nextConfig: NextConfig = {
     // tightening them would only produce false positives. Violations POST to /api/csp-report.
     const cspReportOnly = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.clarity.ms",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data:",
       "font-src 'self' data:",
-      "connect-src 'self'",
+      "connect-src 'self' https://*.clarity.ms https://c.bing.com",
       "frame-src 'self'",
       "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
       "base-uri 'self'",
