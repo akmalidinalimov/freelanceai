@@ -77,6 +77,12 @@ model User {
   lastLoginAt        DateTime?
   lastSeenAt         DateTime?
   telegramLastChatAt DateTime?
+  // Gamification (cosmetic — XP has NO monetary value; see docs/legal-notes.md).
+  // Streak day boundary is Tashkent (UTC+5); lastActiveDay stores that day at midnight UTC.
+  xp            Int       @default(0)
+  streakDays    Int       @default(0)
+  streakBest    Int       @default(0)
+  lastActiveDay DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -104,6 +110,7 @@ model User {
   activityEvents ActivityEvent[]
   flags          UserFlag[]
   searchEmbedding SellerEmbedding?
+  badges         UserBadge[]
 
   @@index([role])
   @@index([lastSeenAt])
@@ -330,6 +337,9 @@ model Gig {
   faq         Json?     // [{ q, a }] seller-managed FAQ
   requirementPrompts Json? // ["question", ...] structured requirement questions
   views       Int       @default(0)
+  // Decayed 7d popularity (orders/saves/reviews + views tiebreak), recomputed nightly
+  // by the engagement cron — powers "Trending" ordering. 0 = cold.
+  trendingScore Float   @default(0)
   featured     Boolean   @default(false)
   featuredUntil DateTime?
   locale      String    @default("uz")
@@ -570,6 +580,35 @@ model Message {
 // Trust & safety — deterministic fraud/abuse signals, recomputed by the nightly
 // red-flag scan (see src/server/services/red-flags.ts). One row per (user, signal).
 // ---------------------------------------------------------------------------
+
+// Weekly creator leaderboard snapshot (rolling 7d, recomputed nightly, ranks reset
+// weekly — cohort design per retention research: no all-time insurmountable gaps).
+model LeaderboardEntry {
+  id        String   @id @default(cuid())
+  weekStart DateTime // Monday (Tashkent) of the ranked week
+  sellerId  String
+  rank      Int
+  score     Float
+  completed Int
+  ratingAvg Float
+  createdAt DateTime @default(now())
+
+  @@unique([weekStart, sellerId])
+  @@index([weekStart, rank])
+}
+
+// Earned achievement badges (catalog lives in src/lib/badges.ts — keys only here).
+// Append-only per user: a badge, once earned, stays.
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, key])
+  @@index([userId])
+}
 
 enum FlagSeverity {
   LOW

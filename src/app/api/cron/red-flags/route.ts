@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { scanRedFlags } from "@/server/services/red-flags";
 import { rebuildSellerEmbeddings } from "@/server/services/embeddings";
+import { sweepBadges } from "@/server/services/gamification";
+import { recomputeTrending, recomputeLeaderboard } from "@/server/services/engagement";
 
 /** ActivityEvents are product analytics, not records of account — bounded retention. */
 const EVENT_RETENTION_DAYS = 180;
@@ -19,13 +21,26 @@ export async function POST(request: Request) {
 
   const scan = await scanRedFlags();
   const cutoff = new Date(Date.now() - EVENT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-  const [eventsPurged, tokensPurged, embeddings] = await Promise.all([
+  const [eventsPurged, tokensPurged, embeddings, badges, trending, leaderboard] = await Promise.all([
     prisma.activityEvent.deleteMany({ where: { createdAt: { lt: cutoff } } }),
     prisma.verificationToken.deleteMany({ where: { expires: { lt: new Date() } } }),
     // S2: refresh creator-document embeddings (skips unchanged docs; no-op without key).
     rebuildSellerEmbeddings().catch((e) => {
       console.error("embedding rebuild failed", e);
       return { sellers: 0, embedded: -1 };
+    }),
+    // Gamification: award all count-based badges (idempotent set-based sweep).
+    sweepBadges().catch((e) => {
+      console.error("badge sweep failed", e);
+      return { awarded: -1 };
+    }),
+    recomputeTrending().catch((e) => {
+      console.error("trending recompute failed", e);
+      return { gigs: -1 };
+    }),
+    recomputeLeaderboard().catch((e) => {
+      console.error("leaderboard recompute failed", e);
+      return { ranked: -1 };
     }),
   ]);
 
@@ -34,5 +49,8 @@ export async function POST(request: Request) {
     eventsPurged: eventsPurged.count,
     tokensPurged: tokensPurged.count,
     embeddings,
+    badges,
+    trending,
+    leaderboard,
   });
 }

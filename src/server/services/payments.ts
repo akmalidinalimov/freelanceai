@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
 import { notify } from "@/server/services/notification";
+import { onOrderPaid } from "@/server/services/gamification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
 
@@ -86,6 +87,7 @@ export async function confirmOrderPayment(orderId: string, actor: User) {
   await audit({ actorId: actor.id, action: "order.payment.confirm", entity: "Order", entityId: orderId });
   if (posted) {
     void trackEvent("order_paid", { userId: order.buyerId, entityId: orderId, meta: { provider: "MANUAL" } });
+    onOrderPaid(order.buyerId);
     await notifySellerPaid(orderId, order.sellerId);
   }
 }
@@ -118,6 +120,7 @@ export async function settleOrderByProvider(
       metadata: { provider, externalRef: externalRef ?? null },
     });
     void trackEvent("order_paid", { userId: order.buyerId, entityId: orderId, meta: { provider } });
+    onOrderPaid(order.buyerId);
     await notifySellerPaid(orderId, order.sellerId);
   }
 }

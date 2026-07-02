@@ -612,5 +612,16 @@
     "release": "Ijrochiga berish",
     "adminTitle": "Ochiq nizolar",
     "noDisputes": "Ochiq nizolar yoʻq."
+  },
+  "Gamification": {
+    "nextLevel": "keyingi daraja: +{xp} XP",
+    "streak": "{days} kunlik seriya",
+    "profileScore": "Profil {score}% toʻliq — toʻldiring!",
+    "weeklyRank": "Bu hafta #{rank}-oʻrin"
+  },
+  "Feed": {
+    "fromFollowed": "Kuzatayotgan ijodkorlaringizdan yangi",
+    "forYou": "Siz uchun",
+    "trending": "Hozir mashhur"
   }
 }

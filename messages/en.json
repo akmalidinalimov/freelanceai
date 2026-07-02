@@ -612,5 +612,16 @@
     "release": "Release to seller",
     "adminTitle": "Open disputes",
     "noDisputes": "No open disputes."
+  },
+  "Gamification": {
+    "nextLevel": "next level: +{xp} XP",
+    "streak": "{days}-day streak",
+    "profileScore": "Profile {score}% complete — finish it!",
+    "weeklyRank": "#{rank} this week"
+  },
+  "Feed": {
+    "fromFollowed": "New from creators you follow",
+    "forYou": "For you",
+    "trending": "Trending now"
   }
 }

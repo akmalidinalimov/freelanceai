@@ -7,6 +7,10 @@ import { listBuyerOrders } from "@/server/services/order";
 import { listSavedGigs } from "@/server/services/saved";
 import { getReferralInfo, applyReferral } from "@/server/services/referral";
 import { getBuyerStats } from "@/server/services/analytics";
+import { getUserBadges } from "@/server/services/gamification";
+import { GamificationStrip } from "@/components/gamification-strip";
+import { buildFeed } from "@/server/services/engagement";
+import { FeedSectionsView } from "@/components/feed-sections";
 import { formatUzs } from "@/lib/utils";
 
 export default async function DashboardPage({
@@ -34,6 +38,8 @@ export default async function DashboardPage({
   const orders = await listBuyerOrders(user.id);
   const saved = await listSavedGigs(user.id);
   const bstats = await getBuyerStats(user.id);
+  const myBadges = (await getUserBadges(user.id)).filter((b) => !b.key.startsWith("seller_"));
+  const feed = await buildFeed(user.id).catch(() => null);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -53,6 +59,13 @@ export default async function DashboardPage({
           )}
         </div>
       </div>
+
+      <GamificationStrip
+        locale={locale}
+        xp={user.xp}
+        streakDays={user.streakDays}
+        badges={myBadges}
+      />
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
@@ -118,6 +131,8 @@ export default async function DashboardPage({
           />
         </div>
       )}
+
+      {feed && <FeedSectionsView feed={feed} />}
 
       <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
         <div className="mb-3 flex items-center justify-between">

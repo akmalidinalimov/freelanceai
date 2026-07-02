@@ -48,6 +48,9 @@ export function touchLastSeen(userId: string): void {
   void prisma.user
     .update({ where: { id: userId }, data: { lastSeenAt: new Date() } })
     .catch(() => {});
+  // Streak/XP maintenance piggybacks the same throttle window (dynamic import
+  // avoids a static cycle only in spirit — gamification is a leaf module).
+  void import("@/server/services/gamification").then((g) => g.touchStreak(userId)).catch(() => {});
 }
 
 export function stampLastLogin(userId: string): void {

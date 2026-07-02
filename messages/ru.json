@@ -612,5 +612,16 @@
     "release": "Передать исполнителю",
     "adminTitle": "Открытые споры",
     "noDisputes": "Нет открытых споров."
+  },
+  "Gamification": {
+    "nextLevel": "до след. уровня: +{xp} XP",
+    "streak": "серия {days} дн.",
+    "profileScore": "Профиль заполнен на {score}% — дозаполните!",
+    "weeklyRank": "#{rank} на этой неделе"
+  },
+  "Feed": {
+    "fromFollowed": "Новое от ваших авторов",
+    "forYou": "Для вас",
+    "trending": "Сейчас популярно"
   }
 }

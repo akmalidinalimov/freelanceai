@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
+import { onReviewCreated } from "@/server/services/gamification";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { stripContactInfo } from "@/lib/sanitize";
 import { notify } from "@/server/services/notification";
@@ -32,6 +33,7 @@ export async function createReview(
   // Recompute the seller's rating aggregate + level.
   await recomputeSellerStats(order.sellerId);
 
+  onReviewCreated(authorId);
   await audit({ actorId: authorId, action: "review.create", entity: "Review", entityId: review.id });
   await notify(order.sellerId, "review.new", "Yangi sharh", {
     body: `Buyurtmangizga ${rating}★ sharh qoldirildi.`,

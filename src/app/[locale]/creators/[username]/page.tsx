@@ -9,6 +9,8 @@ import { ContactSellerButton } from "@/components/contact-seller-button";
 import { FollowButton } from "@/components/follow-button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { specLabel } from "@/lib/specializations";
+import { badgeDef, badgeLabel } from "@/lib/badges";
+import { getUserBadges } from "@/server/services/gamification";
 
 export async function generateMetadata({
   params,
@@ -43,6 +45,7 @@ export default async function CreatorProfilePage({
   const data = await getPublicProfile(username);
   if (!data) notFound();
   const { user, profile, gigs } = data;
+  const earnedBadges = (await getUserBadges(user.id)).filter((b) => b.key.startsWith("seller_"));
 
   const name = user.firstName ?? user.name ?? user.username ?? "";
   const avatar = user.image ?? user.photoUrl ?? null;
@@ -93,6 +96,22 @@ export default async function CreatorProfilePage({
           <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
             {t("memberSince")} {memberYear}
           </p>
+          {earnedBadges.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {earnedBadges.map((b) => {
+                const def = badgeDef(b.key);
+                if (!def) return null;
+                return (
+                  <span
+                    key={b.key}
+                    className="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 px-2 py-0.5 text-xs"
+                  >
+                    {def.emoji} {badgeLabel(b.key, locale)}
+                  </span>
+                );
+              })}
+            </div>
+          )}
           {profile?.headline && <p className="mt-3 font-medium">{profile.headline}</p>}
           {profile?.instagramUsername && (
             <a

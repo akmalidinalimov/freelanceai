@@ -7,6 +7,9 @@ import { listSellerGigs } from "@/server/services/gig";
 import { listSellerOrders, autoCompleteDeliveredOrders } from "@/server/services/order";
 import { getSellerEarnings } from "@/server/services/payments";
 import { getSellerStats } from "@/server/services/analytics";
+import { getUserBadges, computeCompleteness } from "@/server/services/gamification";
+import { GamificationStrip } from "@/components/gamification-strip";
+import { myWeeklyRank } from "@/server/services/engagement";
 import { getOwnProfile } from "@/server/services/profile";
 import { formatUzs } from "@/lib/utils";
 import { PayoutRequestButton } from "@/components/payout-request-button";
@@ -20,6 +23,11 @@ export default async function SellerDashboardPage({
   setRequestLocale(locale);
 
   const user = await requireSellerUser(locale);
+  const [sellerBadges, completeness, weeklyRank] = await Promise.all([
+    getUserBadges(user.id).then((b) => b.filter((x) => x.key.startsWith("seller_"))),
+    computeCompleteness(user.id).catch(() => null),
+    myWeeklyRank(user.id).catch(() => null),
+  ]);
   const t = await getTranslations("Dash");
   const tg = await getTranslations("Gig");
   const to = await getTranslations("Order");
@@ -73,6 +81,15 @@ export default async function SellerDashboardPage({
           </Link>
         </div>
       </div>
+
+      <GamificationStrip
+        locale={locale}
+        xp={user.xp}
+        streakDays={user.streakDays}
+        badges={sellerBadges}
+        completeness={completeness}
+        weeklyRank={weeklyRank}
+      />
 
       {!onboardingComplete && (
         <div className="mb-4 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">
