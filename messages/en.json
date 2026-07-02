@@ -521,6 +521,20 @@
       "TOP_RATED": "Top rated"
     }
   },
+  "Account": {
+    "title": "Account",
+    "exportTitle": "Download my data",
+    "exportHint": "Everything we store about you, as a single JSON file.",
+    "exportBtn": "Download",
+    "exporting": "Preparing...",
+    "dangerTitle": "Danger zone",
+    "deleteTitle": "Delete account",
+    "deleteHint": "Your account is closed and personal data is anonymized. This cannot be undone.",
+    "confirmLabel": "Type DELETE to confirm",
+    "deleteBtn": "Delete account",
+    "deleting": "Deleting...",
+    "error": "Something went wrong. Please try again."
+  },
   "Settings": {
     "title": "Settings",
     "notifyTitle": "Where should we notify you about new messages?",

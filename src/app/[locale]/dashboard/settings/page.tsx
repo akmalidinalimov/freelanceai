@@ -3,6 +3,7 @@ import { requireOnboardedUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/settings-form";
 import { KycVerify } from "@/components/kyc-verify";
+import { AccountSection } from "@/components/account-section";
 import { decryptPII } from "@/lib/pii-crypto";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,9 @@ export default async function SettingsPage({
           hasTelegram={Boolean(user.telegramId)}
           hasEmail={Boolean(user.email)}
         />
+      </div>
+      <div className="mt-4">
+        <AccountSection />
       </div>
     </div>
   );

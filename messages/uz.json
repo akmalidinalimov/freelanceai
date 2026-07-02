@@ -521,6 +521,20 @@
       "TOP_RATED": "Top reyting"
     }
   },
+  "Account": {
+    "title": "Hisob",
+    "exportTitle": "Maʼlumotlarimni yuklab olish",
+    "exportHint": "Biz saqlaydigan barcha maʼlumotlaringiz — bitta JSON fayl.",
+    "exportBtn": "Yuklab olish",
+    "exporting": "Tayyorlanmoqda...",
+    "dangerTitle": "Xavfli hudud",
+    "deleteTitle": "Hisobni oʻchirish",
+    "deleteHint": "Hisob yopiladi, shaxsiy maʼlumotlar anonimlashtiriladi. Bu amalni bekor qilib boʻlmaydi.",
+    "confirmLabel": "Tasdiqlash uchun DELETE deb yozing",
+    "deleteBtn": "Hisobni oʻchirish",
+    "deleting": "Oʻchirilmoqda...",
+    "error": "Xatolik yuz berdi. Qayta urinib koʻring."
+  },
   "Settings": {
     "title": "Sozlamalar",
     "notifyTitle": "Yangi xabarlar haqida qayerda xabar beraylik?",
