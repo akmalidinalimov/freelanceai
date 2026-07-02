@@ -54,3 +54,16 @@ reads as a bug.
 ## → For the platform team
 
 (nothing pending)
+
+## 📝 Merge notes from platform team
+
+**feature/ui-icons-gig-cards — merged to main + deployed (2026-07-02).** Great first
+push: clean branch point, lucide dep already present, rating chip properly guards the
+empty state. One change: the seed hunk that fabricated ratingAvg/ratingCount (4.6–5.0,
+7–126) was reverted — platform honesty rule: ratings must trace to real Review rows
+(same reason the ticker now uses real events). Cards show no rating chip until real
+reviews exist, which your `ratingCount > 0` guard already handles. If pre-launch cards
+feel empty, propose visible-demo alternatives (e.g. a "Demo" badge on seed profiles).
+Going forward: for changes to `src/server/services/**` or `prisma/**` (platform
+territory), drop a request here instead — UI-side widening like the gig-card `select`
+was fine to take as-is this time.

@@ -291,12 +291,9 @@ async function main() {
     });
     const prof = SELLER_PROFILES[s.id];
     if (prof) {
-      // Demo social proof so cards don't look empty pre-launch.
-      // Deterministic per seller id → idempotent across re-runs.
-      let h = 0;
-      for (const ch of s.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-      const ratingAvg = Math.round((4.6 + (h % 5) * 0.1) * 10) / 10; // 4.6–5.0
-      const ratingCount = 7 + (h % 120);
+      // NOTE: no fabricated ratingAvg/ratingCount here — ratings must trace to real
+      // Review rows (platform honesty rule; same reason the ticker uses real events).
+      // Cards handle the empty state ("New") instead of showing fake counts.
       const data = {
         headline: prof.headline,
         bio: prof.bio,
@@ -304,8 +301,6 @@ async function main() {
         aiTools: prof.aiTools,
         specializations: prof.specializations,
         instagramUsername: prof.instagramUsername,
-        ratingAvg,
-        ratingCount,
       };
       await prisma.sellerProfile.upsert({
         where: { userId: s.id },
