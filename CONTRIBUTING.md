@@ -15,11 +15,15 @@ Conflicts happen at the file level, so this map is the contract.
 
 - **`main` is production.** Every deploy clones `main`; the migrate container applies
   `prisma/migrations` from `main`. Therefore `main` must always be shippable.
-- **UI team → `ui-redesign` branch.** Long-lived during the redesign; rebase on `main`
-  daily (backend merges are small, rebases stay trivial); merge to `main` when the
-  design is cohesive enough to go live.
-- **Platform team → small complete batches to `main`.** Each batch typecheck + build
-  clean, then deployed with the post-deploy verify suite (smoke + deep sweep + R2).
+- **`main` is branch-protected (since 2026-07-02):** collaborators cannot push to it
+  directly — changes land via Pull Request (or via the repo owner merging your branch).
+  Force-pushes and branch deletion are blocked for everyone.
+- **UI team → feature branches** (e.g. `feature/dark-redesign`), branched from the
+  latest `main`. Rebase on `main` regularly (platform merges are small, rebases stay
+  trivial). When ready: open a PR, or tell the founder — the platform side reviews,
+  merges, and deploys.
+- **Platform team → small complete batches to `main`** (owner direct-push). Each batch
+  typecheck + build clean, then deployed with the post-deploy verify suite.
 
 ## Ground rules
 
