@@ -1,7 +1,17 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { listUsersForAdmin } from "@/server/services/admin-users";
 import { UserRowActions } from "@/components/user-row-actions";
+
+/** Compact "how long ago" for activity columns (admin-only page — English is fine). */
+function ago(d: Date | null): string {
+  if (!d) return "—";
+  const mins = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
+  if (mins < 60) return `${mins}m`;
+  if (mins < 24 * 60) return `${Math.floor(mins / 60)}h`;
+  return `${Math.floor(mins / (24 * 60))}d`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +55,10 @@ export default async function AdminUsersPage({
                 <th>{t("status")}</th>
                 <th className="tabular-nums">{t("orders")}</th>
                 <th className="tabular-nums">{t("sales")}</th>
+                <th className="tabular-nums">Contacts</th>
+                <th className="tabular-nums">Msgs</th>
+                <th>Seen</th>
+                <th>TG chat</th>
                 <th>{t("actions")}</th>
               </tr>
             </thead>
@@ -52,7 +66,9 @@ export default async function AdminUsersPage({
               {users.map((u) => (
                 <tr key={u.id} className="border-b border-[hsl(var(--border))]">
                   <td className="py-2">
-                    <span className="font-medium">{u.name || "—"}</span>
+                    <Link href={`/admin/users/${u.id}`} className="font-medium text-[hsl(var(--primary))] hover:underline">
+                      {u.name || "(no name)"}
+                    </Link>
                     {u.username && (
                       <span className="ml-1 text-xs text-[hsl(var(--muted-foreground))]">@{u.username}</span>
                     )}
@@ -71,6 +87,10 @@ export default async function AdminUsersPage({
                   </td>
                   <td className="tabular-nums">{u.orders}</td>
                   <td className="tabular-nums">{u.sales}</td>
+                  <td className="tabular-nums">{u.contacts}</td>
+                  <td className="tabular-nums">{u.messages}</td>
+                  <td className="text-xs">{ago(u.lastSeenAt)}</td>
+                  <td className="text-xs">{ago(u.telegramLastChatAt)}</td>
                   <td>
                     {u.role === "ADMIN" ? (
                       <span className="text-xs text-[hsl(var(--muted-foreground))]">—</span>

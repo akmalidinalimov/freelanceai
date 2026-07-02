@@ -237,7 +237,16 @@
     "disputes": "Disputes",
     "payouts": "Payouts",
     "kyc": "KYC review",
-    "metrics": "Metrics"
+    "metrics": "Metrics",
+    "stat30dOrders": "Orders (30d)",
+    "stat30dCompleted": "Completed (30d)",
+    "stat30dRevenue": "Earned (30d), soʼm",
+    "stat30dContacts": "New contacts (30d)",
+    "bstatActive": "Active orders",
+    "bstatCompleted": "Completed",
+    "bstatSpent": "Total spent, soʼm",
+    "bstatContacted": "Sellers contacted",
+    "bstatSaved": "Saved gigs"
   },
   "Gig": {
     "createTitle": "Create a gig",

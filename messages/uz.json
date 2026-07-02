@@ -237,7 +237,16 @@
     "disputes": "Nizolar",
     "payouts": "Toʻlovlar",
     "kyc": "KYC tekshiruvi",
-    "metrics": "Koʻrsatkichlar"
+    "metrics": "Koʻrsatkichlar",
+    "stat30dOrders": "Buyurtmalar (30 kun)",
+    "stat30dCompleted": "Yakunlangan (30 kun)",
+    "stat30dRevenue": "Daromad (30 kun), soʼm",
+    "stat30dContacts": "Yangi kontaktlar (30 kun)",
+    "bstatActive": "Faol buyurtmalar",
+    "bstatCompleted": "Yakunlangan",
+    "bstatSpent": "Jami sarflangan, soʼm",
+    "bstatContacted": "Bogʻlangan sotuvchilar",
+    "bstatSaved": "Saqlangan giglar"
   },
   "Gig": {
     "createTitle": "Yangi xizmat yaratish",

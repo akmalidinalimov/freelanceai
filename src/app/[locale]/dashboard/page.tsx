@@ -6,6 +6,7 @@ import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listBuyerOrders } from "@/server/services/order";
 import { listSavedGigs } from "@/server/services/saved";
 import { getReferralInfo, applyReferral } from "@/server/services/referral";
+import { getBuyerStats } from "@/server/services/analytics";
 import { formatUzs } from "@/lib/utils";
 
 export default async function DashboardPage({
@@ -32,6 +33,7 @@ export default async function DashboardPage({
 
   const orders = await listBuyerOrders(user.id);
   const saved = await listSavedGigs(user.id);
+  const bstats = await getBuyerStats(user.id);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -50,6 +52,21 @@ export default async function DashboardPage({
             </Link>
           )}
         </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[
+          { label: t("bstatActive"), value: bstats.ordersActive.toLocaleString() },
+          { label: t("bstatCompleted"), value: bstats.ordersCompleted.toLocaleString() },
+          { label: t("bstatSpent"), value: `${formatUzs(bstats.spentUzs)}` },
+          { label: t("bstatContacted"), value: bstats.sellersContacted.toLocaleString() },
+          { label: t("bstatSaved"), value: bstats.savedGigs.toLocaleString() },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3">
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">{s.label}</p>
+            <p className="mt-1 text-lg font-bold tabular-nums">{s.value}</p>
+          </div>
+        ))}
       </div>
 
       <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { tgSendMessage } from "@/lib/telegram-bot";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { encryptPII } from "@/lib/pii-crypto";
+import { stampTelegramChat } from "@/server/services/activity";
 
 /**
  * Telegram bot webhook. Verified by the secret header. Idempotent (dedups on
@@ -50,6 +51,9 @@ export async function POST(request: Request) {
   const from = update.message?.from;
   const text = update.message?.text ?? "";
   const contact = update.message?.contact;
+
+  // Any real inbound message stamps "last chatted with the bot" (admin analytics).
+  if (from && !from.is_bot) stampTelegramChat(String(from.id));
 
   // KYC phone share: the user tapped the "share phone" button (requestContact). Telegram
   // gives us their already-verified phone. Only accept the user's OWN contact.

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { User, $Enums, Prisma } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
+import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
 import { notify } from "@/server/services/notification";
 
@@ -83,7 +84,10 @@ export async function confirmOrderPayment(orderId: string, actor: User) {
   });
 
   await audit({ actorId: actor.id, action: "order.payment.confirm", entity: "Order", entityId: orderId });
-  if (posted) await notifySellerPaid(orderId, order.sellerId);
+  if (posted) {
+    void trackEvent("order_paid", { userId: order.buyerId, entityId: orderId, meta: { provider: "MANUAL" } });
+    await notifySellerPaid(orderId, order.sellerId);
+  }
 }
 
 /**
@@ -113,6 +117,7 @@ export async function settleOrderByProvider(
       entityId: orderId,
       metadata: { provider, externalRef: externalRef ?? null },
     });
+    void trackEvent("order_paid", { userId: order.buyerId, entityId: orderId, meta: { provider } });
     await notifySellerPaid(orderId, order.sellerId);
   }
 }

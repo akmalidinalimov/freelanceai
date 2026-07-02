@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@/lib/track";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +21,7 @@ export function ContactSellerButton({
   if (viewer === "owner") return null;
 
   async function go() {
+    track("contact_cta_click", gigId);
     if (viewer === "guest") {
       window.location.href = `/${locale}/login`;
       return;

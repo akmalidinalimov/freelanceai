@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { requireAdminUser } from "@/lib/auth-guards";
-import { getAdminStats } from "@/server/services/analytics";
+import { getAdminStats, getAdminActivityStats } from "@/server/services/analytics";
 import { formatUzs } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,7 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
   const t = await getTranslations("Admin");
   const td = await getTranslations("Dispute");
   const stats = await getAdminStats();
+  const act = await getAdminActivityStats();
 
   const money = [
     { label: t("gmv"), value: `${formatUzs(stats.gmvUzs)} so'm` },
@@ -78,6 +79,61 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
           </div>
         ))}
       </div>
+
+      {/* Activity — who is actually using the platform */}
+      <h2 className="mb-2 mt-6 text-lg font-bold">Activity</h2>
+      <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[
+          { label: "Active 3d", value: act.activeUsers.d3 },
+          { label: "Active 7d", value: act.activeUsers.d7 },
+          { label: "Active 14d", value: act.activeUsers.d14 },
+          { label: "Active 30d", value: act.activeUsers.d30 },
+          { label: "New users 24h", value: act.registrations.d1 },
+          { label: "New users 7d", value: act.registrations.d7 },
+          { label: "New users 30d", value: act.registrations.d30 },
+          { label: "Telegram-linked", value: act.telegramLinked },
+          { label: "Contacts 7d", value: act.contacts.d7 },
+          { label: "Contacts 30d", value: act.contacts.d30 },
+          { label: "Messages 7d", value: act.messages.d7 },
+          { label: "KYC verified", value: act.kycVerified },
+        ].map((c) => (
+          <div key={c.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-4">
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">{c.label}</p>
+            <p className="mt-1 text-xl font-bold tabular-nums">{c.value.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Conversion funnel (last 30 days) */}
+      <h2 className="mb-2 mt-6 text-lg font-bold">Funnel — last 30 days</h2>
+      <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-5">
+        {[
+          { label: "Order-button clicks", value: act.funnel.orderCtaClicks },
+          { label: "Orders created", value: act.funnel.ordersCreated },
+          { label: "Orders paid", value: act.funnel.ordersPaid },
+          { label: "Contact clicks", value: act.funnel.contactCtaClicks },
+          { label: "Conversations started", value: act.funnel.conversationsStarted },
+        ].map((c) => (
+          <div key={c.label} className="rounded-lg border border-[hsl(var(--border))] p-4">
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">{c.label}</p>
+            <p className="mt-1 text-xl font-bold tabular-nums">{c.value.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mb-6 text-xs text-[hsl(var(--muted-foreground))]">
+        Click→order conversion:{" "}
+        <b>
+          {act.funnel.orderCtaClicks > 0
+            ? `${Math.round((act.funnel.ordersCreated / act.funnel.orderCtaClicks) * 100)}%`
+            : "n/a (no clicks tracked yet)"}
+        </b>
+        {" · "}Created→paid:{" "}
+        <b>
+          {act.funnel.ordersCreated > 0
+            ? `${Math.round((act.funnel.ordersPaid / act.funnel.ordersCreated) * 100)}%`
+            : "n/a"}
+        </b>
+      </p>
 
       {/* Ledger integrity — every order's double-entry postings must net to zero. */}
       <div

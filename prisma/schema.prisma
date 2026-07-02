@@ -72,6 +72,11 @@ model User {
   notifyEmail    Boolean @default(false)
   // Per-event-category mutes, e.g. { orders: true, messages: true, reviews: false }.
   notifyPrefs Json?
+  // Activity tracking (admin analytics): stamped on session creation, by a throttled
+  // per-request touch (~15 min resolution), and by any inbound Telegram-bot update.
+  lastLoginAt        DateTime?
+  lastSeenAt         DateTime?
+  telegramLastChatAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -96,8 +101,10 @@ model User {
   referrals      User[]  @relation("Referrals")
   following      Follow[] @relation("Following")
   followers      Follow[] @relation("Followers")
+  activityEvents ActivityEvent[]
 
   @@index([role])
+  @@index([lastSeenAt])
   @@index([referredById])
 }
 
@@ -732,4 +739,21 @@ model FeatureFlag {
   enabled   Boolean  @default(false)
   payload   Json?
   updatedAt DateTime @updatedAt
+}
+
+// Lightweight product-analytics events (funnel: what users click vs what converts).
+// Client-emitted types come through /api/events (validated enum, rate-limited);
+// server-emitted types are written by services (source of truth for conversions).
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // e.g. "order_cta_click" | "contact_cta_click" | "search" | "order_created" | "order_paid"
+  type      String
+  entityId  String? // gigId / orderId / conversationId the event refers to
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([userId, createdAt])
 }

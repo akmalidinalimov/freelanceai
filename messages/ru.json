@@ -237,7 +237,16 @@
     "disputes": "Споры",
     "payouts": "Выплаты",
     "kyc": "Проверка KYC",
-    "metrics": "Показатели"
+    "metrics": "Показатели",
+    "stat30dOrders": "Заказы (30 дн)",
+    "stat30dCompleted": "Завершено (30 дн)",
+    "stat30dRevenue": "Заработано (30 дн), сум",
+    "stat30dContacts": "Новые контакты (30 дн)",
+    "bstatActive": "Активные заказы",
+    "bstatCompleted": "Завершено",
+    "bstatSpent": "Всего потрачено, сум",
+    "bstatContacted": "Контактов с продавцами",
+    "bstatSaved": "Сохранённые гиги"
   },
   "Gig": {
     "createTitle": "Создать услугу",

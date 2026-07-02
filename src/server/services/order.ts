@@ -4,6 +4,7 @@ import type { OrderStatus, PackageTier, User } from "@prisma/client";
 import { orderWhereForUser, assertFound } from "@/lib/authz";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
+import { trackEvent } from "@/server/services/activity";
 import { canTransition } from "@/lib/order-state";
 import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
@@ -90,6 +91,7 @@ export async function createOrder(
     });
   });
   await audit({ actorId: buyerId, action: "order.create", entity: "Order", entityId: order.id });
+  void trackEvent("order_created", { userId: buyerId, entityId: order.id, meta: { gigId: gig.id } });
   return order;
 }
 

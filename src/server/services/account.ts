@@ -111,21 +111,29 @@ export async function deleteOwnAccount(user: User) {
   if (user.role === "ADMIN") {
     throw Errors.forbidden("Admin accounts cannot self-delete");
   }
+  await anonymizeAndClose(user, user.id, "account.delete");
+}
 
+/**
+ * Shared anonymize-and-close core, used by self-deletion AND admin deletion
+ * (admin-users.adminDeleteUser). Callers are responsible for authorization; this
+ * enforces only the data-integrity guards (active orders / withdrawable balance).
+ */
+export async function anonymizeAndClose(target: User, actorId: string, action: string) {
   // Fast pre-checks for a friendly error before entering the transaction. These are
   // RE-CHECKED inside the transaction below — an order placed (or payout settled)
   // between check and anonymization must abort the deletion, not slip through (TOCTOU).
   const activeOrders = await prisma.order.count({
     where: {
-      OR: [{ buyerId: user.id }, { sellerId: user.id }],
+      OR: [{ buyerId: target.id }, { sellerId: target.id }],
       status: { in: [...ACTIVE_ORDER_STATUSES] },
     },
   });
   if (activeOrders > 0) {
     throw Errors.conflict("Finish or cancel your active orders first");
   }
-  if (user.isSeller) {
-    const balance = await sellerAvailableUzs(user.id);
+  if (target.isSeller) {
+    const balance = await sellerAvailableUzs(target.id);
     if (balance > 0) {
       throw Errors.conflict("Withdraw your remaining balance first");
     }
@@ -134,11 +142,11 @@ export async function deleteOwnAccount(user: User) {
   // Collect re-hosted media URLs up front so we can purge the R2 objects after the DB
   // rows go (deleting rows alone would leave portfolio/Instagram images publicly reachable).
   const portfolioMedia = await prisma.portfolioItem.findMany({
-    where: { profile: { userId: user.id } },
+    where: { profile: { userId: target.id } },
     select: { mediaUrl: true },
   });
 
-  const anonymize = (tx: Prisma.TransactionClient) => runAnonymize(tx, user);
+  const anonymize = (tx: Prisma.TransactionClient) => runAnonymize(tx, target);
   try {
     // Serializable: a concurrent order insert that would invalidate the guard forces a
     // serialization failure (P2034) instead of slipping past the count (phantom read).
@@ -155,7 +163,7 @@ export async function deleteOwnAccount(user: User) {
   // Purge re-hosted media from R2 (best-effort; never blocks the deletion).
   await Promise.all(portfolioMedia.map((m) => deleteStoredFile(m.mediaUrl)));
 
-  await audit({ actorId: user.id, action: "account.delete", entity: "User", entityId: user.id });
+  await audit({ actorId, action, entity: "User", entityId: target.id });
 }
 
 async function runAnonymize(tx: Prisma.TransactionClient, user: User): Promise<void> {

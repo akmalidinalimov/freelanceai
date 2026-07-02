@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@/lib/track";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { GalleryUpload } from "@/components/gallery-upload";
@@ -63,6 +64,7 @@ export function OrderPanel({
   }
 
   async function placeOrder() {
+    track("order_cta_click", gigId); // funnel numerator lives server-side (order_created)
     if (viewer === "guest") {
       window.location.href = `/${locale}/login`;
       return;

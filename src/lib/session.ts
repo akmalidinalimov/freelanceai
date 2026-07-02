@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { touchLastSeen } from "@/server/services/activity";
 import type { User } from "@prisma/client";
 
 /**
@@ -16,6 +17,7 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user || user.status !== "ACTIVE") return null;
+  touchLastSeen(user.id); // throttled fire-and-forget (admin activity analytics)
   return user;
 });
 

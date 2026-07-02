@@ -9,14 +9,24 @@ export interface SellerStats {
   views: number;
   conversionPct: number; // completed orders / gig views
   byStatus: Record<string, number>;
+  /** Momentum: last-30-days slice (new orders, completions, net revenue, new contacts). */
+  last30: { orders: number; completed: number; revenueUzs: number; contacts: number };
 }
 
 /** Read-only seller performance metrics for the dashboard. */
 export async function getSellerStats(sellerId: string): Promise<SellerStats> {
-  const [statusGroups, viewAgg, activeGigs] = await Promise.all([
+  const d30 = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+  const [statusGroups, viewAgg, activeGigs, orders30, completed30Agg, contacts30] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], where: { sellerId }, _count: true }),
     prisma.gig.aggregate({ where: { sellerId, deletedAt: null }, _sum: { views: true } }),
     prisma.gig.count({ where: { sellerId, deletedAt: null, status: "ACTIVE" } }),
+    prisma.order.count({ where: { sellerId, createdAt: { gte: d30 } } }),
+    prisma.order.aggregate({
+      where: { sellerId, status: "COMPLETED", updatedAt: { gte: d30 } },
+      _sum: { sellerNetUzs: true },
+      _count: true,
+    }),
+    prisma.conversation.count({ where: { sellerId, createdAt: { gte: d30 } } }),
   ]);
 
   const byStatus: Record<string, number> = {};
@@ -30,7 +40,58 @@ export async function getSellerStats(sellerId: string): Promise<SellerStats> {
   const views = viewAgg._sum.views ?? 0;
   const conversionPct = views > 0 ? Math.round((completed / views) * 1000) / 10 : 0;
 
-  return { totalOrders, completed, active, activeGigs, views, conversionPct, byStatus };
+  return {
+    totalOrders,
+    completed,
+    active,
+    activeGigs,
+    views,
+    conversionPct,
+    byStatus,
+    last30: {
+      orders: orders30,
+      completed: completed30Agg._count,
+      revenueUzs: completed30Agg._sum.sellerNetUzs ?? 0,
+      contacts: contacts30,
+    },
+  };
+}
+
+export interface BuyerStats {
+  ordersTotal: number;
+  ordersActive: number;
+  ordersCompleted: number;
+  spentUzs: number; // succeeded payments across their orders
+  sellersContacted: number;
+  savedGigs: number;
+  reviewsWritten: number;
+}
+
+/** Read-only buyer activity metrics for the buyer dashboard. */
+export async function getBuyerStats(buyerId: string): Promise<BuyerStats> {
+  const [byStatus, paidAgg, contacts, saved, reviews] = await Promise.all([
+    prisma.order.groupBy({ by: ["status"], where: { buyerId }, _count: true }),
+    prisma.transaction.aggregate({
+      where: { type: "PAYMENT_IN", status: "SUCCEEDED", order: { buyerId } },
+      _sum: { amountUzs: true },
+    }),
+    prisma.conversation.count({ where: { buyerId } }),
+    prisma.savedGig.count({ where: { userId: buyerId } }),
+    prisma.review.count({ where: { authorId: buyerId } }),
+  ]);
+  const m: Record<string, number> = Object.fromEntries(byStatus.map((g) => [g.status, g._count]));
+  const ordersTotal = byStatus.reduce((a, g) => a + g._count, 0);
+  const ordersActive =
+    (m.PENDING_PAYMENT ?? 0) + (m.IN_PROGRESS ?? 0) + (m.DELIVERED ?? 0) + (m.REVISION ?? 0) + (m.DISPUTED ?? 0);
+  return {
+    ordersTotal,
+    ordersActive,
+    ordersCompleted: m.COMPLETED ?? 0,
+    spentUzs: paidAgg._sum.amountUzs ?? 0,
+    sellersContacted: contacts,
+    savedGigs: saved,
+    reviewsWritten: reviews,
+  };
 }
 
 export interface AdminStats {
@@ -43,6 +104,78 @@ export interface AdminStats {
   gigsActive: number;
   ledgerOrders: number; // orders that have ledger entries
   ledgerImbalanced: number; // orders whose entries don't net to zero (should be 0)
+}
+
+export interface AdminActivityStats {
+  /** Active users (lastSeenAt within N days) for 3/7/14/30-day windows. */
+  activeUsers: { d3: number; d7: number; d14: number; d30: number };
+  /** New registrations for 1/7/30-day windows. */
+  registrations: { d1: number; d7: number; d30: number };
+  /** Conversations started + messages sent, 7/30-day windows. */
+  contacts: { d7: number; d30: number };
+  messages: { d7: number; d30: number };
+  /** Funnel: CTA clicks vs real conversions (server-written), 30-day window. */
+  funnel: {
+    orderCtaClicks: number;
+    ordersCreated: number;
+    ordersPaid: number;
+    contactCtaClicks: number;
+    conversationsStarted: number;
+  };
+  /** Ever-chatted-with-the-Telegram-bot count + KYC-verified count. */
+  telegramLinked: number;
+  kycVerified: number;
+}
+
+/** Activity/engagement metrics (admin dashboard). Separate from finance stats so the
+ * ledger scan doesn't slow the fast tiles. */
+export async function getAdminActivityStats(): Promise<AdminActivityStats> {
+  const now = Date.now();
+  const ago = (days: number) => new Date(now - days * 24 * 3600 * 1000);
+  const activeSince = (d: Date) => prisma.user.count({ where: { lastSeenAt: { gte: d }, status: "ACTIVE" } });
+  const regSince = (d: Date) => prisma.user.count({ where: { createdAt: { gte: d } } });
+  const convSince = (d: Date) => prisma.conversation.count({ where: { createdAt: { gte: d } } });
+  const msgSince = (d: Date) => prisma.message.count({ where: { createdAt: { gte: d } } });
+  const events = (type: string, d: Date) =>
+    prisma.activityEvent.count({ where: { type, createdAt: { gte: d } } });
+
+  const d30 = ago(30);
+  const [a3, a7, a14, a30, r1, r7, r30, c7, c30, m7, m30, ctaOrder, created, paid, ctaContact, tg, kyc] =
+    await Promise.all([
+      activeSince(ago(3)),
+      activeSince(ago(7)),
+      activeSince(ago(14)),
+      activeSince(d30),
+      regSince(ago(1)),
+      regSince(ago(7)),
+      regSince(d30),
+      convSince(ago(7)),
+      convSince(d30),
+      msgSince(ago(7)),
+      msgSince(d30),
+      events("order_cta_click", d30),
+      events("order_created", d30),
+      events("order_paid", d30),
+      events("contact_cta_click", d30),
+      prisma.user.count({ where: { telegramLastChatAt: { not: null } } }),
+      prisma.user.count({ where: { kycStatus: "VERIFIED" } }),
+    ]);
+
+  return {
+    activeUsers: { d3: a3, d7: a7, d14: a14, d30: a30 },
+    registrations: { d1: r1, d7: r7, d30: r30 },
+    contacts: { d7: c7, d30: c30 },
+    messages: { d7: m7, d30: m30 },
+    funnel: {
+      orderCtaClicks: ctaOrder,
+      ordersCreated: created,
+      ordersPaid: paid,
+      contactCtaClicks: ctaContact,
+      conversationsStarted: c30,
+    },
+    telegramLinked: tg,
+    kycVerified: kyc,
+  };
 }
 
 /** Read-only platform finance + ops metrics for the admin dashboard. */

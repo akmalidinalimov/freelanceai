@@ -202,6 +202,10 @@ export default async function SellerDashboardPage({
             { label: t("statCompleted"), value: stats.completed.toLocaleString() },
             { label: t("statActiveGigs"), value: stats.activeGigs.toLocaleString() },
             { label: t("statConversion"), value: `${stats.conversionPct}%` },
+            { label: t("stat30dOrders"), value: stats.last30.orders.toLocaleString() },
+            { label: t("stat30dCompleted"), value: stats.last30.completed.toLocaleString() },
+            { label: t("stat30dRevenue"), value: `${formatUzs(stats.last30.revenueUzs)}` },
+            { label: t("stat30dContacts"), value: stats.last30.contacts.toLocaleString() },
           ].map((s) => (
             <div key={s.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3">
               <p className="text-xs text-[hsl(var(--muted-foreground))]">{s.label}</p>
