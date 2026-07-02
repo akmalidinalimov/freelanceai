@@ -6,6 +6,10 @@ need frontend work here instead of editing components.
 
 ## → For the UI team
 
+> ✅ **Tasks 1–4 below: DONE by the UI team (feature/dark-redesign), merged to main
+> and deployed 2026-07-02.** Kept for reference. Task 5 (Gigora rebrand) remains
+> gated on the founder's go. Next big item: the dark-theme redesign itself.
+
 ### 1. Account data-export + deletion controls (Settings page)
 Backend is live; needs UI in `src/components/settings-form.tsx` (or a new section on
 the settings page):
