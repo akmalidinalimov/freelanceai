@@ -93,6 +93,83 @@ async function listAllCreatorsUncached(take = 60): Promise<BrowseCreator[]> {
   return rows.map(toCreator);
 }
 
+export interface ActivityEvent {
+  type: "delivered" | "review" | "joined";
+  /** Public first name of the (active) seller involved. */
+  name: string;
+  /** delivered → gig title; review → rating as string; joined → "". */
+  extra: string;
+}
+
+/**
+ * REAL recent marketplace events for the homepage ticker — completed orders, fresh
+ * high ratings, new creators. Replaces the launch-era hardcoded strings: everything
+ * shown here must trace to a DB row (honest social proof). Names are already public
+ * on the creators' own profiles. Empty result → the ticker simply doesn't render.
+ */
+async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
+  const sellerName = (u: { firstName: string | null; name: string | null; username: string | null }) =>
+    u.firstName ?? u.name ?? u.username ?? "";
+
+  const [delivered, reviews, joined] = await Promise.all([
+    prisma.order.findMany({
+      where: { status: "COMPLETED", seller: { status: "ACTIVE" } },
+      orderBy: { updatedAt: "desc" },
+      take: 5,
+      select: {
+        seller: { select: { firstName: true, name: true, username: true } },
+        gig: { select: { title: true } },
+      },
+    }),
+    prisma.review.findMany({
+      where: { rating: { gte: 4 }, gig: { seller: { status: "ACTIVE" } } },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        rating: true,
+        gig: { select: { seller: { select: { firstName: true, name: true, username: true } } } },
+      },
+    }),
+    prisma.user.findMany({
+      where: { isSeller: true, status: "ACTIVE" },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      select: { firstName: true, name: true, username: true },
+    }),
+  ]);
+
+  const events: ActivityEvent[] = [];
+  const trim = (s: string) => (s.length > 44 ? `${s.slice(0, 44).trimEnd()}…` : s);
+  for (const o of delivered) {
+    const name = sellerName(o.seller);
+    if (name) events.push({ type: "delivered", name, extra: trim(o.gig.title) });
+  }
+  for (const r of reviews) {
+    const name = sellerName(r.gig.seller);
+    if (name) events.push({ type: "review", name, extra: String(r.rating) });
+  }
+  for (const u of joined) {
+    const name = sellerName(u);
+    if (name) events.push({ type: "joined", name, extra: "" });
+  }
+
+  // Interleave the three streams so the ticker doesn't read as blocks of one kind.
+  const byType = { delivered: [] as ActivityEvent[], review: [] as ActivityEvent[], joined: [] as ActivityEvent[] };
+  for (const e of events) byType[e.type].push(e);
+  const mixed: ActivityEvent[] = [];
+  for (let i = 0; i < 5 && mixed.length < 10; i++) {
+    for (const k of ["delivered", "review", "joined"] as const) {
+      const e = byType[k][i];
+      if (e && mixed.length < 10) mixed.push(e);
+    }
+  }
+  return mixed;
+}
+
+export const listRecentActivity = unstable_cache(listRecentActivityUncached, ["home-activity"], {
+  revalidate: 300,
+});
+
 // Hot anonymous discovery reads, cached 60s per args (home rail, /creators, /browse/[spec]).
 export const listCreatorsBySpecialization = unstable_cache(
   listCreatorsBySpecializationUncached,

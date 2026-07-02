@@ -1,11 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-
-/** Dark scrolling activity bar under the header — signals a live marketplace. */
-export function ActivityTicker() {
-  const t = useTranslations("Home");
-  const items = (t.raw("tickerItems") as string[]) ?? [];
+/**
+ * Dark scrolling activity bar under the header. Items are REAL recent marketplace
+ * events (completed orders, fresh ratings, new creators) composed server-side from
+ * listRecentActivity — never invented copy. Renders nothing when there's no activity.
+ */
+export function ActivityTicker({ items }: { items: string[] }) {
   if (items.length === 0) return null;
   const loop = [...items, ...items];
 

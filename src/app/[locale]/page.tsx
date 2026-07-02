@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listFeaturedCreators, countActiveCreators } from "@/server/services/browse";
+import { listFeaturedCreators, countActiveCreators, listRecentActivity } from "@/server/services/browse";
 import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { ActivityTicker } from "@/components/activity-ticker";
@@ -29,10 +29,18 @@ export default async function HomePage({
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
   const creatorCount = await countActiveCreators().catch(() => 0);
+  const activity = await listRecentActivity().catch(() => []);
+  const tickerItems = activity.map((e) =>
+    e.type === "delivered"
+      ? t("tickerDelivered", { name: e.name, title: e.extra })
+      : e.type === "review"
+        ? t("tickerReview", { name: e.name, rating: e.extra })
+        : t("tickerJoined", { name: e.name })
+  );
 
   return (
     <>
-      <ActivityTicker />
+      <ActivityTicker items={tickerItems} />
       <div
         className="mx-auto max-w-5xl px-4"
         style={{

@@ -148,13 +148,6 @@
     "catBranding": "логотип, айдентика",
     "catMotion": "анимация логотипа, интро",
     "catEdit": "ретушь, upscale",
-    "tickerItems": [
-      "Дильноза только что сдала AI-ролик",
-      "Камила получила отзыв 5★",
-      "новый заказ: talking-head аватар",
-      "PixelUz онлайн — 12 работ в процессе",
-      "Сардор начал проект логотипа"
-    ],
     "searchSub": "Опишите задачу простыми словами — AI подберёт лучших креаторов.",
     "searchAssistant": "Помощник FreelanceAI",
     "searchPlaceholder": "Опишите нужную работу…",
@@ -169,7 +162,10 @@
     "trustSecure": "✓ Безопасная оплата",
     "trustPayment": "Payme · Click · Uzum",
     "trustVerified": "✓ Проверенные креаторы",
-    "trustLangs": "oʻzbek · рус · english"
+    "trustLangs": "oʻzbek · рус · english",
+    "tickerDelivered": "{name} сдал(а) работу: {title}",
+    "tickerReview": "{name} получил(а) оценку {rating}★",
+    "tickerJoined": "{name} присоединился(лась) к платформе"
   },
   "Categories": {
     "aiVideo": "AI-видео",

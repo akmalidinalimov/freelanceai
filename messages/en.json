@@ -148,13 +148,6 @@
     "catBranding": "logo, identity",
     "catMotion": "logo animation, intro",
     "catEdit": "retouch, upscale",
-    "tickerItems": [
-      "Dilnoza just delivered an AI ad video",
-      "Kamila received a 5★ review",
-      "new order: talking-head avatar",
-      "PixelUz online — 12 jobs in progress",
-      "Sardor started a logo project"
-    ],
     "searchSub": "Describe your job in plain words — AI ranks the best-matched creators.",
     "searchAssistant": "FreelanceAI assistant",
     "searchPlaceholder": "Describe the work you need…",
@@ -169,7 +162,10 @@
     "trustSecure": "✓ Secure payment",
     "trustPayment": "Payme · Click · Uzum",
     "trustVerified": "✓ Verified creators",
-    "trustLangs": "oʻzbek · рус · english"
+    "trustLangs": "oʻzbek · рус · english",
+    "tickerDelivered": "{name} delivered: {title}",
+    "tickerReview": "{name} received a {rating}★ rating",
+    "tickerJoined": "{name} joined the platform"
   },
   "Categories": {
     "aiVideo": "AI video",
