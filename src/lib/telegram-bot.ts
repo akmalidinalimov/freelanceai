@@ -15,15 +15,21 @@ export async function tgSendMessage(
   chatId: number | string,
   text: string,
   replyMarkup?: Record<string, unknown>
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await fetch(api("sendMessage"), {
+    const res = await fetch(api("sendMessage"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chat_id: chatId, text, ...(replyMarkup ? { reply_markup: replyMarkup } : {}) }),
     });
+    // Telegram answers 200 {ok:true} on accept; 403 = user blocked the bot — the
+    // caller must know delivery failed (digest falls back to email on this).
+    if (!res.ok) return false;
+    const body = (await res.json().catch(() => null));
+    return body?.ok === true;
   } catch (err) {
     console.error("tgSendMessage failed", err);
+    return false;
   }
 }
 

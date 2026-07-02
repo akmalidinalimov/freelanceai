@@ -25,7 +25,7 @@ async function computeFlags(): Promise<Flag[]> {
   const d1 = new Date(now - 1 * DAY);
   const d7 = new Date(now - 7 * DAY);
 
-  const [redactions, disputes, refunds, contactsByBuyer, paidBuyers, rapidContacts, newHighValue] =
+  const [redactions, disputes, refunds, contactsByBuyer, paidBuyers, rapidContacts, newHighValue, deviceBursts] =
     await Promise.all([
       // Contact-info redactions in the last 30 days (off-platform bypass attempts).
       prisma.activityEvent.groupBy({
@@ -69,6 +69,13 @@ async function computeFlags(): Promise<Flag[]> {
           buyer: { createdAt: { gte: d7 } },
         },
         _sum: { amountUzs: true },
+      }),
+      // Distinct new devices per user in the last 7 days (device_seen rows are
+      // written only on first sighting — see activity.recordDeviceSighting).
+      prisma.activityEvent.groupBy({
+        by: ["userId"],
+        where: { type: "device_seen", createdAt: { gte: d7 }, userId: { not: null } },
+        _count: true,
       }),
     ]);
 
@@ -146,6 +153,16 @@ async function computeFlags(): Promise<Flag[]> {
       type: "NEW_ACCOUNT_HIGH_VALUE",
       severity: "MEDIUM",
       details: { paidUzsFirstWeek: sum },
+    });
+  }
+
+  for (const d of deviceBursts) {
+    if (!d.userId || d._count < 6) continue; // multi-device + UA variety is normal life
+    flags.push({
+      userId: d.userId,
+      type: "NEW_DEVICE_BURST",
+      severity: d._count >= 12 ? "HIGH" : "MEDIUM",
+      details: { newDevices7d: d._count },
     });
   }
 

@@ -51,6 +51,48 @@ export function touchLastSeen(userId: string): void {
   // Streak/XP maintenance piggybacks the same throttle window (dynamic import
   // avoids a static cycle only in spirit — gamification is a leaf module).
   void import("@/server/services/gamification").then((g) => g.touchStreak(userId)).catch(() => {});
+  void recordDeviceSighting(userId);
+}
+
+/**
+ * Security telemetry: hash the caller's IP+UA (never stored raw — SHA-256 prefix
+ * only) and record a `device_seen` event the FIRST time this device appears for the
+ * user in 90 days. Distinct new devices in a short window feed the NEW_DEVICE_BURST
+ * red-flag signal (account sharing / takeover indicator). Fails silently outside a
+ * request scope (cron) or on any error — telemetry must never break a page.
+ */
+async function recordDeviceSighting(userId: string): Promise<void> {
+  try {
+    const { headers } = await import("next/headers");
+    const h = await headers();
+    const ip = h.get("cf-connecting-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+    const ua = h.get("user-agent") ?? "";
+    if (!ip && !ua) return;
+    // /16-truncate IPv4 so Uzbek carrier CG-NAT pool rotation doesn't mint a "new
+    // device" per session; HMAC with a server pepper so a DB leak can't be
+    // dictionary-tested against candidate IP+UA pairs.
+    const ipNet = ip.includes(".") ? ip.split(".").slice(0, 2).join(".") : ip.split(":").slice(0, 3).join(":");
+    const { createHmac } = await import("node:crypto");
+    const pepper = process.env.AUTH_SECRET ?? "device-pepper";
+    const hash = createHmac("sha256", pepper).update(`${ipNet}|${ua}`).digest("hex").slice(0, 32);
+
+    const seen = await prisma.activityEvent.findFirst({
+      where: {
+        userId,
+        type: "device_seen",
+        entityId: hash,
+        createdAt: { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) },
+      },
+      select: { id: true },
+    });
+    if (!seen) {
+      await prisma.activityEvent.create({
+        data: { userId, type: "device_seen", entityId: hash },
+      });
+    }
+  } catch {
+    // outside request scope or transient failure — skip
+  }
 }
 
 export function stampLastLogin(userId: string): void {

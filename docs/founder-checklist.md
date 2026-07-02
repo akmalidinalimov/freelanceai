@@ -7,8 +7,8 @@ chat; this is the tracking copy.
 | # | Item | Status | Hands to platform team | Verified by |
 |---|------|--------|------------------------|-------------|
 | 1 | Meta Business + App (Instagram Business Login, redirect URI set) + Pixel + IG tester | ☐ | App ID, App Secret, Pixel ID | Live IG connect on founder's profile; Pixel wired consent-gated |
-| 2 | Anthropic API key (console.anthropic.com) | ☐ | sk-ant-… | S3 intent search live, better "understood/why-matched" |
-| 3 | Voyage AI key (voyageai.com) | ☐ | pa-… | S2 semantic search live, fuzzy-query A/B check |
+| 2 | Anthropic API key (console.anthropic.com) | ✅ 2026-07-03 | delivered | S3 LIVE — verified: RU fuzzy query → understood echo + fashion niche detected |
+| 3 | Voyage AI key (voyageai.com) | ✅ 2026-07-03 | delivered | key validated (1024-dim); S2 build next (pgvector DB-image swap) |
 | 4 | Buy gigora.ai (Cloudflare Registrar) | ☐ | "bought" | Rebrand runbook executed, suite green on gigora.ai |
 | 5 | Microsoft Clarity project | ☐ | Project ID | Recordings/heatmaps flowing (consent-gated) |
 | 6 | support@aicreator.academy (CF Email Routing → Gmail) | ☐ | "done" | Test email received |

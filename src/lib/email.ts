@@ -10,21 +10,24 @@ export function emailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<void> {
+export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM ?? `${BRAND_NAME} <noreply@aicreator.academy>`;
   if (!key) {
     console.log(`[email:noop] to=${to} subject="${subject}"`);
-    return;
+    return false;
   }
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from, to, subject, text, ...(html ? { html } : {}) }),
     });
+    if (!res.ok) console.error("sendEmail rejected", res.status);
+    return res.ok;
   } catch (err) {
     console.error("sendEmail failed", err);
+    return false;
   }
 }
 

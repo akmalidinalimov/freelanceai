@@ -99,6 +99,28 @@ r = await get("/api/health");
 const h = JSON.parse(r.body || "{}").data ?? {};
 check("health all green", h.db === "up" && h.trgm === true && h.media === true && h.email === true, JSON.stringify(h));
 check("health vector (pgvector ext)", h.vector === true, JSON.stringify(h));
+check("health ai (Claude intent)", h.ai === true, JSON.stringify(h));
+check("health semantic (Voyage)", h.semantic === true, JSON.stringify(h));
+
+// ── Batch15/16 + G-series progression checks (the standing regression checklist) ──
+const loginHtml = await (await fetch(`${B}/en/login`)).text();
+check("email login form present", loginHtml.includes("email-login"));
+check("auth/email callback page 200", (await fetch(`${B}/en/auth/email?token=x`)).status === 200);
+check("admin flags guarded", (await fetch(`${B}/uz/admin/flags`, { redirect: "manual" })).status === 307);
+check("admin conversations guarded", (await fetch(`${B}/uz/admin/conversations`, { redirect: "manual" })).status === 307);
+check("cron red-flags 401 without secret", (await mut("POST", "/api/cron/red-flags")) === 401);
+// Feature-gated checks: 404 => warn-skip so rolling back to a pre-feature SHA
+// (deploy-vps.ps1 -Sha <old>) doesn't false-fail the emergency lever.
+const digestStatus = await mut("POST", "/api/cron/digest");
+if (digestStatus === 404) console.log("  ⚠ cron digest not in this build (rollback?) — skipped");
+else check("cron digest 401 without secret", digestStatus === 401);
+const feedRes = await fetch(`${B}/api/feed`);
+if (feedRes.status === 404) console.log("  ⚠ feed API not in this build (rollback?) — skipped");
+else {
+  check("feed API 200 (anon -> trending)", feedRes.status === 200);
+  const feed = (await feedRes.json())?.data;
+  check("feed shape has sections", feed && Array.isArray(feed.trending) && Array.isArray(feed.forYou), JSON.stringify(Object.keys(feed ?? {})));
+}
 check("private media bucket active", h.privateMedia === true, `privateMedia=${h.privateMedia}`);
 check("home has main landmark (a11y skip target)", (await get("/uz")).body.includes('id="main"'));
 
