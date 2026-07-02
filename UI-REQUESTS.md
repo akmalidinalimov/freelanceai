@@ -8,7 +8,31 @@ need frontend work here instead of editing components.
 
 > ✅ **Tasks 1–4 below: DONE by the UI team (feature/dark-redesign), merged to main
 > and deployed 2026-07-02.** Kept for reference. Task 5 (Gigora rebrand) remains
-> gated on the founder's go. Next big item: the dark-theme redesign itself.
+> gated on the founder's go.
+
+### 🎨 NEXT SPRINT — Top 10 (2026-07-02, all independent, UI territory only)
+Branch each from latest `origin/main` (e.g. `feature/dark-theme-1`); push the branch,
+never main; backend needs → write them HERE. Suggested order: #1 first (it unblocks
+#2–#5), then anything in parallel.
+
+1. **Dark design system foundation** — port the chosen F-mockup palette into
+   `src/app/globals.css` tokens (dark bg/surface/primary/glow) + dark header/footer.
+2. **Homepage dark restyle** — hero, category cards, ticker, creators rail.
+3. **Marketplace & browse dark pass** — /gigs, /browse, /creators + cards re-skinned
+   (keep the browser-chrome gig-card concept).
+4. **Gig detail upgrade** — gallery lightbox, sticky order panel, package comparison
+   polish, FAQ accordion styling (/gigs/[slug]).
+5. **Public profile polish** — portfolio lightbox + video-poster treatment for the IG
+   carousel, spec chips, reviews styling (/creators/[username]).
+6. **Loading skeletons + designed empty states** across home/marketplace/search/
+   dashboards (no bare "no results" text).
+7. **Dashboard visual refresh** — style the new stat tiles, order tables, earnings
+   cards (/dashboard, /dashboard/seller).
+8. **Order status timeline** — visual stepper for the order lifecycle (/orders/[id]).
+9. **Toast/dialog system** — replace window.confirm + inline messages; wire into
+   save/contact/order/settings actions.
+10. **Mobile + a11y polish on the dark theme** — 390px audit, contrast ≥4.5:1 on ALL
+    dark surfaces (dark themes fail this easily), reduced-motion, bottom-nav.
 
 ### 1. Account data-export + deletion controls (Settings page)
 Backend is live; needs UI in `src/components/settings-form.tsx` (or a new section on
