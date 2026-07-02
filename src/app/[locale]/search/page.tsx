@@ -32,7 +32,9 @@ export default async function SearchPage({
   const t = await getTranslations("Search");
   const tp = await getTranslations("Profile");
 
-  const query = (q ?? "").trim();
+  // Same 300-char bound as the API route's zod schema — the SSR path must not be an
+  // unbounded-input bypass into pg_trgm/Claude.
+  const query = (q ?? "").trim().slice(0, 300);
   // This page runs the full match pipeline unauthenticated, so throttle by IP here too —
   // otherwise it's an un-rate-limited bypass of the /api/search/match limit.
   let limited = false;
@@ -85,6 +87,11 @@ export default async function SearchPage({
 
       {data && (
         <div className="mt-7">
+          {data.intent.understood && (
+            <p className="mb-2 text-sm text-[hsl(var(--muted-foreground))]">
+              {data.intent.understood}
+            </p>
+          )}
           {data.intent.specLabels.length > 0 && (
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-[hsl(var(--muted-foreground))]">

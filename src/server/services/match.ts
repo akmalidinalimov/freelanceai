@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { SPECIALIZATIONS, specLabel } from "@/lib/specializations";
 import { computeSpecEvidence } from "@/lib/niche-evidence";
+import { parseIntentWithClaude } from "@/server/services/intent-ai";
 
 /**
  * S1 creator matching — "describe your job → best-matched creators".
@@ -73,10 +74,23 @@ export function parseIntent(query: string, locale = "uz"): Intent {
 export async function matchCreators(
   query: string,
   opts: { limit?: number; locale?: string } = {}
-): Promise<{ intent: Intent; results: MatchResult[] }> {
+): Promise<{ intent: Intent & { understood?: string; ai?: boolean }; results: MatchResult[] }> {
   const locale = opts.locale ?? "uz";
   const limit = opts.limit ?? 10;
-  const intent = parseIntent(query, locale);
+
+  // S3: Claude parse (fuzzy, cross-language) UNIONED with the deterministic lexical
+  // parse — the lexical arm stays the precision floor; AI only ever ADDS recall.
+  // parseIntentWithClaude is fail-open (null on no-key/timeout) → pure S1 behavior.
+  const lexical = parseIntent(query, locale);
+  const ai = await parseIntentWithClaude(query, locale);
+  const specKeys = [...new Set([...lexical.specKeys, ...(ai?.specKeys ?? [])])];
+  const intent: Intent & { understood?: string; ai?: boolean } = {
+    terms: [...new Set([...lexical.terms, ...(ai?.terms ?? [])])],
+    specKeys,
+    specLabels: specKeys.map((k) => specLabel(k, locale)),
+    understood: ai?.understood,
+    ai: Boolean(ai),
+  };
 
   // relevance per seller: 0..1
   const rel = new Map<string, number>();

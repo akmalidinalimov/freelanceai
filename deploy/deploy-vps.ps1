@@ -62,7 +62,8 @@ foreach ($k in $needed) {
 $optional = 'ADMIN_TELEGRAM_IDS', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
 'S3_ENDPOINT', 'S3_BUCKET', 'S3_PRIVATE_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_PUBLIC_BASE_URL',
 'RESEND_API_KEY', 'EMAIL_FROM', 'CRON_SECRET',
-'INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET'
+'INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET',
+'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY'
 $lines = @($needed | ForEach-Object { "$_=$($dv[$_])" })
 foreach ($k in $optional) { if ($dv[$k] -and $dv[$k] -notmatch 'PASTE_') { $lines += "$k=$($dv[$k])" } }
 if ($Sha) { $lines += "GIT_SHA=$Sha" }

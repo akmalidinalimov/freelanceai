@@ -34,6 +34,7 @@ export async function GET() {
         media: mediaConfigured(),
         privateMedia: Boolean(process.env.S3_PRIVATE_BUCKET),
         email: emailConfigured(),
+        ai: Boolean(process.env.ANTHROPIC_API_KEY),
         version: process.env.APP_VERSION ?? "dev",
       },
     },
