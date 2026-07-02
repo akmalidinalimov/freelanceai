@@ -2,12 +2,15 @@
 
 /* Design tokens — light theme. shadcn-compatible HSL variables. */
 :root {
-  --background: 0 0% 100%;
+  /* Warm ivory canvas instead of stark white — easier on the eyes; grays and
+     borders are warmed to match (the old ones leaned cool/blue). */
+  --background: 36 45% 97%;
   --foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --border: 214 32% 91%;
-  --card: 0 0% 100%;
+  --muted: 36 30% 93%;
+  --muted-foreground: 30 10% 44%;
+  --border: 36 24% 88%;
+  /* Cards stay near-white so they gently lift off the warm canvas. */
+  --card: 40 60% 99.5%;
   --card-foreground: 222 47% 11%;
   /* Brand: a confident teal/emerald for an "AI + trust" feel. */
   --primary: 173 80% 36%;
@@ -85,14 +88,6 @@ body {
   background: radial-gradient(closest-side, hsl(38 92% 55% / 0.13), transparent 70%);
   animation: glow-drift-b 34s ease-in-out infinite alternate;
 }
-.ambient .glow-teal {
-  bottom: -10rem;
-  right: 10%;
-  width: 36rem;
-  height: 36rem;
-  background: radial-gradient(closest-side, hsl(var(--primary) / 0.1), transparent 70%);
-  animation: glow-drift-c 40s ease-in-out infinite alternate;
-}
 @keyframes glow-drift-a {
   to {
     transform: translate3d(-6rem, 4rem, 0) scale(1.08);
@@ -101,11 +96,6 @@ body {
 @keyframes glow-drift-b {
   to {
     transform: translate3d(5rem, -3rem, 0) scale(1.12);
-  }
-}
-@keyframes glow-drift-c {
-  to {
-    transform: translate3d(-4rem, -5rem, 0) scale(1.06);
   }
 }
 

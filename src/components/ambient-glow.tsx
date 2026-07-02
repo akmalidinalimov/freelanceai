@@ -8,7 +8,6 @@ export function AmbientGlow() {
     <div className="ambient" aria-hidden>
       <span className="glow-coral" />
       <span className="glow-gold" />
-      <span className="glow-teal" />
     </div>
   );
 }
