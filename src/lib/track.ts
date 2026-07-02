@@ -13,6 +13,12 @@ export function track(type: "order_cta_click" | "contact_cta_click", entityId?: 
       body: JSON.stringify({ type, ...(entityId ? { entityId } : {}) }),
       keepalive: true,
     }).catch(() => {});
+    // Mirror to the Meta Pixel (standard events) so ad campaigns can optimize on
+    // real funnel actions. No-op when the pixel isn't loaded.
+    (window as { fbq?: (...args: unknown[]) => void }).fbq?.(
+      "track",
+      type === "order_cta_click" ? "InitiateCheckout" : "Contact"
+    );
   } catch {
     // best-effort
   }

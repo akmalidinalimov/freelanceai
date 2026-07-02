@@ -40,8 +40,9 @@ const nextConfig: NextConfig = {
       // there are no external/web fonts (font). img/script/style stay Report-Only (the
       // R2/Telegram image allowlist + Next's script nonce are the attended next step).
       // Clarity beacons upload session data to *.clarity.ms + c.bing.com (Microsoft's
-      // collector) — required or analytics silently drops every payload.
-      "connect-src 'self' https://*.clarity.ms https://c.bing.com",
+      // collector); the Meta Pixel beacons to www.facebook.com — required or
+      // analytics silently drops every payload.
+      "connect-src 'self' https://*.clarity.ms https://c.bing.com https://www.facebook.com",
       "frame-src 'self'",
       "font-src 'self' data:",
     ].join("; ");
@@ -52,11 +53,11 @@ const nextConfig: NextConfig = {
     // tightening them would only produce false positives. Violations POST to /api/csp-report.
     const cspReportOnly = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.clarity.ms",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.clarity.ms https://connect.facebook.net",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data:",
+      "img-src 'self' data: https://www.facebook.com",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.clarity.ms https://c.bing.com",
+      "connect-src 'self' https://*.clarity.ms https://c.bing.com https://www.facebook.com",
       "frame-src 'self'",
       "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
       "base-uri 'self'",
