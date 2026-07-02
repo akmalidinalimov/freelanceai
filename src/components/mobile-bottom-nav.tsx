@@ -2,12 +2,13 @@
 
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { Home, Search, LayoutGrid, Users } from "lucide-react";
 
 const ITEMS = [
-  { href: "/", key: "home", icon: "⌂" },
-  { href: "/search", key: "search", icon: "🔍" },
-  { href: "/gigs", key: "explore", icon: "▦" },
-  { href: "/creators", key: "creators", icon: "✦" },
+  { href: "/", key: "home", Icon: Home },
+  { href: "/search", key: "search", Icon: Search },
+  { href: "/gigs", key: "explore", Icon: LayoutGrid },
+  { href: "/creators", key: "creators", Icon: Users },
 ] as const;
 
 /** Thumb-reachable bottom tab bar for mobile (hidden on md+). */
@@ -32,9 +33,7 @@ export function MobileBottomNav() {
               active ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]"
             }`}
           >
-            <span className="text-lg" aria-hidden>
-              {it.icon}
-            </span>
+            <it.Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
             {t(it.key)}
           </Link>
         );

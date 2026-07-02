@@ -405,7 +405,17 @@ async function listPublicGigsUncached(opts: GigFilters = {}) {
     take: opts.take ?? 48,
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },
-      seller: { select: { firstName: true, username: true, name: true } },
+      seller: {
+        select: {
+          firstName: true,
+          username: true,
+          name: true,
+          photoUrl: true,
+          image: true,
+          sellerProfile: { select: { ratingAvg: true, ratingCount: true, level: true } },
+        },
+      },
+      _count: { select: { orders: true } },
     },
   });
 
