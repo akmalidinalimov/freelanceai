@@ -521,6 +521,18 @@
       "TOP_RATED": "Top rated"
     }
   },
+  "Instagram": {
+    "connect": "Connect Instagram",
+    "connectHint": "Your Instagram posts sync to your portfolio automatically.",
+    "connected": "connected",
+    "lastSynced": "Last synced",
+    "disconnect": "Disconnect",
+    "disconnectWarn": "Disconnect Instagram? Synced portfolio items will be removed too.",
+    "markerConnected": "Instagram connected!",
+    "markerError": "Couldn't connect Instagram. Please try again.",
+    "markerUnavailable": "Instagram connection isn't available yet.",
+    "viewOnInstagram": "View on Instagram"
+  },
   "Account": {
     "title": "Account",
     "exportTitle": "Download my data",

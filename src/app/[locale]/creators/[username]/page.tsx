@@ -38,6 +38,7 @@ export default async function CreatorProfilePage({
   setRequestLocale(locale);
   const t = await getTranslations("Profile");
   const tg = await getTranslations("Gig");
+  const ti = await getTranslations("Instagram");
 
   const data = await getPublicProfile(username);
   if (!data) notFound();
@@ -188,22 +189,61 @@ export default async function CreatorProfilePage({
         </div>
       )}
 
-      {/* Portfolio */}
+      {/* Portfolio — horizontal snap carousel (manual uploads first, then IG-synced) */}
       {(profile?.portfolio?.length ?? 0) > 0 && (
         <div className="mb-8">
           <h2 className="mb-4 text-xl font-semibold">{t("portfolio")}</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {profile!.portfolio.map((p) => (
-              <div key={p.id} className="overflow-hidden rounded-lg border border-[hsl(var(--border))]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={p.mediaUrl}
-                  alt={p.caption ?? ""}
-                  loading="lazy"
-                  className="aspect-square w-full object-cover"
-                />
-              </div>
-            ))}
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+            {profile!.portfolio.map((p) => {
+              const fromIg = p.source === "instagram";
+              const isVideo = p.mediaType === "video";
+              const media = (
+                <span className="relative block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.mediaUrl}
+                    alt={p.caption ?? ""}
+                    loading="lazy"
+                    className="aspect-square w-full object-cover"
+                  />
+                  {isVideo && (
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 pl-0.5 text-lg text-white backdrop-blur-sm">
+                        ▶
+                      </span>
+                    </span>
+                  )}
+                </span>
+              );
+              return (
+                <figure
+                  key={p.id}
+                  className="w-40 shrink-0 snap-start overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] sm:w-48"
+                >
+                  {/* Video: the image is the poster; the permalink is the playable source. */}
+                  {isVideo && p.permalink ? (
+                    <a href={p.permalink} target="_blank" rel="noopener noreferrer">
+                      {media}
+                    </a>
+                  ) : (
+                    media
+                  )}
+                  {fromIg && p.permalink && (
+                    <a
+                      href={p.permalink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block truncate px-2 py-1.5 text-[11px] font-medium text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      ↗ {ti("viewOnInstagram")}
+                    </a>
+                  )}
+                </figure>
+              );
+            })}
           </div>
         </div>
       )}

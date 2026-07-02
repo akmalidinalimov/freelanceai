@@ -521,6 +521,18 @@
       "TOP_RATED": "Топ-рейтинг"
     }
   },
+  "Instagram": {
+    "connect": "Подключить Instagram",
+    "connectHint": "Ваши посты из Instagram автоматически синхронизируются в портфолио.",
+    "connected": "подключён",
+    "lastSynced": "Последняя синхронизация",
+    "disconnect": "Отключить",
+    "disconnectWarn": "Отключить Instagram? Синхронизированные элементы портфолио будут удалены.",
+    "markerConnected": "Instagram успешно подключён!",
+    "markerError": "Не удалось подключить Instagram. Попробуйте ещё раз.",
+    "markerUnavailable": "Подключение Instagram пока недоступно.",
+    "viewOnInstagram": "Смотреть в Instagram"
+  },
   "Account": {
     "title": "Аккаунт",
     "exportTitle": "Скачать мои данные",
