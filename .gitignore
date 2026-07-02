@@ -11,6 +11,12 @@ next-env.d.ts
 # production
 /build
 
+# playwright e2e
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # misc
 .DS_Store
 *.pem
@@ -44,3 +50,6 @@ yarn-error.log*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Local MCP config (contains the Hostinger API token — never commit)
+/.mcp.json

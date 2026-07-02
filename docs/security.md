@@ -3,6 +3,11 @@
 Running log of security decisions and the adversarial-review backlog. Auth code
 gets an adversarial review (qa-verifier) each phase; this tracks the outcomes.
 
+> Broader data-protection design (PII classification, encryption, AuthZ/IDOR,
+> retention, Uzbek data-localization) lives in [DATA-PROTECTION.md](DATA-PROTECTION.md);
+> the phased plan + foundations are in [BUILD-SPEC.md](BUILD-SPEC.md). The AuthZ/IDOR
+> layer and single-use login nonce are scheduled for phase **P1.5** there.
+
 ## Phase 1 — Telegram auth review
 
 **Core crypto: PASS.** Both HMAC schemes correct (Login Widget secret =

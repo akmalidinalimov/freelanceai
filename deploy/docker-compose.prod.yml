@@ -1,0 +1,123 @@
+# Production stack for the shared Hostinger VPS (deployed via the Hostinger MCP as
+# project "freelanceai") at https://freelanceai.aicreator.academy. Exposure is via
+# Cloudflare Tunnel (cloudflared) — no host ports are published, so the box's existing
+# nginx (80/443) and other apps are untouched. Postgres stays internal. Secrets come
+# from the project environment:
+#   POSTGRES_PASSWORD, SESSION_SECRET, CLOUDFLARE_TUNNEL_TOKEN,
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME  (never committed here).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: freelanceai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: freelanceai
+    volumes:
+      - freelanceai_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freelanceai -d freelanceai"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    # Same prebuilt image as the app (prisma CLI + migrations baked in) — no network
+    # fetches on the migration path anymore.
+    image: ghcr.io/akmalidinalimov/freelanceai:${GIT_SHA:-latest}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
+    working_dir: /app
+    entrypoint: ["sh", "-c"]
+    command:
+      # Proper migrations: `prisma migrate deploy` from the image's prisma/migrations.
+      # On the pre-existing (db push era) database the first deploy fails with P3005
+      # ("database not empty") — the fallback baselines it by marking 0_init applied
+      # (schema already matches), then deploys. IMPORTANT: the baseline path only runs
+      # when the error is actually P3005 (grep). Any other failure aborts the deploy
+      # loudly with exit 1 instead of marking schema "applied" without running it. A
+      # partially-failed migration then needs deploy/migrate-fix-compose.yml (docs/ops.md).
+      - "(npx prisma migrate deploy --schema=prisma/schema.prisma > /tmp/mig.log 2>&1 && cat /tmp/mig.log || (cat /tmp/mig.log; if grep -q P3005 /tmp/mig.log; then echo 'baselining existing db (P3005)' && npx prisma migrate resolve --applied 0_init --schema=prisma/schema.prisma && npx prisma migrate deploy --schema=prisma/schema.prisma; else echo '[migrate] FAILED (not P3005) — aborting deploy'; exit 1; fi)) && (printf 'CREATE EXTENSION IF NOT EXISTS pg_trgm;\\nCREATE INDEX IF NOT EXISTS gig_title_trgm ON \"Gig\" USING gin (title gin_trgm_ops);\\nCREATE INDEX IF NOT EXISTS gig_description_trgm ON \"Gig\" USING gin (description gin_trgm_ops);' | npx prisma db execute --stdin --schema=prisma/schema.prisma || echo 'trgm setup skipped')"
+    restart: "no"
+
+  # Nightly logical backups: pg_dump -> R2 private bucket (backups/db-<Weekday>.dump),
+  # giving 7 rolling daily restore points independent of Hostinger's weekly VPS backups.
+  # First dump runs immediately on start (so every deploy also snapshots), then every 24h.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_PRIVATE_BUCKET: ${S3_PRIVATE_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+    entrypoint: ["sh", "-c"]
+    command:
+      # NB: $${S3_ENDPOINT%/} strips a trailing slash — R2 returns 404 RouteNotFound on
+      # double-slash paths (the app's SDK normalizes this; raw curl does not).
+      # Fail fast if S3 isn't configured (a typo'd env var must crash-loop loudly, not
+      # silently mean NO backups). Credentials go via a 600-mode netrc file, not argv
+      # (argv is readable in /proc). Each dump uploads twice: the weekday slot (7-day
+      # rotation) and the month slot (db-YYYY-MM, long-term monthly retention).
+      - "apk add --no-cache curl ca-certificates && EP=$${S3_ENDPOINT%/} && if [ -z \"$$EP\" ] || [ -z \"$$S3_PRIVATE_BUCKET\" ] || [ -z \"$$S3_ACCESS_KEY_ID\" ]; then echo '[backup] FATAL: S3 not configured — refusing to run without offsite backups'; exit 1; fi && H=$${EP#*://} && H=$${H%%/*} && printf 'machine %s login %s password %s\\n' \"$$H\" \"$$S3_ACCESS_KEY_ID\" \"$$S3_SECRET_ACCESS_KEY\" > /root/.nrc && chmod 600 /root/.nrc && while true; do F=db-$$(date +%a).dump; M=db-$$(date +%Y-%m).dump; echo \"[backup] dumping $$F\"; if pg_dump -h db -U freelanceai -d freelanceai -Fc -f /tmp/$$F; then for K in $$F $$M; do curl -sf --aws-sigv4 aws:amz:auto:s3 --netrc-file /root/.nrc -T /tmp/$$F \"$$EP/$$S3_PRIVATE_BUCKET/backups/$$K\" && echo \"[backup] uploaded backups/$$K ($$(du -h /tmp/$$F | cut -f1))\" || echo \"[backup] UPLOAD FAILED ($$K)\"; done; rm -f /tmp/$$F; else echo '[backup] DUMP FAILED'; fi; sleep 86400; done"
+
+  app:
+    # Prebuilt per-commit image from GHCR (built by .github/workflows/image.yml).
+    # Seed + `next start` are the image's CMD — no git/npm/build on the prod box, so
+    # restarts don't depend on npm/GitHub availability and rollback = old tag.
+    image: ghcr.io/akmalidinalimov/freelanceai:${GIT_SHA:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
+      SESSION_SECRET: ${SESSION_SECRET}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: "https://freelanceai.aicreator.academy"
+      AUTH_TRUST_HOST: "true"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      APP_ORIGIN: "https://freelanceai.aicreator.academy"
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      ADMIN_TELEGRAM_IDS: ${ADMIN_TELEGRAM_IDS:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_PRIVATE_BUCKET: ${S3_PRIVATE_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      CRON_SECRET: ${CRON_SECRET:-}
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-}
+      INSTAGRAM_APP_ID: ${INSTAGRAM_APP_ID:-}
+      INSTAGRAM_APP_SECRET: ${INSTAGRAM_APP_SECRET:-}
+      PLATFORM_COMMISSION_PCT: "20"
+    expose:
+      - "3000"
+
+  # Outbound connector to Cloudflare; routes freelanceai.aicreator.academy -> app:3000.
+  # The public-hostname mapping is configured in the Cloudflare dashboard (remote-managed
+  # tunnel); cloudflared only needs the token.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - app
+
+volumes:
+  freelanceai_pgdata:

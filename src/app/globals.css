@@ -12,9 +12,10 @@
   /* Brand: a confident teal/emerald for an "AI + trust" feel. */
   --primary: 173 80% 36%;
   --primary-foreground: 0 0% 100%;
-  --accent: 38 92% 50%;
-  --accent-foreground: 222 47% 11%;
-  --radius: 0.75rem;
+  /* B3 identity: coral accent alongside the teal primary. */
+  --accent: 11 86% 59%;
+  --accent-foreground: 0 0% 100%;
+  --radius: 1rem;
 }
 
 @theme inline {
@@ -32,12 +33,54 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-manrope), sans-serif;
 }
 
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
-    sans-serif;
+    var(--font-manrope), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Arial, sans-serif;
+}
+
+/* Display face for hero/section headings (Unbounded). Falls back gracefully. */
+.font-display {
+  font-family: var(--font-unbounded), var(--font-manrope), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Live activity ticker marquee (content is duplicated; scrolls one copy width). */
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Visible focus ring for keyboard users (a11y). Mouse clicks don't trigger :focus-visible. */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Printing (receipts): drop the site chrome for a clean page. */
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

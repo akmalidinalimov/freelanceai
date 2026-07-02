@@ -1,11 +1,28 @@
 import type { Metadata } from "next";
+import { Manrope, Unbounded } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale, getTranslations, getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { ClarityAnalytics } from "@/components/clarity-analytics";
+import { MetaPixel } from "@/components/meta-pixel";
 import "../globals.css";
+
+// Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
+const manrope = Manrope({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+const unbounded = Unbounded({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  weight: ["600", "700", "800"],
+  variable: "--font-unbounded",
+  display: "swap",
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -36,15 +53,34 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+  // Pass ALL messages to the client so client components can use any namespace
+  // (without this, next-intl only forwards namespaces accessed by server components
+  // on the page — e.g. OrderPanel's "Order" namespace would be missing on the gig page).
+  const messages = await getMessages();
+  const skip =
+    ({ uz: "Asosiy kontentga oʻtish", ru: "Перейти к содержимому", en: "Skip to content" } as Record<string, string>)[
+      locale
+    ] ?? "Skip to content";
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="flex min-h-screen flex-col">
-        <NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[hsl(var(--primary))] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-[hsl(var(--primary-foreground))]"
+          >
+            {skip}
+          </a>
           <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <main id="main" className="flex-1 pb-16 md:pb-0">
+            {children}
+          </main>
           <SiteFooter />
+          <MobileBottomNav />
         </NextIntlClientProvider>
+        <ClarityAnalytics />
+        <MetaPixel />
       </body>
     </html>
   );

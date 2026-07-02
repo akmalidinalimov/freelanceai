@@ -1,6 +1,13 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { redirect } from "@/i18n/navigation";
-import { getCurrentUser } from "@/lib/session";
+import { cookies } from "next/headers";
+import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { requireOnboardedUser } from "@/lib/auth-guards";
+import { listBuyerOrders } from "@/server/services/order";
+import { listSavedGigs } from "@/server/services/saved";
+import { getReferralInfo, applyReferral } from "@/server/services/referral";
+import { getBuyerStats } from "@/server/services/analytics";
+import { formatUzs } from "@/lib/utils";
 
 export default async function DashboardPage({
   params,
@@ -10,29 +17,144 @@ export default async function DashboardPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // Auth gate: must be signed in.
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect({ href: "/login", locale });
-    return null; // unreachable (redirect throws); narrows `user` for TS
-  }
+  const user = await requireOnboardedUser(locale);
+  const t = await getTranslations("Dash");
+  const to = await getTranslations("Order");
+  const tm = await getTranslations("Message");
+  const ts = await getTranslations("Settings");
+  const tg = await getTranslations("Gig");
+  const tr = await getTranslations("Referral");
+  // Attribute a pending referral (set-once) from the `ref` cookie, then load the invite info.
+  const ref = (await cookies()).get("ref")?.value;
+  if (ref) await applyReferral(user.id, ref);
+  const referral = await getReferralInfo(user.id);
+  const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
+  const referralUrl = referral.code ? `${origin}/${locale}/r/${referral.code}` : null;
 
-  const t = await getTranslations("Nav");
+  const orders = await listBuyerOrders(user.id);
+  const saved = await listSavedGigs(user.id);
+  const bstats = await getBuyerStats(user.id);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="text-3xl font-bold">{t("dashboard")}</h1>
-      <div className="mt-6 rounded-lg border border-[hsl(var(--border))] p-6">
-        <p className="text-sm text-[hsl(var(--muted-foreground))]">
-          Signed in as
-        </p>
-        <p className="text-lg font-semibold">
-          {user.firstName} {user.lastName}{" "}
-          {user.username ? `(@${user.username})` : ""}
-        </p>
-        <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-          Telegram ID: {user.telegramId} · Role: {user.role}
-        </p>
+    <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold">{t("buyer")}</h1>
+        <div className="flex gap-2">
+          <Link href="/messages">
+            <Button variant="ghost">{tm("inbox")}</Button>
+          </Link>
+          <Link href="/dashboard/settings">
+            <Button variant="ghost">{ts("title")}</Button>
+          </Link>
+          {!user.isSeller && (
+            <Link href="/sell">
+              <Button variant="outline">{t("becomeCreator")}</Button>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[
+          { label: t("bstatActive"), value: bstats.ordersActive.toLocaleString() },
+          { label: t("bstatCompleted"), value: bstats.ordersCompleted.toLocaleString() },
+          { label: t("bstatSpent"), value: `${formatUzs(bstats.spentUzs)}` },
+          // Refunds are rare — only show the tile when there is something to show.
+          ...(bstats.refundedCount > 0
+            ? [{ label: t("bstatRefunded"), value: `${formatUzs(bstats.refundedUzs)}` }]
+            : []),
+          { label: t("bstatContacted"), value: bstats.sellersContacted.toLocaleString() },
+          { label: t("bstatSaved"), value: bstats.savedGigs.toLocaleString() },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3">
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">{s.label}</p>
+            <p className="mt-1 text-lg font-bold tabular-nums">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+        <h3 className="mb-3 font-semibold">{t("orders")}</h3>
+        {orders.length === 0 ? (
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            {to("noOrders")}{" "}
+            <Link href="/gigs" className="text-[hsl(var(--primary))] hover:underline">
+              {to("browse")}
+            </Link>
+          </p>
+        ) : (
+          <ul className="divide-y divide-[hsl(var(--border))]">
+            {orders.map((o) => (
+              <li key={o.id} className="flex items-center justify-between py-3">
+                <Link href={`/orders/${o.id}`} className="font-medium hover:underline">
+                  {o.gig.title}
+                </Link>
+                <span className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
+                  <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
+                    {to(`status.${o.status}`)}
+                  </span>
+                  <span className="tabular-nums">{formatUzs(o.amountUzs)} so&apos;m</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {referralUrl && (
+        <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="font-semibold">{tr("inviteTitle")}</h3>
+            <span className="text-sm text-[hsl(var(--muted-foreground))]">
+              {tr("invited", { n: referral.count })}
+            </span>
+          </div>
+          <p className="mb-2 text-sm text-[hsl(var(--muted-foreground))]">{tr("inviteDesc")}</p>
+          <input
+            readOnly
+            value={referralUrl}
+            aria-label={tr("inviteTitle")}
+            className="w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+          />
+        </div>
+      )}
+
+      <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-semibold">{t("saved")}</h3>
+          <Link href="/dashboard/saved" className="text-sm text-[hsl(var(--primary))] hover:underline">
+            {t("manageSaved")}
+          </Link>
+        </div>
+        {saved.length === 0 ? (
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">{tg("noSaved")}</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {saved.map((g) => {
+              const from = g.packages[0]?.priceUzs ?? 0;
+              return (
+                <Link
+                  key={g.id}
+                  href={`/gigs/${g.slug}`}
+                  className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
+                >
+                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary))]">
+                    {g.coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    ) : (
+                      g.title.slice(0, 1).toUpperCase()
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-sm font-medium">{g.title}</p>
+                  <p className="mt-auto pt-1 text-sm font-semibold tabular-nums">
+                    {tg("from")} {formatUzs(from)} so&apos;m
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

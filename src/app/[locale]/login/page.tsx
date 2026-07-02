@@ -1,7 +1,10 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/session";
-import { TelegramLoginButton } from "@/components/telegram-login-button";
+import { TelegramDeepLinkLogin } from "@/components/telegram-deeplink-login";
+import { GoogleLoginButton } from "@/components/google-login-button";
+import { EmailLoginForm } from "@/components/email-login-form";
+import { emailConfigured } from "@/lib/email";
 
 export default async function LoginPage({
   params,
@@ -20,9 +23,7 @@ export default async function LoginPage({
   const { error } = await searchParams;
   const t = await getTranslations("Nav");
   const tb = await getTranslations("Brand");
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const authUrl = `${appUrl}/api/auth/telegram`;
+  const ta = await getTranslations("Auth");
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
@@ -39,7 +40,17 @@ export default async function LoginPage({
         </p>
       )}
 
-      <TelegramLoginButton authUrl={authUrl} />
+      <TelegramDeepLinkLogin locale={locale} />
+
+      <div className="flex w-full items-center gap-3 text-xs text-[hsl(var(--muted-foreground))]">
+        <span className="h-px flex-1 bg-[hsl(var(--border))]" />
+        {ta("or")}
+        <span className="h-px flex-1 bg-[hsl(var(--border))]" />
+      </div>
+
+      <GoogleLoginButton locale={locale} />
+
+      {emailConfigured() && <EmailLoginForm locale={locale} />}
     </div>
   );
 }

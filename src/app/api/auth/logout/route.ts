@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { destroySession } from "@/lib/session";
+import { signOut } from "@/auth";
 import { appUrl, isSameOrigin } from "@/lib/http";
 
 export async function POST(request: Request) {
@@ -7,6 +7,6 @@ export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
-  await destroySession();
+  await signOut({ redirect: false });
   return NextResponse.redirect(appUrl(request, "/"), { status: 303 });
 }

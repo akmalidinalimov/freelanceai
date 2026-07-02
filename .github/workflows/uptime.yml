@@ -1,0 +1,49 @@
+# Uptime monitor: checks prod health every ~10 minutes. When a run fails, GitHub
+# notifies the repo owner (email/app, per your notification settings) — that's the
+# alert channel; no secrets needed. Also runnable manually via workflow_dispatch.
+name: uptime
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check prod health
+        run: |
+          set -e
+          body=$(curl -sf --max-time 20 --retry 2 --retry-delay 10 https://freelanceai.aicreator.academy/api/health) \
+            || { echo "::error::health endpoint unreachable"; exit 1; }
+          echo "$body"
+          echo "$body" | grep -q '"db":"up"' || { echo "::error::db is not up"; exit 1; }
+          curl -sf --max-time 20 -o /dev/null https://freelanceai.aicreator.academy/uz \
+            || { echo "::error::home page failed"; exit 1; }
+      - name: Check backup freshness
+        # Turns silent backup death (a broken sidecar / missing env) into the same alert
+        # channel. No-op unless the S3 repo secrets are set, so it can't false-alarm before
+        # you opt in by adding them.
+        env:
+          EP: ${{ secrets.S3_ENDPOINT }}
+          BUCKET: ${{ secrets.S3_PRIVATE_BUCKET }}
+          AK: ${{ secrets.S3_ACCESS_KEY_ID }}
+          SK: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+        run: |
+          if [ -z "$AK" ] || [ -z "$EP" ] || [ -z "$BUCKET" ]; then
+            echo "backup-freshness check skipped (S3 secrets not configured)"; exit 0
+          fi
+          EP=${EP%/}
+          found=0
+          for D in $(date -u +%a) $(date -u -d yesterday +%a); do
+            lm=$(curl -sf -I --aws-sigv4 aws:amz:auto:s3 --user "$AK:$SK" \
+                  "$EP/$BUCKET/backups/db-$D.dump" \
+                  | grep -i '^last-modified:' | sed 's/[Ll]ast-[Mm]odified:[[:space:]]*//' | tr -d '\r')
+            if [ -n "$lm" ]; then
+              age=$(( ( $(date -u +%s) - $(date -u -d "$lm" +%s) ) / 3600 ))
+              echo "db-$D.dump age ${age}h"
+              if [ "$age" -le 26 ]; then found=1; break; fi
+            fi
+          done
+          [ "$found" = 1 ] || { echo "::error::no database backup newer than 26h"; exit 1; }

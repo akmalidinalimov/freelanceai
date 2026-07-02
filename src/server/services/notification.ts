@@ -1,0 +1,62 @@
+import "server-only";
+import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
+
+/**
+ * In-app notifications. `notify` is best-effort (a failure here must never break the
+ * order/review/message flow that triggered it), so it swallows + logs errors.
+ */
+/** Map a notification type to a user-mutable category. */
+export function notificationCategory(type: string): "messages" | "reviews" | "orders" {
+  if (type.startsWith("message.")) return "messages";
+  if (type.startsWith("review.")) return "reviews";
+  return "orders"; // order.*, dispute.*, cancellation.*
+}
+
+export async function notify(
+  userId: string,
+  type: string,
+  title: string,
+  opts?: { body?: string; link?: string }
+): Promise<void> {
+  try {
+    // Respect the recipient's per-category mutes (default: everything on).
+    const u = await prisma.user.findUnique({ where: { id: userId }, select: { notifyPrefs: true } });
+    const prefs = (u?.notifyPrefs as Record<string, boolean> | null) ?? null;
+    if (prefs && prefs[notificationCategory(type)] === false) return;
+    await prisma.notification.create({
+      data: { userId, type, title, body: opts?.body ?? null, link: opts?.link ?? null },
+    });
+  } catch (err) {
+    logger.warn("notify_failed", { userId, type, err: String(err) });
+  }
+}
+
+export async function listNotifications(userId: string, limit = 30) {
+  return prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+}
+
+export async function countUnreadNotifications(userId: string): Promise<number> {
+  return prisma.notification.count({ where: { userId, readAt: null } });
+}
+
+export async function markNotificationsRead(userId: string): Promise<void> {
+  await prisma.notification.updateMany({
+    where: { userId, readAt: null },
+    data: { readAt: new Date() },
+  });
+}
+
+/** Delete a single notification — scoped to the owner (no IDOR). */
+export async function deleteNotification(userId: string, id: string): Promise<void> {
+  await prisma.notification.deleteMany({ where: { id, userId } });
+}
+
+/** Delete all of the current user's notifications. */
+export async function clearNotifications(userId: string): Promise<void> {
+  await prisma.notification.deleteMany({ where: { userId } });
+}

@@ -15,10 +15,20 @@ datasource db {
 // Identity
 // ---------------------------------------------------------------------------
 
+// Privilege tier. BUYER = default member tier (everyone can buy); ADMIN = back-office.
+// Seller/creator is a CAPABILITY (User.isSeller), not a role. The clean rename to
+// {USER, ADMIN} is deferred to a proper Prisma migration (avoids a destructive enum
+// change on the live DB via db push). See docs/IDENTITY-ROLES-DASHBOARDS.md §1.1.
 enum UserRole {
   BUYER
   SELLER
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
 }
 
 enum KycStatus {
@@ -30,33 +40,119 @@ enum KycStatus {
 
 model User {
   id         String   @id @default(cuid())
-  // Telegram numeric id (stable per user). Stored as string to be safe with large ids.
-  telegramId String   @unique
+  // Telegram numeric id (optional — users may sign in via Google instead).
+  telegramId String?  @unique
   username   String?
   firstName  String?
   lastName   String?
   photoUrl   String?
   phone      String?
+  // Auth.js fields (used by Google / the Prisma adapter).
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
   locale     String   @default("uz")
   role       UserRole @default(BUYER)
   isSeller   Boolean  @default(false)
+  status     UserStatus @default(ACTIVE)
+  onboardingCompleted Boolean @default(false)
   kycStatus  KycStatus @default(NONE)
+  // Seller payout destination — only the masked card is stored (last 4), never the full PAN.
+  payoutCardMasked String?
+  // One-time verification code (KYC), hashed. Delivered via Telegram bot or email.
+  verifyCodeHash      String?
+  verifyCodeExpiresAt DateTime?
+  verifyAttempts      Int       @default(0)
+  verifyChannel       String? // "telegram" | "email" — channel of the pending code
+  referralCode String? @unique
+  referredById String?
+  // Notification preferences (where to mirror in-app messages).
+  notifyTelegram Boolean @default(true)
+  notifyEmail    Boolean @default(false)
+  // Per-event-category mutes, e.g. { orders: true, messages: true, reviews: false }.
+  notifyPrefs Json?
+  // Activity tracking (admin analytics): stamped on session creation, by a throttled
+  // per-request touch (~15 min resolution), and by any inbound Telegram-bot update.
+  lastLoginAt        DateTime?
+  lastSeenAt         DateTime?
+  telegramLastChatAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   sellerProfile  SellerProfile?
+  accounts       Account[]
   sessions       Session[]
   gigs           Gig[]
   ordersAsBuyer  Order[]        @relation("BuyerOrders")
   ordersAsSeller Order[]        @relation("SellerOrders")
   messages       Message[]
+  convosAsBuyer  Conversation[] @relation("ConvBuyer")
+  convosAsSeller Conversation[] @relation("ConvSeller")
+  savedGigs      SavedGig[]
   reviewsWritten Review[]       @relation("ReviewAuthor")
   ledgerEntries  LedgerEntry[]
   payoutRequests PayoutRequest[]
   notifications  Notification[]
   auditLogs      AuditLog[]
+  collections    Collection[]
+  savedSearches  SavedSearch[]
+  referredBy     User?   @relation("Referrals", fields: [referredById], references: [id])
+  referrals      User[]  @relation("Referrals")
+  following      Follow[] @relation("Following")
+  followers      Follow[] @relation("Followers")
+  activityEvents ActivityEvent[]
+  flags          UserFlag[]
 
   @@index([role])
+  @@index([lastSeenAt])
+  @@index([referredById])
+}
+
+// A buyer following a seller/creator → notified when the seller publishes a new gig.
+model Follow {
+  id         String   @id @default(cuid())
+  followerId String
+  follower   User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  sellerId   String
+  seller     User     @relation("Followers", fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([followerId, sellerId])
+  @@index([sellerId])
+}
+
+// A seller's custom-priced offer made inside a conversation. Buyer accepts → an order.
+model CustomOffer {
+  id             String   @id @default(cuid())
+  conversationId String
+  sellerId       String
+  buyerId        String
+  gigId          String
+  title          String
+  priceUzs       Int
+  deliveryDays   Int
+  revisions      Int      @default(1)
+  status         String   @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  orderId        String?
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
+}
+
+// A buyer's saved search; a cron job notifies them when new matching gigs appear.
+model SavedSearch {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  q             String?
+  categorySlug  String?
+  minUzs        Int?
+  maxUzs        Int?
+  lastCheckedAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Session {
@@ -67,6 +163,79 @@ model Session {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// Auth.js (NextAuth) — linked external accounts (e.g. Google). One user may have many.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// Auth.js — used by email/magic-link flows (kept for adapter completeness).
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  // Magic-link login consumes by token alone — avoid a table scan per login.
+  @@index([token])
+}
+
+// Single-use guard for Telegram login payloads: the verified `hash` is recorded
+// once so the same signed payload cannot be replayed (defense beyond the 60s window).
+model TelegramAuthNonce {
+  hash      String   @id
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+enum LoginTokenStatus {
+  PENDING
+  CONFIRMED
+  CONSUMED
+}
+
+// One-time token for bot deep-link login: site creates it (PENDING), the bot
+// webhook confirms it with the user's Telegram identity on /start, and the site's
+// poll exchanges a CONFIRMED token for a session (then CONSUMED). No phone needed.
+model LoginToken {
+  id         String           @id @default(cuid())
+  token      String           @unique
+  status     LoginTokenStatus @default(PENDING)
+  // sha256 of the httpOnly nonce cookie set on /start — binds the session exchange
+  // to the originating browser (defends against login-CSRF / token-leak takeover).
+  browserNonceHash String?
+  telegramId String?
+  firstName  String?
+  lastName   String?
+  username   String?
+  expiresAt  DateTime
+  createdAt  DateTime         @default(now())
+
+  @@index([expiresAt])
+}
+
+// Webhook idempotency: Telegram retries deliveries; we process each update once.
+model ProcessedUpdate {
+  updateId  BigInt   @id
+  createdAt DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------
@@ -86,8 +255,16 @@ model SellerProfile {
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   headline      String?
   bio           String?
-  skills        String[]    @default([])
-  aiTools       String[]    @default([])
+  skills          String[]    @default([])
+  aiTools         String[]    @default([])
+  specializations String[]    @default([])
+  instagramUsername String?
+  // Instagram sync (Business Login). Token stored encrypted (pii-crypto).
+  instagramUserId        String?
+  instagramTokenEnc      String?
+  instagramTokenExpiresAt DateTime?
+  instagramSyncedAt      DateTime?
+  instagramSyncStatus    String?
   level         SellerLevel @default(NEW)
   ratingAvg     Float       @default(0)
   ratingCount   Int         @default(0)
@@ -106,9 +283,14 @@ model PortfolioItem {
   mediaType String        @default("image") // image | video
   caption   String?
   position  Int           @default(0)
+  // Provenance: manual upload vs Instagram sync (externalId = IG media id, for dedup).
+  source     String   @default("upload") // upload | instagram
+  externalId String?
+  permalink  String?
   createdAt DateTime      @default(now())
 
   @@index([profileId])
+  @@unique([profileId, externalId])
 }
 
 // ---------------------------------------------------------------------------
@@ -126,6 +308,7 @@ model Category {
 
 enum GigStatus {
   DRAFT
+  PENDING_REVIEW
   ACTIVE
   PAUSED
   REJECTED
@@ -143,18 +326,81 @@ model Gig {
   tags        String[]  @default([])
   coverUrl    String?
   galleryUrls String[]  @default([])
+  faq         Json?     // [{ q, a }] seller-managed FAQ
+  requirementPrompts Json? // ["question", ...] structured requirement questions
+  views       Int       @default(0)
+  featured     Boolean   @default(false)
+  featuredUntil DateTime?
   locale      String    @default("uz")
   status      GigStatus @default(DRAFT)
+  deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   packages GigPackage[]
+  extras   GigExtra[]
   orders   Order[]
   reviews  Review[]
+  conversations Conversation[]
+  savedBy  SavedGig[]
 
   @@index([sellerId])
   @@index([status])
   @@index([categoryId])
+}
+
+model GigExtra {
+  id           String @id @default(cuid())
+  gigId        String
+  gig          Gig    @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  title        String
+  priceUzs     Int
+  deliveryDays Int    @default(0) // extra days added to delivery
+  position     Int    @default(0)
+
+  @@index([gigId])
+}
+
+// Platform-funded promo codes applied at checkout. The seller is always paid in full;
+// the discount reduces what the buyer pays and the platform's commission.
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  percentOff  Int? // 1-100
+  amountOffUzs Int? // fixed UZS off
+  active      Boolean   @default(true)
+  maxUses     Int       @default(100)
+  uses        Int       @default(0)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([code])
+}
+
+model SavedGig {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gigId        String
+  gig          Gig         @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  collectionId String?
+  collection   Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+
+  @@unique([userId, gigId])
+  @@index([userId])
+}
+
+// Named lists for organizing a buyer's saved gigs.
+model Collection {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime   @default(now())
+  savedGigs SavedGig[]
+
+  @@index([userId])
 }
 
 enum PackageTier {
@@ -206,7 +452,13 @@ model Order {
   amountUzs    Int
   commissionUzs Int        @default(0)
   sellerNetUzs Int         @default(0)
+  extrasUzs    Int         @default(0)
+  extrasSnapshot Json?     // [{ title, priceUzs }] selected add-ons
+  couponCode   String?
+  discountUzs  Int         @default(0) // platform-funded discount on the buyer's payment
   requirements String?
+  requirementAnswers Json?    // [{ q, a }] answers to the gig's requirement prompts
+  requirementFileUrls String[] @default([])
   status       OrderStatus @default(PENDING_PAYMENT)
   dueAt        DateTime?
   deliveredAt  DateTime?
@@ -217,13 +469,47 @@ model Order {
   deliveries   OrderDelivery[]
   conversation Conversation?
   review       Review?
+  buyerReview  BuyerReview?
   transactions Transaction[]
   ledgerEntries LedgerEntry[]
   dispute      Dispute?
+  cancellation CancellationRequest?
 
   @@index([buyerId])
   @@index([sellerId])
   @@index([status])
+}
+
+enum CancellationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+// Mutual (consensual) order cancellation — distinct from a dispute (which an admin resolves).
+// One party requests; the other party (or an admin) approves → CANCELLED + ledger reversal.
+model CancellationRequest {
+  id            String             @id @default(cuid())
+  orderId       String             @unique
+  order         Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  requestedById String
+  reason        String
+  status        CancellationStatus @default(PENDING)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+// Seller's review OF the buyer (the other half of two-way reviews). Author is the order's seller.
+model BuyerReview {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  buyerId   String // the buyer being reviewed
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@index([buyerId])
 }
 
 model OrderDelivery {
@@ -245,8 +531,20 @@ model Conversation {
   id        String    @id @default(cuid())
   orderId   String?   @unique
   order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  // Direct (pre-order) conversation participants + gig context. Null for order-only
+  // conversations (participants derive from the order). One direct thread per buyer↔seller pair.
+  buyerId   String?
+  buyer     User?     @relation("ConvBuyer", fields: [buyerId], references: [id])
+  sellerId  String?
+  seller    User?     @relation("ConvSeller", fields: [sellerId], references: [id])
+  gigId     String?
+  gig       Gig?      @relation(fields: [gigId], references: [id], onDelete: SetNull)
   createdAt DateTime  @default(now())
   messages  Message[]
+
+  @@unique([buyerId, sellerId])
+  @@index([buyerId])
+  @@index([sellerId])
 }
 
 model Message {
@@ -261,6 +559,35 @@ model Message {
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])
+  // Transcript reads + last-activity ordering (conversationId, createdAt);
+  // per-user message-rate signals (senderId, createdAt).
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Trust & safety — deterministic fraud/abuse signals, recomputed by the nightly
+// red-flag scan (see src/server/services/red-flags.ts). One row per (user, signal).
+// ---------------------------------------------------------------------------
+
+enum FlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model UserFlag {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // e.g. CONTACT_REDACTED, HIGH_DISPUTE, CONTACTS_NO_ORDERS
+  severity  FlagSeverity
+  details   Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([userId, type])
+  @@index([severity])
 }
 
 // ---------------------------------------------------------------------------
@@ -298,6 +625,7 @@ enum TransactionType {
   PAYMENT_IN
   REFUND
   PAYOUT
+  TIP
 }
 
 enum TransactionStatus {
@@ -443,4 +771,21 @@ model FeatureFlag {
   enabled   Boolean  @default(false)
   payload   Json?
   updatedAt DateTime @updatedAt
+}
+
+// Lightweight product-analytics events (funnel: what users click vs what converts).
+// Client-emitted types come through /api/events (validated enum, rate-limited);
+// server-emitted types are written by services (source of truth for conversions).
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // e.g. "order_cta_click" | "contact_cta_click" | "search" | "order_created" | "order_paid"
+  type      String
+  entityId  String? // gigId / orderId / conversationId the event refers to
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([userId, createdAt])
 }
