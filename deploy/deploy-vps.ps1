@@ -83,6 +83,19 @@ $resp = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -ContentType 
 if (-not $SkipVerify) {
   Write-Host "`n--- Post-deploy verification (waits for prod, then smoke + deep sweep + R2) ---"
   node "$root\deploy\verify-prod.mjs"
-  if ($LASTEXITCODE -ne 0) { throw "Post-deploy verification FAILED (see output above)" }
+  if ($LASTEXITCODE -ne 0) {
+    # Known Hostinger flake (seen 2026-07-02): compose-up recreates containers but only
+    # starts db, leaving app/migrate/cloudflared in "Created" → site 530. One project
+    # start fixes it. Try that once, then re-verify before declaring failure.
+    Write-Host "verify failed - attempting one project START (Hostinger created-not-started flake) ..."
+    try {
+      Invoke-RestMethod -Method Post -Headers $headers `
+        -Uri "https://developers.hostinger.com/api/vps/v1/virtual-machines/$vmId/docker/freelanceai/start" | Out-Null
+    } catch { Write-Host "project start call failed: $($_.Exception.Message)" }
+    Start-Sleep -Seconds 30
+    node "$root\deploy\verify-prod.mjs"
+    if ($LASTEXITCODE -ne 0) { throw "Post-deploy verification FAILED (see output above)" }
+    Write-Host "recovered via project start."
+  }
   Write-Host "`nDeploy + verification complete."
 }
