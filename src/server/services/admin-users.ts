@@ -214,9 +214,7 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
  * yourself (loadTarget). Role stays untouchable: ADMIN is allowlist-only by design.
  */
 export async function adminDeleteUser(admin: User, userId: string) {
-  await loadTarget(admin, userId);
-  const target = await prisma.user.findUnique({ where: { id: userId } });
-  if (!target) throw Errors.notFound("User not found");
+  const target = await loadTarget(admin, userId); // same row the role check validated
   await anonymizeAndClose(target, admin.id, "admin.user.delete");
 }
 
@@ -239,11 +237,12 @@ export async function listAuditLogs(action?: string) {
   }));
 }
 
-/** Guard: admin-only, and never act on another admin or on yourself. */
-async function loadTarget(admin: User, userId: string) {
+/** Guard: admin-only, and never act on another admin or on yourself. Returns the full
+ * target row so callers act on the SAME row the role check saw (no re-fetch gap). */
+async function loadTarget(admin: User, userId: string): Promise<User> {
   if (admin.role !== "ADMIN") throw Errors.forbidden("Admins only");
   if (admin.id === userId) throw Errors.forbidden("You cannot modify your own account here");
-  const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true } });
+  const target = await prisma.user.findUnique({ where: { id: userId } });
   if (!target) throw Errors.notFound("User not found");
   if (target.role === "ADMIN") throw Errors.forbidden("Cannot modify an admin");
   return target;

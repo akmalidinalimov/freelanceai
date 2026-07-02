@@ -19,7 +19,10 @@ const schema = z
  */
 export const POST = defineHandler({ schema, sameOrigin: true }, async ({ body, request }) => {
   const user = await getCurrentUser();
+  // Per-caller limit + a global circuit breaker (distributed floods can rotate IPs;
+  // events are best-effort analytics, so shedding under attack is the right trade).
   enforceRateLimit(`events:${user?.id ?? clientIp(request)}`, 60, 60_000);
+  enforceRateLimit("events:global", 3000, 60_000);
   await trackEvent(body.type, { userId: user?.id, entityId: body.entityId });
   return ok({});
 });

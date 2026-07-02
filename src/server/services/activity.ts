@@ -39,8 +39,12 @@ export function touchLastSeen(userId: string): void {
   const now = Date.now();
   const prev = lastTouch.get(userId) ?? 0;
   if (now - prev < THROTTLE_MS) return;
+  // Bound the map by sweeping EXPIRED entries only (a wholesale clear would wipe fresh
+  // throttle state and cause a write burst from every active user at once).
+  if (lastTouch.size > 20_000) {
+    for (const [k, t] of lastTouch) if (now - t >= THROTTLE_MS) lastTouch.delete(k);
+  }
   lastTouch.set(userId, now);
-  if (lastTouch.size > 20_000) lastTouch.clear(); // bound the map under abuse
   void prisma.user
     .update({ where: { id: userId }, data: { lastSeenAt: new Date() } })
     .catch(() => {});

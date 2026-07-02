@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { requireAdminUser } from "@/lib/auth-guards";
+import { ApiError } from "@/lib/api";
 import { getUserDetailForAdmin } from "@/server/services/admin-users";
 import { AdminUserManage } from "@/components/admin-user-manage";
 import { formatUzs } from "@/lib/utils";
@@ -42,7 +43,11 @@ export default async function AdminUserDetailPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   const admin = await requireAdminUser(locale);
-  const d = await getUserDetailForAdmin(admin, id).catch(() => null);
+  // Only a genuine NOT_FOUND becomes a 404 — DB failures must surface, not masquerade.
+  const d = await getUserDetailForAdmin(admin, id).catch((e) => {
+    if (e instanceof ApiError && e.code === "NOT_FOUND") return null;
+    throw e;
+  });
   if (!d) notFound();
   const u = d.identity;
 
