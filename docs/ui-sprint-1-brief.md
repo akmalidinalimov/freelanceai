@@ -1,21 +1,30 @@
-# UI Sprint 1 — Dark redesign + Instagram showcase (detailed brief)
+# UI Sprint 1 — Light-first redesign + living background + Instagram showcase
 
-Authoritative version of the sprint prompt handed to the UI team on 2026-07-02.
-The paste-able prompt lives in the founder's message; this file is the reference copy.
-Workflow contract: CONTRIBUTING.md. Request board: UI-REQUESTS.md.
+REVISED 2026-07-02 (supersedes the dark-only brief). Direction from the founder:
 
-Tasks (one branch each, `feature/dark-theme-<n>`):
-1. Dark design-system foundation (globals.css tokens + header/footer)
-2. Homepage dark restyle
-3. Marketplace + browse + creators dark pass
-4. Instagram auto-looping showcase on public profiles (NOT an icon — a living carousel)
-5. Gig detail page upgrade (lightbox, sticky order panel, comparison, FAQ)
-6. Loading skeletons + designed empty states
-7. Buyer + seller dashboard visual refresh
-8. Order status timeline stepper
-9. Toast/dialog system (replace window.confirm + inline notices)
-10. Mobile, a11y, contrast + reduced-motion final audit
+- DEFAULT THEME: **light**, minimalistic, warm, premium — NOT dark.
+- **Living background**: the site must feel alive — an animated warm gradient /
+  ambient motion layer. Team builds THREE candidate concepts on the homepage
+  hero (§Task 2 of the prompt); the founder picks one, it then rolls out.
+- DARK THEME: automatic only, via `prefers-color-scheme` (phone in dark mode →
+  site in dark mode). No manual toggle in v1. Light is the canonical design;
+  dark is a faithful translation of it.
+- UX bar: "every button, every card" — full interaction-state coverage
+  (hover/active/focus/disabled/loading), micro-interactions with taste,
+  one-primary-action-per-screen simplicity.
 
-Each task: verify locally (tsc + build + locale parity + 390px + contrast) BEFORE push;
-push the branch; never touch main; platform files are off-limits (requests go to
-UI-REQUESTS.md). Full per-task detail in the founder's prompt of 2026-07-02.
+Task list (one branch each, `feature/redesign-<n>`):
+1. Design-system foundation: light tokens + auto-dark set + interaction primitives
+2. Living-background lab — build 3 concepts, founder picks
+3. Homepage restyle (light minimal + chosen living background)
+4. Marketplace + browse + creators pass
+5. Instagram auto-looping showcase on public profiles
+6. Gig detail upgrade (lightbox, sticky panel, comparison, FAQ)
+7. Skeletons + designed empty states
+8. Dashboards visual refresh
+9. Order status timeline stepper
+10. Toast/dialog system + micro-interaction pass
+11. Final audit — BOTH themes, mobile, contrast, reduced-motion
+
+Every task verifies in BOTH themes before push. Full detail lives in the
+founder's prompt (2026-07-02, revised). Workflow contract: CONTRIBUTING.md.

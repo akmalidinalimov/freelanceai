@@ -10,7 +10,14 @@ need frontend work here instead of editing components.
 > and deployed 2026-07-02.** Kept for reference. Task 5 (Gigora rebrand) remains
 > gated on the founder's go.
 
-### 🎨 NEXT SPRINT — Top 10 (2026-07-02, all independent, UI territory only)
+### 🎨 NEXT SPRINT — Redesign v2 (2026-07-02, REVISED: LIGHT-first + auto dark)
+> ⚠️ DIRECTION CHANGED by the founder: default theme is LIGHT + minimal with a
+> "living background" (animated warm gradient / ambient motion); DARK theme is
+> automatic via prefers-color-scheme. The dark-only framing below is superseded.
+> The authoritative task list is the founder's Sprint 1 prompt (reference:
+> docs/ui-sprint-1-brief.md). Old summary kept for history:
+
+#### (superseded) old top-10
 Branch each from latest `origin/main` (e.g. `feature/dark-theme-1`); push the branch,
 never main; backend needs → write them HERE. Suggested order: #1 first (it unblocks
 #2–#5), then anything in parallel.
