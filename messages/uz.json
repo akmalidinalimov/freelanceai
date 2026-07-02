@@ -177,7 +177,9 @@
   },
   "Footer": {
     "rights": "Barcha huquqlar himoyalangan.",
-    "language": "Til"
+    "language": "Til",
+    "terms": "Foydalanish shartlari",
+    "privacy": "Maxfiylik siyosati"
   },
   "Common": {
     "comingSoon": "Tez orada",

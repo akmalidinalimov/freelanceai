@@ -177,7 +177,9 @@
   },
   "Footer": {
     "rights": "All rights reserved.",
-    "language": "Language"
+    "language": "Language",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
   },
   "Common": {
     "comingSoon": "Coming soon",
