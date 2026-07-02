@@ -5,18 +5,29 @@ import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
+import {
+  ArrowRight,
+  Camera,
+  Clapperboard,
+  Film,
+  Image as ImageIcon,
+  Mic,
+  PenTool,
+  UserRound,
+  Wand2,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 const CATS = [
-  { spec: "ai_video", icon: "🎬", desc: "catVideo" },
-  { spec: "ai_image", icon: "🖼️", desc: "catImage" },
-  { spec: "ai_avatar", icon: "🧑‍💼", desc: "catAvatar" },
-  { spec: "product_photo", icon: "📸", desc: "catPhoto" },
-  { spec: "voiceover", icon: "🎙️", desc: "catVoice" },
-  { spec: "branding", icon: "✨", desc: "catBranding" },
-  { spec: "motion", icon: "🎞️", desc: "catMotion" },
-  { spec: "image_edit", icon: "🛠️", desc: "catEdit" },
+  { spec: "ai_video", Icon: Clapperboard, desc: "catVideo" },
+  { spec: "ai_image", Icon: ImageIcon, desc: "catImage" },
+  { spec: "ai_avatar", Icon: UserRound, desc: "catAvatar" },
+  { spec: "product_photo", Icon: Camera, desc: "catPhoto" },
+  { spec: "voiceover", Icon: Mic, desc: "catVoice" },
+  { spec: "branding", Icon: PenTool, desc: "catBranding" },
+  { spec: "motion", Icon: Film, desc: "catMotion" },
+  { spec: "image_edit", Icon: Wand2, desc: "catEdit" },
 ] as const;
 
 export default async function HomePage({
@@ -85,12 +96,10 @@ export default async function HomePage({
                 href={`/browse/${specSlug(c.spec)}`}
                 className="group relative overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))]"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--primary))]/10 text-xl">
-                  {c.icon}
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
+                  <c.Icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
-                <span className="absolute right-4 top-4 text-[hsl(var(--muted-foreground))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--primary))]">
-                  →
-                </span>
+                <ArrowRight className="absolute right-4 top-4 h-4 w-4 text-[hsl(var(--muted-foreground))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--primary))]" />
                 <h3 className="mt-3 text-sm font-bold">{specLabel(c.spec, locale)}</h3>
                 <p className="mt-0.5 text-xs font-medium text-[hsl(var(--muted-foreground))]">
                   {t(c.desc)}

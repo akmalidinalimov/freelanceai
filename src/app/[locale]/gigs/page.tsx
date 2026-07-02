@@ -4,9 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { listPublicGigs, type GigSort } from "@/server/services/gig";
 import { getCurrentUser } from "@/lib/session";
 import { listSavedGigIds } from "@/server/services/saved";
-import { formatUzs } from "@/lib/utils";
-import { approxPrice } from "@/lib/currency";
-import { SaveHeart } from "@/components/save-heart";
+import { GigCard } from "@/components/gig-card";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { listSavedSearches, searchLink } from "@/server/services/saved-search";
 import { SaveSearchButton, DeleteSavedSearch } from "@/components/saved-search-controls";
@@ -148,38 +146,15 @@ export default async function GigsPage({
         <p className="text-[hsl(var(--muted-foreground))]">{tg("noResults")}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {gigs.map((g) => {
-            const from = g.packages[0]?.priceUzs ?? 0;
-            const seller = g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "";
-            return (
-              <Link
-                key={g.id}
-                href={`/gigs/${g.slug}`}
-                className="relative flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-colors hover:border-[hsl(var(--primary))]"
-              >
-                <SaveHeart gigId={g.id} locale={locale} initialSaved={savedSet.has(g.id)} isGuest={!me} />
-                {g.featured && (
-                  <span className="absolute left-2 top-2 z-10 rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--primary-foreground))]">
-                    ★ {tg("featured")}
-                  </span>
-                )}
-                <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-2xl font-bold text-[hsl(var(--primary))]">
-                  {g.coverUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-                  ) : (
-                    g.title.slice(0, 1).toUpperCase()
-                  )}
-                </div>
-                <p className="line-clamp-2 font-medium">{g.title}</p>
-                <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{seller}</p>
-                <p className="mt-auto pt-2 text-sm font-semibold tabular-nums">
-                  {tg("from")} {formatUzs(from)} so&apos;m
-                </p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">{approxPrice(from)}</p>
-              </Link>
-            );
-          })}
+          {gigs.map((g) => (
+            <GigCard
+              key={g.id}
+              gig={g}
+              locale={locale}
+              saved={savedSet.has(g.id)}
+              isGuest={!me}
+            />
+          ))}
         </div>
       )}
     </div>
