@@ -2,9 +2,15 @@
 
 ## Deploys & rollback
 
-Every deploy is **pinned to one commit**: `deploy/deploy-vps.ps1` resolves origin/main's
-tip SHA and passes it as `GIT_SHA`; the migrate and app containers check out exactly that
-commit (no skew if someone pushes mid-deploy).
+Every deploy is **pinned to one commit** and **pull-based**: pushing to main triggers the
+`image` workflow, which builds `ghcr.io/akmalidinalimov/freelanceai:<sha>` (public
+package). `deploy/deploy-vps.ps1` resolves origin/main's tip SHA, **waits for that
+image to exist in GHCR**, then swaps the compose project — the app and migrate
+containers just pull the image (no git/npm/build on the VPS; restarts don't depend on
+npm/GitHub being up). Build-time values (S3_PUBLIC_BASE_URL for the next/image
+allowlist, NEXT_PUBLIC_BRAND_*) are GitHub Actions repo VARIABLES fed in as build args
+— note anything DB-backed must NOT be statically prerendered (CI builds against a dummy
+DATABASE_URL; that's why sitemap.ts is force-dynamic).
 
 **Rollback** = redeploy a known-good commit:
 ```
