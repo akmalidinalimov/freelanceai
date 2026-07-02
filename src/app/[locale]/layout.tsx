@@ -7,6 +7,7 @@ import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { AmbientGlow } from "@/components/ambient-glow";
 import "../globals.css";
 
 // Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
@@ -63,6 +64,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="flex min-h-screen flex-col">
+        <AmbientGlow />
         <NextIntlClientProvider messages={messages}>
           <a
             href="#main"
