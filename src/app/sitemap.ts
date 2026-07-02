@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SPECIALIZATIONS, specSlug } from "@/lib/specializations";
 
+// Render at request time: the image is built in CI with a dummy DATABASE_URL, so a
+// build-time (static) sitemap would bake in zero gigs/categories/creators forever.
+export const dynamic = "force-dynamic";
+
 const LOCALES = ["uz", "ru", "en"] as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
