@@ -14,6 +14,7 @@ export default async function InboxPage({
   setRequestLocale(locale);
   const user = await requireOnboardedUser(locale);
   const t = await getTranslations("Message");
+  const tc = await getTranslations("Common");
   const rows = await listInbox(user);
 
   return (
@@ -27,7 +28,9 @@ export default async function InboxPage({
             <li key={c.id}>
               <Link href={`/messages/${c.id}`} className="flex items-center justify-between gap-3 p-4 hover:bg-[hsl(var(--muted))]/40">
                 <div className="min-w-0">
-                  <p className={c.unread > 0 ? "font-semibold" : "font-medium"}>{c.counterpart || "—"}</p>
+                  <p className={c.unread > 0 ? "font-semibold" : "font-medium"}>
+                    {c.counterpart || tc("deletedUser")}
+                  </p>
                   {c.context && <p className="truncate text-xs text-[hsl(var(--muted-foreground))]">{c.context}</p>}
                   {c.lastBody && (
                     <p className={`truncate text-sm ${c.unread > 0 ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--muted-foreground))]"}`}>

@@ -181,7 +181,8 @@
   },
   "Common": {
     "comingSoon": "Скоро",
-    "loading": "Загрузка..."
+    "loading": "Загрузка...",
+    "deletedUser": "Удалённый пользователь"
   },
   "Auth": {
     "loginTelegram": "Войти через Telegram",

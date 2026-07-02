@@ -28,6 +28,7 @@ export default async function OrderPage({
   const user = await requireOnboardedUser(locale);
   const t = await getTranslations("Order");
   const tr = await getTranslations("Review");
+  const tc = await getTranslations("Common");
 
   const order = await getOrderForUser(id, user).catch(() => null);
   if (!order) notFound();
@@ -48,7 +49,8 @@ export default async function OrderPage({
   const role =
     user.id === order.buyerId ? "buyer" : user.id === order.sellerId ? "seller" : "admin";
   const counterpart = role === "buyer" ? order.seller : order.buyer;
-  const cpName = counterpart.firstName ?? counterpart.name ?? counterpart.username ?? "";
+  const cpName =
+    counterpart.firstName ?? counterpart.name ?? counterpart.username ?? tc("deletedUser");
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
