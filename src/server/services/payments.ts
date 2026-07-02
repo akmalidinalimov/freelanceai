@@ -118,8 +118,8 @@ export async function settleOrderByProvider(
 }
 
 /** Total successful tips received by a seller (across all their orders). */
-async function sellerTipsTotal(sellerId: string): Promise<number> {
-  const tips = await prisma.transaction.findMany({
+async function sellerTipsTotal(sellerId: string, db: Prisma.TransactionClient = prisma): Promise<number> {
+  const tips = await db.transaction.findMany({
     where: { type: "TIP", status: "SUCCEEDED", order: { sellerId } },
     select: { amountUzs: true },
   });
@@ -162,11 +162,14 @@ export async function tipOrder(orderId: string, buyer: User, amountUzs: number) 
  * − amounts already paid out. Every payout path (UI balance, request, admin fulfil) MUST use
  * this so the seller-facing balance and the payout ceiling can never disagree.
  */
-export async function sellerAvailableUzs(sellerId: string): Promise<number> {
+export async function sellerAvailableUzs(
+  sellerId: string,
+  db: Prisma.TransactionClient = prisma
+): Promise<number> {
   const [completed, payouts, tips] = await Promise.all([
-    prisma.order.aggregate({ where: { sellerId, status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
-    prisma.payoutRequest.aggregate({ where: { sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
-    sellerTipsTotal(sellerId),
+    db.order.aggregate({ where: { sellerId, status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
+    db.payoutRequest.aggregate({ where: { sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
+    sellerTipsTotal(sellerId, db),
   ]);
   return (completed._sum.sellerNetUzs ?? 0) + tips - (payouts._sum.amountUzs ?? 0);
 }

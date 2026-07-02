@@ -10,8 +10,12 @@ import crypto from "node:crypto";
  * Format: enc.v1.<iv b64>.<tag b64>.<ciphertext b64> — versioned for future rotation.
  * decryptPII is tolerant: values without the prefix are returned as-is, so rows
  * written before this shipped (plaintext) keep working and get encrypted on their
- * next write. Without a key configured, encryptPII passes through (warns once) so
- * a missing env never breaks signups — but prod MUST set the key.
+ * next write.
+ *
+ * Missing key: in PRODUCTION encryptPII THROWS (fail closed — a typo'd env var must
+ * surface as a loud 500 on the PII-writing request, never as silent plaintext at
+ * rest). In dev/test it passes through with a one-time warning so a bare checkout
+ * still runs.
  */
 
 const PREFIX = "enc.v1.";
@@ -28,9 +32,14 @@ export function encryptPII(value: string | null | undefined): string | null {
   if (value == null || value === "") return value ?? null;
   const k = key();
   if (!k) {
+    if (process.env.NODE_ENV === "production") {
+      // Fail closed: refuse to persist plaintext PII in prod. The request 500s and
+      // the fix is to set/correct PII_ENCRYPTION_KEY — not to accept the write.
+      throw new Error("PII_ENCRYPTION_KEY missing or invalid (need base64-encoded 32 bytes)");
+    }
     if (!warned) {
       warned = true;
-      console.warn("[pii-crypto] PII_ENCRYPTION_KEY missing/invalid — storing PII unencrypted");
+      console.warn("[pii-crypto] PII_ENCRYPTION_KEY missing/invalid — storing PII unencrypted (dev only)");
     }
     return value;
   }

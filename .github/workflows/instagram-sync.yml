@@ -1,0 +1,23 @@
+name: instagram-sync
+
+# Refreshes Instagram tokens nearing expiry (~60d lifetime) and re-syncs every
+# connected creator's portfolio. Without this schedule the tokens silently die.
+# Needs the repo secret CRON_SECRET to match the app's CRON_SECRET env.
+on:
+  schedule:
+    - cron: "20 3 * * *" # daily 03:20 UTC (08:20 Tashkent)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger instagram-sync
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET repo secret not set — skipping."
+            exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://freelanceai.aicreator.academy/api/cron/instagram-sync

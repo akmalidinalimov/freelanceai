@@ -112,6 +112,9 @@ export async function deleteOwnAccount(user: User) {
     throw Errors.forbidden("Admin accounts cannot self-delete");
   }
 
+  // Fast pre-checks for a friendly error before entering the transaction. These are
+  // RE-CHECKED inside the transaction below — an order placed (or payout settled)
+  // between check and anonymization must abort the deletion, not slip through (TOCTOU).
   const activeOrders = await prisma.order.count({
     where: {
       OR: [{ buyerId: user.id }, { sellerId: user.id }],
@@ -135,14 +138,26 @@ export async function deleteOwnAccount(user: User) {
     select: { mediaUrl: true },
   });
 
-  await prisma.$transaction([
+  await prisma.$transaction(async (tx) => {
+    // Guards re-run atomically with the writes (see TOCTOU note above).
+    const stillActive = await tx.order.count({
+      where: {
+        OR: [{ buyerId: user.id }, { sellerId: user.id }],
+        status: { in: [...ACTIVE_ORDER_STATUSES] },
+      },
+    });
+    if (stillActive > 0) throw Errors.conflict("Finish or cancel your active orders first");
+    if (user.isSeller && (await sellerAvailableUzs(user.id, tx)) > 0) {
+      throw Errors.conflict("Withdraw your remaining balance first");
+    }
+
     // Unpublish the catalog footprint.
-    prisma.gig.updateMany({
+    await tx.gig.updateMany({
       where: { sellerId: user.id },
       data: { status: "PAUSED", deletedAt: new Date() },
-    }),
-    prisma.portfolioItem.deleteMany({ where: { profile: { userId: user.id } } }),
-    prisma.sellerProfile.updateMany({
+    });
+    await tx.portfolioItem.deleteMany({ where: { profile: { userId: user.id } } });
+    await tx.sellerProfile.updateMany({
       where: { userId: user.id },
       data: {
         headline: null,
@@ -159,19 +174,19 @@ export async function deleteOwnAccount(user: User) {
         instagramSyncedAt: null,
         instagramSyncStatus: null,
       },
-    }),
+    });
     // Remove social/preference footprint.
-    prisma.follow.deleteMany({ where: { OR: [{ followerId: user.id }, { sellerId: user.id }] } }),
-    prisma.savedGig.deleteMany({ where: { userId: user.id } }),
-    prisma.savedSearch.deleteMany({ where: { userId: user.id } }),
-    prisma.collection.deleteMany({ where: { userId: user.id } }),
-    prisma.notification.deleteMany({ where: { userId: user.id } }),
+    await tx.follow.deleteMany({ where: { OR: [{ followerId: user.id }, { sellerId: user.id }] } });
+    await tx.savedGig.deleteMany({ where: { userId: user.id } });
+    await tx.savedSearch.deleteMany({ where: { userId: user.id } });
+    await tx.collection.deleteMany({ where: { userId: user.id } });
+    await tx.notification.deleteMany({ where: { userId: user.id } });
     // Kill all access: sessions + linked OAuth accounts.
-    prisma.session.deleteMany({ where: { userId: user.id } }),
-    prisma.account.deleteMany({ where: { userId: user.id } }),
+    await tx.session.deleteMany({ where: { userId: user.id } });
+    await tx.account.deleteMany({ where: { userId: user.id } });
     // Strip every personal identifier; orders/ledger/reviews/messages remain
     // (financial + counterparty records) but point at an anonymous shell.
-    prisma.user.update({
+    await tx.user.update({
       where: { id: user.id },
       data: {
         telegramId: null,
@@ -194,8 +209,8 @@ export async function deleteOwnAccount(user: User) {
         notifyEmail: false,
         status: "DELETED",
       },
-    }),
-  ]);
+    });
+  });
 
   // Purge re-hosted media from R2 (best-effort; never blocks the deletion).
   await Promise.all(portfolioMedia.map((m) => deleteStoredFile(m.mediaUrl)));
