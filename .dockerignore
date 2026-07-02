@@ -6,11 +6,10 @@ npm-debug.log
 .env
 .env*.local
 .mcp.json
-docs
 coverage
-*.md
 .vscode
 .idea
 Dockerfile
 .dockerignore
-docker-compose.yml
+mock-assets
+design-*.html

@@ -1,8 +1,11 @@
-name: Build & Push Image
+name: image
 
-# Manual-only for now: the VPS currently runs the app from source (no registry).
-# Re-enable the push trigger once GHCR publishing is wired up for faster deploys.
+# Builds the production image for every main commit and pushes to GHCR. The VPS deploy
+# (deploy/deploy-vps.ps1) waits for the commit's image tag to exist, then the compose
+# app+migrate services pull it — no more npm ci / next build on the production box.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -21,20 +24,17 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Image metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+          build-args: |
+            S3_PUBLIC_BASE_URL=${{ vars.S3_PUBLIC_BASE_URL }}
+            NEXT_PUBLIC_BRAND_NAME=${{ vars.NEXT_PUBLIC_BRAND_NAME }}
+            NEXT_PUBLIC_BRAND_DOMAIN=${{ vars.NEXT_PUBLIC_BRAND_DOMAIN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

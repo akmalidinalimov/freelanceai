@@ -1,39 +1,39 @@
-# syntax=docker/dockerfile:1
+# Production image, built ONCE per commit by .github/workflows/image.yml and pulled by
+# the VPS (deploy/docker-compose.prod.yml). Replaces the old build-on-boot flow, so a
+# VPS restart no longer depends on npm/GitHub/Alpine availability.
+#
+# Deliberately a single full-fat image (app + node_modules + prisma CLI): the same image
+# serves the app container AND the migrate container (`npx prisma migrate deploy`).
+# Slimming back to `output: standalone` is a later optimization — correctness first.
+FROM node:24-alpine
 
-# ---- deps: install all deps (incl. dev) for the build ----
-FROM node:24-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache openssl libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json ./
-COPY prisma ./prisma
-RUN npm ci
-
-# ---- builder: generate Prisma client + build Next (standalone) ----
-FROM node:24-alpine AS builder
-RUN apk add --no-cache openssl
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-# These are inlined into the client bundle at build; the app also reads runtime
-# equivalents (APP_ORIGIN / TELEGRAM_BOT_USERNAME) so the image stays portable.
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npx prisma generate
-RUN npm run build
 
-# ---- runner: minimal standalone image ----
-FROM node:24-alpine AS runner
-RUN apk add --no-cache openssl
-WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
-RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+# Dependency layer (cached until the lockfile changes).
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev
 
-# Standalone server + static assets + public
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-# Prisma generated client + query engine (musl) for runtime queries
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY . .
 
-USER nextjs
+# Build-time inlined values. S3_PUBLIC_BASE_URL feeds next.config's image-host
+# allowlist (public URL, not a secret — set as a GitHub Actions repo VARIABLE).
+# The NEXT_PUBLIC_* pair is the Gigora rename lever (docs/rebrand-gigora.md).
+ARG S3_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_BRAND_NAME
+ARG NEXT_PUBLIC_BRAND_DOMAIN
+ENV S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL \
+    NEXT_PUBLIC_BRAND_NAME=$NEXT_PUBLIC_BRAND_NAME \
+    NEXT_PUBLIC_BRAND_DOMAIN=$NEXT_PUBLIC_BRAND_DOMAIN
+
+RUN npx prisma generate && \
+    DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public" \
+    NEXTAUTH_SECRET="build-dummy" \
+    npm run build
+
+ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "server.js"]
+# Seed is idempotent; app only starts after the migrate service succeeded (compose
+# depends_on), so the schema is always current by the time this runs.
+CMD ["sh", "-c", "(node prisma/seed-prod.mjs || echo 'seed-prod skipped') && npx next start -H 0.0.0.0 -p 3000"]
