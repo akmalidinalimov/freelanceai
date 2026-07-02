@@ -191,6 +191,8 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  // Magic-link login consumes by token alone — avoid a table scan per login.
+  @@index([token])
 }
 
 // Single-use guard for Telegram login payloads: the verified `hash` is recorded

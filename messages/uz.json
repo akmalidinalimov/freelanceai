@@ -194,7 +194,15 @@
     "waiting": "Telegramda “Start” tugmasini bosing va shu yerga qayting...",
     "openInTelegram": "Telegramni ochish",
     "failed": "Kirish amalga oshmadi. Qaytadan urinib koʻring.",
-    "retry": "Qaytadan"
+    "retry": "Qaytadan",
+    "emailLabel": "Email manzili",
+    "emailPlaceholder": "siz@example.com",
+    "emailBtn": "Email orqali kirish havolasini yuborish",
+    "emailSending": "Yuborilmoqda...",
+    "emailSent": "Havolani emailingizga yubordik. Kirish uchun undagi tugmani bosing (15 daqiqa amal qiladi).",
+    "emailError": "Yuborib boʻlmadi. Qaytadan urinib koʻring.",
+    "emailSigningIn": "Hisobingizga kirilmoqda...",
+    "emailLinkInvalid": "Havola yaroqsiz yoki muddati oʻtgan. Qaytadan urinib koʻring."
   },
   "Onboarding": {
     "title": "FreelanceAI dan qanday foydalanasiz?",

@@ -3,6 +3,8 @@ import { redirect } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { TelegramDeepLinkLogin } from "@/components/telegram-deeplink-login";
 import { GoogleLoginButton } from "@/components/google-login-button";
+import { EmailLoginForm } from "@/components/email-login-form";
+import { emailConfigured } from "@/lib/email";
 
 export default async function LoginPage({
   params,
@@ -47,6 +49,8 @@ export default async function LoginPage({
       </div>
 
       <GoogleLoginButton locale={locale} />
+
+      {emailConfigured() && <EmailLoginForm locale={locale} />}
     </div>
   );
 }

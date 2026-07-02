@@ -35,3 +35,36 @@ export async function upsertTelegramUser(
     },
   });
 }
+
+/**
+ * Create/refresh a User from a verified email (magic-link login). The email is only
+ * reached here AFTER a single-use token was consumed, so it is treated as verified.
+ * Never elevates role: a pre-existing account (e.g. a Google user with the same
+ * verified email) keeps its role/isSeller; new accounts default to the BUYER tier.
+ */
+export async function upsertEmailUser(
+  email: string,
+  db: Prisma.TransactionClient = prisma
+): Promise<User> {
+  const normalized = email.trim().toLowerCase();
+  // Case-insensitive lookup: adapter-written emails (e.g. Google OAuth) are stored
+  // verbatim and aren't guaranteed lowercase — an exact match could miss and then
+  // trip the @unique constraint on create.
+  const existing = await db.user.findFirst({
+    where: { email: { equals: normalized, mode: "insensitive" } },
+  });
+  if (existing) {
+    if (existing.emailVerified) return existing;
+    return db.user.update({
+      where: { id: existing.id },
+      data: { emailVerified: new Date() },
+    });
+  }
+  return db.user.create({
+    data: {
+      email: normalized,
+      emailVerified: new Date(),
+      firstName: normalized.split("@")[0],
+    },
+  });
+}

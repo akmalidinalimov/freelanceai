@@ -3,7 +3,8 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { upsertTelegramUser } from "@/lib/users";
+import { upsertTelegramUser, upsertEmailUser } from "@/lib/users";
+import { consumeMagicToken } from "@/lib/email-auth";
 import { stampLastLogin } from "@/server/services/activity";
 import { readCookie, sha256 } from "@/lib/rate-limit";
 
@@ -70,6 +71,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           name: user.firstName ?? user.username ?? "User",
           image: user.photoUrl ?? undefined,
+        };
+      },
+    }),
+    Credentials({
+      // Passwordless email login. The magic-link email carries a single-use token
+      // (created + stored by /api/auth/email/request); the callback page hands it
+      // here. Consuming the token verifies the address, so we upsert + sign in.
+      id: "email-link",
+      name: "Email",
+      credentials: { token: { type: "text" } },
+      async authorize(credentials) {
+        const token = typeof credentials?.token === "string" ? credentials.token : "";
+        if (!token) return null;
+        const email = await consumeMagicToken(token);
+        if (!email) return null;
+        const user = await upsertEmailUser(email);
+        if (user.status !== "ACTIVE") return null;
+        return {
+          id: user.id,
+          name: user.firstName ?? user.name ?? email.split("@")[0],
+          image: user.photoUrl ?? user.image ?? undefined,
         };
       },
     }),

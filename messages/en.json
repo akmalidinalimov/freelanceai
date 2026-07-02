@@ -194,7 +194,15 @@
     "waiting": "Tap “Start” in Telegram, then come back here...",
     "openInTelegram": "Open Telegram",
     "failed": "Login failed. Please try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "emailBtn": "Email me a login link",
+    "emailSending": "Sending...",
+    "emailSent": "We emailed you a login link. Tap the button in it to sign in (valid 15 minutes).",
+    "emailError": "Couldn't send. Please try again.",
+    "emailSigningIn": "Signing you in...",
+    "emailLinkInvalid": "This link is invalid or expired. Please try again."
   },
   "Onboarding": {
     "title": "How will you use FreelanceAI?",
