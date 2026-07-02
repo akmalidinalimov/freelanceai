@@ -17,7 +17,30 @@ if (-not $Sha) {
   $remote = git -C $root ls-remote origin main 2>$null
   if ($LASTEXITCODE -eq 0 -and $remote) { $Sha = ($remote -split "\s+")[0] }
 }
-if ($Sha) { "deploying commit: $Sha" } else { "WARNING: could not resolve origin/main SHA - containers will track branch main" }
+if ($Sha) { "deploying commit: $Sha" } else { "WARNING: could not resolve origin/main SHA - containers will use :latest image" }
+
+# The app+migrate containers PULL ghcr.io/<repo>:<sha> (built by the image workflow on
+# push). Wait until that image exists — deploying before the build finishes would fail.
+if ($Sha) {
+  $img = "akmalidinalimov/freelanceai"
+  $tok = (Invoke-RestMethod "https://ghcr.io/token?scope=repository:${img}:pull").token
+  $mh = @{
+    Authorization = "Bearer $tok"
+    Accept        = "application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.docker.distribution.manifest.list.v2+json"
+  }
+  $deadline = (Get-Date).AddMinutes(15)
+  $ready = $false
+  Write-Host "waiting for image ghcr.io/${img}:$Sha ..." -NoNewline
+  while ((Get-Date) -lt $deadline) {
+    try {
+      Invoke-WebRequest -Method Head -Uri "https://ghcr.io/v2/$img/manifests/$Sha" -Headers $mh -UseBasicParsing | Out-Null
+      $ready = $true; break
+    } catch { Write-Host "." -NoNewline; Start-Sleep -Seconds 20 }
+  }
+  Write-Host ""
+  if (-not $ready) { throw "image for $Sha not in GHCR after 15 min - check the 'image' workflow run" }
+  "image ready: ghcr.io/${img}:$Sha"
+}
 
 # Hostinger API token (from the local MCP config)
 $mcp = Get-Content "$root\.mcp.json" -Raw | ConvertFrom-Json
