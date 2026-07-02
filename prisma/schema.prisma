@@ -103,6 +103,7 @@ model User {
   followers      Follow[] @relation("Followers")
   activityEvents ActivityEvent[]
   flags          UserFlag[]
+  searchEmbedding SellerEmbedding?
 
   @@index([role])
   @@index([lastSeenAt])
@@ -574,6 +575,18 @@ enum FlagSeverity {
   LOW
   MEDIUM
   HIGH
+}
+
+// S2 semantic search: one embedding per seller over their "creator document"
+// (headline + bio + specializations + gig text). Rebuilt by the nightly cron and
+// backfilled on demand; queried via pgvector kNN in matchCreators (raw SQL — the
+// vector type/operators are outside Prisma's query API).
+model SellerEmbedding {
+  sellerId  String                       @id
+  user      User                         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  docText   String
+  embedding Unsupported("vector(1024)")?
+  updatedAt DateTime                     @updatedAt
 }
 
 model UserFlag {

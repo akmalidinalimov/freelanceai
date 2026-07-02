@@ -98,6 +98,7 @@ if (slug) check("gig has <title>", (await get(`/uz/gigs/${slug}`)).body.toLowerC
 r = await get("/api/health");
 const h = JSON.parse(r.body || "{}").data ?? {};
 check("health all green", h.db === "up" && h.trgm === true && h.media === true && h.email === true, JSON.stringify(h));
+check("health vector (pgvector ext)", h.vector === true, JSON.stringify(h));
 check("private media bucket active", h.privateMedia === true, `privateMedia=${h.privateMedia}`);
 check("home has main landmark (a11y skip target)", (await get("/uz")).body.includes('id="main"'));
 

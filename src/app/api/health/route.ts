@@ -13,12 +13,14 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   let db: "up" | "down" = "down";
   let trgm = false;
+  let vector = false;
   try {
     await prisma.$queryRaw`SELECT 1`;
     db = "up";
-    const rows = await prisma.$queryRaw<{ count: number }[]>`
-      SELECT count(*)::int AS count FROM pg_extension WHERE extname = 'pg_trgm'`;
-    trgm = Number(rows[0]?.count ?? 0) > 0;
+    const rows = await prisma.$queryRaw<{ extname: string }[]>`
+      SELECT extname FROM pg_extension WHERE extname IN ('pg_trgm', 'vector')`;
+    trgm = rows.some((r) => r.extname === "pg_trgm");
+    vector = rows.some((r) => r.extname === "vector");
   } catch {
     db = "down";
   }
@@ -31,6 +33,8 @@ export async function GET() {
         status: healthy ? "ok" : "degraded",
         db,
         trgm,
+        vector,
+        semantic: vector && Boolean(process.env.VOYAGE_API_KEY),
         media: mediaConfigured(),
         privateMedia: Boolean(process.env.S3_PRIVATE_BUCKET),
         email: emailConfigured(),

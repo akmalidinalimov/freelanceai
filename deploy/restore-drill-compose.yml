@@ -5,7 +5,9 @@
 # deleted. Run via deploy/restore-drill.ps1; results read from project logs.
 services:
   db:
-    image: postgres:16-alpine
+    # Must match prod's pgvector-enabled image: dumps contain CREATE EXTENSION vector
+    # + a vector(1024) column, which plain postgres:16-alpine cannot restore.
+    image: ghcr.io/akmalidinalimov/freelanceai:db-pg16
     environment:
       POSTGRES_USER: drill
       POSTGRES_PASSWORD: drill

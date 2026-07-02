@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { SPECIALIZATIONS, specLabel } from "@/lib/specializations";
 import { computeSpecEvidence } from "@/lib/niche-evidence";
 import { parseIntentWithClaude } from "@/server/services/intent-ai";
+import { embedQuery, semanticCandidates } from "@/server/services/embeddings";
 
 /**
  * S1 creator matching — "describe your job → best-matched creators".
@@ -80,9 +81,13 @@ export async function matchCreators(
 
   // S3: Claude parse (fuzzy, cross-language) UNIONED with the deterministic lexical
   // parse — the lexical arm stays the precision floor; AI only ever ADDS recall.
-  // parseIntentWithClaude is fail-open (null on no-key/timeout) → pure S1 behavior.
+  // S2: the query embedding runs CONCURRENTLY with the parse (independent calls).
+  // Both are fail-open (null on no-key/timeout) → pure S1 behavior.
   const lexical = parseIntent(query, locale);
-  const ai = await parseIntentWithClaude(query, locale);
+  const [ai, queryVec] = await Promise.all([
+    parseIntentWithClaude(query, locale),
+    embedQuery(query).catch(() => null),
+  ]);
   const specKeys = [...new Set([...lexical.specKeys, ...(ai?.specKeys ?? [])])];
   const intent: Intent & { understood?: string; ai?: boolean } = {
     terms: [...new Set([...lexical.terms, ...(ai?.terms ?? [])])],
@@ -148,6 +153,31 @@ export async function matchCreators(
     for (const p of profs) {
       declaredBySeller.set(p.userId, p.specializations);
       rel.set(p.userId, Math.max(rel.get(p.userId) ?? 0, 0.35));
+    }
+  }
+
+  // 4) S2 semantic arm: pgvector kNN over creator-document embeddings, fused with the
+  // lexical relevance by Reciprocal Rank Fusion (RANKS, not raw scores — ts_rank and
+  // cosine live on different scales; spec §4). Absent embeddings → lexical-only.
+  if (queryVec) {
+    try {
+      const semantic = await semanticCandidates(queryVec, 50);
+      if (semantic.size > 0) {
+        const K = 60;
+        const rrf = new Map<string, number>();
+        [...rel.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .forEach(([id], i) => rrf.set(id, (rrf.get(id) ?? 0) + 1 / (K + i + 1)));
+        [...semantic.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .forEach(([id], i) => rrf.set(id, (rrf.get(id) ?? 0) + 1 / (K + i + 1)));
+        const max = Math.max(...rrf.values());
+        rel.clear();
+        for (const [id, v] of rrf) rel.set(id, v / max);
+      }
+    } catch (err) {
+      // vector extension/table missing (pre-migration) — lexical-only, never fatal.
+      console.error("semantic arm skipped", err);
     }
   }
 

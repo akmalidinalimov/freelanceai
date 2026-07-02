@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { scanRedFlags } from "@/server/services/red-flags";
+import { rebuildSellerEmbeddings } from "@/server/services/embeddings";
 
 /** ActivityEvents are product analytics, not records of account — bounded retention. */
 const EVENT_RETENTION_DAYS = 180;
@@ -18,14 +19,20 @@ export async function POST(request: Request) {
 
   const scan = await scanRedFlags();
   const cutoff = new Date(Date.now() - EVENT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-  const [eventsPurged, tokensPurged] = await Promise.all([
+  const [eventsPurged, tokensPurged, embeddings] = await Promise.all([
     prisma.activityEvent.deleteMany({ where: { createdAt: { lt: cutoff } } }),
     prisma.verificationToken.deleteMany({ where: { expires: { lt: new Date() } } }),
+    // S2: refresh creator-document embeddings (skips unchanged docs; no-op without key).
+    rebuildSellerEmbeddings().catch((e) => {
+      console.error("embedding rebuild failed", e);
+      return { sellers: 0, embedded: -1 };
+    }),
   ]);
 
   return Response.json({
     ...scan,
     eventsPurged: eventsPurged.count,
     tokensPurged: tokensPurged.count,
+    embeddings,
   });
 }

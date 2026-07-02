@@ -7,7 +7,10 @@
 #   TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME  (never committed here).
 services:
   db:
-    image: postgres:16-alpine
+    # postgres:16-alpine + pgvector, SAME alpine base as the volume was initialized
+    # with (deploy/db.Dockerfile — do NOT swap to the Debian pgvector image; libc
+    # change shifts text collation and corrupts btree indexes without a REINDEX).
+    image: ghcr.io/akmalidinalimov/freelanceai:db-pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: freelanceai
