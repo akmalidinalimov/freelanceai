@@ -1,4 +1,20 @@
-# Ops runbook — backups, migrations, monitoring
+# Ops runbook — firewall, backups, migrations, monitoring
+
+## Network posture (firewall)
+
+**Drop-ALL-inbound** since 2026-07-02: Hostinger network-level firewall `freelanceai-prod`
+(id 321306) is active on VM 1411263 with **zero allow rules** — every inbound connection
+(incl. SSH:22) is dropped before reaching the box. This works because nothing needs
+inbound: the site is served via the *outbound* Cloudflare Tunnel, Postgres is
+compose-internal, and all operations (deploys, logs, backups, break-glass projects) go
+through the Hostinger API.
+
+**Emergency SSH re-open** (if ever needed): the firewall is managed above the VM, so you
+can't be locked out of changing it —
+`VPS_createFirewallRuleV1` (firewallId 321306, protocol SSH, port 22, source any or
+your-IP) then `VPS_syncFirewallV1(321306, 1411263)`; or hPanel → VPS → Security →
+Firewall. Delete the rule + re-sync when done. Console access without SSH: hPanel
+browser terminal / recovery mode.
 
 ## Database backups
 
