@@ -10,8 +10,11 @@ services:
       POSTGRES_USER: drill
       POSTGRES_PASSWORD: drill
       POSTGRES_DB: drill
-    tmpfs:
-      - /var/lib/postgresql/data
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+        tmpfs:
+          size: 1073741824 # 1 GiB cap — tmpfs otherwise defaults to half of RAM
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U drill -d drill"]
       interval: 5s
@@ -33,4 +36,4 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       # Try today's dump, then yesterday's, then 2 days back (weekday-named keys).
-      - "apk add --no-cache curl ca-certificates >/dev/null && EP=$${S3_ENDPOINT%/} && DOW=$$(date -u +%w) && OK='' && for i in 0 1 2; do idx=$$(( (DOW - i + 7) % 7 )); set -- Sun Mon Tue Wed Thu Fri Sat; shift $$idx; D=$$1; echo \"[drill] trying backups/db-$$D.dump\"; if curl -sf --aws-sigv4 aws:amz:auto:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" -o /tmp/restore.dump \"$$EP/$$S3_PRIVATE_BUCKET/backups/db-$$D.dump\"; then OK=$$D; break; fi; done && if [ -z \"$$OK\" ]; then echo '[drill] FAIL: no dump found for last 3 days'; exit 1; fi && echo \"[drill] downloaded db-$$OK.dump ($$(du -h /tmp/restore.dump | cut -f1))\" && pg_restore -h db -U drill -d drill --no-owner --no-privileges /tmp/restore.dump 2>/tmp/warn.txt; echo \"[drill] pg_restore exit=$$? (warnings: $$(wc -l < /tmp/warn.txt))\" && psql -h db -U drill -d drill -t -A -c \"SELECT 'users='||(SELECT count(*) FROM \\\"User\\\") || ' gigs='||(SELECT count(*) FROM \\\"Gig\\\") || ' orders='||(SELECT count(*) FROM \\\"Order\\\") || ' profiles='||(SELECT count(*) FROM \\\"SellerProfile\\\") || ' ledger='||(SELECT count(*) FROM \\\"LedgerEntry\\\")\" | sed 's/^/[drill] RESULT /' && psql -h db -U drill -d drill -t -A -c \"SELECT '[drill] sample gig: '||title FROM \\\"Gig\\\" LIMIT 1\" && echo '[drill] DRILL COMPLETE' && sleep 3600"
+      - "apk add --no-cache curl ca-certificates >/dev/null && EP=$${S3_ENDPOINT%/} && DOW=$$(date -u +%w) && OK='' && for i in 0 1 2; do idx=$$(( (DOW - i + 7) % 7 )); set -- Sun Mon Tue Wed Thu Fri Sat; shift $$idx; D=$$1; echo \"[drill] trying backups/db-$$D.dump\"; if curl -sf --aws-sigv4 aws:amz:auto:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" -o /tmp/restore.dump \"$$EP/$$S3_PRIVATE_BUCKET/backups/db-$$D.dump\"; then OK=$$D; break; fi; done && if [ -z \"$$OK\" ]; then echo '[drill] FAIL: no dump found for last 3 days'; exit 1; fi && echo \"[drill] downloaded db-$$OK.dump ($$(du -h /tmp/restore.dump | cut -f1))\" && if pg_restore -h db -U drill -d drill --no-owner --no-privileges /tmp/restore.dump 2>/tmp/warn.txt; then echo \"[drill] pg_restore OK (warnings: $$(wc -l < /tmp/warn.txt))\"; else echo \"[drill] pg_restore FAILED\"; cat /tmp/warn.txt | tail -5; exit 1; fi && psql -h db -U drill -d drill -t -A -c \"SELECT 'users='||(SELECT count(*) FROM \\\"User\\\") || ' gigs='||(SELECT count(*) FROM \\\"Gig\\\") || ' orders='||(SELECT count(*) FROM \\\"Order\\\") || ' profiles='||(SELECT count(*) FROM \\\"SellerProfile\\\") || ' ledger='||(SELECT count(*) FROM \\\"LedgerEntry\\\")\" | sed 's/^/[drill] RESULT /' && psql -h db -U drill -d drill -t -A -c \"SELECT '[drill] sample gig: '||title FROM \\\"Gig\\\" LIMIT 1\" && echo '[drill] DRILL COMPLETE' && sleep 3600"

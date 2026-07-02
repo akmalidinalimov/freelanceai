@@ -1,5 +1,17 @@
 # Ops runbook — firewall, backups, migrations, monitoring
 
+## Deploys & rollback
+
+Every deploy is **pinned to one commit**: `deploy/deploy-vps.ps1` resolves origin/main's
+tip SHA and passes it as `GIT_SHA`; the migrate and app containers check out exactly that
+commit (no skew if someone pushes mid-deploy).
+
+**Rollback** = redeploy a known-good commit:
+```
+& .\deploy\deploy-vps.ps1 -Sha <previous-good-sha>
+```
+(find SHAs with `git log --oneline`; the post-deploy verify suite still runs).
+
 ## Network posture (firewall)
 
 **Drop-ALL-inbound** since 2026-07-02: Hostinger network-level firewall `freelanceai-prod`
@@ -24,7 +36,9 @@ Two independent layers:
    [deploy/docker-compose.prod.yml](../deploy/docker-compose.prod.yml) runs `pg_dump -Fc`
    immediately on every (re)start and then every 24h, uploading to the **private** R2
    bucket at `backups/db-<Weekday>.dump` (e.g. `backups/db-Mon.dump`). Weekday naming =
-   7 rolling daily restore points, no cleanup job needed.
+   7 rolling daily restore points, no cleanup job needed. Each dump ALSO lands in a
+   monthly slot `backups/db-<YYYY-MM>.dump` — long-term retention for
+   corruption-noticed-late scenarios (delete old months manually if space matters).
 2. **Hostinger weekly VPS snapshots (automatic).** Whole-machine, ~weekly, restorable
    from hPanel / `VPS_restoreBackupV1`. Last resort only.
 

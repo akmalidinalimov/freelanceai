@@ -4,10 +4,20 @@
 # never printed. Safe to commit (contains no secrets).
 # By default, runs the full post-deploy verification once the app is live. Pass
 # -SkipVerify to only submit the deploy (fire-and-forget).
-param([switch]$SkipVerify)
+# -Sha <commit>: deploy a specific commit instead of origin/main's tip. This is the
+# ROLLBACK lever: redeploying yesterday's SHA restores yesterday's code deterministically.
+param([switch]$SkipVerify, [string]$Sha)
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $vmId = 1411263
+
+# Pin the deploy to one commit: migrate + app containers both check out exactly this
+# SHA, so a push mid-deploy can't skew them apart.
+if (-not $Sha) {
+  $remote = git -C $root ls-remote origin main 2>$null
+  if ($LASTEXITCODE -eq 0 -and $remote) { $Sha = ($remote -split "\s+")[0] }
+}
+if ($Sha) { "deploying commit: $Sha" } else { "WARNING: could not resolve origin/main SHA - containers will track branch main" }
 
 # Hostinger API token (from the local MCP config)
 $mcp = Get-Content "$root\.mcp.json" -Raw | ConvertFrom-Json
@@ -32,6 +42,7 @@ $optional = 'ADMIN_TELEGRAM_IDS', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
 'INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET'
 $lines = @($needed | ForEach-Object { "$_=$($dv[$_])" })
 foreach ($k in $optional) { if ($dv[$k] -and $dv[$k] -notmatch 'PASTE_') { $lines += "$k=$($dv[$k])" } }
+if ($Sha) { $lines += "GIT_SHA=$Sha" }
 # [string] casts avoid a PowerShell 5.1 ConvertTo-Json quirk that wraps strings as {value,Count}.
 $envStr = [string]($lines -join "`n")
 $content = [string](Get-Content "$root\deploy\docker-compose.prod.yml" -Raw)
