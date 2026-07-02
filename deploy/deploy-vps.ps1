@@ -19,14 +19,16 @@ $dv = @{}
 Get-Content "$root\.env.deploy.local" | Where-Object { $_ -match '^\s*[A-Z]' } | ForEach-Object {
   $k, $v = $_ -split '=', 2; $dv[$k.Trim()] = $v.Trim()
 }
-$needed = 'POSTGRES_PASSWORD', 'SESSION_SECRET', 'CLOUDFLARE_TUNNEL_TOKEN', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_USERNAME', 'TELEGRAM_WEBHOOK_SECRET', 'AUTH_SECRET'
+# PII_ENCRYPTION_KEY is REQUIRED: encryptPII fails closed (throws) in production, so a
+# deploy that stripped the key would 500 every KYC/Instagram PII write.
+$needed = 'POSTGRES_PASSWORD', 'SESSION_SECRET', 'CLOUDFLARE_TUNNEL_TOKEN', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_USERNAME', 'TELEGRAM_WEBHOOK_SECRET', 'AUTH_SECRET', 'PII_ENCRYPTION_KEY'
 foreach ($k in $needed) {
   if (-not $dv[$k] -or $dv[$k] -match 'PASTE_') { throw "$k missing/placeholder in .env.deploy.local" }
 }
 # Optional vars: included only if present (e.g. the admin allowlist may be empty).
 $optional = 'ADMIN_TELEGRAM_IDS', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
 'S3_ENDPOINT', 'S3_BUCKET', 'S3_PRIVATE_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_PUBLIC_BASE_URL',
-'RESEND_API_KEY', 'EMAIL_FROM', 'CRON_SECRET', 'PII_ENCRYPTION_KEY',
+'RESEND_API_KEY', 'EMAIL_FROM', 'CRON_SECRET',
 'INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET'
 $lines = @($needed | ForEach-Object { "$_=$($dv[$_])" })
 foreach ($k in $optional) { if ($dv[$k] -and $dv[$k] -notmatch 'PASTE_') { $lines += "$k=$($dv[$k])" } }

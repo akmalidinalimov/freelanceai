@@ -15,6 +15,13 @@ const OAUTH_BASE = "https://www.instagram.com/oauth/authorize";
 const TOKEN_URL = "https://api.instagram.com/oauth/access_token";
 const GRAPH = "https://graph.instagram.com";
 
+// Every Graph call gets a hard timeout: a stalled Meta endpoint must not hang the
+// sequential cron pass (or an OAuth callback) indefinitely.
+const IG_FETCH_TIMEOUT_MS = 15_000;
+function igFetch(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, { ...init, signal: AbortSignal.timeout(IG_FETCH_TIMEOUT_MS) });
+}
+
 export function instagramConfigured(): boolean {
   return Boolean(process.env.INSTAGRAM_APP_ID && process.env.INSTAGRAM_APP_SECRET);
 }
@@ -70,11 +77,11 @@ export async function exchangeCode(code: string): Promise<{ accessToken: string;
     redirect_uri: redirectUri(),
     code,
   });
-  const shortRes = await fetch(TOKEN_URL, { method: "POST", body: form });
+  const shortRes = await igFetch(TOKEN_URL, { method: "POST", body: form });
   if (!shortRes.ok) throw new Error(`ig_token_exchange_${shortRes.status}`);
   const short = (await shortRes.json()) as { access_token: string; user_id: number | string };
 
-  const longRes = await fetch(
+  const longRes = await igFetch(
     `${GRAPH}/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_APP_SECRET}&access_token=${short.access_token}`
   );
   if (!longRes.ok) throw new Error(`ig_long_token_${longRes.status}`);
@@ -89,7 +96,7 @@ export async function exchangeCode(code: string): Promise<{ accessToken: string;
 
 /** Refresh a long-lived token (must be ≥24h old, not expired). */
 export async function refreshToken(token: string): Promise<{ accessToken: string; expiresAt: Date }> {
-  const res = await fetch(`${GRAPH}/refresh_access_token?grant_type=ig_refresh_token&access_token=${token}`);
+  const res = await igFetch(`${GRAPH}/refresh_access_token?grant_type=ig_refresh_token&access_token=${token}`);
   if (!res.ok) throw new Error(`ig_refresh_${res.status}`);
   const j = (await res.json()) as { access_token: string; expires_in: number };
   return { accessToken: j.access_token, expiresAt: new Date(Date.now() + j.expires_in * 1000) };
@@ -109,7 +116,7 @@ export interface IgMedia {
 /** Latest media for the connected account (CDN URLs are short-lived — re-host!). */
 export async function fetchMedia(token: string, limit = 12): Promise<IgMedia[]> {
   const fields = "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp,username";
-  const res = await fetch(`${GRAPH}/me/media?fields=${fields}&limit=${limit}&access_token=${token}`);
+  const res = await igFetch(`${GRAPH}/me/media?fields=${fields}&limit=${limit}&access_token=${token}`);
   if (!res.ok) throw new Error(`ig_media_${res.status}`);
   const j = (await res.json()) as { data?: IgMedia[] };
   return j.data ?? [];

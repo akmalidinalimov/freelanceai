@@ -118,17 +118,34 @@ export async function disconnectInstagram(userId: string): Promise<void> {
  * Cron pass: refresh tokens expiring within 10 days (Meta long-lived tokens last ~60d
  * and must be refreshed while still valid), then re-sync every connected creator.
  */
-export async function instagramCronPass(): Promise<{ refreshed: number; synced: number; failed: number }> {
+export async function instagramCronPass(): Promise<{
+  refreshed: number;
+  synced: number;
+  failed: number;
+  skipped: number;
+}> {
+  // Time budget: the HTTP caller sits behind Cloudflare's ~100s origin limit, so one
+  // pass must stay well under it. Least-recently-synced profiles go first; anything
+  // beyond the budget is skipped and caught by tomorrow's run (tokens have a 10-day
+  // refresh lookahead, so a skipped day costs nothing).
+  const deadline = Date.now() + 60_000;
   const connected = await prisma.sellerProfile.findMany({
     // Only active accounts — never keep syncing a suspended/deleted user's Instagram.
     where: { instagramTokenEnc: { not: null }, user: { status: "ACTIVE" } },
     select: { userId: true, instagramTokenEnc: true, instagramTokenExpiresAt: true },
+    orderBy: { instagramSyncedAt: { sort: "asc", nulls: "first" } },
     take: 200,
   });
   let refreshed = 0;
   let synced = 0;
   let failed = 0;
-  for (const p of connected) {
+  let skipped = 0;
+  for (let i = 0; i < connected.length; i++) {
+    if (Date.now() > deadline) {
+      skipped = connected.length - i;
+      break;
+    }
+    const p = connected[i];
     try {
       const token = decryptPII(p.instagramTokenEnc);
       if (!token || token === "•••") throw new Error("token_unreadable");
@@ -147,5 +164,5 @@ export async function instagramCronPass(): Promise<{ refreshed: number; synced: 
       failed++;
     }
   }
-  return { refreshed, synced, failed };
+  return { refreshed, synced, failed, skipped };
 }

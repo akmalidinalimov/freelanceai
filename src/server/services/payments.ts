@@ -286,10 +286,11 @@ export async function recordPayout(
   if (!Number.isInteger(amountUzs) || amountUzs <= 0) throw Errors.validation({ amountUzs: "Invalid amount" });
   if (!cardMasked || cardMasked.trim().length < 4) throw Errors.validation({ cardMasked: "Card is required" });
 
-  const available = await sellerAvailableUzs(sellerId);
-  if (amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
-
   await prisma.$transaction(async (tx) => {
+    // Balance ceiling checked INSIDE the transaction (atomically with the payout row) —
+    // two concurrent admin payouts must not both pass the check (check-then-act race).
+    const available = await sellerAvailableUzs(sellerId, tx);
+    if (amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
     await tx.payoutRequest.create({
       data: {
         sellerId,
@@ -374,10 +375,13 @@ export async function fulfillPayoutRequest(admin: User, requestId: string) {
   const req = await prisma.payoutRequest.findUnique({ where: { id: requestId } });
   if (!req || req.status !== "REQUESTED") throw Errors.conflict("No such pending payout request");
 
-  const available = await sellerAvailableUzs(req.sellerId);
-  if (req.amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
-
   await prisma.$transaction(async (tx) => {
+    // Re-fetch + balance check inside the transaction: concurrent fulfilments of the
+    // same request (double-click) or overlapping payouts must not both pass.
+    const fresh = await tx.payoutRequest.findUnique({ where: { id: requestId } });
+    if (!fresh || fresh.status !== "REQUESTED") throw Errors.conflict("No such pending payout request");
+    const available = await sellerAvailableUzs(req.sellerId, tx);
+    if (req.amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
     await tx.payoutRequest.update({
       where: { id: requestId },
       data: { status: "PAID", processedBy: admin.id },

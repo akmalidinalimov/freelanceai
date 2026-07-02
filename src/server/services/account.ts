@@ -138,7 +138,28 @@ export async function deleteOwnAccount(user: User) {
     select: { mediaUrl: true },
   });
 
-  await prisma.$transaction(async (tx) => {
+  const anonymize = (tx: Prisma.TransactionClient) => runAnonymize(tx, user);
+  try {
+    // Serializable: a concurrent order insert that would invalidate the guard forces a
+    // serialization failure (P2034) instead of slipping past the count (phantom read).
+    await prisma.$transaction(anonymize, {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    });
+  } catch (e) {
+    if ((e as { code?: string })?.code === "P2034") {
+      throw Errors.conflict("Account activity changed during deletion — please try again");
+    }
+    throw e;
+  }
+
+  // Purge re-hosted media from R2 (best-effort; never blocks the deletion).
+  await Promise.all(portfolioMedia.map((m) => deleteStoredFile(m.mediaUrl)));
+
+  await audit({ actorId: user.id, action: "account.delete", entity: "User", entityId: user.id });
+}
+
+async function runAnonymize(tx: Prisma.TransactionClient, user: User): Promise<void> {
+  {
     // Guards re-run atomically with the writes (see TOCTOU note above).
     const stillActive = await tx.order.count({
       where: {
@@ -210,10 +231,5 @@ export async function deleteOwnAccount(user: User) {
         status: "DELETED",
       },
     });
-  });
-
-  // Purge re-hosted media from R2 (best-effort; never blocks the deletion).
-  await Promise.all(portfolioMedia.map((m) => deleteStoredFile(m.mediaUrl)));
-
-  await audit({ actorId: user.id, action: "account.delete", entity: "User", entityId: user.id });
+  }
 }
