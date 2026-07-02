@@ -69,7 +69,15 @@ export default async function AdminUserDetailPage({
         </span>
         <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">KYC: {u.kycStatus}</span>
       </div>
-      <p className="mb-6 text-xs text-[hsl(var(--muted-foreground))]">id {u.id}</p>
+      <p className="mb-6 text-xs text-[hsl(var(--muted-foreground))]">
+        id {u.id} ·{" "}
+        <Link
+          href={`/admin/conversations?user=${u.id}`}
+          className="text-[hsl(var(--primary))] hover:underline"
+        >
+          View conversations
+        </Link>
+      </p>
 
       {/* Identity & activity */}
       <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
