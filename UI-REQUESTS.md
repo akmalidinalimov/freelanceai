@@ -51,6 +51,13 @@ Add a shared key (e.g. `Common.deletedUser`) in all three locales. No crash toda
 (avatar initial handles `""`), purely cosmetic — a blank name next to a real review
 reads as a bug.
 
+### 5. Gigora rebrand (WAIT for founder's go — domain not purchased yet)
+The platform is renaming FreelanceAI → **Gigora** (gigora.ai). Platform prep is done:
+`src/lib/brand.ts` exports `BRAND_NAME`/`BRAND_DOMAIN` (env-driven). When the founder
+says go: swap the header/footer logo text and any hardcoded brand strings in components
+to import `BRAND_NAME` from `@/lib/brand`, and prepare favicon/OG assets with the new
+name. Full plan: docs/rebrand-gigora.md.
+
 ## → For the platform team
 
 (nothing pending)

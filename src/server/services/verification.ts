@@ -1,4 +1,5 @@
 import "server-only";
+import { BRAND_NAME } from "@/lib/brand";
 import crypto from "crypto";
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -42,14 +43,14 @@ export async function requestVerificationCode(user: User, channel: VerifyChannel
   if (channel === "telegram") {
     await tgSendMessage(
       user.telegramId!,
-      `🔐 FreelanceAI tasdiqlash kodi: ${code}\n\nKod 10 daqiqa amal qiladi. Agar bu siz boʻlmasangiz, eʼtibor bermang.`
+      `🔐 ${BRAND_NAME} tasdiqlash kodi: ${code}\n\nKod 10 daqiqa amal qiladi. Agar bu siz boʻlmasangiz, eʼtibor bermang.`
     );
   } else {
     const { text, html } = renderBrandedEmail({
       title: "Your verification code",
-      lines: [`Your FreelanceAI verification code is ${code}.`, "It expires in 10 minutes."],
+      lines: [`Your ${BRAND_NAME} verification code is ${code}.`, "It expires in 10 minutes."],
     });
-    await sendEmail(user.email!, "FreelanceAI verification code", text, html);
+    await sendEmail(user.email!, `${BRAND_NAME} verification code`, text, html);
   }
   return code;
 }

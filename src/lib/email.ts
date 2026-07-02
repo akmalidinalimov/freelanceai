@@ -1,4 +1,5 @@
 import "server-only";
+import { BRAND_NAME } from "@/lib/brand";
 
 /**
  * Email delivery. Uses Resend when RESEND_API_KEY is set; otherwise logs a no-op so the
@@ -11,7 +12,7 @@ export function emailConfigured(): boolean {
 
 export async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<void> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM ?? "FreelanceAI <noreply@aicreator.academy>";
+  const from = process.env.EMAIL_FROM ?? `${BRAND_NAME} <noreply@aicreator.academy>`;
   if (!key) {
     console.log(`[email:noop] to=${to} subject="${subject}"`);
     return;
@@ -58,14 +59,14 @@ export function renderBrandedEmail({ title, lines, button }: BrandedEmail): { te
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
       <tr><td style="padding:20px 28px;border-bottom:1px solid #e2e8f0">
-        <span style="font-size:18px;font-weight:700;color:#14a37f">FreelanceAI</span>
+        <span style="font-size:18px;font-weight:700;color:#14a37f">${BRAND_NAME}</span>
       </td></tr>
       <tr><td style="padding:26px 28px">
         <h1 style="margin:0 0 14px;font-size:19px;color:#0f172a">${escapeHtml(title)}</h1>
         ${body}${cta}
       </td></tr>
       <tr><td style="padding:16px 28px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8">
-        FreelanceAI — Central Asia's marketplace for AI creators
+        ${BRAND_NAME} — Central Asia's marketplace for AI creators
       </td></tr>
     </table>
   </td></tr></table>
