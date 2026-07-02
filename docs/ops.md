@@ -20,19 +20,22 @@ DATABASE_URL; that's why sitemap.ts is force-dynamic).
 
 ## Network posture (firewall)
 
-**Drop-ALL-inbound** since 2026-07-02: Hostinger network-level firewall `freelanceai-prod`
-(id 321306) is active on VM 1411263 with **zero allow rules** — every inbound connection
-(incl. SSH:22) is dropped before reaching the box. This works because nothing needs
-inbound: the site is served via the *outbound* Cloudflare Tunnel, Postgres is
-compose-internal, and all operations (deploys, logs, backups, break-glass projects) go
-through the Hostinger API.
+**IMPORTANT — srv1411263 is a SHARED box.** Besides FreelanceAI it hosts other apps
+(alikhanova.cloud, pay.alikhanova.cloud) served by the HOST nginx on **inbound 80/443**
+behind Cloudflare. FreelanceAI itself needs no inbound (its Cloudflare Tunnel dials
+out), but the other apps do — so a drop-ALL firewall breaks them.
 
-**Emergency SSH re-open** (if ever needed): the firewall is managed above the VM, so you
-can't be locked out of changing it —
-`VPS_createFirewallRuleV1` (firewallId 321306, protocol SSH, port 22, source any or
-your-IP) then `VPS_syncFirewallV1(321306, 1411263)`; or hPanel → VPS → Security →
-Firewall. Delete the rule + re-sync when done. Console access without SSH: hPanel
-browser terminal / recovery mode.
+Active firewall: **`alikhanova.cloud`** (id 321686) on VM 1411263 — default-deny with
+**Accept TCP 80 + 443** (web open for the shared apps), everything else (incl. SSH:22)
+dropped. The old **`freelanceai-prod`** (id 321306, zero rules = drop-all) is retained
+but **must NOT be re-activated** — doing so takes alikhanova.cloud/pay offline (this
+happened 2026-07-02 ~10:42–14:10 UTC; fixed by activating the 80/443 group).
+
+- Rule changes need the founder's explicit approval (auto-mode classifier blocks
+  firewall writes). hPanel → VPS 1411263 → Security → Firewall.
+- Console access without SSH: hPanel browser terminal / recovery mode.
+- TIGHTEN LATER (optional): the 321686 group also has an over-broad "Accept TCP any"
+  rule; delete it so only 80/443 are open (SSH stays closed).
 
 ## Database backups
 
