@@ -177,11 +177,14 @@
   },
   "Footer": {
     "rights": "Все права защищены.",
-    "language": "Язык"
+    "language": "Язык",
+    "terms": "Условия использования",
+    "privacy": "Политика конфиденциальности"
   },
   "Common": {
     "comingSoon": "Скоро",
-    "loading": "Загрузка..."
+    "loading": "Загрузка...",
+    "deletedUser": "Удалённый пользователь"
   },
   "Auth": {
     "loginTelegram": "Войти через Telegram",
@@ -526,6 +529,32 @@
       "LEVEL_2": "Уровень 2",
       "TOP_RATED": "Топ-рейтинг"
     }
+  },
+  "Instagram": {
+    "connect": "Подключить Instagram",
+    "connectHint": "Ваши посты из Instagram автоматически синхронизируются в портфолио.",
+    "connected": "подключён",
+    "lastSynced": "Последняя синхронизация",
+    "disconnect": "Отключить",
+    "disconnectWarn": "Отключить Instagram? Синхронизированные элементы портфолио будут удалены.",
+    "markerConnected": "Instagram успешно подключён!",
+    "markerError": "Не удалось подключить Instagram. Попробуйте ещё раз.",
+    "markerUnavailable": "Подключение Instagram пока недоступно.",
+    "viewOnInstagram": "Смотреть в Instagram"
+  },
+  "Account": {
+    "title": "Аккаунт",
+    "exportTitle": "Скачать мои данные",
+    "exportHint": "Все данные, которые мы храним о вас, — одним JSON-файлом.",
+    "exportBtn": "Скачать",
+    "exporting": "Готовим...",
+    "dangerTitle": "Опасная зона",
+    "deleteTitle": "Удалить аккаунт",
+    "deleteHint": "Аккаунт будет закрыт, личные данные анонимизированы. Действие необратимо.",
+    "confirmLabel": "Для подтверждения введите DELETE",
+    "deleteBtn": "Удалить аккаунт",
+    "deleting": "Удаляем...",
+    "error": "Произошла ошибка. Попробуйте ещё раз."
   },
   "Settings": {
     "title": "Настройки",

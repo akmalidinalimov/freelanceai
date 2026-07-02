@@ -177,11 +177,14 @@
   },
   "Footer": {
     "rights": "Barcha huquqlar himoyalangan.",
-    "language": "Til"
+    "language": "Til",
+    "terms": "Foydalanish shartlari",
+    "privacy": "Maxfiylik siyosati"
   },
   "Common": {
     "comingSoon": "Tez orada",
-    "loading": "Yuklanmoqda..."
+    "loading": "Yuklanmoqda...",
+    "deletedUser": "Oʻchirilgan foydalanuvchi"
   },
   "Auth": {
     "loginTelegram": "Telegram orqali kirish",
@@ -526,6 +529,32 @@
       "LEVEL_2": "2-daraja",
       "TOP_RATED": "Top reyting"
     }
+  },
+  "Instagram": {
+    "connect": "Instagram'ni ulash",
+    "connectHint": "Instagram postlaringiz portfolioga avtomatik sinxronlanadi.",
+    "connected": "ulangan",
+    "lastSynced": "Oxirgi sinxronlash",
+    "disconnect": "Uzish",
+    "disconnectWarn": "Instagram uzilsinmi? Sinxronlangan portfolio elementlari ham oʻchiriladi.",
+    "markerConnected": "Instagram muvaffaqiyatli ulandi!",
+    "markerError": "Instagram ulanmadi. Qayta urinib koʻring.",
+    "markerUnavailable": "Instagram ulanishi hozircha mavjud emas.",
+    "viewOnInstagram": "Instagram'da koʻrish"
+  },
+  "Account": {
+    "title": "Hisob",
+    "exportTitle": "Maʼlumotlarimni yuklab olish",
+    "exportHint": "Biz saqlaydigan barcha maʼlumotlaringiz — bitta JSON fayl.",
+    "exportBtn": "Yuklab olish",
+    "exporting": "Tayyorlanmoqda...",
+    "dangerTitle": "Xavfli hudud",
+    "deleteTitle": "Hisobni oʻchirish",
+    "deleteHint": "Hisob yopiladi, shaxsiy maʼlumotlar anonimlashtiriladi. Bu amalni bekor qilib boʻlmaydi.",
+    "confirmLabel": "Tasdiqlash uchun DELETE deb yozing",
+    "deleteBtn": "Hisobni oʻchirish",
+    "deleting": "Oʻchirilmoqda...",
+    "error": "Xatolik yuz berdi. Qayta urinib koʻring."
   },
   "Settings": {
     "title": "Sozlamalar",

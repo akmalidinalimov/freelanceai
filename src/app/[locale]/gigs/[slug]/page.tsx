@@ -48,6 +48,7 @@ export default async function GigDetailPage({
   const t = await getTranslations("Gig");
   const tr = await getTranslations("Review");
   const tp = await getTranslations("Profile");
+  const tc = await getTranslations("Common");
 
   const gig = await getGigBySlug(slug);
   if (!gig) notFound();
@@ -260,7 +261,7 @@ export default async function GigDetailPage({
                   <div className="flex items-center gap-2">
                     <Stars value={rv.rating} />
                     <span className="text-sm font-medium">
-                      {rv.author.firstName ?? rv.author.name ?? rv.author.username ?? ""}
+                      {rv.author.firstName ?? rv.author.name ?? rv.author.username ?? tc("deletedUser")}
                     </span>
                   </div>
                   {rv.comment && <p className="mt-2 text-sm">{rv.comment}</p>}

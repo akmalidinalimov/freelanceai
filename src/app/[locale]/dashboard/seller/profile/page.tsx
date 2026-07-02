@@ -4,16 +4,20 @@ import { requireSellerUser } from "@/lib/auth-guards";
 import { getOwnProfile } from "@/server/services/profile";
 import { ProfileForm } from "@/components/profile-form";
 import { PortfolioEditor } from "@/components/portfolio-editor";
+import { InstagramConnect } from "@/components/instagram-connect";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ ig?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const { ig } = await searchParams;
   const user = await requireSellerUser(locale);
   const t = await getTranslations("Profile");
   const profile = await getOwnProfile(user.id);
@@ -27,6 +31,14 @@ export default async function EditProfilePage({
             {t("viewPublic")}
           </Link>
         )}
+      </div>
+      <div className="mb-6">
+        <InstagramConnect
+          connected={Boolean(profile?.instagramUserId)}
+          handle={profile?.instagramUsername ?? null}
+          syncedAt={profile?.instagramSyncedAt?.toISOString() ?? null}
+          marker={ig}
+        />
       </div>
       <ProfileForm
         initial={{

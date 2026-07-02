@@ -177,11 +177,14 @@
   },
   "Footer": {
     "rights": "All rights reserved.",
-    "language": "Language"
+    "language": "Language",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
   },
   "Common": {
     "comingSoon": "Coming soon",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "deletedUser": "Deleted user"
   },
   "Auth": {
     "loginTelegram": "Log in with Telegram",
@@ -526,6 +529,32 @@
       "LEVEL_2": "Level 2",
       "TOP_RATED": "Top rated"
     }
+  },
+  "Instagram": {
+    "connect": "Connect Instagram",
+    "connectHint": "Your Instagram posts sync to your portfolio automatically.",
+    "connected": "connected",
+    "lastSynced": "Last synced",
+    "disconnect": "Disconnect",
+    "disconnectWarn": "Disconnect Instagram? Synced portfolio items will be removed too.",
+    "markerConnected": "Instagram connected!",
+    "markerError": "Couldn't connect Instagram. Please try again.",
+    "markerUnavailable": "Instagram connection isn't available yet.",
+    "viewOnInstagram": "View on Instagram"
+  },
+  "Account": {
+    "title": "Account",
+    "exportTitle": "Download my data",
+    "exportHint": "Everything we store about you, as a single JSON file.",
+    "exportBtn": "Download",
+    "exporting": "Preparing...",
+    "dangerTitle": "Danger zone",
+    "deleteTitle": "Delete account",
+    "deleteHint": "Your account is closed and personal data is anonymized. This cannot be undone.",
+    "confirmLabel": "Type DELETE to confirm",
+    "deleteBtn": "Delete account",
+    "deleting": "Deleting...",
+    "error": "Something went wrong. Please try again."
   },
   "Settings": {
     "title": "Settings",
