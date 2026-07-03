@@ -6,6 +6,7 @@ import { HomeSearch } from "@/components/home-search";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
 import { LivingBackground, normalizeBg, BG_CONCEPTS } from "@/components/living-background";
+import { cardClass } from "@/components/ui/card";
 import {
   ArrowRight,
   Camera,
@@ -108,9 +109,9 @@ export default async function HomePage({
               <Link
                 key={c.spec}
                 href={`/browse/${specSlug(c.spec)}`}
-                className="group relative overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))]"
+                className={cardClass(true, "group relative overflow-hidden p-4")}
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))]">
                   <c.Icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 <ArrowRight className="absolute right-4 top-4 h-4 w-4 text-[hsl(var(--muted-foreground))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--primary))]" />
@@ -128,11 +129,8 @@ export default async function HomePage({
           <h2 className="font-display mb-4 text-xl font-bold sm:text-2xl">{t("howItWorksTitle")}</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {[1, 2, 3].map((step) => (
-              <div
-                key={step}
-                className="flex items-start gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4"
-              >
-                <div className="font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--foreground))] font-bold text-[hsl(var(--background))]">
+              <div key={step} className={cardClass(false, "flex items-start gap-3 p-4")}>
+                <div className="font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent))] font-bold text-[hsl(var(--accent-foreground))]">
                   {step}
                 </div>
                 <div>
@@ -153,9 +151,15 @@ export default async function HomePage({
                 {t("viewAll")}
               </Link>
             </div>
-            <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{
+                maskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
+                WebkitMaskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
+              }}
+            >
               {creators.map((c, i) => (
-                <div key={c.username ?? i} className="w-[280px] shrink-0 [scroll-snap-align:start]">
+                <div key={c.username ?? i} className="w-[280px] shrink-0 snap-start">
                   <CreatorCard creator={c} />
                 </div>
               ))}
@@ -163,13 +167,11 @@ export default async function HomePage({
           </section>
         )}
 
-        {/* Trust strip */}
-        <section className="flex flex-wrap justify-center gap-2 py-10">
+        {/* Trust strip — one quiet row of small badges */}
+        <section className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-10 text-xs font-medium text-[hsl(var(--muted-foreground))]">
           {[t("trustSecure"), t("trustPayment"), t("trustVerified"), t("trustLangs")].map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-2 text-sm font-medium text-[hsl(var(--muted-foreground))]"
-            >
+            <span key={item} className="inline-flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-[hsl(var(--accent))]" aria-hidden />
               {item}
             </span>
           ))}
