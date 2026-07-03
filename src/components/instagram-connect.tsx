@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/confirm-dialog";
 
 const IG_GRADIENT = "linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0)";
 
@@ -26,6 +27,7 @@ export function InstagramConnect({
 }) {
   const t = useTranslations("Instagram");
   const locale = useLocale();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +45,7 @@ export function InstagramConnect({
       : "border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning-soft))] text-[hsl(var(--warning))]";
 
   async function disconnect() {
-    if (!window.confirm(t("disconnectWarn"))) return;
+    if (!(await confirm({ title: t("disconnect"), message: t("disconnectWarn"), danger: true }))) return;
     setBusy(true);
     setError(null);
     const r = await fetch("/api/instagram/disconnect", { method: "POST" }).catch(() => null);
