@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       text?: string;
       contact?: { phone_number?: string; user_id?: number };
       reply_to_message?: { message_id?: number };
+      chat?: { id?: number; type?: string };
       from?: {
         id: number;
         is_bot?: boolean;
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
   const text = update.message?.text ?? "";
   const contact = update.message?.contact;
   const replyToId = update.message?.reply_to_message?.message_id;
+  const chatType = update.message?.chat?.type;
 
   // Any real inbound message stamps "last chatted with the bot" (admin analytics)
   // and clears a stale bot-blocked marker (the user is clearly reachable again).
@@ -96,15 +98,27 @@ export async function POST(request: Request) {
 
   // Bot-native quick reply: the user swipe-replied (in Telegram) to a "new message"
   // notification. Route their text back into that conversation as a real message.
-  if (from && !from.is_bot && replyToId && text && !text.startsWith("/")) {
+  // Gated to PRIVATE chats: message_id is per-chat, so only the DM where we sent the
+  // notification can safely map back (a group's colliding message_id must not route).
+  if (from && !from.is_bot && chatType === "private" && replyToId && text && !text.startsWith("/")) {
+    // Per-user throttle: the global webhook limiter keys on Telegram's IP, not the
+    // end user, so bound how fast one user can post via replies.
+    if (!rateLimit(`tg-reply:${from.id}`, 20, 60_000)) {
+      void tgSendMessage(from.id, "⏳ Juda tez yubordingiz. Biroz kuting.");
+      return NextResponse.json({ ok: true });
+    }
     try {
       const convoId = await routeTelegramReply(String(from.id), replyToId, text);
       if (convoId) {
         void tgSendMessage(from.id, "✅ Javobingiz yuborildi.");
         return NextResponse.json({ ok: true });
       }
+      // No mapping (reply to a non-notification message) → fall through as ordinary text.
     } catch {
-      // fall through — treat as an ordinary message if routing failed
+      // Routing failed after we already marked this update processed (so Telegram
+      // won't retry) — tell the user instead of silently dropping their message.
+      void tgSendMessage(from.id, "⚠️ Javobni yuborib boʻlmadi. Iltimos, ilovada urinib koʻring.");
+      return NextResponse.json({ ok: true });
     }
   }
 

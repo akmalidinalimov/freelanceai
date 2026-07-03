@@ -89,20 +89,23 @@ Runs via a CRON_SECRET job the admin action enqueues (single-instance throttled 
 
 ## 8. Build phases (each: build → adversarial review → deploy → verify → regression)
 
-- **B1 Passwordless Mini App session** — `telegram-miniapp` Credentials bridge + Mini App
+- **B1 Passwordless Mini App session** — ✅ DONE. `telegram-miniapp` Credentials bridge + Mini App
   bootstrap (loads telegram-web-app.js, auto signs-in via initData). Gate: open gigora.ai
   inside Telegram → logged in, no password; forged initData rejected.
-- **B2 Bot launcher** — role-aware persistent reply keyboards + Menu Button + command/text
+- **B2 Bot launcher** — ✅ DONE. role-aware persistent reply keyboards + Menu Button + command/text
   router in the webhook (uz/ru/en). Gate: /start shows the right always-visible keyboard;
   buttons open the right Mini App screens.
-- **B3 Notification catalog** — add the ➕ events to `notify()` with Telegram push. Gate:
-  each lifecycle event yields the right in-app + Telegram notification, pref-gated.
-- **B4 Deadline reminders + review nudges** — the cron + idempotent markers + workflow.
-  Gate: an order near dueAt triggers exactly one 2d/1d/overdue reminder.
-- **B5 Admin broadcast** — page + throttled sender + 403/429 handling + audit. Gate: test
-  segment send; blocked users skipped; rate-safe.
-- **B6 Messaging polish + Fiverr gaps** — quick-reply templates, block/report, online/last-seen,
-  custom-offer-in-chat surfacing, bot-native quick reply. Gate: per feature.
+- **B3 Notification catalog** — ✅ DONE. Promoted order paid/delivered/completed/tip, new review,
+  custom offer, cancellation + dispute to `notifyAndPush` (in-app + Telegram, pref-gated). Added
+  missing events: revision-requested, offer accepted/declined, gig approved/rejected, payout paid.
+- **B4 Deadline reminders + review nudges** — ✅ DONE. cron + idempotent markers (ActivityEvent) +
+  6h workflow. Gate: an order near dueAt triggers exactly one 2d/1d/overdue reminder.
+- **B5 Admin broadcast** — ✅ DONE. page + throttled sender + 403/429 handling + audit + advisory-lock
+  serialization + per-batch cursor checkpoint (no concurrent double-send). Gate: rate-safe, resumable.
+- **B6 Messaging polish + Fiverr gaps** — ✅ bot-native quick reply DONE (swipe-reply in Telegram →
+  posts into the real conversation via `TelegramReplyTarget` mapping; reuses participant authz +
+  contact-stripping). Remaining/optional: quick-reply templates, block/report, online/last-seen,
+  custom-offer-in-chat surfacing.
 
 ## 9. Test plan (per phase)
 

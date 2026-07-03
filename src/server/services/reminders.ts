@@ -120,5 +120,11 @@ export async function sendOrderReminders(): Promise<{ deadlines: number; reviewN
     reviewNudges += 1;
   }
 
+  // 3) Housekeeping: prune bot-native quick-reply mappings older than 30 days.
+  // A notification that old is no longer a live reply target; this bounds table growth.
+  await prisma.telegramReplyTarget
+    .deleteMany({ where: { createdAt: { lt: new Date(now - 30 * DAY) } } })
+    .catch(() => {});
+
   return { deadlines, reviewNudges };
 }
