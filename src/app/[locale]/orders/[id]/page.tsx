@@ -15,6 +15,8 @@ import { canTransition } from "@/lib/order-state";
 import { ReviewForm } from "@/components/review-form";
 import { BuyerReviewForm } from "@/components/buyer-review-form";
 import { Stars } from "@/components/stars";
+import { StatusChip } from "@/components/status-chip";
+import { OrderTimeline } from "@/components/order-timeline";
 import { MessageThread } from "@/components/message-thread";
 import { TipButton } from "@/components/tip-button";
 
@@ -68,10 +70,12 @@ export default async function OrderPage({
           >
             {t("receipt")}
           </Link>
-          <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-sm font-medium">
-            {t(`status.${order.status}`)}
-          </span>
+          <StatusChip status={order.status} label={t(`status.${order.status}`)} />
         </div>
+      </div>
+
+      <div className="mb-6">
+        <OrderTimeline status={order.status} />
       </div>
 
       {!["CANCELLED", "DISPUTED"].includes(order.status) && (

@@ -359,6 +359,9 @@
     "confirmDelete": "Delete this gig? It will be removed from the marketplace."
   },
   "Order": {
+    "bannerRevision": "Revision in progress",
+    "bannerDisputed": "Dispute open",
+    "bannerCancelled": "Order cancelled",
     "order": "Order",
     "placeOrder": "Place order",
     "placing": "Placing...",

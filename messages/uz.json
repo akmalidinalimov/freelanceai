@@ -359,6 +359,9 @@
     "confirmDelete": "Xizmat oʻchirilsinmi? U bozordan olib tashlanadi."
   },
   "Order": {
+    "bannerRevision": "Tahrir jarayonda",
+    "bannerDisputed": "Nizo ochilgan",
+    "bannerCancelled": "Buyurtma bekor qilingan",
     "order": "Buyurtma",
     "placeOrder": "Buyurtma berish",
     "placing": "Yuborilmoqda...",

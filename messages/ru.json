@@ -359,6 +359,9 @@
     "confirmDelete": "Удалить услугу? Она исчезнет из каталога."
   },
   "Order": {
+    "bannerRevision": "Идёт доработка",
+    "bannerDisputed": "Открыт спор",
+    "bannerCancelled": "Заказ отменён",
     "order": "Заказ",
     "placeOrder": "Оформить заказ",
     "placing": "Оформление...",
