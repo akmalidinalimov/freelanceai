@@ -52,15 +52,26 @@ export async function reportCounterpart(
 ): Promise<void> {
   const otherId = await conversationCounterpartId(conversationId, user);
   const text = reason.trim().slice(0, 1000);
-  const existing = await prisma.userFlag.findUnique({
-    where: { userId_type: { userId: otherId, type: "USER_REPORTED" } },
-  });
-  const prevCount = ((existing?.details as { count?: number } | null)?.count ?? 0) + 1;
-  const details = { count: prevCount, lastReason: text, lastReporterId: user.id, conversationId };
-  await prisma.userFlag.upsert({
-    where: { userId_type: { userId: otherId, type: "USER_REPORTED" } },
-    create: { userId: otherId, type: "USER_REPORTED", severity: "MEDIUM", details },
-    update: { details, severity: "MEDIUM" },
-  });
+  const id = crypto.randomUUID();
+  const initial = JSON.stringify({ count: 1, lastReason: text, lastReporterId: user.id, conversationId });
+  // Atomic upsert: the count is incremented inside a single INSERT … ON CONFLICT so two
+  // concurrent reports on the same user can't lose an increment (read-then-write race).
+  await prisma.$executeRaw`
+    INSERT INTO "UserFlag" ("id", "userId", "type", "severity", "details", "createdAt", "updatedAt")
+    VALUES (${id}, ${otherId}, 'USER_REPORTED', 'MEDIUM'::"FlagSeverity", ${initial}::jsonb, now(), now())
+    ON CONFLICT ("userId", "type") DO UPDATE SET
+      "details" = jsonb_set(
+                    jsonb_set(
+                      jsonb_set(
+                        COALESCE("UserFlag"."details", '{}'::jsonb),
+                        '{count}', to_jsonb(COALESCE(("UserFlag"."details"->>'count')::int, 0) + 1)
+                      ),
+                      '{lastReason}', to_jsonb(${text}::text)
+                    ),
+                    '{lastReporterId}', to_jsonb(${user.id}::text)
+                  ),
+      "severity" = 'MEDIUM'::"FlagSeverity",
+      "updatedAt" = now()
+  `;
   await audit({ actorId: user.id, action: "user.report", entity: "User", entityId: otherId, metadata: { reason: text } });
 }

@@ -22,6 +22,7 @@ const SIGNAL_LABEL: Record<string, string> = {
   RAPID_CONTACTS: "Contact burst in the last 24h",
   NEW_ACCOUNT_HIGH_VALUE: "New account with unusually high paid volume",
   NEW_DEVICE_BURST: "Many new devices/IPs in the last 7 days",
+  USER_REPORTED: "Reported by another user in chat",
 };
 
 export default async function AdminFlagsPage({ params }: { params: Promise<{ locale: string }> }) {

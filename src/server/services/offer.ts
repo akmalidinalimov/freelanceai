@@ -5,6 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { notifyAndPush } from "@/server/services/notification";
 import { createOrderFromOffer } from "@/server/services/order";
+import { isBlockedBetween } from "@/server/services/blocks";
 
 async function loadConvo(conversationId: string, user: User) {
   const convo = await prisma.conversation.findUnique({
@@ -31,6 +32,8 @@ export async function createOffer(user: User, conversationId: string, input: Off
   }
   if (user.id !== convo.sellerId) throw Errors.forbidden("Only the seller can send an offer");
   if (!input.title.trim()) throw Errors.validation({ title: "Title is required" });
+  // A block severs the relationship both ways — a blocked seller can't push an offer either.
+  if (await isBlockedBetween(convo.sellerId, convo.buyerId)) throw Errors.forbidden("This conversation is blocked");
 
   const offer = await prisma.customOffer.create({
     data: {

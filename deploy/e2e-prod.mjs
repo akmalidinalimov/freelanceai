@@ -120,6 +120,13 @@ else check("cron broadcast 401 without secret", cronBcast === 401);
 const cronRem = await mut("POST", "/api/cron/order-reminders");
 if (cronRem === 404) console.log("  ⚠ cron order-reminders not in this build (rollback?) — skipped");
 else check("cron order-reminders 401 without secret", cronRem === 401);
+// Block/report a user (U3): the routes must reject an unauthenticated caller.
+const blockGuard = await mut("POST", "/api/conversations/x/block");
+if (blockGuard === 404) console.log("  ⚠ conversation block not in this build (rollback?) — skipped");
+else check("conversation block 401 without auth", blockGuard === 401);
+const reportGuard = await mut("POST", "/api/conversations/x/report");
+if (reportGuard === 404) console.log("  ⚠ conversation report not in this build (rollback?) — skipped");
+else check("conversation report 401 without auth", reportGuard === 401);
 // Feature-gated checks: 404 => warn-skip so rolling back to a pre-feature SHA
 // (deploy-vps.ps1 -Sha <old>) doesn't false-fail the emergency lever.
 const digestStatus = await mut("POST", "/api/cron/digest");
