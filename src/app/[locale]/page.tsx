@@ -5,6 +5,7 @@ import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
+import { LivingBackground, normalizeBg, BG_CONCEPTS } from "@/components/living-background";
 import {
   ArrowRight,
   Camera,
@@ -32,11 +33,16 @@ const CATS = [
 
 export default async function HomePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ bg?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Temporary living-background lab: ?bg=1|2|3 picks a concept (default 1).
+  const { bg } = await searchParams;
+  const bgVariant = normalizeBg(bg);
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
   const creatorCount = await countActiveCreators().catch(() => 0);
@@ -59,26 +65,34 @@ export default async function HomePage({
           backgroundSize: "22px 22px",
         }}
       >
-        {/* Hero — AI concierge search */}
-        <section className="flex flex-col items-center gap-4 py-12 text-center sm:py-20">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary))]">
-            ✦ {t("eyebrowAI")}
-            {creatorCount > 0 && (
-              <>
-                <span aria-hidden>·</span>
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
-                {t("creatorsCount", { count: creatorCount })}
-              </>
-            )}
-          </span>
-          <h1 className="font-display max-w-[16ch] text-3xl font-extrabold leading-[1.08] text-balance sm:text-5xl">
-            {t("searchHeadline")}{" "}
-            <span className="text-[hsl(var(--primary))]">{t("searchHeadline2")}</span>
-          </h1>
-          <p className="max-w-[42ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
-            {t("searchSub")}
-          </p>
-          <HomeSearch />
+        {/* Hero — AI concierge search over the living background */}
+        <section className="relative isolate -mx-4 overflow-hidden rounded-b-[2rem] px-4">
+          <LivingBackground variant={bgVariant} />
+          {bg && (
+            <span className="pointer-events-none absolute bottom-2 right-2 z-20 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))]/80 px-2.5 py-1 text-[10px] font-semibold text-[hsl(var(--muted-foreground))] backdrop-blur">
+              bg {bgVariant} · {BG_CONCEPTS[bgVariant].name}
+            </span>
+          )}
+          <div className="relative z-10 flex flex-col items-center gap-4 py-12 text-center sm:py-20">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary))]">
+              ✦ {t("eyebrowAI")}
+              {creatorCount > 0 && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
+                  {t("creatorsCount", { count: creatorCount })}
+                </>
+              )}
+            </span>
+            <h1 className="font-display max-w-[16ch] text-3xl font-extrabold leading-[1.08] text-balance sm:text-5xl">
+              {t("searchHeadline")}{" "}
+              <span className="text-[hsl(var(--primary))]">{t("searchHeadline2")}</span>
+            </h1>
+            <p className="max-w-[42ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
+              {t("searchSub")}
+            </p>
+            <HomeSearch />
+          </div>
         </section>
 
         {/* Categories */}
