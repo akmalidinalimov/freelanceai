@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { specLabel } from "@/lib/specializations";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { Stars } from "@/components/stars";
+import { cardClass } from "@/components/ui/card";
 import type { BrowseCreator } from "@/server/services/browse";
 
 export async function CreatorCard({ creator }: { creator: BrowseCreator }) {
@@ -10,7 +11,7 @@ export async function CreatorCard({ creator }: { creator: BrowseCreator }) {
   const locale = await getLocale();
 
   const inner = (
-    <div className="flex h-full flex-col rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))] hover:shadow-[0_18px_40px_-24px_rgba(11,18,32,0.35)]">
+    <div className={cardClass(true, "flex h-full flex-col p-4")}>
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary-ink))]">
           {creator.avatar ? (

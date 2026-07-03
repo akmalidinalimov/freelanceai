@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { Mic, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 
 interface MatchResult {
@@ -169,7 +170,7 @@ export function HomeSearch() {
           e.preventDefault();
           run(q);
         }}
-        className="rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 text-left shadow-[0_30px_60px_-40px_rgba(11,21,38,0.35)] transition-colors focus-within:border-[hsl(var(--primary))]"
+        className="rounded-[calc(var(--radius-lg)+0.5rem)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 text-left shadow-[var(--shadow-hover)] transition-[box-shadow,border-color] duration-200 focus-within:border-[hsl(var(--primary))] focus-within:ring-4 focus-within:ring-[hsl(var(--ring))]/20 sm:p-4"
       >
         <div className="flex items-center gap-2 px-2 pt-1 text-xs font-bold text-[hsl(var(--primary-ink))]">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--primary))]" />
@@ -204,20 +205,20 @@ export function HomeSearch() {
             type="button"
             onClick={mic}
             aria-label={t("micLabel")}
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-lg transition-transform active:scale-95 ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-transform active:scale-95 ${
               listening
                 ? "animate-pulse border-[hsl(var(--accent))] text-[hsl(var(--accent))]"
-                : "border-[hsl(var(--border))]"
+                : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
             }`}
           >
-            🎙
+            <Mic className="h-5 w-5" strokeWidth={1.75} />
           </button>
           <button
             type="submit"
             aria-label={t("searchButton")}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[hsl(var(--primary))] text-lg font-bold text-[hsl(var(--primary-foreground))] transition-transform active:scale-95 hover:bg-[hsl(var(--primary))]/90"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-[var(--shadow-soft)] transition-[transform,box-shadow] active:scale-95 hover:shadow-[var(--shadow-hover)] hover:brightness-[1.05]"
           >
-            →
+            <ArrowRight className="h-5 w-5" strokeWidth={2} />
           </button>
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

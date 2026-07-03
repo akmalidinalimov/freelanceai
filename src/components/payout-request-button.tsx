@@ -40,13 +40,13 @@ export function PayoutRequestButton({ availableUzs }: { availableUzs: number }) 
       <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("available")}</p>
       <p className="mb-2 text-xl font-bold tabular-nums">{formatUzs(availableUzs)} so&apos;m</p>
       {done ? (
-        <p className="text-sm font-medium text-green-800" role="status">{t("requested")}</p>
+        <p className="text-sm font-medium text-[hsl(var(--success))]">{t("requested")}</p>
       ) : (
         <Button size="sm" onClick={go} disabled={busy}>
           {t("request")}
         </Button>
       )}
-      {error && <p className="mt-1 text-sm text-red-700">{error}</p>}
+      {error && <p className="mt-1 text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

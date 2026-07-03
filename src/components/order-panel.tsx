@@ -101,16 +101,16 @@ export function OrderPanel({
 
   return (
     <div className="space-y-4">
-      <div role="group" aria-label="Package tier" className="flex gap-2">
+      <div className="flex gap-1 rounded-[var(--radius-md)] border border-[hsl(var(--border))] bg-[hsl(var(--surface-2))] p-1">
         {packages.map((p) => (
           <button
             key={p.tier}
             onClick={() => setTier(p.tier)}
             aria-pressed={p.tier === tier}
-            className={`flex-1 rounded-md border px-2 py-1.5 text-xs font-medium ${
+            className={`flex-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-xs font-semibold transition-colors ${
               p.tier === tier
-                ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary-ink))]"
-                : "border-[hsl(var(--border))]"
+                ? "bg-[hsl(var(--card))] text-[hsl(var(--primary))] shadow-[var(--shadow-soft)] ring-1 ring-[hsl(var(--primary))]/40"
+                : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
             }`}
           >
             {tierLabel[p.tier]}
@@ -134,9 +134,14 @@ export function OrderPanel({
           {selected.description && (
             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{selected.description}</p>
           )}
-          <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">
-            {selected.deliveryDays} {t("daysDelivery")} · {selected.revisions} {t("revisionsLabel")}
-          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <span className="rounded-[var(--radius-sm)] bg-[hsl(var(--surface-2))] px-3 py-2 text-center font-medium">
+              {selected.deliveryDays} {t("daysDelivery")}
+            </span>
+            <span className="rounded-[var(--radius-sm)] bg-[hsl(var(--surface-2))] px-3 py-2 text-center font-medium">
+              {selected.revisions} {t("revisionsLabel")}
+            </span>
+          </div>
         </div>
       )}
 
@@ -204,7 +209,7 @@ export function OrderPanel({
               />
             </>
           )}
-          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
           <Button className="w-full" size="lg" onClick={placeOrder} disabled={busy}>
             {busy ? to("placing") : to("placeOrder")}
           </Button>

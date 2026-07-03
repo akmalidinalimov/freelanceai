@@ -49,7 +49,7 @@ export function ReviewForm({ orderId }: { orderId: string }) {
             onMouseEnter={() => setHover(n)}
             aria-pressed={n <= rating}
             className="text-3xl leading-none transition-colors"
-            style={{ color: n <= (hover || rating) ? "#f5a623" : "hsl(var(--border))" }}
+            style={{ color: n <= (hover || rating) ? "hsl(var(--star))" : "hsl(var(--border))" }}
             aria-label={`${n}`}
           >
             ★
@@ -63,7 +63,7 @@ export function ReviewForm({ orderId }: { orderId: string }) {
         aria-label={t("commentPh")}
         className="min-h-20 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
       />
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
       <Button onClick={submit} disabled={busy}>
         {busy ? t("submitting") : t("submit")}
       </Button>

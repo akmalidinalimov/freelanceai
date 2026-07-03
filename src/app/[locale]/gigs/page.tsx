@@ -5,9 +5,12 @@ import { listPublicGigs, type GigSort } from "@/server/services/gig";
 import { getCurrentUser } from "@/lib/session";
 import { listSavedGigIds } from "@/server/services/saved";
 import { GigCard } from "@/components/gig-card";
+import { GigFilters } from "@/components/gig-filters";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { listSavedSearches, searchLink } from "@/server/services/saved-search";
 import { SaveSearchButton, DeleteSavedSearch } from "@/components/saved-search-controls";
+import { EmptyState } from "@/components/empty-state";
+import { X, SearchX } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 
 export default async function GigsPage({
@@ -56,63 +59,53 @@ export default async function GigsPage({
     maxUzs: Number.isFinite(maxUzs) ? maxUzs : undefined,
   };
 
-  const field =
-    "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
+  const localizedCats = categories.map((c) => ({ slug: c.slug, name: c[nameKey] }));
+
+  // Active-filter chips: each links to the same page with that filter dropped.
+  const activeChips: { key: string; drop: string[]; label: string }[] = [];
+  if (sp.q) activeChips.push({ key: "q", drop: ["q"], label: `“${sp.q}”` });
+  if (sp.category) {
+    const c = categories.find((x) => x.slug === sp.category);
+    activeChips.push({ key: "category", drop: ["category"], label: c ? c[nameKey] : sp.category });
+  }
+  if (sp.min || sp.max) {
+    activeChips.push({ key: "price", drop: ["min", "max"], label: `${sp.min ?? "0"}–${sp.max ?? "∞"} so'm` });
+  }
+  const hrefWithout = (drop: string[]) => {
+    const query: Record<string, string> = {};
+    for (const [k, v] of Object.entries({ q: sp.q, category: sp.category, min: sp.min, max: sp.max, sort: sp.sort })) {
+      if (v && !drop.includes(k)) query[k] = v as string;
+    }
+    return { pathname: "/gigs" as const, query };
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-5 text-3xl font-bold">{tn("explore")}</h1>
+      <h1 className="font-display mb-5 text-3xl font-extrabold">{tn("explore")}</h1>
 
-      {/* Filter bar — plain GET form, URL-driven */}
-      <form
-        method="get"
-        className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4"
-      >
-        <input
-          name="q"
-          defaultValue={sp.q ?? ""}
-          placeholder={tg("searchPh")}
-          aria-label={tg("searchPh")}
-          className={`${field} min-w-48 flex-1`}
-        />
-        <select name="category" defaultValue={sp.category ?? ""} className={field} aria-label={tg("category")}>
-          <option value="">{tg("allCategories")}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.slug}>
-              {c[nameKey]}
-            </option>
+      <GigFilters
+        categories={localizedCats}
+        values={{ q: sp.q, category: sp.category, min: sp.min, max: sp.max, sort }}
+      />
+
+      {hasFilters && (
+        <div className="mb-6 mt-3 flex flex-wrap items-center gap-2">
+          {activeChips.map((chip) => (
+            <Link
+              key={chip.key}
+              href={hrefWithout(chip.drop)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-1 text-xs font-medium transition-colors hover:border-[hsl(var(--primary))]"
+            >
+              {chip.label}
+              <X className="h-3 w-3 text-[hsl(var(--muted-foreground))]" aria-hidden />
+            </Link>
           ))}
-        </select>
-        <input
-          name="min"
-          inputMode="numeric"
-          defaultValue={sp.min ?? ""}
-          placeholder={tg("minPrice")}
-          aria-label={tg("minPrice")}
-          className={`${field} w-28`}
-        />
-        <input
-          name="max"
-          inputMode="numeric"
-          defaultValue={sp.max ?? ""}
-          placeholder={tg("maxPrice")}
-          aria-label={tg("maxPrice")}
-          className={`${field} w-28`}
-        />
-        <select name="sort" defaultValue={sort} className={field} aria-label={tg("sort")}>
-          <option value="newest">{tg("sortNewest")}</option>
-          <option value="popular">{tg("sortPopular")}</option>
-          <option value="price_asc">{tg("sortPriceLow")}</option>
-          <option value="price_desc">{tg("sortPriceHigh")}</option>
-        </select>
-        <button
-          type="submit"
-          className="h-10 rounded-md bg-[hsl(var(--primary))] px-5 text-sm font-medium text-[hsl(var(--primary-foreground))]"
-        >
-          {tg("apply")}
-        </button>
-        {me && hasFilters && <SaveSearchButton filters={currentFilters} />}
-      </form>
+          <Link href="/gigs" className="text-xs font-semibold text-[hsl(var(--primary))] hover:underline">
+            {tg("clearAll")}
+          </Link>
+          {me && <SaveSearchButton filters={currentFilters} />}
+        </div>
+      )}
 
       {savedSearches.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -146,7 +139,11 @@ export default async function GigsPage({
       </p>
 
       {gigs.length === 0 ? (
-        <p className="text-[hsl(var(--muted-foreground))]">{tg("noResults")}</p>
+        <EmptyState
+          icon={SearchX}
+          title={tg("noResults")}
+          {...(hasFilters ? { ctaLabel: tg("clearAll"), ctaHref: "/gigs" } : {})}
+        />
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {gigs.map((g) => (

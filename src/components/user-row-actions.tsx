@@ -36,7 +36,7 @@ export function UserRowActions({
           {t("unsuspend")}
         </button>
       ) : (
-        <button onClick={() => act("suspend")} disabled={busy} className="text-red-700 hover:underline">
+        <button onClick={() => act("suspend")} disabled={busy} className="text-[hsl(var(--danger))] hover:underline">
           {t("suspend")}
         </button>
       )}

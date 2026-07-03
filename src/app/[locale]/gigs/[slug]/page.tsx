@@ -29,7 +29,9 @@ import { getCurrentUser } from "@/lib/session";
 import { isGigSaved } from "@/server/services/saved";
 import { formatUzs } from "@/lib/utils";
 import { OrderPanel } from "@/components/order-panel";
+import { GigGallery } from "@/components/gig-gallery";
 import { Stars } from "@/components/stars";
+import { ChevronDown } from "lucide-react";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { SaveButton } from "@/components/save-button";
 import { ShareButton } from "@/components/share-button";
@@ -91,30 +93,10 @@ export default async function GigDetailPage({
       />
       <RecentlyViewedTracker gigId={gig.id} />
       <div>
-        <div className="mb-5 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-5xl font-bold text-[hsl(var(--primary-ink))]">
-          {gig.coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={gig.coverUrl} alt={gig.title} className="h-full w-full object-cover" />
-          ) : (
-            gig.title.slice(0, 1).toUpperCase()
-          )}
-        </div>
-        {gig.galleryUrls.length > 0 && (
-          <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {gig.galleryUrls.map((url) => (
-              <a
-                key={url}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="aspect-video overflow-hidden rounded-lg border border-[hsl(var(--border))]"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-              </a>
-            ))}
-          </div>
-        )}
+        <GigGallery
+          images={[...(gig.coverUrl ? [gig.coverUrl] : []), ...gig.galleryUrls]}
+          title={gig.title}
+        />
         <div className="flex flex-wrap items-center gap-2">
           {gig.featured && (
             <span className="rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-xs font-bold text-[hsl(var(--primary-foreground))]">
@@ -231,9 +213,18 @@ export default async function GigDetailPage({
             <h2 className="mb-4 text-xl font-semibold">{t("faq")}</h2>
             <div className="space-y-2">
               {(gig.faq as { q: string; a: string }[]).map((f, i) => (
-                <details key={i} className="rounded-xl border border-[hsl(var(--border))] p-4">
-                  <summary className="cursor-pointer text-sm font-medium">{f.q}</summary>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-[hsl(var(--muted-foreground))]">{f.a}</p>
+                <details
+                  key={i}
+                  className="group rounded-[var(--radius-md)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 [&::-webkit-details-marker]:hidden"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-medium">
+                    {f.q}
+                    <ChevronDown
+                      className="h-4 w-4 shrink-0 text-[hsl(var(--muted-foreground))] transition-transform duration-200 group-open:rotate-180"
+                      aria-hidden
+                    />
+                  </summary>
+                  <p className="whitespace-pre-wrap pb-4 text-sm text-[hsl(var(--muted-foreground))]">{f.a}</p>
                 </details>
               ))}
             </div>

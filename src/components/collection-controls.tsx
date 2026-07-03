@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/confirm-dialog";
 
 async function post(body: Record<string, unknown>): Promise<boolean> {
   const r = await fetch("/api/collections", {
@@ -51,15 +52,16 @@ export function CreateCollection() {
 export function DeleteCollection({ id }: { id: string }) {
   const t = useTranslations("Collections");
   const router = useRouter();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   async function del() {
-    if (!window.confirm(t("confirmDelete"))) return;
+    if (!(await confirm({ title: t("confirmDelete"), danger: true }))) return;
     setBusy(true);
     if (await post({ action: "delete", id })) router.refresh();
     setBusy(false);
   }
   return (
-    <button onClick={del} disabled={busy} className="text-xs text-red-700 hover:underline">
+    <button onClick={del} disabled={busy} className="text-xs text-[hsl(var(--danger))] hover:underline">
       {t("delete")}
     </button>
   );

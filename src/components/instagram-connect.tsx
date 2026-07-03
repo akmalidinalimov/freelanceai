@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/confirm-dialog";
 
 const IG_GRADIENT = "linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0)";
 
@@ -26,6 +27,7 @@ export function InstagramConnect({
 }) {
   const t = useTranslations("Instagram");
   const locale = useLocale();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,11 +41,11 @@ export function InstagramConnect({
           : null;
   const markerTone =
     marker === "connected"
-      ? "border-green-300 bg-green-50 text-green-800"
-      : "border-amber-300 bg-amber-50 text-amber-800";
+      ? "border-[hsl(var(--success))]/40 bg-[hsl(var(--success-soft))] text-[hsl(var(--success))]"
+      : "border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning-soft))] text-[hsl(var(--warning))]";
 
   async function disconnect() {
-    if (!window.confirm(t("disconnectWarn"))) return;
+    if (!(await confirm({ title: t("disconnect"), message: t("disconnectWarn"), danger: true }))) return;
     setBusy(true);
     setError(null);
     const r = await fetch("/api/instagram/disconnect", { method: "POST" }).catch(() => null);
@@ -103,7 +105,7 @@ export function InstagramConnect({
         )}
       </div>
       {error && (
-        <p className="mt-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mt-3 rounded-md border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger-soft))] px-3 py-2 text-sm text-[hsl(var(--danger))]">
           {error}
         </p>
       )}

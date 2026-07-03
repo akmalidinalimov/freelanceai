@@ -4,6 +4,8 @@ import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listCollections, listSavedWithCollection } from "@/server/services/collection";
 import { formatUzs } from "@/lib/utils";
 import { CreateCollection, DeleteCollection, CollectionSelect } from "@/components/collection-controls";
+import { EmptyState } from "@/components/empty-state";
+import { Heart } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,7 @@ export default async function SavedPage({
   const { collection } = await searchParams;
   const t = await getTranslations("Collections");
   const tg = await getTranslations("Gig");
+  const tn = await getTranslations("Nav");
 
   const collections = await listCollections(user.id);
   const saved = await listSavedWithCollection(user.id, collection);
@@ -51,7 +54,7 @@ export default async function SavedPage({
       </div>
 
       {saved.length === 0 ? (
-        <p className="text-sm text-[hsl(var(--muted-foreground))]">{tg("noSaved")}</p>
+        <EmptyState icon={Heart} title={tg("noSaved")} ctaLabel={tn("explore")} ctaHref="/gigs" />
       ) : (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {saved.map(({ gig: g, collectionId }) => {

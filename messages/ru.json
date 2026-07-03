@@ -364,6 +364,12 @@
     "sortPriceLow": "Дешевле",
     "sortPriceHigh": "Дороже",
     "apply": "Применить",
+    "filters": "Фильтры",
+    "clearAll": "Сбросить",
+    "done": "Готово",
+    "close": "Закрыть",
+    "prev": "Назад",
+    "next": "Далее",
     "results": "результатов",
     "noResults": "Ничего не найдено.",
     "pause": "Пауза",
@@ -372,6 +378,9 @@
     "confirmDelete": "Удалить услугу? Она исчезнет из каталога."
   },
   "Order": {
+    "bannerRevision": "Идёт доработка",
+    "bannerDisputed": "Открыт спор",
+    "bannerCancelled": "Заказ отменён",
     "order": "Заказ",
     "placeOrder": "Оформить заказ",
     "placing": "Оформление...",
@@ -581,7 +590,10 @@
     "markerConnected": "Instagram успешно подключён!",
     "markerError": "Не удалось подключить Instagram. Попробуйте ещё раз.",
     "markerUnavailable": "Подключение Instagram пока недоступно.",
-    "viewOnInstagram": "Смотреть в Instagram"
+    "viewOnInstagram": "Смотреть в Instagram",
+    "showcaseLabel": "Лента Instagram",
+    "postBy": "Пост в Instagram от @{handle}",
+    "close": "Закрыть"
   },
   "Account": {
     "title": "Аккаунт",

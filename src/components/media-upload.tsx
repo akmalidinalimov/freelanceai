@@ -100,12 +100,12 @@ export function MediaUpload({
         <button
           type="button"
           onClick={() => onChange(undefined)}
-          className="self-start text-xs text-red-700 underline"
+          className="self-start text-xs text-[hsl(var(--danger))] underline"
         >
           {t("removeCover")}
         </button>
       )}
-      {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
+      {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

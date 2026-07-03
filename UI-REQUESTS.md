@@ -95,7 +95,22 @@ name. Full plan: docs/rebrand-gigora.md.
 
 ## → For the platform team
 
-(nothing pending)
+### 1. Mount the UI providers in the locale layout (Task 10)
+`src/components/ui-providers.tsx` exports `<UIProviders>` (toasts + confirm
+dialogs). Please wrap the app in it inside `src/app/[locale]/layout.tsx` —
+around the existing children, inside `NextIntlClientProvider`:
+
+```tsx
+<NextIntlClientProvider messages={messages}>
+  <UIProviders>
+    …existing header / main / footer / bottom-nav…
+  </UIProviders>
+</NextIntlClientProvider>
+```
+
+Until this lands, `useToast()`/`useConfirm()` fall back safely (no-op toast /
+native confirm), so nothing breaks — but toasts won't appear and confirm
+dialogs stay native. Layout is shared territory, so we didn't edit it ourselves.
 
 ## 📝 Merge notes from platform team
 

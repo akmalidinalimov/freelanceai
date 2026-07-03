@@ -5,6 +5,8 @@ import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
+import { LivingBackground, normalizeBg, BG_CONCEPTS } from "@/components/living-background";
+import { cardClass } from "@/components/ui/card";
 import {
   ArrowRight,
   Camera,
@@ -32,11 +34,16 @@ const CATS = [
 
 export default async function HomePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ bg?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  // Temporary living-background lab: ?bg=1|2|3 picks a concept (default 1).
+  const { bg } = await searchParams;
+  const bgVariant = normalizeBg(bg);
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
   const creatorCount = await countActiveCreators().catch(() => 0);
@@ -66,26 +73,34 @@ export default async function HomePage({
           backgroundSize: "22px 22px",
         }}
       >
-        {/* Hero — AI concierge search */}
-        <section className="flex flex-col items-center gap-4 py-12 text-center sm:py-20">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary-ink))]">
-            ✦ {t("eyebrowAI")}
-            {creatorCount > 0 && (
-              <>
-                <span aria-hidden>·</span>
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
-                {t("creatorsCount", { count: creatorCount })}
-              </>
-            )}
-          </span>
-          <h1 className="font-display max-w-[16ch] text-3xl font-extrabold leading-[1.08] text-balance sm:text-5xl">
-            {t("searchHeadline")}{" "}
-            <span className="text-[hsl(var(--primary-ink))]">{t("searchHeadline2")}</span>
-          </h1>
-          <p className="max-w-[42ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
-            {t("searchSub")}
-          </p>
-          <HomeSearch />
+        {/* Hero — AI concierge search over the living background */}
+        <section className="relative isolate -mx-4 overflow-hidden rounded-b-[2rem] px-4">
+          <LivingBackground variant={bgVariant} />
+          {bg && (
+            <span className="pointer-events-none absolute bottom-2 right-2 z-20 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))]/80 px-2.5 py-1 text-[10px] font-semibold text-[hsl(var(--muted-foreground))] backdrop-blur">
+              bg {bgVariant} · {BG_CONCEPTS[bgVariant].name}
+            </span>
+          )}
+          <div className="relative z-10 flex flex-col items-center gap-4 py-12 text-center sm:py-20">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary))]">
+              ✦ {t("eyebrowAI")}
+              {creatorCount > 0 && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
+                  {t("creatorsCount", { count: creatorCount })}
+                </>
+              )}
+            </span>
+            <h1 className="font-display max-w-[16ch] text-3xl font-extrabold leading-[1.08] text-balance sm:text-5xl">
+              {t("searchHeadline")}{" "}
+              <span className="text-[hsl(var(--primary))]">{t("searchHeadline2")}</span>
+            </h1>
+            <p className="max-w-[42ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
+              {t("searchSub")}
+            </p>
+            <HomeSearch />
+          </div>
         </section>
 
         {/* Platform stats — real counts, each shown only when non-zero */}
@@ -120,9 +135,9 @@ export default async function HomePage({
               <li key={c.spec}>
               <Link
                 href={`/browse/${specSlug(c.spec)}`}
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))]"
+                className={cardClass(true, "group relative overflow-hidden p-4")}
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary-ink))]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))]">
                   <c.Icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 <ArrowRight className="absolute right-4 top-4 h-4 w-4 text-[hsl(var(--muted-foreground))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--primary-ink))]" />
@@ -141,11 +156,8 @@ export default async function HomePage({
           <h2 className="font-display mb-4 text-xl font-bold sm:text-2xl">{t("howItWorksTitle")}</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {[1, 2, 3].map((step) => (
-              <div
-                key={step}
-                className="flex items-start gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4"
-              >
-                <div className="font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--foreground))] font-bold text-[hsl(var(--background))]">
+              <div key={step} className={cardClass(false, "flex items-start gap-3 p-4")}>
+                <div className="font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent))] font-bold text-[hsl(var(--accent-foreground))]">
                   {step}
                 </div>
                 <div>
@@ -166,9 +178,15 @@ export default async function HomePage({
                 {t("viewAll")}
               </Link>
             </div>
-            <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{
+                maskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
+                WebkitMaskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
+              }}
+            >
               {creators.map((c, i) => (
-                <div key={c.username ?? i} className="w-[280px] shrink-0 [scroll-snap-align:start]">
+                <div key={c.username ?? i} className="w-[280px] shrink-0 snap-start">
                   <CreatorCard creator={c} />
                 </div>
               ))}
@@ -176,13 +194,11 @@ export default async function HomePage({
           </section>
         )}
 
-        {/* Trust strip */}
-        <section className="flex flex-wrap justify-center gap-2 py-10">
+        {/* Trust strip — one quiet row of small badges */}
+        <section className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-10 text-xs font-medium text-[hsl(var(--muted-foreground))]">
           {[t("trustSecure"), t("trustPayment"), t("trustVerified"), t("trustLangs")].map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-2 text-sm font-medium text-[hsl(var(--muted-foreground))]"
-            >
+            <span key={item} className="inline-flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-[hsl(var(--accent))]" aria-hidden />
               {item}
             </span>
           ))}

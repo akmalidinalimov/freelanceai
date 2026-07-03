@@ -79,7 +79,7 @@ export default async function AdminUsersPage({
                   <td>
                     <span
                       className={
-                        u.status === "ACTIVE" ? "text-[hsl(var(--foreground))]" : "text-red-700"
+                        u.status === "ACTIVE" ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--danger))]"
                       }
                     >
                       {u.status}

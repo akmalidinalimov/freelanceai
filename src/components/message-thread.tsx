@@ -275,53 +275,27 @@ export function MessageThread({
         <div ref={endRef} />
       </div>
 
-      {blocked ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 px-3 py-3 text-sm">
-          <span className="text-[hsl(var(--muted-foreground))]">{t("blockedNotice")}</span>
-          <Button variant="outline" size="sm" onClick={toggleBlock} disabled={tsBusy}>
-            {t("unblock")}
-          </Button>
-        </div>
-      ) : (
-        <>
-          {!input.trim() && quickReplies.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1.5" aria-label={t("quickRepliesLabel")}>
-              {quickReplies.map((qr) => (
-                <button
-                  key={qr}
-                  type="button"
-                  onClick={() => setInput(qr)}
-                  className="rounded-full border border-[hsl(var(--border))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
-                >
-                  {qr}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="mb-2">
-            <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              aria-label={t("placeholder")}
-              placeholder={t("placeholder")}
-              className="h-10 flex-1 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm"
-            />
-            <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
-              {t("send")}
-            </Button>
-          </div>
-          {sendError && <p className="mt-2 text-sm text-red-700" role="alert">{sendError}</p>}
-        </>
-      )}
+      <div className="mb-2">
+        <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
+          placeholder={t("placeholder")}
+          className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
+        />
+        <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
+          {t("send")}
+        </Button>
+      </div>
+      {sendError && <p className="mt-2 text-sm text-[hsl(var(--danger))]" role="alert">{sendError}</p>}
     </div>
   );
 }

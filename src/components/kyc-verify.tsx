@@ -58,7 +58,7 @@ export function KycVerify({
   }
 
   if (verified) {
-    return <p className="text-sm font-medium text-green-800">{t("verifyVerified")}</p>;
+    return <p className="text-sm font-medium text-[hsl(var(--success))]">{t("verifyVerified")}</p>;
   }
 
   const field = "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
@@ -97,8 +97,8 @@ export function KycVerify({
           {t("verifyConfirm")}
         </Button>
       </div>
-      {msg && <p className="text-sm text-[hsl(var(--primary-ink))]" role="status">{msg}</p>}
-      {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
+      {msg && <p className="text-sm text-[hsl(var(--primary))]">{msg}</p>}
+      {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

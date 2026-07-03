@@ -130,7 +130,7 @@ export function OrderActions({
         </Button>
       )}
 
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

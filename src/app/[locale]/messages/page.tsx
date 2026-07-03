@@ -2,6 +2,8 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listInbox } from "@/server/services/message";
+import { EmptyState } from "@/components/empty-state";
+import { Inbox } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,7 @@ export default async function InboxPage({
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="mb-6 text-2xl font-bold">{t("inbox")}</h1>
       {rows.length === 0 ? (
-        <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("inboxEmpty")}</p>
+        <EmptyState icon={Inbox} title={t("inboxEmpty")} />
       ) : (
         <ul className="divide-y divide-[hsl(var(--border))] rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
           {rows.map((c) => (

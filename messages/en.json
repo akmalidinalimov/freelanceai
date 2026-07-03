@@ -364,6 +364,12 @@
     "sortPriceLow": "Price: low",
     "sortPriceHigh": "Price: high",
     "apply": "Apply",
+    "filters": "Filters",
+    "clearAll": "Clear all",
+    "done": "Done",
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next",
     "results": "results",
     "noResults": "Nothing found.",
     "pause": "Pause",
@@ -372,6 +378,9 @@
     "confirmDelete": "Delete this gig? It will be removed from the marketplace."
   },
   "Order": {
+    "bannerRevision": "Revision in progress",
+    "bannerDisputed": "Dispute open",
+    "bannerCancelled": "Order cancelled",
     "order": "Order",
     "placeOrder": "Place order",
     "placing": "Placing...",
@@ -581,7 +590,10 @@
     "markerConnected": "Instagram connected!",
     "markerError": "Couldn't connect Instagram. Please try again.",
     "markerUnavailable": "Instagram connection isn't available yet.",
-    "viewOnInstagram": "View on Instagram"
+    "viewOnInstagram": "View on Instagram",
+    "showcaseLabel": "From Instagram",
+    "postBy": "Instagram post by @{handle}",
+    "close": "Close"
   },
   "Account": {
     "title": "Account",

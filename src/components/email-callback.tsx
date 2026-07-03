@@ -36,7 +36,7 @@ export function EmailCallback({ token, locale }: { token: string; locale: string
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
       {failed ? (
         <>
-          <p className="text-sm text-red-700" role="alert">
+          <p className="text-sm text-[hsl(var(--danger))]" role="alert">
             {t("emailLinkInvalid")}
           </p>
           <a href={`/${locale}/login`} className="text-sm font-medium underline">

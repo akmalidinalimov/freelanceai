@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/confirm-dialog";
 
 interface Cat {
   id: string;
@@ -22,6 +23,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
   const [nameEn, setNameEn] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   async function post(body: Record<string, unknown>) {
     setError(null);
@@ -58,7 +60,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
   }
 
   async function remove(id: string, label: string) {
-    if (!window.confirm(`Delete category "${label}"?`)) return;
+    if (!(await confirm({ title: `Delete category "${label}"?`, danger: true }))) return;
     await post({ action: "delete", id });
   }
 
@@ -80,7 +82,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
         <Button type="submit" disabled={busy}>
           {busy ? "…" : "Add"}
         </Button>
-        {error && <p role="alert" className="w-full text-sm text-red-700">{error}</p>}
+        {error && <p className="w-full text-sm text-[hsl(var(--danger))]">{error}</p>}
       </form>
 
       {categories.length === 0 ? (
@@ -110,7 +112,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
                     onClick={() => remove(c.id, c.nameEn)}
                     disabled={busy || c._count.gigs > 0}
                     title={c._count.gigs > 0 ? "Reassign gigs first" : "Delete"}
-                    className="text-red-700 hover:underline disabled:opacity-40"
+                    className="text-[hsl(var(--danger))] hover:underline disabled:opacity-40"
                   >
                     Delete
                   </button>

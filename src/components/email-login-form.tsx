@@ -61,7 +61,7 @@ export function EmailLoginForm({ locale }: { locale: string }) {
         className="w-full rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))]"
       />
       {state === "error" && (
-        <p className="text-sm text-red-700" role="alert">
+        <p className="text-sm text-[hsl(var(--danger))]" role="alert">
           {t("emailError")}
         </p>
       )}

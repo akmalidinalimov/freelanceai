@@ -13,6 +13,9 @@ import { myWeeklyRank } from "@/server/services/engagement";
 import { getOwnProfile } from "@/server/services/profile";
 import { formatUzs } from "@/lib/utils";
 import { PayoutRequestButton } from "@/components/payout-request-button";
+import { StatTile } from "@/components/stat-tile";
+import { StatusChip } from "@/components/status-chip";
+import { cardClass } from "@/components/ui/card";
 
 export default async function SellerDashboardPage({
   params,
@@ -119,23 +122,33 @@ export default async function SellerDashboardPage({
         </div>
       )}
 
-      {/* Earnings */}
+      {/* Earnings — available balance is the hero; held/lifetime secondary */}
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
-        {[
-          { label: t("held"), value: earnings.heldUzs },
-          { label: t("available"), value: earnings.availableUzs },
-          { label: t("lifetime"), value: earnings.lifetimeUzs },
-        ].map((b) => (
-          <div
-            key={b.label}
-            className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5"
-          >
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">{b.label}</p>
-            <p className="mt-1 text-2xl font-bold tabular-nums">
-              {formatUzs(b.value)} <span className="text-base font-normal">so&apos;m</span>
-            </p>
-          </div>
-        ))}
+        <div className={cardClass(false, "p-5 ring-1 ring-inset ring-[hsl(var(--accent))]/30")}>
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("available")}</p>
+          <p className="mt-1 text-3xl font-extrabold tabular-nums">
+            {formatUzs(earnings.availableUzs)}{" "}
+            <span className="text-base font-normal text-[hsl(var(--muted-foreground))]">so&apos;m</span>
+          </p>
+        </div>
+        <StatTile
+          label={t("held")}
+          value={
+            <>
+              {formatUzs(earnings.heldUzs)}{" "}
+              <span className="text-sm font-normal text-[hsl(var(--muted-foreground))]">so&apos;m</span>
+            </>
+          }
+        />
+        <StatTile
+          label={t("lifetime")}
+          value={
+            <>
+              {formatUzs(earnings.lifetimeUzs)}{" "}
+              <span className="text-sm font-normal text-[hsl(var(--muted-foreground))]">so&apos;m</span>
+            </>
+          }
+        />
       </div>
 
       {/* Withdraw available balance */}
@@ -197,9 +210,7 @@ export default async function SellerDashboardPage({
                   {o.gig.title}
                 </Link>
                 <span className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
-                  <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
-                    {to(`status.${o.status}`)}
-                  </span>
+                  <StatusChip status={o.status} label={to(`status.${o.status}`)} />
                   <span className="tabular-nums">{formatUzs(o.amountUzs)} so&apos;m</span>
                 </span>
               </li>
