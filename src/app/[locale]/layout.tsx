@@ -10,6 +10,7 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ClarityAnalytics } from "@/components/clarity-analytics";
 import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
+import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
 import "../globals.css";
 
 // Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
@@ -81,6 +82,7 @@ export default async function LocaleLayout({
           <MobileBottomNav />
           <CookieConsent />
         </NextIntlClientProvider>
+        <TelegramMiniAppBootstrap />
         <ClarityAnalytics />
         <MetaPixel />
       </body>

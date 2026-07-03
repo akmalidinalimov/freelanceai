@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
     // tightening them would only produce false positives. Violations POST to /api/csp-report.
     const cspReportOnly = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.clarity.ms https://connect.facebook.net",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.clarity.ms https://connect.facebook.net https://telegram.org",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https://www.facebook.com",
       "font-src 'self' data:",

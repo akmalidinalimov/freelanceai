@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { upsertTelegramUser, upsertEmailUser } from "@/lib/users";
 import { consumeMagicToken } from "@/lib/email-auth";
+import { verifyMiniAppInitData } from "@/lib/telegram";
 import { stampLastLogin } from "@/server/services/activity";
 import { readCookie, sha256 } from "@/lib/rate-limit";
 
@@ -92,6 +93,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           name: user.firstName ?? user.name ?? email.split("@")[0],
           image: user.photoUrl ?? user.image ?? undefined,
+        };
+      },
+    }),
+    Credentials({
+      // Passwordless login INSIDE a Telegram Mini App. The WebView posts the signed
+      // `initData`; verifyMiniAppInitData validates it against the bot token (HMAC) and
+      // its freshness — that signature IS the proof of identity, so no password/nonce.
+      // This is what makes "open the app in Telegram once → logged in forever" work.
+      id: "telegram-miniapp",
+      name: "Telegram Mini App",
+      credentials: { initData: { type: "text" } },
+      async authorize(credentials) {
+        const initData = typeof credentials?.initData === "string" ? credentials.initData : "";
+        if (!initData) return null;
+        // Short freshness window: initData carries no browser-nonce (unlike the
+        // deep-link flow), so cap the replay window to the login moment (10 min).
+        const tg = verifyMiniAppInitData(initData, { maxAgeSeconds: 600 });
+        if (!tg) return null;
+        const user = await upsertTelegramUser({ ...tg, authDate: Math.floor(Date.now() / 1000) });
+        if (user.status !== "ACTIVE") return null;
+        return {
+          id: user.id,
+          name: user.firstName ?? user.username ?? "User",
+          image: user.photoUrl ?? undefined,
         };
       },
     }),
