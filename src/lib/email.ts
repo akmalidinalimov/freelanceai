@@ -41,7 +41,7 @@ export interface BrandedEmail {
 }
 
 /**
- * Render a branded FreelanceAI email into both plain-text and inline-styled HTML
+ * Render a branded Gigora email into both plain-text and inline-styled HTML
  * (table layout + inline CSS for broad client support). Returns both so `sendEmail`
  * can carry a text fallback alongside the HTML.
  */

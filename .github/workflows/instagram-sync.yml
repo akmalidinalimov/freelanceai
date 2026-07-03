@@ -24,7 +24,7 @@ jobs:
           body=$(curl -fsS -X POST \
             --retry 5 --retry-all-errors --retry-delay 30 --max-time 120 \
             -H "Authorization: Bearer $CRON_SECRET" \
-            https://freelanceai.aicreator.academy/api/cron/instagram-sync)
+            https://gigora.ai/api/cron/instagram-sync)
           echo "$body"
           # Green run must mean the pass worked: fail when every profile errored.
           failed=$(echo "$body" | jq -r '.failed // 0')

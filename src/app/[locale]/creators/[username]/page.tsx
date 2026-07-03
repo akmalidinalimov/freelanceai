@@ -23,11 +23,12 @@ export async function generateMetadata({
   const name = data.user.firstName ?? data.user.name ?? data.user.username ?? "";
   return {
     title: name,
-    description: data.profile?.headline ?? `${name} — FreelanceAI`,
+    description: data.profile?.headline ?? `${name} — ${BRAND_NAME}`,
   };
 }
 import { formatUzs } from "@/lib/utils";
 import { Stars } from "@/components/stars";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 

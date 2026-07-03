@@ -49,7 +49,7 @@
     "inviteDesc": "Ushbu havola orqali roʻyxatdan oʻtganlar sizning takliflaringizga qoʻshiladi.",
     "invited": "{n} ta taklif qilingan",
     "invitedTitle": "Sizni taklif qilishdi!",
-    "invitedDesc": "FreelanceAI — AI ijodkorlar bozoriga xush kelibsiz.",
+    "invitedDesc": "Gigora — AI ijodkorlar bozoriga xush kelibsiz.",
     "getStarted": "Boshlash"
   },
   "SavedSearch": {
@@ -107,7 +107,7 @@
     "decline": "Rad etish"
   },
   "Brand": {
-    "name": "FreelanceAI",
+    "name": "Gigora",
     "tagline": "Markaziy Osiyoning AI-ijodkorlar bozori"
   },
   "Nav": {
@@ -149,7 +149,7 @@
     "catMotion": "logo animatsiya, intro",
     "catEdit": "retush, upscale",
     "searchSub": "Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.",
-    "searchAssistant": "FreelanceAI yordamchi",
+    "searchAssistant": "Gigora yordamchi",
     "searchPlaceholder": "Kerakli ishni tasvirlang…",
     "searchExamplePrefix": "Masalan: ",
     "searchButton": "Qidirish",
@@ -205,7 +205,7 @@
     "emailLinkInvalid": "Havola yaroqsiz yoki muddati oʻtgan. Qaytadan urinib koʻring."
   },
   "Onboarding": {
-    "title": "FreelanceAI dan qanday foydalanasiz?",
+    "title": "Gigora dan qanday foydalanasiz?",
     "subtitle": "Buni keyinroq oʻzgartirishingiz mumkin.",
     "hire": "Ijodkor yollash",
     "hireDesc": "Men AI video va rasm xizmatlarini sotib olmoqchiman",

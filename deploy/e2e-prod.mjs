@@ -1,6 +1,6 @@
 // Deep end-to-end sweep of the live PUBLIC + API surface (no auth). Complements smoke-test.mjs
 // with content assertions + real search/filters/SEO. Run: node deploy/e2e-prod.mjs
-const B = (process.argv[2] ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+const B = (process.argv[2] ?? "https://gigora.ai").replace(/\/$/, "");
 let pass = 0, fail = 0;
 const results = [];
 
@@ -22,7 +22,7 @@ console.log("\n[i18n] home renders in 3 locales");
 for (const loc of ["uz", "ru", "en"]) {
   const { status, body } = await get(`/${loc}`);
   // Home is the AI-concierge search hero (no gig grid); assert it renders + has the creators rail.
-  check(`home ${loc}`, status === 200 && body.includes("FreelanceAI") && body.includes("/creators"), `(${status})`);
+  check(`home ${loc}`, status === 200 && body.includes("Gigora") && body.includes("/creators"), `(${status})`);
 }
 
 // 2. Marketplace + search

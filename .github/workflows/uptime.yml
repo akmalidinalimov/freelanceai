@@ -15,11 +15,11 @@ jobs:
       - name: Check prod health
         run: |
           set -e
-          body=$(curl -sf --max-time 20 --retry 2 --retry-delay 10 https://freelanceai.aicreator.academy/api/health) \
+          body=$(curl -sf --max-time 20 --retry 2 --retry-delay 10 https://gigora.ai/api/health) \
             || { echo "::error::health endpoint unreachable"; exit 1; }
           echo "$body"
           echo "$body" | grep -q '"db":"up"' || { echo "::error::db is not up"; exit 1; }
-          curl -sf --max-time 20 -o /dev/null https://freelanceai.aicreator.academy/uz \
+          curl -sf --max-time 20 -o /dev/null https://gigora.ai/uz \
             || { echo "::error::home page failed"; exit 1; }
       - name: Check backup freshness
         # Turns silent backup death (a broken sidecar / missing env) into the same alert

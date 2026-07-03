@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { listPublicGigs } from "@/server/services/gig";
 import { formatUzs } from "@/lib/utils";
 import type { Locale } from "@/i18n/routing";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export async function generateMetadata({
   const cat = await prisma.category.findUnique({ where: { slug } }).catch(() => null);
   if (!cat) return {};
   const name = cat[NAME_KEY[locale as Locale]];
-  return { title: name, description: `${name} — FreelanceAI` };
+  return { title: name, description: `${name} — ${BRAND_NAME}` };
 }
 
 export default async function CategoryPage({

@@ -87,11 +87,10 @@ services:
       DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
       SESSION_SECRET: ${SESSION_SECRET}
       AUTH_SECRET: ${AUTH_SECRET}
-      AUTH_URL: "https://freelanceai.aicreator.academy"
       AUTH_TRUST_HOST: "true"
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      APP_ORIGIN: "https://freelanceai.aicreator.academy"
+      APP_ORIGIN: "https://gigora.ai"
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}

@@ -24,4 +24,4 @@ jobs:
           fi
           curl -fsS -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://freelanceai.aicreator.academy/api/cron/red-flags
+            https://gigora.ai/api/cron/red-flags

@@ -23,4 +23,4 @@ jobs:
           fi
           curl -fsS --max-time 90 -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://freelanceai.aicreator.academy/api/cron/digest
+            https://gigora.ai/api/cron/digest

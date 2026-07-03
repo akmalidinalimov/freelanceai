@@ -4,7 +4,7 @@
 //   node deploy/smoke-test.mjs https://host   (override base URL)
 // Exit code 0 = all pass, 1 = something regressed.
 
-const BASE = (process.argv[2] ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+const BASE = (process.argv[2] ?? "https://gigora.ai").replace(/\/$/, "");
 
 /**
  * expect: status code or array of acceptable codes.
@@ -18,9 +18,9 @@ const CHECKS = [
   { group: "SEO", name: "robots.txt", method: "GET", path: "/robots.txt", expect: 200, contains: "Sitemap" },
 
   // --- Public pages render in all 3 locales (catches i18n / message-catalog breakage) ---
-  { group: "i18n", name: "home uz", method: "GET", path: "/uz", expect: 200, contains: "FreelanceAI" },
-  { group: "i18n", name: "home ru", method: "GET", path: "/ru", expect: 200, contains: "FreelanceAI" },
-  { group: "i18n", name: "home en", method: "GET", path: "/en", expect: 200, contains: "FreelanceAI" },
+  { group: "i18n", name: "home uz", method: "GET", path: "/uz", expect: 200, contains: "Gigora" },
+  { group: "i18n", name: "home ru", method: "GET", path: "/ru", expect: 200, contains: "Gigora" },
+  { group: "i18n", name: "home en", method: "GET", path: "/en", expect: 200, contains: "Gigora" },
   { group: "i18n", name: "home AI search hero", method: "GET", path: "/uz", expect: 200, contains: "yordamchi" },
   { group: "Search", name: "browse index ru", method: "GET", path: "/ru/browse", expect: 200 },
 

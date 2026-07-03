@@ -5,6 +5,7 @@ import { requireOnboardedUser } from "@/lib/auth-guards";
 import { getOrderForUser } from "@/server/services/order";
 import { formatUzs } from "@/lib/utils";
 import { PrintButton } from "@/components/print-button";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function ReceiptPage({
 
       <div className="rounded-xl border border-[hsl(var(--border))] p-6 text-sm">
         <div className="mb-4 flex items-center justify-between border-b border-[hsl(var(--border))] pb-3">
-          <span className="text-lg font-bold text-[hsl(var(--primary))]">FreelanceAI</span>
+          <span className="text-lg font-bold text-[hsl(var(--primary))]">{BRAND_NAME}</span>
           <span className="text-[hsl(var(--muted-foreground))]">
             #{order.id.slice(-8)} · {new Date(order.createdAt).toLocaleDateString()}
           </span>

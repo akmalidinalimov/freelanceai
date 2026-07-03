@@ -49,7 +49,7 @@
     "inviteDesc": "People who sign up via this link are counted as your referrals.",
     "invited": "{n} invited",
     "invitedTitle": "You've been invited!",
-    "invitedDesc": "Welcome to FreelanceAI — the AI creators marketplace.",
+    "invitedDesc": "Welcome to Gigora — the AI creators marketplace.",
     "getStarted": "Get started"
   },
   "SavedSearch": {
@@ -107,7 +107,7 @@
     "decline": "Decline"
   },
   "Brand": {
-    "name": "FreelanceAI",
+    "name": "Gigora",
     "tagline": "Central Asia's marketplace for AI creators"
   },
   "Nav": {
@@ -149,7 +149,7 @@
     "catMotion": "logo animation, intro",
     "catEdit": "retouch, upscale",
     "searchSub": "Describe your job in plain words — AI ranks the best-matched creators.",
-    "searchAssistant": "FreelanceAI assistant",
+    "searchAssistant": "Gigora assistant",
     "searchPlaceholder": "Describe the work you need…",
     "searchExamplePrefix": "e.g. ",
     "searchButton": "Search",
@@ -205,7 +205,7 @@
     "emailLinkInvalid": "This link is invalid or expired. Please try again."
   },
   "Onboarding": {
-    "title": "How will you use FreelanceAI?",
+    "title": "How will you use Gigora?",
     "subtitle": "You can change this later.",
     "hire": "Hire creators",
     "hireDesc": "I want to buy AI video and image services",

@@ -3,7 +3,7 @@
 // Run after a deploy:  node deploy/verify-prod.mjs   (or it's invoked by deploy-vps.ps1)
 import { execSync } from "child_process";
 
-const BASE = (process.env.E2E_BASE_URL ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+const BASE = (process.env.E2E_BASE_URL ?? "https://gigora.ai").replace(/\/$/, "");
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
 // The VPS rebuild tears down the old container before the new one serves, so the site

@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "FreelanceAI Privacy Policy",
+  description: "Gigora Privacy Policy",
 };
 
 /**

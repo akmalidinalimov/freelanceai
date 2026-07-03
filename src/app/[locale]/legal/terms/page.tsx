@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "FreelanceAI Terms of Service",
+  description: "Gigora Terms of Service",
 };
 
 /**
@@ -26,9 +26,9 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
         </Link>
       </p>
 
-      <h2>1. What FreelanceAI is</h2>
+      <h2>1. What Gigora is</h2>
       <p>
-        FreelanceAI (&quot;the Platform&quot;, &quot;we&quot;) is an online marketplace where clients
+        Gigora (&quot;the Platform&quot;, &quot;we&quot;) is an online marketplace where clients
         (&quot;Buyers&quot;) order digital creative services — AI-generated video, images, audio, design
         and related work — from independent creators (&quot;Sellers&quot;). We provide the venue,
         tooling and payment coordination; the creative work itself is performed by Sellers, who are
