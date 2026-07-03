@@ -15,7 +15,7 @@ chat; this is the tracking copy.
 | 7 | Rotate exposed tokens: @kontent_pro_bot (BotFather /revoke) + OpenAI key + Cloudflare API token (used for DNS wiring) | ☐ | new values | SMM bot redeployed + answering; CF token revoked |
 | 8 | Counsel email (docs/legal-notes.md + chat-review/Clarity disclosure question) | ☐ | counsel reply | Legal pages updated if needed |
 | 9 | Cloudflare edge-cache rule (LAST — after redesign settles) | ☐ | rule created | Load-test before/after numbers |
-| 10 | **Google OAuth redirect URI** → add https://gigora.ai/api/auth/callback/google (rebrand cutover gate) | ☐ | "added" | Google login works on gigora.ai; then flip 301 |
+| 10 | **Google OAuth redirect URI** → add https://gigora.ai/api/auth/callback/google (rebrand cutover gate) | 🟡 2026-07-03 | done by platform | Redirect URI ADDED to the OAuth client (project "Gemini API"/gen-lang-client-0606527571 → "Web client 1", ID 512758868590-emktt1t…). Live test then exposed an APP bug: Auth.js was sending redirect_uri=0.0.0.0:3000 (no AUTH_URL). Fixed by pinning AUTH_URL=https://gigora.ai. Re-verify after redeploy, then flip 301. |
 | 11 | Telegram BotFather `/setdomain` → gigora.ai (only if the Login Widget is used; deep-link flow works without it) | ☐ | "done" | — |
 
 Notes:
