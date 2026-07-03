@@ -147,23 +147,31 @@ export async function tipOrder(orderId: string, buyer: User, amountUzs: number, 
   // Idempotency: a retried / double-submitted tip (same client key) must not double-credit
   // the seller. The key is unique on Transaction, so the second write is a no-op.
   const idem = `order:${orderId}:tip:${idempotencyKey ?? crypto.randomUUID()}`;
-  const posted = await prisma.$transaction(async (tx) => {
-    const already = await tx.transaction.findUnique({ where: { idempotencyKey: idem } });
-    if (already) return false;
-    await tx.transaction.create({
-      data: { orderId, provider: "MANUAL", type: "TIP", status: "SUCCEEDED", amountUzs, idempotencyKey: idem },
+  let posted = false;
+  try {
+    posted = await prisma.$transaction(async (tx) => {
+      const already = await tx.transaction.findUnique({ where: { idempotencyKey: idem } });
+      if (already) return false;
+      await tx.transaction.create({
+        data: { orderId, provider: "MANUAL", type: "TIP", status: "SUCCEEDED", amountUzs, idempotencyKey: idem },
+      });
+      await tx.ledgerEntry.createMany({
+        data: tipPostings(amountUzs).map((p) => ({
+          orderId,
+          account: p.account,
+          amountUzs: p.amountUzs,
+          userId: p.account === "SELLER_PAYABLE" ? order.sellerId : null,
+          memo: `Tip for order ${orderId}`,
+        })),
+      });
+      return true;
     });
-    await tx.ledgerEntry.createMany({
-      data: tipPostings(amountUzs).map((p) => ({
-        orderId,
-        account: p.account,
-        amountUzs: p.amountUzs,
-        userId: p.account === "SELLER_PAYABLE" ? order.sellerId : null,
-        memo: `Tip for order ${orderId}`,
-      })),
-    });
-    return true;
-  });
+  } catch (e) {
+    // A truly simultaneous same-key tip lost the unique race — that's the idempotent
+    // outcome (the winner recorded it), so treat it as success, not a 500.
+    if ((e as { code?: string })?.code === "P2002") return;
+    throw e;
+  }
   if (!posted) return; // already recorded — no double audit/notify
   await audit({ actorId: buyer.id, action: "order.tip", entity: "Order", entityId: orderId });
   await notifyAndPush(order.sellerId, "order.tip", "Choychaqa oldingiz", {
