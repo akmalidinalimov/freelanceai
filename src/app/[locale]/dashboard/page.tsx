@@ -9,6 +9,8 @@ import { getReferralInfo, applyReferral } from "@/server/services/referral";
 import { getBuyerStats } from "@/server/services/analytics";
 import { getUserBadges } from "@/server/services/gamification";
 import { GamificationStrip } from "@/components/gamification-strip";
+import { StatTile } from "@/components/stat-tile";
+import { StatusChip } from "@/components/status-chip";
 import { buildFeed } from "@/server/services/engagement";
 import { FeedSectionsView } from "@/components/feed-sections";
 import { formatUzs } from "@/lib/utils";
@@ -79,10 +81,7 @@ export default async function DashboardPage({
           { label: t("bstatContacted"), value: bstats.sellersContacted.toLocaleString() },
           { label: t("bstatSaved"), value: bstats.savedGigs.toLocaleString() },
         ].map((s) => (
-          <div key={s.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3">
-            <p className="text-xs text-[hsl(var(--muted-foreground))]">{s.label}</p>
-            <p className="mt-1 text-lg font-bold tabular-nums">{s.value}</p>
-          </div>
+          <StatTile key={s.label} value={s.value} label={s.label} />
         ))}
       </div>
 
@@ -103,9 +102,7 @@ export default async function DashboardPage({
                   {o.gig.title}
                 </Link>
                 <span className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
-                  <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
-                    {to(`status.${o.status}`)}
-                  </span>
+                  <StatusChip status={o.status} label={to(`status.${o.status}`)} />
                   <span className="tabular-nums">{formatUzs(o.amountUzs)} so&apos;m</span>
                 </span>
               </li>
