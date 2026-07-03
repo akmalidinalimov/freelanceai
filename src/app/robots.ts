@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = (process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+  const base = (process.env.APP_ORIGIN ?? "https://gigora.ai").replace(/\/$/, "");
   return {
     rules: {
       userAgent: "*",

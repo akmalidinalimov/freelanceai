@@ -163,6 +163,9 @@
     "trustPayment": "Payme · Click · Uzum",
     "trustVerified": "✓ Verified creators",
     "trustLangs": "oʻzbek · рус · english",
+    "statGigs": "services",
+    "statCreators": "creators",
+    "statOrders": "orders delivered",
     "tickerDelivered": "{name} delivered: {title}",
     "tickerReview": "{name} received a {rating}★ rating",
     "tickerJoined": "{name} joined the platform"
@@ -434,7 +437,15 @@
     "offline": "Offline",
     "lastSeen": "Last seen {time}",
     "quickRepliesLabel": "Quick replies",
-    "quickReplies": ["On it 👍", "Could you share the details?", "Delivered ✅", "Thank you!"]
+    "quickReplies": ["On it 👍", "Could you share the details?", "Delivered ✅", "Thank you!"],
+    "block": "Block",
+    "unblock": "Unblock",
+    "report": "Report",
+    "reported": "Reported ✓",
+    "reportPlaceholder": "What's the problem? (visible to moderators only)",
+    "reportSubmit": "Send report",
+    "cancel": "Cancel",
+    "blockedNotice": "You blocked this user. Unblock to message again."
   },
   "Admin": {
     "dashboard": "Admin dashboard",

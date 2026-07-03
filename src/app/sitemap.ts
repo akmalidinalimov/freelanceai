@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const LOCALES = ["uz", "ru", "en"] as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = (process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+  const base = (process.env.APP_ORIGIN ?? "https://gigora.ai").replace(/\/$/, "");
 
   // Active gigs (best-effort — empty if the DB is unreachable at build time).
   const gigs = await prisma.gig

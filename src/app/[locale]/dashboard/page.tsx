@@ -32,7 +32,7 @@ export default async function DashboardPage({
   const ref = (await cookies()).get("ref")?.value;
   if (ref) await applyReferral(user.id, ref);
   const referral = await getReferralInfo(user.id);
-  const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
+  const origin = process.env.APP_ORIGIN ?? "https://gigora.ai";
   const referralUrl = referral.code ? `${origin}/${locale}/r/${referral.code}` : null;
 
   const orders = await listBuyerOrders(user.id);

@@ -51,7 +51,7 @@ export const POST = defineHandler({ schema, sameOrigin: true }, async ({ body, r
     const locale = body.locale ?? "uz";
     const copy = COPY[locale];
     const token = await createMagicToken(body.email);
-    const origin = (process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+    const origin = (process.env.APP_ORIGIN ?? "https://gigora.ai").replace(/\/$/, "");
     const url = `${origin}/${locale}/auth/email?token=${token}`;
     const { text, html } = renderBrandedEmail({
       title: copy.title,

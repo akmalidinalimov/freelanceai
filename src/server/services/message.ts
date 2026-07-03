@@ -8,6 +8,7 @@ import { sendEmail, renderBrandedEmail } from "@/lib/email";
 import { publishMessage } from "@/lib/message-bus";
 import { notify } from "@/server/services/notification";
 import { trackEvent } from "@/server/services/activity";
+import { isBlockedBetween } from "@/server/services/blocks";
 
 const SENDER_SELECT = { select: { id: true, firstName: true, name: true, username: true } } as const;
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -28,6 +29,21 @@ async function authzConversation(conversationId: string, user: Pick<User, "id" |
   const isParty = user.id === buyerId || user.id === sellerId || user.role === "ADMIN";
   if (!isParty) throw Errors.notFound("Conversation not found"); // 404 hides existence
   return { convo, buyerId, sellerId };
+}
+
+/**
+ * The id of the OTHER participant in a conversation (buyer↔seller), enforcing that the
+ * caller is a participant. Throws 404 if not a participant or if the caller is neither
+ * party (e.g. an admin) — block/report is only for the two people in the thread.
+ */
+export async function conversationCounterpartId(
+  conversationId: string,
+  user: Pick<User, "id" | "role">
+): Promise<string> {
+  const { buyerId, sellerId } = await authzConversation(conversationId, user);
+  const other = user.id === buyerId ? sellerId : user.id === sellerId ? buyerId : null;
+  if (!other) throw Errors.notFound("Conversation not found");
+  return other;
 }
 
 /** Boolean access check for a conversation (used by the SSE stream endpoint). */
@@ -98,6 +114,11 @@ export async function postConversationMessage(
   const text = stripped?.text ?? null;
 
   const { convo, buyerId, sellerId } = await authzConversation(conversationId, user);
+  // Blocking severs the thread both ways — neither party can post once a block exists.
+  const counterId = user.id === buyerId ? sellerId : user.id === sellerId ? buyerId : null;
+  if (counterId && (await isBlockedBetween(user.id, counterId))) {
+    throw Errors.forbidden("This conversation is blocked");
+  }
   // Redactions feed the CONTACT_REDACTED red-flag signal — recorded only for a
   // message that actually posts (after authz), so every flag has visible evidence.
   if (stripped?.redacted) {

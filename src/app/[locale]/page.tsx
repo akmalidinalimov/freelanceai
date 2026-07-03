@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listFeaturedCreators, countActiveCreators, listRecentActivity } from "@/server/services/browse";
+import { listFeaturedCreators, countActiveCreators, getHomeStats, listRecentActivity } from "@/server/services/browse";
 import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { ActivityTicker } from "@/components/activity-ticker";
@@ -40,7 +40,14 @@ export default async function HomePage({
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
   const creatorCount = await countActiveCreators().catch(() => 0);
+  const stats = await getHomeStats().catch(() => ({ gigs: 0, creators: 0, orders: 0 }));
   const activity = await listRecentActivity().catch(() => []);
+  // Show each stat only when it has a real, non-trivial number — never a sad "0" pre-launch.
+  const statTiles = [
+    { key: "statGigs", value: stats.gigs },
+    { key: "statCreators", value: stats.creators },
+    { key: "statOrders", value: stats.orders },
+  ].filter((s) => s.value > 0);
   const tickerItems = activity.map((e) =>
     e.type === "delivered"
       ? t("tickerDelivered", { name: e.name, title: e.extra })
@@ -80,6 +87,25 @@ export default async function HomePage({
           </p>
           <HomeSearch />
         </section>
+
+        {/* Platform stats — real counts, each shown only when non-zero */}
+        {statTiles.length > 0 && (
+          <section className="grid grid-cols-3 gap-3 pb-6">
+            {statTiles.map((s) => (
+              <div
+                key={s.key}
+                className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-4 text-center"
+              >
+                <p className="font-display text-2xl font-extrabold tabular-nums sm:text-3xl">
+                  {s.value.toLocaleString()}
+                </p>
+                <p className="mt-0.5 text-xs font-medium text-[hsl(var(--muted-foreground))] sm:text-sm">
+                  {t(s.key)}
+                </p>
+              </div>
+            ))}
+          </section>
+        )}
 
         {/* Categories */}
         <section className="py-6">

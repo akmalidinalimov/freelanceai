@@ -82,6 +82,22 @@ function countActiveCreatorsUncached(): Promise<number> {
   return prisma.sellerProfile.count({ where: { user: { isSeller: true, status: "ACTIVE" } } });
 }
 
+export interface HomeStats {
+  gigs: number;
+  creators: number;
+  orders: number;
+}
+
+/** Public platform totals for the homepage counter (active gigs, creators, completed orders). */
+async function getHomeStatsUncached(): Promise<HomeStats> {
+  const [gigs, creators, orders] = await Promise.all([
+    prisma.gig.count({ where: { status: "ACTIVE", deletedAt: null } }),
+    prisma.sellerProfile.count({ where: { user: { isSeller: true, status: "ACTIVE" } } }),
+    prisma.order.count({ where: { status: "COMPLETED" } }),
+  ]);
+  return { gigs, creators, orders };
+}
+
 /** All active sellers for the /creators index, best-rated first. */
 async function listAllCreatorsUncached(take = 60): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
@@ -180,6 +196,9 @@ export const listFeaturedCreators = unstable_cache(listFeaturedCreatorsUncached,
   revalidate: 60,
 });
 export const countActiveCreators = unstable_cache(countActiveCreatorsUncached, ["creator-count"], {
+  revalidate: 300,
+});
+export const getHomeStats = unstable_cache(getHomeStatsUncached, ["home-stats"], {
   revalidate: 300,
 });
 export const listAllCreators = unstable_cache(listAllCreatorsUncached, ["all-creators"], {

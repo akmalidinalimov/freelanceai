@@ -173,7 +173,9 @@ async function computeFlags(): Promise<Flag[]> {
 export async function scanRedFlags(): Promise<{ flagged: number; flags: number }> {
   const flags = await computeFlags();
   await prisma.$transaction([
-    prisma.userFlag.deleteMany({}),
+    // Only clear engine-computed flags; USER_REPORTED is manual (user-submitted) and
+    // must survive a recompute, or reports would vanish on every cron run.
+    prisma.userFlag.deleteMany({ where: { type: { not: "USER_REPORTED" } } }),
     prisma.userFlag.createMany({
       data: flags.map((f) => ({
         userId: f.userId,

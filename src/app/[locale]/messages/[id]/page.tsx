@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listConversationMessages, markConversationRead } from "@/server/services/message";
+import { hasBlockedCounterpart } from "@/server/services/moderation-user";
 import { listOffers } from "@/server/services/offer";
 import { prisma } from "@/lib/prisma";
 import { MessageThread } from "@/components/message-thread";
@@ -59,6 +60,7 @@ export default async function ConversationPage({
         lastSeenAt: other.lastSeenAt ? other.lastSeenAt.toISOString() : null,
       }
     : null;
+  const blocked = counterpart ? await hasBlockedCounterpart(convId, user).catch(() => false) : false;
   const offers = isGigConvo
     ? (await listOffers(convId, user)).map((o) => ({
         id: o.id,
@@ -76,7 +78,13 @@ export default async function ConversationPage({
         ← {t("inbox")}
       </Link>
       <div className="mt-3">
-        <MessageThread conversationId={convId} currentUserId={user.id} initial={msgs} counterpart={counterpart} />
+        <MessageThread
+          conversationId={convId}
+          currentUserId={user.id}
+          initial={msgs}
+          counterpart={counterpart}
+          initiallyBlocked={blocked}
+        />
       </div>
       {isGigConvo && (
         <div className="mt-4">

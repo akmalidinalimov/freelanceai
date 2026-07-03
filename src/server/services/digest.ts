@@ -35,7 +35,7 @@ const COPY = {
 } as const;
 
 export async function sendDailyDigests(limit = 500): Promise<{ considered: number; sent: number }> {
-  const origin = (process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy").replace(/\/$/, "");
+  const origin = (process.env.APP_ORIGIN ?? "https://gigora.ai").replace(/\/$/, "");
   const since = new Date(Date.now() - DAY);
   const activeSince = new Date(Date.now() - 60 * DAY);
 

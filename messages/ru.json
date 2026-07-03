@@ -163,6 +163,9 @@
     "trustPayment": "Payme · Click · Uzum",
     "trustVerified": "✓ Проверенные креаторы",
     "trustLangs": "oʻzbek · рус · english",
+    "statGigs": "услуг",
+    "statCreators": "авторов",
+    "statOrders": "заказов выполнено",
     "tickerDelivered": "{name} сдал(а) работу: {title}",
     "tickerReview": "{name} получил(а) оценку {rating}★",
     "tickerJoined": "{name} присоединился(лась) к платформе"
@@ -434,7 +437,15 @@
     "offline": "Не в сети",
     "lastSeen": "Был(а) в сети {time}",
     "quickRepliesLabel": "Быстрые ответы",
-    "quickReplies": ["Уже делаю 👍", "Пришлите, пожалуйста, детали", "Готово ✅", "Спасибо!"]
+    "quickReplies": ["Уже делаю 👍", "Пришлите, пожалуйста, детали", "Готово ✅", "Спасибо!"],
+    "block": "Заблокировать",
+    "unblock": "Разблокировать",
+    "report": "Пожаловаться",
+    "reported": "Жалоба отправлена ✓",
+    "reportPlaceholder": "В чём проблема? (видно только модераторам)",
+    "reportSubmit": "Отправить жалобу",
+    "cancel": "Отмена",
+    "blockedNotice": "Вы заблокировали этого пользователя. Разблокируйте, чтобы писать."
   },
   "Admin": {
     "dashboard": "Админ-панель",

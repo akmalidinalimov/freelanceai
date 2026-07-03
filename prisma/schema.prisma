@@ -682,7 +682,7 @@ model UserFlag {
   id        String       @id @default(cuid())
   userId    String
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String // e.g. CONTACT_REDACTED, HIGH_DISPUTE, CONTACTS_NO_ORDERS
+  type      String // e.g. CONTACT_REDACTED, HIGH_DISPUTE, CONTACTS_NO_ORDERS, USER_REPORTED
   severity  FlagSeverity
   details   Json?
   createdAt DateTime     @default(now())
@@ -690,6 +690,18 @@ model UserFlag {
 
   @@unique([userId, type])
   @@index([severity])
+}
+
+// One party blocking another in messaging. Scalar-only (no back-relations on User)
+// to keep the User model untouched; a block severs the conversation in BOTH directions.
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 // ---------------------------------------------------------------------------

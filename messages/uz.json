@@ -163,6 +163,9 @@
     "trustPayment": "Payme · Click · Uzum",
     "trustVerified": "✓ Tasdiqlangan ijodkorlar",
     "trustLangs": "oʻzbek · рус · english",
+    "statGigs": "xizmat",
+    "statCreators": "ijodkor",
+    "statOrders": "buyurtma bajarildi",
     "tickerDelivered": "{name} yangi ish topshirdi: {title}",
     "tickerReview": "{name} {rating}★ baho oldi",
     "tickerJoined": "{name} platformaga qoʻshildi"
@@ -434,7 +437,15 @@
     "offline": "Oflayn",
     "lastSeen": "Oxirgi faollik {time}",
     "quickRepliesLabel": "Tez javoblar",
-    "quickReplies": ["Boshladim 👍", "Tafsilotlarni yuboring", "Topshirildi ✅", "Rahmat!"]
+    "quickReplies": ["Boshladim 👍", "Tafsilotlarni yuboring", "Topshirildi ✅", "Rahmat!"],
+    "block": "Bloklash",
+    "unblock": "Blokdan chiqarish",
+    "report": "Shikoyat qilish",
+    "reported": "Shikoyat yuborildi ✓",
+    "reportPlaceholder": "Muammo nimada? (faqat moderatorlar koʻradi)",
+    "reportSubmit": "Shikoyat yuborish",
+    "cancel": "Bekor qilish",
+    "blockedNotice": "Siz bu foydalanuvchini bloklagansiz. Yozish uchun blokdan chiqaring."
   },
   "Admin": {
     "dashboard": "Admin paneli",

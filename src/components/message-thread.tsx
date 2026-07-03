@@ -26,11 +26,13 @@ export function MessageThread({
   currentUserId,
   initial,
   counterpart,
+  initiallyBlocked = false,
 }: {
   conversationId: string;
   currentUserId: string;
   initial: Msg[];
   counterpart?: { name: string; lastSeenAt: string | null } | null;
+  initiallyBlocked?: boolean;
 }) {
   const t = useTranslations("Message");
   const format = useFormatter();
@@ -41,6 +43,53 @@ export function MessageThread({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const online = mounted && isOnline(lastSeenMs, Date.now());
+
+  // Block / report state (T&S). Server enforces block on send; UI reflects + disables.
+  const [blocked, setBlocked] = useState(initiallyBlocked);
+  const [tsBusy, setTsBusy] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reported, setReported] = useState(false);
+
+  async function toggleBlock() {
+    if (tsBusy) return;
+    setTsBusy(true);
+    try {
+      const r = await fetch(`/api/conversations/${conversationId}/block`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const j = await r.json();
+      if (j.ok) setBlocked(j.data.blocked);
+    } catch {
+      /* ignore — user can retry */
+    } finally {
+      setTsBusy(false);
+    }
+  }
+
+  async function submitReport() {
+    const reason = reportReason.trim();
+    if (reason.length < 3 || tsBusy) return;
+    setTsBusy(true);
+    try {
+      const r = await fetch(`/api/conversations/${conversationId}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const j = await r.json();
+      if (j.ok) {
+        setReported(true);
+        setReporting(false);
+        setReportReason("");
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setTsBusy(false);
+    }
+  }
   const [messages, setMessages] = useState<Msg[]>(initial);
   const [input, setInput] = useState("");
   const [files, setFiles] = useState<string[]>([]);
@@ -139,6 +188,48 @@ export function MessageThread({
         )}
       </div>
 
+      {counterpart && (
+        <div className="mb-3 flex items-center gap-3 text-xs">
+          <button
+            type="button"
+            onClick={() => setReporting((v) => !v)}
+            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:underline"
+          >
+            {reported ? t("reported") : t("report")}
+          </button>
+          <button
+            type="button"
+            onClick={toggleBlock}
+            disabled={tsBusy}
+            className="text-[hsl(var(--muted-foreground))] hover:text-red-600 hover:underline disabled:opacity-50"
+          >
+            {blocked ? t("unblock") : t("block")}
+          </button>
+        </div>
+      )}
+
+      {reporting && !reported && (
+        <div className="mb-3 space-y-2 rounded-lg border border-[hsl(var(--border))] p-3">
+          <textarea
+            value={reportReason}
+            onChange={(e) => setReportReason(e.target.value)}
+            rows={2}
+            maxLength={1000}
+            placeholder={t("reportPlaceholder")}
+            aria-label={t("report")}
+            className="w-full rounded-md border border-[hsl(var(--border))] bg-transparent p-2 text-sm"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setReporting(false)}>
+              {t("cancel")}
+            </Button>
+            <Button size="sm" onClick={submitReport} disabled={tsBusy || reportReason.trim().length < 3}>
+              {t("reportSubmit")}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-3 max-h-80 space-y-2 overflow-y-auto">
         {messages.length === 0 ? (
           <p className="py-6 text-center text-sm text-[hsl(var(--muted-foreground))]">{t("empty")}</p>
@@ -183,41 +274,52 @@ export function MessageThread({
         <div ref={endRef} />
       </div>
 
-      {!input.trim() && quickReplies.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5" aria-label={t("quickRepliesLabel")}>
-          {quickReplies.map((qr) => (
-            <button
-              key={qr}
-              type="button"
-              onClick={() => setInput(qr)}
-              className="rounded-full border border-[hsl(var(--border))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
-            >
-              {qr}
-            </button>
-          ))}
+      {blocked ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 px-3 py-3 text-sm">
+          <span className="text-[hsl(var(--muted-foreground))]">{t("blockedNotice")}</span>
+          <Button variant="outline" size="sm" onClick={toggleBlock} disabled={tsBusy}>
+            {t("unblock")}
+          </Button>
         </div>
+      ) : (
+        <>
+          {!input.trim() && quickReplies.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5" aria-label={t("quickRepliesLabel")}>
+              {quickReplies.map((qr) => (
+                <button
+                  key={qr}
+                  type="button"
+                  onClick={() => setInput(qr)}
+                  className="rounded-full border border-[hsl(var(--border))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+                >
+                  {qr}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mb-2">
+            <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              placeholder={t("placeholder")}
+              className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
+            />
+            <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
+              {t("send")}
+            </Button>
+          </div>
+          {sendError && <p className="mt-2 text-sm text-red-600" role="alert">{sendError}</p>}
+        </>
       )}
-      <div className="mb-2">
-        <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-          placeholder={t("placeholder")}
-          className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
-        />
-        <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
-          {t("send")}
-        </Button>
-      </div>
-      {sendError && <p className="mt-2 text-sm text-red-600" role="alert">{sendError}</p>}
     </div>
   );
 }
