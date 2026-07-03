@@ -85,6 +85,19 @@ export async function tgSendTracked(
   }
 }
 
+/** Acknowledge an inline-button tap (removes the button's loading spinner; optional toast). */
+export async function tgAnswerCallback(callbackId: string, text?: string): Promise<void> {
+  try {
+    await fetch(api("answerCallbackQuery"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackId, ...(text ? { text } : {}) }),
+    });
+  } catch (err) {
+    console.error("tgAnswerCallback failed", err);
+  }
+}
+
 /** Prompt the user to share their (Telegram-verified) phone via a one-tap contact button. */
 export async function tgRequestContact(chatId: number | string, prompt: string): Promise<void> {
   await tgSendMessage(chatId, prompt, {
@@ -216,7 +229,7 @@ export async function tgSetWebhook(url: string, secretToken: string): Promise<un
     body: JSON.stringify({
       url,
       secret_token: secretToken,
-      allowed_updates: ["message"],
+      allowed_updates: ["message", "callback_query"],
       drop_pending_updates: true,
     }),
   });

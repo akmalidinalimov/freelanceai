@@ -39,6 +39,13 @@ const REVIEW_NUDGE = {
   en: (t: string) => `⭐ "${t}" is done. Leave a review — it helps creators.`,
 };
 
+// "Don't lose your streak" — n = current streak length.
+const STREAK_RISK = {
+  uz: (n: number) => `🔥 ${n} kunlik seriyangiz xavf ostida! Bugun Gigora'ga kiring va davom eting.`,
+  ru: (n: number) => `🔥 Ваша серия из ${n} дней под угрозой! Зайдите в Gigora сегодня, чтобы продолжить.`,
+  en: (n: number) => `🔥 Your ${n}-day streak is at risk! Open Gigora today to keep it going.`,
+};
+
 async function alreadySent(type: string, orderId: string, threshold?: string): Promise<boolean> {
   const rows = await prisma.activityEvent.findFirst({
     where: {
@@ -51,10 +58,11 @@ async function alreadySent(type: string, orderId: string, threshold?: string): P
   return Boolean(rows);
 }
 
-export async function sendOrderReminders(): Promise<{ deadlines: number; reviewNudges: number }> {
+export async function sendOrderReminders(): Promise<{ deadlines: number; reviewNudges: number; streakNudges: number }> {
   const now = Date.now();
   let deadlines = 0;
   let reviewNudges = 0;
+  let streakNudges = 0;
 
   // 1) Deadline reminders — active, in-progress orders with a due date.
   const active = await prisma.order.findMany({
@@ -112,7 +120,10 @@ export async function sendOrderReminders(): Promise<{ deadlines: number; reviewN
     if (await alreadySent("review_nudge", o.id)) continue;
     const loc = asLoc(o.buyer.locale);
     await notifyAndPush(o.buyerId, "order.review_nudge", REVIEW_NUDGE[loc](o.gig.title), {
-      link: `/orders/${o.id}`,
+      // Rate in one tap right from the chat.
+      buttons: [
+        [1, 2, 3, 4, 5].map((n) => ({ text: `${n}⭐`, callback_data: `r:${o.id}:${n}` })),
+      ],
     });
     await prisma.activityEvent
       .create({ data: { userId: o.buyerId, type: "review_nudge", entityId: o.id } })
@@ -120,7 +131,36 @@ export async function sendOrderReminders(): Promise<{ deadlines: number; reviewN
     reviewNudges += 1;
   }
 
-  // 3) Housekeeping: prune bot-native quick-reply mappings older than 30 days.
+  // 3) Streak-at-risk nudge — users who kept a ≥3-day streak, were active yesterday but
+  //    NOT today, get one reminder per day to come back before it breaks.
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const yesterday = new Date(todayStart);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const todayKey = todayStart.toISOString().slice(0, 10);
+  const atRisk = await prisma.user.findMany({
+    where: {
+      streakDays: { gte: 3 },
+      lastActiveDay: { gte: yesterday, lt: todayStart }, // active yesterday, not yet today
+      telegramId: { not: null },
+      telegramBlockedAt: null,
+      notifyTelegram: true,
+      status: "ACTIVE",
+    },
+    select: { id: true, streakDays: true, locale: true },
+    take: 500,
+  });
+  for (const u of atRisk) {
+    if (await alreadySent("streak_nudge", u.id, todayKey)) continue; // once per calendar day
+    const loc = asLoc(u.locale);
+    await notifyAndPush(u.id, "streak.nudge", STREAK_RISK[loc](u.streakDays), { link: "/dashboard" });
+    await prisma.activityEvent
+      .create({ data: { userId: u.id, type: "streak_nudge", entityId: u.id, meta: { threshold: todayKey } } })
+      .catch(() => {});
+    streakNudges += 1;
+  }
+
+  // 4) Housekeeping: prune bot-native quick-reply mappings older than 30 days.
   // A notification that old is no longer a live reply target; this bounds table growth.
   await prisma.telegramReplyTarget
     .deleteMany({ where: { createdAt: { lt: new Date(now - 30 * DAY) } } })
@@ -128,5 +168,5 @@ export async function sendOrderReminders(): Promise<{ deadlines: number; reviewN
   // Expired single-use login nonces (10-min TTL) — bound the replay-guard table.
   await prisma.telegramAuthNonce.deleteMany({ where: { expiresAt: { lt: new Date() } } }).catch(() => {});
 
-  return { deadlines, reviewNudges };
+  return { deadlines, reviewNudges, streakNudges };
 }

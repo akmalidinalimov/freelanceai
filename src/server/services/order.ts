@@ -193,8 +193,14 @@ export async function deliverOrder(orderId: string, seller: User, message: strin
   ]);
   await audit({ actorId: seller.id, action: "order.deliver", entity: "Order", entityId: orderId });
   await notifyAndPush(order.buyerId, "order.delivered", "Buyurtmangiz topshirildi", {
-    body: "Ijrochi ishni topshirdi — koʻrib chiqing va qabul qiling.",
-    link: `/orders/${orderId}`,
+    body: "Ijrochi ishni topshirdi — koʻrib chiqing.",
+    // One-tap actions right in the Telegram chat.
+    buttons: [
+      [
+        { text: "✅ Qabul qilish", callback_data: `o:acc:${orderId}` },
+        { text: "✏️ Oʻzgartirish", callback_data: `o:rev:${orderId}` },
+      ],
+    ],
   });
 }
 

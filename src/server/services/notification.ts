@@ -42,7 +42,7 @@ export async function notifyAndPush(
   userId: string,
   type: string,
   title: string,
-  opts?: { body?: string; link?: string }
+  opts?: { body?: string; link?: string; buttons?: Record<string, unknown>[][] }
 ): Promise<void> {
   await notify(userId, type, title, opts);
   try {
@@ -54,7 +54,13 @@ export async function notifyAndPush(
     const prefs = (u.notifyPrefs as Record<string, boolean> | null) ?? null;
     if (prefs && prefs[notificationCategory(type)] === false) return;
     const text = opts?.body ? `${title}\n\n${opts.body}` : title;
-    const markup = opts?.link ? tgOpenButton(u.locale, opts.link) : undefined;
+    // Inline action buttons (callback_data) take precedence over the plain "open" button —
+    // they turn the notification into a one-tap action (accept delivery, rate, …).
+    const markup = opts?.buttons
+      ? { inline_keyboard: opts.buttons }
+      : opts?.link
+        ? tgOpenButton(u.locale, opts.link)
+        : undefined;
     await tgSendMessage(u.telegramId, text, markup);
   } catch (err) {
     logger.warn("notify_push_failed", { userId, type, err: String(err) });

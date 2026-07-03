@@ -7,11 +7,14 @@ import {
   tgWelcome,
   tgHelpText,
   tgOpenButton,
+  tgAnswerCallback,
 } from "@/lib/telegram-bot";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { encryptPII } from "@/lib/pii-crypto";
 import { stampTelegramChat } from "@/server/services/activity";
 import { routeTelegramReply } from "@/server/services/message";
+import { acceptOrder, requestRevision } from "@/server/services/order";
+import { createReview } from "@/server/services/review";
 
 /**
  * Telegram bot webhook. Verified by the secret header. Idempotent (dedups on
@@ -42,6 +45,11 @@ export async function POST(request: Request) {
         username?: string;
       };
     };
+    callback_query?: {
+      id: string;
+      data?: string;
+      from?: { id: number; is_bot?: boolean };
+    };
   };
   try {
     update = await request.json();
@@ -56,6 +64,41 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ ok: true }); // already processed
     }
+  }
+
+  // Inline action buttons (accept/revise a delivery, rate an order) tapped in the chat.
+  // Each service call re-checks ownership, so a user can only act on their OWN orders.
+  const cb = update.callback_query;
+  if (cb && cb.from && !cb.from.is_bot) {
+    const cbFrom = String(cb.from.id);
+    if (!rateLimit(`tg-cb:${cbFrom}`, 30, 60_000)) {
+      void tgAnswerCallback(cb.id, "Juda tez. Biroz kuting.");
+      return NextResponse.json({ ok: true });
+    }
+    const account = await prisma.user.findFirst({ where: { telegramId: cbFrom, status: "ACTIVE" } });
+    if (!account) {
+      void tgAnswerCallback(cb.id, "Avval saytga kiring.");
+      return NextResponse.json({ ok: true });
+    }
+    const data = cb.data ?? "";
+    try {
+      if (data.startsWith("o:acc:")) {
+        await acceptOrder(data.slice(6), account);
+        void tgAnswerCallback(cb.id, "✅ Buyurtma qabul qilindi!");
+      } else if (data.startsWith("o:rev:")) {
+        await requestRevision(data.slice(6), account);
+        void tgAnswerCallback(cb.id, "✏️ Oʻzgartirish soʻraldi.");
+      } else if (data.startsWith("r:")) {
+        const [, orderId, n] = data.split(":");
+        await createReview(account.id, orderId ?? "", Number(n));
+        void tgAnswerCallback(cb.id, `⭐ ${Number(n)} — rahmat!`);
+      } else {
+        void tgAnswerCallback(cb.id);
+      }
+    } catch {
+      void tgAnswerCallback(cb.id, "Amalni bajarib boʻlmadi.");
+    }
+    return NextResponse.json({ ok: true });
   }
 
   const from = update.message?.from;
