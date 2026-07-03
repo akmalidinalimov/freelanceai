@@ -12,6 +12,8 @@ import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
 import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
+import { ReferralCapture } from "@/components/referral-capture";
+import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/session";
 import { needsBotReconnect } from "@/lib/telegram-migration";
 import "../globals.css";
@@ -95,6 +97,9 @@ export default async function LocaleLayout({
           <MobileBottomNav />
           <CookieConsent />
         </NextIntlClientProvider>
+        <Suspense fallback={null}>
+          <ReferralCapture />
+        </Suspense>
         <TelegramMiniAppBootstrap />
         <ClarityAnalytics />
         <MetaPixel />

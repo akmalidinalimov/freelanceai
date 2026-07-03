@@ -32,6 +32,7 @@ import { OrderPanel } from "@/components/order-panel";
 import { Stars } from "@/components/stars";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { SaveButton } from "@/components/save-button";
+import { ShareButton } from "@/components/share-button";
 import { ReviewReply } from "@/components/review-reply";
 import { RecentlyViewedTracker } from "@/components/recently-viewed-tracker";
 import { FeatureGigButton } from "@/components/feature-gig-button";
@@ -123,6 +124,9 @@ export default async function GigDetailPage({
           {me?.role === "ADMIN" && <FeatureGigButton gigId={gig.id} featured={gig.featured} />}
         </div>
         <h1 className="mt-2 text-3xl font-bold">{gig.title}</h1>
+        <div className="mt-3">
+          <ShareButton path={`/${locale}/gigs/${slug}`} title={gig.title} />
+        </div>
         <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
           {t("byCreator")}{" "}
           {gig.seller.username ? (

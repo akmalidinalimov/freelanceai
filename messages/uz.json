@@ -1,4 +1,11 @@
 {
+  "Share": {
+    "shareText": "🎨 Gigora'da yaratilgan — {title}",
+    "telegram": "Telegram",
+    "copyLink": "Havolani nusxalash",
+    "copied": "Nusxalandi!",
+    "shareTelegram": "Telegram'da ulashish"
+  },
   "BotMigration": {
     "aria": "Telegram bot yangilanishi",
     "text": "Biz yangi Telegram botga oʻtdik. Buyurtma yangiliklari va xabarlarni olishda davom etish uchun qayta ulaning.",

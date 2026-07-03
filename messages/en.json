@@ -1,4 +1,11 @@
 {
+  "Share": {
+    "shareText": "🎨 Made with Gigora — {title}",
+    "telegram": "Telegram",
+    "copyLink": "Copy link",
+    "copied": "Copied!",
+    "shareTelegram": "Share on Telegram"
+  },
   "BotMigration": {
     "aria": "Telegram bot update notice",
     "text": "We've moved to a new Telegram bot. Reconnect to keep getting order updates and messages.",

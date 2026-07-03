@@ -7,6 +7,7 @@ import { isFollowing } from "@/server/services/follow";
 import { getCurrentUser } from "@/lib/session";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { FollowButton } from "@/components/follow-button";
+import { ShareButton } from "@/components/share-button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { specLabel } from "@/lib/specializations";
 import { badgeDef, badgeLabel } from "@/lib/badges";
@@ -84,6 +85,9 @@ export default async function CreatorProfilePage({
             )}
             {user.kycStatus === "VERIFIED" && <VerifiedBadge label={t("verified")} />}
             {viewer === "buyer" && <FollowButton sellerId={user.id} initialFollowing={following} />}
+          </div>
+          <div className="mt-2">
+            <ShareButton path={`/${locale}/creators/${username}`} title={name} />
           </div>
           {profile && profile.ratingCount > 0 ? (
             <div className="mt-1 flex items-center gap-2 text-sm">
