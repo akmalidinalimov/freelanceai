@@ -9,7 +9,8 @@ import { GigFilters } from "@/components/gig-filters";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { listSavedSearches, searchLink } from "@/server/services/saved-search";
 import { SaveSearchButton, DeleteSavedSearch } from "@/components/saved-search-controls";
-import { X } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { X, SearchX } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 
 export default async function GigsPage({
@@ -138,7 +139,11 @@ export default async function GigsPage({
       </p>
 
       {gigs.length === 0 ? (
-        <p className="text-[hsl(var(--muted-foreground))]">{tg("noResults")}</p>
+        <EmptyState
+          icon={SearchX}
+          title={tg("noResults")}
+          {...(hasFilters ? { ctaLabel: tg("clearAll"), ctaHref: "/gigs" } : {})}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {gigs.map((g) => (
