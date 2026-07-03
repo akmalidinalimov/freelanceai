@@ -61,7 +61,7 @@ export async function GigCard({
         <span className="ml-1 flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-2 py-1 text-[11px] text-[hsl(var(--muted-foreground))]">
           <Lock className="h-3 w-3 shrink-0 text-[#28c840]" strokeWidth={2.25} />
           <span className="truncate">
-            freelanceai.uz/<span className="font-medium text-[hsl(var(--foreground))]/70">{handle}</span>
+            gigora.ai/<span className="font-medium text-[hsl(var(--foreground))]/70">{handle}</span>
           </span>
         </span>
       </div>

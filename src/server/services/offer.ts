@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { notifyAndPush } from "@/server/services/notification";
 import { createOrderFromOffer } from "@/server/services/order";
 import { isBlockedBetween } from "@/server/services/blocks";
+import { stripContactInfo } from "@/lib/sanitize";
 
 async function loadConvo(conversationId: string, user: User) {
   const convo = await prisma.conversation.findUnique({
@@ -35,13 +36,17 @@ export async function createOffer(user: User, conversationId: string, input: Off
   // A block severs the relationship both ways — a blocked seller can't push an offer either.
   if (await isBlockedBetween(convo.sellerId, convo.buyerId)) throw Errors.forbidden("This conversation is blocked");
 
+  // Strip off-platform contact info from the title — offers are a message channel too, so
+  // they must honor the same anti-escrow-bypass control as chat (not a redaction-free hole).
+  const cleanTitle = stripContactInfo(input.title.trim().slice(0, 120)).text;
+
   const offer = await prisma.customOffer.create({
     data: {
       conversationId,
       sellerId: convo.sellerId,
       buyerId: convo.buyerId,
       gigId: convo.gigId,
-      title: input.title.trim().slice(0, 120),
+      title: cleanTitle,
       priceUzs: input.priceUzs,
       deliveryDays: input.deliveryDays,
       revisions: input.revisions,
@@ -53,7 +58,7 @@ export async function createOffer(user: User, conversationId: string, input: Off
   const priceFmt = input.priceUzs.toLocaleString("ru-RU");
   await notifyAndPush(convo.buyerId, "offer.new", "Yangi maxsus taklif 🎁", {
     body:
-      `${input.title.trim()}\n\n` +
+      `${cleanTitle}\n\n` +
       `💰 ${priceFmt} soʻm · ⏱ ${input.deliveryDays} kun · ✏️ ${input.revisions} marta qayta ishlash\n\n` +
       `Qabul qilish uchun oching 👇`,
     link: `/messages/${conversationId}`,

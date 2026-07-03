@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { defineHandler } from "@/lib/handler";
 import { ok, Errors } from "@/lib/api";
+import { requireAdmin } from "@/lib/authz";
 import { createCoupon } from "@/server/services/coupon";
 
 const schema = z
@@ -16,6 +17,7 @@ const schema = z
 /** Admin-only: create a promo code. */
 export const POST = defineHandler({ auth: true, schema }, async ({ user, body }) => {
   if (!user) throw Errors.unauthenticated();
+  requireAdmin(user); // defense-in-depth alongside the service-layer role check
   const coupon = await createCoupon(user, body);
   return ok({ id: coupon.id, code: coupon.code });
 });

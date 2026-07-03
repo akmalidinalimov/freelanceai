@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -26,6 +26,10 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
   const t = useTranslations("Notifications");
   const [items, setItems] = useState(initial);
   const [busy, setBusy] = useState(false);
+  // Relative time depends on the current clock, which differs between SSR and hydration —
+  // render it only after mount (client-only) to avoid a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   async function post(body: Record<string, unknown>) {
     setBusy(true);
@@ -72,10 +76,12 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
                 {n.body && <p className="truncate text-sm text-[hsl(var(--muted-foreground))]">{n.body}</p>}
               </div>
               <span className="shrink-0 text-xs text-[hsl(var(--muted-foreground))]">
-                {(() => {
-                  const p = agoParts(n.createdAt);
-                  return p.n === null ? t("now") : `${p.n} ${t(p.unit)}`;
-                })()}
+                {mounted
+                  ? (() => {
+                      const p = agoParts(n.createdAt);
+                      return p.n === null ? t("now") : `${p.n} ${t(p.unit)}`;
+                    })()
+                  : ""}
               </span>
             </div>
           );

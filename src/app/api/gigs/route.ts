@@ -2,6 +2,7 @@ import { z } from "zod";
 import { defineHandler } from "@/lib/handler";
 import { ok, Errors } from "@/lib/api";
 import { requireSeller } from "@/lib/authz";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createGig } from "@/server/services/gig";
 
 const packageSchema = z.object({
@@ -45,6 +46,8 @@ const schema = z
 export const POST = defineHandler({ auth: true, schema }, async ({ user, body }) => {
   if (!user) throw Errors.unauthenticated();
   requireSeller(user);
+  // Gig creation rebuilds the seller's search embedding — throttle to stop bulk-create abuse.
+  enforceRateLimit(`gig-create:${user.id}`, 10, 60_000);
   const gig = await createGig(user.id, body, user.role === "ADMIN");
   return ok({ id: gig.id, slug: gig.slug });
 });

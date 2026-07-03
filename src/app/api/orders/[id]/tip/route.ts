@@ -5,7 +5,12 @@ import { getCurrentUser } from "@/lib/session";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { tipOrder } from "@/server/services/payments";
 
-const schema = z.object({ amountUzs: z.number().int().min(1000).max(10_000_000) }).strict();
+const schema = z
+  .object({
+    amountUzs: z.number().int().min(1000).max(10_000_000),
+    idempotencyKey: z.string().min(8).max(64).optional(),
+  })
+  .strict();
 
 /** Buyer tips the seller on a completed order. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +21,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     enforceRateLimit(`tip:${user.id}`, 10, 60_000);
     const { id } = await params;
     const input = parseInput(schema, await request.json().catch(() => ({})));
-    await tipOrder(id, user, input.amountUzs);
+    await tipOrder(id, user, input.amountUzs, input.idempotencyKey);
     return ok({ done: true });
   } catch (err) {
     return errorResponse(err);

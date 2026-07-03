@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/session";
 import { canAccessConversation } from "@/server/services/message";
 import { subscribeMessages, type BusMessage } from "@/lib/message-bus";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,6 +16,9 @@ export const runtime = "nodejs";
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return new Response("unauthorized", { status: 401 });
+  // Cap new stream opens per user — an EventSource holds an open connection + heartbeat,
+  // so without a ceiling one user could exhaust listeners/timers by opening thousands.
+  if (!rateLimit(`stream:${user.id}`, 30, 60_000)) return new Response("rate limited", { status: 429 });
   const { id } = await params;
   if (!(await canAccessConversation(id, user))) return new Response("not found", { status: 404 });
 

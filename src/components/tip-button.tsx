@@ -14,6 +14,9 @@ export function TipButton({ orderId }: { orderId: string }) {
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  // Stable per-form idempotency key: a double-click / retry of this tip dedups server-side
+  // instead of double-crediting the seller.
+  const [idemKey] = useState(() => crypto.randomUUID());
 
   async function tip(value: number) {
     if (busy || value < 1000) return;
@@ -22,7 +25,7 @@ export function TipButton({ orderId }: { orderId: string }) {
       const r = await fetch(`/api/orders/${orderId}/tip`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountUzs: value }),
+        body: JSON.stringify({ amountUzs: value, idempotencyKey: idemKey }),
       });
       if ((await r.json()).ok) {
         setDone(true);

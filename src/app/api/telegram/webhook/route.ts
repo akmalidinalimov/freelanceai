@@ -115,10 +115,15 @@ export async function POST(request: Request) {
       }
       // No mapping (reply to a non-notification message) → fall through as ordinary text.
     } catch {
-      // Routing failed after we already marked this update processed (so Telegram
-      // won't retry) — tell the user instead of silently dropping their message.
-      void tgSendMessage(from.id, "⚠️ Javobni yuborib boʻlmadi. Iltimos, ilovada urinib koʻring.");
-      return NextResponse.json({ ok: true });
+      // Routing failed AFTER we marked this update processed. Undo that mark and return a
+      // non-2xx so Telegram redelivers — otherwise a transient DB blip silently drops the
+      // user's reply. On redelivery the (now-removed) idempotency record lets it retry.
+      if (typeof update.update_id === "number") {
+        await prisma.processedUpdate
+          .delete({ where: { updateId: BigInt(update.update_id) } })
+          .catch(() => {});
+      }
+      return NextResponse.json({ ok: false }, { status: 500 });
     }
   }
 

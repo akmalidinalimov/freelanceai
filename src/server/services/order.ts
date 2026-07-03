@@ -8,7 +8,7 @@ import { trackEvent } from "@/server/services/activity";
 import { canTransition } from "@/lib/order-state";
 import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
-import { notify, notifyAndPush } from "@/server/services/notification";
+import { notifyAndPush } from "@/server/services/notification";
 import { findValidCoupon } from "@/server/services/coupon";
 
 function commissionPct(): number {

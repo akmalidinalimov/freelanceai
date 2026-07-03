@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ok, errorResponse, parseInput, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
+import { requireAdmin } from "@/lib/authz";
 import { setUserStatus, setUserSeller, setUserKyc, adminDeleteUser } from "@/server/services/admin-users";
 
 const schema = z
@@ -19,6 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!isSameOrigin(request)) throw Errors.forbidden("Cross-origin request rejected");
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
+    requireAdmin(user); // defense-in-depth alongside the service-layer role check
     const { id } = await params;
     const { action, confirm } = parseInput(schema, await request.json().catch(() => ({})));
     if (action === "suspend") await setUserStatus(user, id, true);

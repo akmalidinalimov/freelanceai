@@ -5,7 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
-import { notify, notifyAndPush } from "@/server/services/notification";
+import { notifyAndPush } from "@/server/services/notification";
 import { onOrderPaid } from "@/server/services/gamification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -135,7 +135,7 @@ async function sellerTipsTotal(sellerId: string, db: Prisma.TransactionClient = 
 }
 
 /** Buyer tips the seller on a COMPLETED order — fully credited to the seller (no commission). */
-export async function tipOrder(orderId: string, buyer: User, amountUzs: number) {
+export async function tipOrder(orderId: string, buyer: User, amountUzs: number, idempotencyKey?: string) {
   if (!Number.isInteger(amountUzs) || amountUzs < 1000 || amountUzs > 10_000_000) {
     throw Errors.validation({ amountUzs: "Invalid tip amount" });
   }
@@ -144,9 +144,14 @@ export async function tipOrder(orderId: string, buyer: User, amountUzs: number) 
   if (order.buyerId !== buyer.id) throw Errors.forbidden();
   if (order.status !== "COMPLETED") throw Errors.conflict("You can tip only after completion");
 
-  await prisma.$transaction(async (tx) => {
+  // Idempotency: a retried / double-submitted tip (same client key) must not double-credit
+  // the seller. The key is unique on Transaction, so the second write is a no-op.
+  const idem = `order:${orderId}:tip:${idempotencyKey ?? crypto.randomUUID()}`;
+  const posted = await prisma.$transaction(async (tx) => {
+    const already = await tx.transaction.findUnique({ where: { idempotencyKey: idem } });
+    if (already) return false;
     await tx.transaction.create({
-      data: { orderId, provider: "MANUAL", type: "TIP", status: "SUCCEEDED", amountUzs },
+      data: { orderId, provider: "MANUAL", type: "TIP", status: "SUCCEEDED", amountUzs, idempotencyKey: idem },
     });
     await tx.ledgerEntry.createMany({
       data: tipPostings(amountUzs).map((p) => ({
@@ -157,7 +162,9 @@ export async function tipOrder(orderId: string, buyer: User, amountUzs: number) 
         memo: `Tip for order ${orderId}`,
       })),
     });
+    return true;
   });
+  if (!posted) return; // already recorded — no double audit/notify
   await audit({ actorId: buyer.id, action: "order.tip", entity: "Order", entityId: orderId });
   await notifyAndPush(order.sellerId, "order.tip", "Choychaqa oldingiz", {
     body: "Buyurtmachi sizga choychaqa qoldirdi.",
@@ -295,8 +302,11 @@ export async function recordPayout(
   if (!cardMasked || cardMasked.trim().length < 4) throw Errors.validation({ cardMasked: "Card is required" });
 
   await prisma.$transaction(async (tx) => {
-    // Balance ceiling checked INSIDE the transaction (atomically with the payout row) —
-    // two concurrent admin payouts must not both pass the check (check-then-act race).
+    // Serialize ALL payouts for this seller: the balance is an aggregate SUM that does not
+    // lock the rows it reads, so without this a second concurrent payout (another admin, a
+    // different REQUESTED row, a double-click) reads the same balance and also passes —
+    // over-withdrawing. A transaction-scoped advisory lock auto-releases on commit/rollback.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${sellerId}))`;
     const available = await sellerAvailableUzs(sellerId, tx);
     if (amountUzs > available) throw Errors.conflict(`Amount exceeds available balance (${available})`);
     await tx.payoutRequest.create({
@@ -384,6 +394,9 @@ export async function fulfillPayoutRequest(admin: User, requestId: string) {
   if (!req || req.status !== "REQUESTED") throw Errors.conflict("No such pending payout request");
 
   await prisma.$transaction(async (tx) => {
+    // Serialize all payouts for this seller (see recordPayout) so a concurrent fulfil of a
+    // DIFFERENT request or a recordPayout can't both pass the unlocked aggregate balance check.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${req.sellerId}))`;
     // Re-fetch + balance check inside the transaction: concurrent fulfilments of the
     // same request (double-click) or overlapping payouts must not both pass.
     const fresh = await tx.payoutRequest.findUnique({ where: { id: requestId } });

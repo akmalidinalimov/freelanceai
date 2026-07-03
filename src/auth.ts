@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { upsertTelegramUser, upsertEmailUser } from "@/lib/users";
 import { consumeMagicToken } from "@/lib/email-auth";
 import { verifyMiniAppInitData } from "@/lib/telegram";
+import { consumeLoginNonce } from "@/lib/login-nonce";
 import { stampLastLogin } from "@/server/services/activity";
 import { readCookie, sha256 } from "@/lib/rate-limit";
 
@@ -111,6 +112,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // deep-link flow), so cap the replay window to the login moment (10 min).
         const tg = verifyMiniAppInitData(initData, { maxAgeSeconds: 600 });
         if (!tg) return null;
+        // Single-use: record the verified initData hash so a captured payload can't be
+        // replayed within the 10-min window. First login wins; a replay is rejected.
+        const hash = new URLSearchParams(initData).get("hash");
+        if (!hash || !(await consumeLoginNonce(hash, 600))) return null;
         const user = await upsertTelegramUser({ ...tg, authDate: Math.floor(Date.now() / 1000) });
         if (user.status !== "ACTIVE") return null;
         return {
@@ -120,10 +125,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    // Test-only login for automated E2E. Present ONLY when E2E_TEST_AUTH=1 — set in CI
-    // and local test runs, NEVER in the prod deploy compose — so it cannot exist in
-    // production. Lets Playwright sign in as a seeded user by id.
-    ...(process.env.E2E_TEST_AUTH === "1"
+    // Test-only login for automated E2E. Present ONLY in a non-production build with
+    // E2E_TEST_AUTH=1. The NODE_ENV guard is the hard backstop: even if E2E_TEST_AUTH
+    // leaked into a prod deploy, this passwordless impersonation provider still cannot
+    // register. Lets Playwright sign in as a seeded user by id.
+    ...(process.env.E2E_TEST_AUTH === "1" && process.env.NODE_ENV !== "production"
       ? [
           Credentials({
             id: "e2e",

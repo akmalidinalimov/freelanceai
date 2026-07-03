@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ok, errorResponse, parseInput, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
+import { requireAdmin } from "@/lib/authz";
 import { createCategory, deleteCategory } from "@/server/services/category";
 
 const schema = z.discriminatedUnion("action", [
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
     if (!isSameOrigin(request)) throw Errors.forbidden("Cross-origin request rejected");
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
+    requireAdmin(user); // defense-in-depth: don't rely solely on the service-layer role check
     const input = parseInput(schema, await request.json().catch(() => ({})));
     if (input.action === "create") {
       await createCategory(user, {

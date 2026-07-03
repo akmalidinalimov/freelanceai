@@ -125,6 +125,8 @@ export async function sendOrderReminders(): Promise<{ deadlines: number; reviewN
   await prisma.telegramReplyTarget
     .deleteMany({ where: { createdAt: { lt: new Date(now - 30 * DAY) } } })
     .catch(() => {});
+  // Expired single-use login nonces (10-min TTL) — bound the replay-guard table.
+  await prisma.telegramAuthNonce.deleteMany({ where: { expiresAt: { lt: new Date() } } }).catch(() => {});
 
   return { deadlines, reviewNudges };
 }
