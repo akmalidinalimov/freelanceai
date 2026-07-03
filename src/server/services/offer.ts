@@ -48,8 +48,14 @@ export async function createOffer(user: User, conversationId: string, input: Off
       status: "PENDING",
     },
   });
-  await notifyAndPush(convo.buyerId, "offer.new", "Yangi maxsus taklif", {
-    body: input.title.trim(),
+  // Rich offer card: show the terms (price · delivery · revisions) right in the push,
+  // with the "open" button deep-linking to the thread where the buyer accepts.
+  const priceFmt = input.priceUzs.toLocaleString("ru-RU");
+  await notifyAndPush(convo.buyerId, "offer.new", "Yangi maxsus taklif 🎁", {
+    body:
+      `${input.title.trim()}\n\n` +
+      `💰 ${priceFmt} soʻm · ⏱ ${input.deliveryDays} kun · ✏️ ${input.revisions} marta qayta ishlash\n\n` +
+      `Qabul qilish uchun oching 👇`,
     link: `/messages/${conversationId}`,
   });
   await audit({ actorId: user.id, action: "offer.create", entity: "CustomOffer", entityId: offer.id });
