@@ -660,6 +660,9 @@ model Broadcast {
   cursor      String? // last-processed user id, for resumable batched sending
   createdById String?
   createdAt   DateTime          @default(now())
+  // When set (future), the drain skips this row until the time arrives (scheduled send).
+  // Null = send immediately.
+  scheduledFor DateTime?
   startedAt   DateTime?
   doneAt      DateTime?
 

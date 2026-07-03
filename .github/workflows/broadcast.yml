@@ -1,10 +1,11 @@
 name: broadcast
 
-# Hourly backstop that drains any queued admin broadcasts the create-time kick
-# didn't finish. Needs the CRON_SECRET repo secret.
+# Every 15 min: drains queued admin broadcasts the create-time kick didn't finish AND
+# fires scheduled broadcasts once their time arrives (so a scheduled send lands within
+# ~15 min of its target). Needs the CRON_SECRET repo secret.
 on:
   schedule:
-    - cron: "15 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 concurrency:

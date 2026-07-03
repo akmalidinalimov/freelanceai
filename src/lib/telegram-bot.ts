@@ -116,8 +116,9 @@ export function tgMainKeyboard(locale: string | undefined, isSeller: boolean): R
   const rows = isSeller
     ? [
         [{ text: L.dashboard, web_app: wa("/dashboard/seller") }, { text: L.messages, web_app: wa("/messages") }],
-        [{ text: L.gigs, web_app: wa("/dashboard/seller") }, { text: L.newGig, web_app: wa("/dashboard/seller/gigs/new") }],
-        [{ text: L.profile, web_app: wa("/dashboard/seller/profile") }, { text: L.help }],
+        [{ text: L.orders, web_app: wa("/dashboard/seller#orders") }, { text: L.gigs, web_app: wa("/dashboard/seller#gigs") }],
+        [{ text: L.newGig, web_app: wa("/dashboard/seller/gigs/new") }, { text: L.profile, web_app: wa("/dashboard/seller/profile") }],
+        [{ text: L.help }],
       ]
     : [
         [{ text: L.search, web_app: wa("/search") }, { text: L.messages, web_app: wa("/messages") }],

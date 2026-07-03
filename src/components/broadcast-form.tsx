@@ -14,6 +14,7 @@ const AUDIENCES = [
 export function BroadcastForm() {
   const [message, setMessage] = useState("");
   const [audience, setAudience] = useState<string>("ALL");
+  const [schedule, setSchedule] = useState(""); // datetime-local; empty = send now
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [result, setResult] = useState<string>("");
 
@@ -22,16 +23,22 @@ export function BroadcastForm() {
     if (message.trim().length < 3 || state === "sending") return;
     setState("sending");
     try {
+      const scheduledFor = schedule ? new Date(schedule).toISOString() : undefined;
       const res = await fetch("/api/admin/broadcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: message.trim(), audience }),
+        body: JSON.stringify({ message: message.trim(), audience, scheduledFor }),
       });
       const j = await res.json();
       if (j.ok) {
         setState("done");
-        setResult(`Queued to ~${j.data.recipients} recipients. Sending now (throttled).`);
+        setResult(
+          j.data.scheduled
+            ? `Scheduled to ~${j.data.recipients} recipients for ${new Date(j.data.scheduledFor).toLocaleString()}.`
+            : `Queued to ~${j.data.recipients} recipients. Sending now (throttled).`
+        );
         setMessage("");
+        setSchedule("");
       } else {
         setState("error");
         setResult(j.error?.message ?? "Failed");
@@ -69,8 +76,15 @@ export function BroadcastForm() {
             </option>
           ))}
         </select>
+        <input
+          type="datetime-local"
+          aria-label="Schedule send (optional)"
+          value={schedule}
+          onChange={(e) => setSchedule(e.target.value)}
+          className="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm"
+        />
         <Button type="submit" disabled={state === "sending"}>
-          {state === "sending" ? "Queuing…" : "Send broadcast"}
+          {state === "sending" ? "Queuing…" : schedule ? "Schedule broadcast" : "Send now"}
         </Button>
         {result && (
           <span className={`text-sm ${state === "error" ? "text-red-700" : "text-emerald-700"}`}>{result}</span>

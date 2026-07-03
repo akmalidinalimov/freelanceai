@@ -35,15 +35,22 @@ export function countRecipients(audience: BroadcastAudience): Promise<number> {
   return prisma.user.count({ where: audienceWhere(audience) });
 }
 
-export async function createBroadcast(admin: User, message: string, audience: BroadcastAudience) {
+export async function createBroadcast(
+  admin: User,
+  message: string,
+  audience: BroadcastAudience,
+  scheduledFor?: Date | null
+) {
   if (admin.role !== "ADMIN") throw Errors.forbidden("Admins only");
   const trimmed = message.trim();
   if (trimmed.length < 3 || trimmed.length > 3000) throw Errors.validation({ message: "3–3000 chars" });
+  // A schedule must be in the future; a past/absent time means send now.
+  const scheduled = scheduledFor && scheduledFor.getTime() > Date.now() ? scheduledFor : null;
   const b = await prisma.broadcast.create({
-    data: { message: trimmed, audience, createdById: admin.id },
+    data: { message: trimmed, audience, createdById: admin.id, scheduledFor: scheduled },
   });
-  await audit({ actorId: admin.id, action: "broadcast.create", entity: "Broadcast", entityId: b.id, metadata: { audience } });
-  return b;
+  await audit({ actorId: admin.id, action: "broadcast.create", entity: "Broadcast", entityId: b.id, metadata: { audience, scheduledFor: scheduled?.toISOString() ?? null } });
+  return { broadcast: b, scheduled: Boolean(scheduled) };
 }
 
 // One global advisory lock for the whole broadcast drain — only ONE worker (the
@@ -70,7 +77,12 @@ export async function processBroadcasts(): Promise<{ processed: number; sent: nu
 
   try {
     const b = await prisma.broadcast.findFirst({
-      where: { status: { in: ["PENDING", "SENDING"] } },
+      // Skip broadcasts scheduled for the future — they become eligible once their time
+      // arrives (the hourly-or-sooner cron picks them up then).
+      where: {
+        status: { in: ["PENDING", "SENDING"] },
+        OR: [{ scheduledFor: null }, { scheduledFor: { lte: new Date() } }],
+      },
       orderBy: { createdAt: "asc" },
     });
     if (!b) return { processed, sent, failed };

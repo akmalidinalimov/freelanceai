@@ -6,6 +6,7 @@ import {
   tgSetChatMenuButton,
   tgWelcome,
   tgHelpText,
+  tgOpenButton,
 } from "@/lib/telegram-bot";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { encryptPII } from "@/lib/pii-crypto";
@@ -125,6 +126,21 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ ok: false }, { status: 500 });
     }
+  }
+
+  // Admin-only: /broadcast opens the broadcast composer (compose + audience + schedule)
+  // in the Mini App — one tap, no clunky chat state machine.
+  if (from && !from.is_bot && text === "/broadcast") {
+    const account = await prisma.user.findUnique({
+      where: { telegramId: String(from.id) },
+      select: { role: true, locale: true },
+    });
+    if (account?.role === "ADMIN") {
+      void tgSendMessage(from.id, "📣 Ommaviy xabar yuborish (darhol yoki rejalashtirilgan):", tgOpenButton(account.locale, "/admin/broadcast"));
+    } else {
+      void tgSendMessage(from.id, "Bu buyruq faqat administratorlar uchun.");
+    }
+    return NextResponse.json({ ok: true });
   }
 
   if (from && !from.is_bot && (text.startsWith("/start") || text === "/menu" || text === "/help")) {

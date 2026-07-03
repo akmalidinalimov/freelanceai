@@ -144,7 +144,7 @@ export default async function SellerDashboardPage({
       </div>
 
       {/* Gigs */}
-      <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+      <div id="gigs" className="mb-4 scroll-mt-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-semibold">{t("gigs")}</h3>
           <Link href="/dashboard/seller/gigs/new">
@@ -185,7 +185,7 @@ export default async function SellerDashboardPage({
       </div>
 
       {/* Orders to fulfill */}
-      <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+      <div id="orders" className="mb-4 scroll-mt-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
         <h3 className="mb-3 font-semibold">{t("orders")}</h3>
         {orders.length === 0 ? (
           <p className="text-sm text-[hsl(var(--muted-foreground))]">{to("noSellerOrders")}</p>
