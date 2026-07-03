@@ -15,6 +15,7 @@ import { stampTelegramChat } from "@/server/services/activity";
 import { routeTelegramReply } from "@/server/services/message";
 import { acceptOrder, requestRevision } from "@/server/services/order";
 import { createReview } from "@/server/services/review";
+import { approveGig, rejectGig } from "@/server/services/gig";
 
 /**
  * Telegram bot webhook. Verified by the secret header. Idempotent (dedups on
@@ -92,6 +93,23 @@ export async function POST(request: Request) {
         const [, orderId, n] = data.split(":");
         await createReview(account.id, orderId ?? "", Number(n));
         void tgAnswerCallback(cb.id, `⭐ ${Number(n)} — rahmat!`);
+      } else if (data.startsWith("ag:")) {
+        // Admin moderation from a gig-review push. The role gate here is the security
+        // boundary (callback_data is guessable); approveGig/rejectGig also re-check ADMIN.
+        if (account.role !== "ADMIN") {
+          void tgAnswerCallback(cb.id, "Faqat administrator uchun.");
+        } else {
+          const [, act, gigId] = data.split(":");
+          if (act === "a") {
+            await approveGig(gigId ?? "", account);
+            void tgAnswerCallback(cb.id, "✅ Gig tasdiqlandi.");
+          } else if (act === "r") {
+            await rejectGig(gigId ?? "", account);
+            void tgAnswerCallback(cb.id, "❌ Gig rad etildi.");
+          } else {
+            void tgAnswerCallback(cb.id);
+          }
+        }
       } else {
         void tgAnswerCallback(cb.id);
       }

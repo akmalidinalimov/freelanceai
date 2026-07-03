@@ -67,6 +67,33 @@ export async function notifyAndPush(
   }
 }
 
+/**
+ * Fan a notification out to every Telegram-reachable ADMIN (in-app + bot push) — for ops
+ * alerts that need admin action (gig review, dispute, payout, KYC). Best-effort per admin;
+ * one failure never blocks the flow that triggered it.
+ */
+export async function notifyAdmins(
+  type: string,
+  title: string,
+  opts?: { body?: string; link?: string; buttons?: Record<string, unknown>[][] }
+): Promise<void> {
+  try {
+    const admins = await prisma.user.findMany({
+      where: {
+        role: "ADMIN",
+        status: "ACTIVE",
+        telegramId: { not: null },
+        notifyTelegram: true,
+        telegramBlockedAt: null,
+      },
+      select: { id: true },
+    });
+    await Promise.all(admins.map((a) => notifyAndPush(a.id, type, title, opts)));
+  } catch (err) {
+    logger.warn("notify_admins_failed", { type, err: String(err) });
+  }
+}
+
 export async function listNotifications(userId: string, limit = 30) {
   return prisma.notification.findMany({
     where: { userId },

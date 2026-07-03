@@ -8,7 +8,8 @@ import { stripContactInfo } from "@/lib/sanitize";
 import { Errors } from "@/lib/api";
 import { gigEditWhereForUser } from "@/lib/authz";
 import { notifyFollowersOfNewGig } from "@/server/services/follow";
-import { notifyAndPush } from "@/server/services/notification";
+import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
+import { adminGigReviewButtons } from "@/lib/telegram-bot";
 
 export type GigSort = "newest" | "price_asc" | "price_desc" | "popular";
 export interface GigFilters {
@@ -118,6 +119,13 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
     include: { packages: true },
   });
   await audit({ actorId: sellerId, action: "gig.create", entity: "Gig", entityId: gig.id });
+  // Ping admins to moderate — one-tap approve/reject right in Telegram.
+  if (gig.status === "PENDING_REVIEW") {
+    await notifyAdmins("admin.gig_review", "🆕 Yangi gig tekshiruvda", {
+      body: `"${gig.title}"`,
+      buttons: adminGigReviewButtons(undefined, gig.id),
+    });
+  }
   return gig;
 }
 
@@ -315,6 +323,13 @@ export async function publishGig(gigId: string, user: GigActor) {
   });
   if (res.count === 0) throw Errors.notFound("Draft gig not found");
   await audit({ actorId: user.id, action: "gig.publish", entity: "Gig", entityId: gigId });
+  if (status === "PENDING_REVIEW") {
+    const g = await prisma.gig.findUnique({ where: { id: gigId }, select: { title: true } });
+    await notifyAdmins("admin.gig_review", "🆕 Yangi gig tekshiruvda", {
+      body: g ? `"${g.title}"` : undefined,
+      buttons: adminGigReviewButtons(undefined, gigId),
+    });
+  }
 }
 
 /** Admin-only: feature/unfeature a gig (boosts it in listings for `days`). */

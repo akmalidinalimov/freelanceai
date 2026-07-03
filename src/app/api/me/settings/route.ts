@@ -3,6 +3,7 @@ import { defineHandler } from "@/lib/handler";
 import { ok, Errors } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { encryptPII } from "@/lib/pii-crypto";
+import { notifyAdmins } from "@/server/services/notification";
 import type { Prisma } from "@prisma/client";
 
 const schema = z
@@ -40,6 +41,12 @@ export const PATCH = defineHandler({ auth: true, schema }, async ({ user, body }
   }
 
   await prisma.user.update({ where: { id: user.id }, data });
+  if (data.kycStatus === "PENDING") {
+    await notifyAdmins("admin.kyc", "🪪 Yangi KYC tekshiruvi", {
+      body: "Foydalanuvchi telefon raqamini yubordi — tasdiqlang.",
+      link: "/admin/kyc",
+    });
+  }
   return ok({ done: true });
 });
 

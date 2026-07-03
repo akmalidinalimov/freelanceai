@@ -202,6 +202,23 @@ export function tgOpenButton(locale: string | undefined, path: string): Record<s
   };
 }
 
+/**
+ * Inline buttons for a "gig awaiting review" admin push: one-tap Approve/Reject
+ * (callback_data — dispatched + admin-re-checked in the webhook) plus Open moderation.
+ */
+export function adminGigReviewButtons(locale: string | undefined, gigId: string): Record<string, unknown>[][] {
+  const loc = asLoc(locale);
+  const approve = { uz: "✅ Tasdiqlash", ru: "✅ Одобрить", en: "✅ Approve" }[loc];
+  const reject = { uz: "❌ Rad etish", ru: "❌ Отклонить", en: "❌ Reject" }[loc];
+  return [
+    [
+      { text: approve, callback_data: `ag:a:${gigId}` },
+      { text: reject, callback_data: `ag:r:${gigId}` },
+    ],
+    [{ text: OPEN_LABEL[loc], web_app: { url: miniAppUrl(locale, "/admin/moderation") } }],
+  ];
+}
+
 export function tgWelcome(locale: string | undefined, name?: string): string {
   const loc = asLoc(locale);
   const who = name ? `, ${name}` : "";

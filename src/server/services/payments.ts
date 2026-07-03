@@ -5,7 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
-import { notifyAndPush } from "@/server/services/notification";
+import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 import { onOrderPaid } from "@/server/services/gamification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -376,6 +376,10 @@ export async function requestPayout(seller: User) {
     },
   });
   await audit({ actorId: seller.id, action: "payout.request", entity: "PayoutRequest", entityId: req.id });
+  await notifyAdmins("admin.payout", "💸 Yangi toʻlov soʻrovi", {
+    body: `${req.amountUzs.toLocaleString("ru-RU")} soʻm — koʻrib chiqing.`,
+    link: "/admin/settlements",
+  });
   return req;
 }
 

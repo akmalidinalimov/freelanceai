@@ -5,7 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { reversalPostings } from "@/lib/commission";
-import { notifyAndPush } from "@/server/services/notification";
+import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 
 const NAME = { select: { firstName: true, name: true, username: true } } as const;
 
@@ -30,6 +30,10 @@ export async function openDispute(orderId: string, user: User, reason: string) {
   await notifyAndPush(otherId, "dispute.opened", "Nizo ochildi", {
     body: "Buyurtma boʻyicha nizo ochildi — administrator koʻrib chiqadi.",
     link: `/orders/${orderId}`,
+  });
+  await notifyAdmins("admin.dispute", "⚠️ Yangi nizo ochildi", {
+    body: "Buyurtma boʻyicha nizo — koʻrib chiqing.",
+    link: "/admin/disputes",
   });
 }
 
