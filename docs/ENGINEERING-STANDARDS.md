@@ -34,6 +34,11 @@ If you find yourself inventing a new error code, a new envelope shape, a new pag
 new auth check, or a new way to do money — **stop**. Either it already exists here, or it belongs
 here and you must propose it as an edit to this doc first.
 
+**Companion standards:** UI work must also follow the **WCAG 2.1 AA baseline** in
+[`ACCESSIBILITY.md`](./ACCESSIBILITY.md) (label/status/live-region/keyboard/contrast
+patterns + the contrast token contract) and the visual system in
+[`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md).
+
 ---
 
 ## 1. Tech stack — pinned majors & runtime assumptions
