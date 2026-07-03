@@ -1,38 +1,134 @@
 @import "tailwindcss";
 
-/* Design tokens — light theme. shadcn-compatible HSL variables. */
+/* ===========================================================================
+ * DESIGN TOKENS
+ * Light is the canonical theme; dark is an automatic, equally-polished
+ * translation via prefers-color-scheme (no manual toggle in v1).
+ * Components must consume ONLY these tokens — never hardcoded colors — so both
+ * themes stay in lockstep forever.
+ * ======================================================================== */
+
+/* ---- LIGHT (canonical): warm near-white, ink text, teal primary + coral --- */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --border: 214 32% 91%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  /* Brand: a confident teal/emerald for an "AI + trust" feel. */
-  --primary: 173 80% 36%;
+  /* Surfaces: a barely-warm white canvas; cards sit a touch brighter to lift. */
+  --background: 40 33% 98%;
+  --foreground: 222 24% 14%;
+  --card: 40 45% 99.5%;
+  --card-foreground: 222 24% 14%;
+  --surface-2: 38 28% 95.5%; /* subtle raised / inset panels */
+  --muted: 38 26% 94%;
+  --muted-foreground: 220 12% 40%;
+  --border: 36 20% 88%;
+
+  /* Brand: teal primary (AI + trust), coral accent (B3 identity). */
+  --primary: 173 80% 34%;
   --primary-foreground: 0 0% 100%;
-  /* B3 identity: coral accent alongside the teal primary. */
-  --accent: 11 86% 59%;
+  --accent: 11 86% 58%;
   --accent-foreground: 0 0% 100%;
+
+  /* Semantic status — soft tint + readable ink, one home for both themes. */
+  --success: 152 58% 36%;
+  --success-foreground: 0 0% 100%;
+  --success-soft: 152 52% 93%;
+  --danger: 0 72% 47%;
+  --danger-foreground: 0 0% 100%;
+  --danger-soft: 0 80% 96%;
+  --warning: 33 92% 44%;
+  --warning-foreground: 40 60% 12%;
+  --warning-soft: 40 90% 92%;
+  --info: 218 80% 50%;
+  --info-foreground: 0 0% 100%;
+  --info-soft: 218 88% 95%;
+  --star: 40 92% 50%;
+
+  /* Focus ring + soft warm shadows (three elevation levels: page/card/overlay). */
+  --ring: 173 80% 34%;
+  --shadow-soft: 0 1px 2px hsl(30 30% 30% / 0.05), 0 4px 14px -6px hsl(30 30% 28% / 0.1);
+  --shadow-hover: 0 4px 12px -3px hsl(30 30% 26% / 0.12), 0 14px 34px -10px hsl(30 30% 24% / 0.16);
+  --shadow-overlay: 0 12px 28px -6px hsl(30 30% 20% / 0.18), 0 30px 60px -20px hsl(30 30% 18% / 0.24);
+
+  /* Living-background stops (warm sunrise) — used by the hero background layer. */
+  --gradient-a: 12 90% 70%;
+  --gradient-b: 32 95% 66%;
+  --gradient-c: 348 85% 74%;
+
   --radius: 1rem;
 }
 
+/* ---- DARK (automatic): deep warm charcoal, embers, same accent hue --------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 24 14% 9%;
+    --foreground: 40 22% 92%;
+    --card: 26 13% 12.5%;
+    --card-foreground: 40 22% 92%;
+    --surface-2: 26 12% 16%;
+    --muted: 26 11% 18%;
+    --muted-foreground: 40 8% 64%;
+    --border: 30 10% 24%;
+
+    --primary: 172 62% 46%;
+    --primary-foreground: 173 45% 8%;
+    --accent: 12 82% 62%;
+    --accent-foreground: 15 40% 10%;
+
+    --success: 152 52% 50%;
+    --success-foreground: 152 45% 8%;
+    --success-soft: 152 40% 16%;
+    --danger: 0 70% 60%;
+    --danger-foreground: 0 40% 10%;
+    --danger-soft: 0 45% 18%;
+    --warning: 36 88% 56%;
+    --warning-foreground: 40 60% 10%;
+    --warning-soft: 36 55% 18%;
+    --info: 214 86% 64%;
+    --info-foreground: 214 45% 10%;
+    --info-soft: 214 55% 20%;
+    --star: 40 90% 58%;
+
+    --ring: 172 62% 52%;
+    --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.4), 0 6px 18px -8px hsl(0 0% 0% / 0.5);
+    --shadow-hover: 0 4px 14px -4px hsl(0 0% 0% / 0.5), 0 16px 38px -12px hsl(0 0% 0% / 0.6);
+    --shadow-overlay: 0 14px 32px -8px hsl(0 0% 0% / 0.6), 0 32px 64px -24px hsl(0 0% 0% / 0.7);
+
+    /* Gradient dims to embers in the dark. */
+    --gradient-a: 12 60% 30%;
+    --gradient-b: 32 55% 28%;
+    --gradient-c: 348 50% 30%;
+  }
+}
+
+/* Register tokens as Tailwind color utilities (bg-success, text-danger, …). */
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-surface-2: hsl(var(--surface-2));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-border: hsl(var(--border));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-success-soft: hsl(var(--success-soft));
+  --color-danger: hsl(var(--danger));
+  --color-danger-foreground: hsl(var(--danger-foreground));
+  --color-danger-soft: hsl(var(--danger-soft));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-warning-soft: hsl(var(--warning-soft));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+  --color-info-soft: hsl(var(--info-soft));
+  --color-star: hsl(var(--star));
+  --color-ring: hsl(var(--ring));
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-unbounded), var(--font-manrope), sans-serif;
 }
@@ -58,9 +154,16 @@ body {
   }
 }
 
+/* Skeleton shimmer (Task 7) — token-based so it reads in both themes. */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Visible focus ring for keyboard users (a11y). Mouse clicks don't trigger :focus-visible. */
 :focus-visible {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
   border-radius: 2px;
 }
