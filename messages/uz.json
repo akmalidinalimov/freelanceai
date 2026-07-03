@@ -60,7 +60,9 @@
   },
   "Referral": {
     "inviteTitle": "Doʻstlarni taklif qiling",
-    "inviteDesc": "Ushbu havola orqali roʻyxatdan oʻtganlar sizning takliflaringizga qoʻshiladi.",
+    "inviteDesc": "Doʻstlaringizni taklif qiling — ikkalangiz ham kredit olasiz, ular birinchi buyurtma berganda esa koʻproq ishlaysiz.",
+    "creditBalance": "Sizning kredit",
+    "earned": "Takliflardan ishlangan",
     "invited": "{n} ta taklif qilingan",
     "invitedTitle": "Sizni taklif qilishdi!",
     "invitedDesc": "Gigora — AI ijodkorlar bozoriga xush kelibsiz.",

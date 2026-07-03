@@ -6,6 +6,7 @@ import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listBuyerOrders } from "@/server/services/order";
 import { listSavedGigs } from "@/server/services/saved";
 import { getReferralInfo, applyReferral } from "@/server/services/referral";
+import { getAffiliateSummary } from "@/server/services/affiliate";
 import { getBuyerStats } from "@/server/services/analytics";
 import { getUserBadges } from "@/server/services/gamification";
 import { GamificationStrip } from "@/components/gamification-strip";
@@ -32,6 +33,7 @@ export default async function DashboardPage({
   const ref = (await cookies()).get("ref")?.value;
   if (ref) await applyReferral(user.id, ref);
   const referral = await getReferralInfo(user.id);
+  const affiliate = await getAffiliateSummary(user.id);
   const origin = process.env.APP_ORIGIN ?? "https://gigora.ai";
   const referralUrl = referral.code ? `${origin}/${locale}/r/${referral.code}` : null;
 
@@ -122,7 +124,17 @@ export default async function DashboardPage({
               {tr("invited", { n: referral.count })}
             </span>
           </div>
-          <p className="mb-2 text-sm text-[hsl(var(--muted-foreground))]">{tr("inviteDesc")}</p>
+          <p className="mb-3 text-sm text-[hsl(var(--muted-foreground))]">{tr("inviteDesc")}</p>
+          <div className="mb-3 grid grid-cols-2 gap-3">
+            <div className="rounded-lg bg-[hsl(var(--muted))]/50 px-3 py-2">
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">{tr("creditBalance")}</p>
+              <p className="text-lg font-bold tabular-nums">{formatUzs(affiliate.balanceUzs)} so&apos;m</p>
+            </div>
+            <div className="rounded-lg bg-[hsl(var(--muted))]/50 px-3 py-2">
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">{tr("earned")}</p>
+              <p className="text-lg font-bold tabular-nums">{formatUzs(affiliate.earnedUzs)} so&apos;m</p>
+            </div>
+          </div>
           <input
             readOnly
             value={referralUrl}

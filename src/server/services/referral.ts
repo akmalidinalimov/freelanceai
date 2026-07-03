@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { REFEREE_WELCOME_UZS } from "@/server/services/affiliate";
 
 function genCode(): string {
   // Server code (not the workflow sandbox) — Math.random is fine here.
@@ -33,15 +34,20 @@ export async function referrerIdForCode(code: string): Promise<string | null> {
   return u?.id ?? null;
 }
 
-/** Attribute a referral (set-once): only if the user has no referrer and it isn't themselves. */
+/**
+ * Attribute a referral (set-once) AND grant the referee their welcome credit — atomically,
+ * so a concurrent double-call can't double-grant (the `referredById: null` guard only lets
+ * the first write through). Only when the user has no referrer and it isn't themselves.
+ */
 export async function applyReferral(userId: string, referrerId: string): Promise<void> {
   if (!referrerId || userId === referrerId) return;
   try {
-    const u = await prisma.user.findUnique({ where: { id: userId }, select: { referredById: true } });
-    if (u?.referredById) return;
     const ref = await prisma.user.findUnique({ where: { id: referrerId }, select: { id: true } });
     if (!ref) return;
-    await prisma.user.update({ where: { id: userId }, data: { referredById: referrerId } });
+    await prisma.user.updateMany({
+      where: { id: userId, referredById: null },
+      data: { referredById: referrerId, creditBalanceUzs: { increment: REFEREE_WELCOME_UZS } },
+    });
   } catch {
     /* best-effort */
   }

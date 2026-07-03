@@ -60,7 +60,9 @@
   },
   "Referral": {
     "inviteTitle": "Invite friends",
-    "inviteDesc": "People who sign up via this link are counted as your referrals.",
+    "inviteDesc": "Invite friends — you both get credit, and you earn more when they place their first order.",
+    "creditBalance": "Your credit",
+    "earned": "Earned from referrals",
     "invited": "{n} invited",
     "invitedTitle": "You've been invited!",
     "invitedDesc": "Welcome to Gigora — the AI creators marketplace.",

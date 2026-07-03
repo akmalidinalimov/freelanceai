@@ -10,6 +10,7 @@ import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { notifyAndPush } from "@/server/services/notification";
 import { findValidCoupon } from "@/server/services/coupon";
+import { consumeCreditForOrder, issueReferralReward } from "@/server/services/affiliate";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -61,9 +62,12 @@ export async function createOrder(
     }
   }
 
-  const order = await prisma.$transaction(async (tx) => {
+  const { order, creditApplied } = await prisma.$transaction(async (tx) => {
     if (couponId) await tx.coupon.update({ where: { id: couponId }, data: { uses: { increment: 1 } } });
-    return tx.order.create({
+    // Spend any available promo/referral credit as an extra platform-funded discount
+    // (capped at the commission so the platform keeps ≥0; the seller's net is untouched).
+    const creditApplied = await consumeCreditForOrder(tx, buyerId, commissionUzs, discountUzs);
+    const order = await tx.order.create({
       data: {
         gigId: gig.id,
         buyerId,
@@ -78,7 +82,7 @@ export async function createOrder(
           ? selectedExtras.map((e) => ({ title: e.title, priceUzs: e.priceUzs }))
           : undefined,
         couponCode: appliedCode,
-        discountUzs,
+        discountUzs: discountUzs + creditApplied,
         requirements: requirements?.trim() || null,
         requirementAnswers: requirementAnswers.length
           ? requirementAnswers.map((a) => ({ q: a.q.slice(0, 200), a: a.a.slice(0, 1000) })).filter((a) => a.a)
@@ -89,8 +93,12 @@ export async function createOrder(
         dueAt: new Date(Date.now() + (pkg.deliveryDays + extraDays) * 24 * 60 * 60 * 1000),
       },
     });
+    return { order, creditApplied };
   });
   await audit({ actorId: buyerId, action: "order.create", entity: "Order", entityId: order.id });
+  if (creditApplied > 0) {
+    await audit({ actorId: buyerId, action: "credit.redeem", entity: "Order", entityId: order.id });
+  }
   void trackEvent("order_created", { userId: buyerId, entityId: order.id, meta: { gigId: gig.id } });
   return order;
 }
@@ -212,6 +220,8 @@ export async function acceptOrder(orderId: string, buyer: User) {
   assertTransition(order.status, "COMPLETED");
   await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED", completedAt: new Date() } });
   await recomputeSellerStats(order.sellerId);
+  // Reward the buyer's referrer on their first completed order (idempotent, best-effort).
+  await issueReferralReward({ id: order.id, buyerId: order.buyerId, commissionUzs: order.commissionUzs });
   await audit({ actorId: buyer.id, action: "order.complete", entity: "Order", entityId: orderId });
   await notifyAndPush(order.sellerId, "order.completed", "Buyurtma yakunlandi", {
     body: "Buyurtmachi ishni qabul qildi. Mablagʻ hisobingizga oʻtkazildi.",
@@ -236,10 +246,19 @@ export async function requestRevision(orderId: string, buyer: User) {
 /** Auto-complete deliveries the buyer didn't act on after `days`. Returns the count completed. */
 export async function autoCompleteDeliveredOrders(days = 3): Promise<number> {
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const res = await prisma.order.updateMany({
+  // Fetch the due orders first (bounded) so we can issue referral rewards per completion.
+  const due = await prisma.order.findMany({
     where: { status: "DELIVERED", deliveredAt: { lt: cutoff } },
+    select: { id: true, buyerId: true, commissionUzs: true },
+    take: 500,
+  });
+  if (due.length === 0) return 0;
+  const res = await prisma.order.updateMany({
+    where: { id: { in: due.map((o) => o.id) }, status: "DELIVERED" },
     data: { status: "COMPLETED", completedAt: new Date() },
   });
+  // First-completed-order referral reward (idempotent per referee, best-effort).
+  for (const o of due) await issueReferralReward(o);
   return res.count;
 }
 

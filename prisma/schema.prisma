@@ -67,6 +67,9 @@ model User {
   verifyChannel       String? // "telegram" | "email" — channel of the pending code
   referralCode String? @unique
   referredById String?
+  // Spendable promo/referral credit (UZS, integer). Non-withdrawable — only reduces the
+  // buyer's payment at checkout (platform-funded, like a coupon). NOT e-money.
+  creditBalanceUzs Int @default(0)
   // Notification preferences (where to mirror in-app messages).
   notifyTelegram Boolean @default(true)
   notifyEmail    Boolean @default(false)
@@ -108,6 +111,7 @@ model User {
   savedSearches  SavedSearch[]
   referredBy     User?   @relation("Referrals", fields: [referredById], references: [id])
   referrals      User[]  @relation("Referrals")
+  rewardsEarned  ReferralReward[] @relation("RewardsEarned")
   following      Follow[] @relation("Following")
   followers      Follow[] @relation("Followers")
   activityEvents ActivityEvent[]
@@ -118,6 +122,20 @@ model User {
   @@index([role])
   @@index([lastSeenAt])
   @@index([referredById])
+}
+
+// Affiliate reward: the referrer earns credit when a user they invited completes their
+// FIRST paid order. One row per referee (unique) = first-order-only AND idempotent.
+model ReferralReward {
+  id         String   @id @default(cuid())
+  referrerId String
+  refereeId  String   @unique
+  orderId    String
+  amountUzs  Int // credit granted to the referrer (UZS)
+  createdAt  DateTime @default(now())
+  referrer   User     @relation("RewardsEarned", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
 }
 
 // A buyer following a seller/creator → notified when the seller publishes a new gig.
