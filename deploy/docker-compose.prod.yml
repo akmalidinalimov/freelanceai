@@ -88,6 +88,11 @@ services:
       SESSION_SECRET: ${SESSION_SECRET}
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_TRUST_HOST: "true"
+      # Pin the Auth.js base URL to the canonical domain. Without this, host derivation
+      # through the Cloudflare tunnel resolves to the container's internal bind address
+      # (0.0.0.0:3000), producing a bad Google OAuth redirect_uri. AUTH_URL forces the
+      # correct absolute callback (https://gigora.ai/api/auth/callback/google).
+      AUTH_URL: "https://gigora.ai"
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       APP_ORIGIN: "https://gigora.ai"
