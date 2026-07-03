@@ -1,5 +1,7 @@
 -- Affiliate credit: spendable promo/referral credit + first-order reward ledger.
 ALTER TABLE "User" ADD COLUMN "creditBalanceUzs" INTEGER NOT NULL DEFAULT 0;
+-- Portion of an order's discount funded by the buyer's credit (restorable on refund).
+ALTER TABLE "Order" ADD COLUMN "creditUsedUzs" INTEGER NOT NULL DEFAULT 0;
 
 CREATE TABLE "ReferralReward" (
     "id" TEXT NOT NULL,

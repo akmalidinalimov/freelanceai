@@ -5,6 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { reversalPostings } from "@/lib/commission";
+import { restoreOrderCredit } from "@/server/services/affiliate";
 import { notifyAndPush } from "@/server/services/notification";
 
 /** A party requests a mutual cancellation of an active order. */
@@ -79,6 +80,8 @@ export async function respondCancellation(orderId: string, user: User, approve: 
           memo: `Cancellation refund for order ${orderId}`,
         })),
       });
+      // Give the buyer back any credit spent on this (now refunded) paid order.
+      await restoreOrderCredit(tx, order);
     }
     await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
     await tx.cancellationRequest.update({ where: { orderId }, data: { status: "APPROVED" } });

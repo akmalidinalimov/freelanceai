@@ -60,10 +60,31 @@ export async function issueReferralReward(order: {
     });
   } catch (err) {
     // P2002 on refereeId = already rewarded → intended idempotent no-op. Log anything else.
-    if (!(err instanceof Error && err.message.includes("Unique constraint"))) {
+    if ((err as { code?: string })?.code !== "P2002") {
       logger.warn("referral_reward_failed", { orderId: order.id, err: String(err) });
     }
   }
+}
+
+/**
+ * Restore credit that was spent on an order which is being refunded/cancelled (post-payment),
+ * so the buyer doesn't lose their credit. Idempotent: zeroes `creditUsedUzs` in the same
+ * write so a re-run can't double-restore. Runs inside the caller's refund transaction.
+ */
+export async function restoreOrderCredit(
+  tx: Prisma.TransactionClient,
+  order: { id: string; buyerId: string; creditUsedUzs: number }
+): Promise<void> {
+  if (order.creditUsedUzs <= 0) return;
+  const res = await tx.order.updateMany({
+    where: { id: order.id, creditUsedUzs: order.creditUsedUzs },
+    data: { creditUsedUzs: 0 },
+  });
+  if (res.count === 0) return; // already restored (race) → no double-credit
+  await tx.user.update({
+    where: { id: order.buyerId },
+    data: { creditBalanceUzs: { increment: order.creditUsedUzs } },
+  });
 }
 
 /**

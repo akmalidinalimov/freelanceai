@@ -5,6 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { reversalPostings } from "@/lib/commission";
+import { restoreOrderCredit } from "@/server/services/affiliate";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 
 const NAME = { select: { firstName: true, name: true, username: true } } as const;
@@ -85,6 +86,8 @@ export async function resolveDispute(
             memo: `Refund for order ${order.id}`,
           })),
         });
+        // Give the buyer back any credit they spent on this (now refunded) order.
+        await restoreOrderCredit(tx, order);
       }
       await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } });
       await tx.dispute.update({

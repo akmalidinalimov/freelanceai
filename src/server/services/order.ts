@@ -10,7 +10,7 @@ import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { notifyAndPush } from "@/server/services/notification";
 import { findValidCoupon } from "@/server/services/coupon";
-import { consumeCreditForOrder, issueReferralReward } from "@/server/services/affiliate";
+import { issueReferralReward } from "@/server/services/affiliate";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -62,12 +62,11 @@ export async function createOrder(
     }
   }
 
-  const { order, creditApplied } = await prisma.$transaction(async (tx) => {
+  const order = await prisma.$transaction(async (tx) => {
     if (couponId) await tx.coupon.update({ where: { id: couponId }, data: { uses: { increment: 1 } } });
-    // Spend any available promo/referral credit as an extra platform-funded discount
-    // (capped at the commission so the platform keeps ≥0; the seller's net is untouched).
-    const creditApplied = await consumeCreditForOrder(tx, buyerId, commissionUzs, discountUzs);
-    const order = await tx.order.create({
+    // NOTE: promo/referral credit is applied at PAYMENT SETTLEMENT (postOrderPaymentTx),
+    // never here — so an unpaid order that's abandoned or cancelled never spends credit.
+    return tx.order.create({
       data: {
         gigId: gig.id,
         buyerId,
@@ -82,7 +81,7 @@ export async function createOrder(
           ? selectedExtras.map((e) => ({ title: e.title, priceUzs: e.priceUzs }))
           : undefined,
         couponCode: appliedCode,
-        discountUzs: discountUzs + creditApplied,
+        discountUzs,
         requirements: requirements?.trim() || null,
         requirementAnswers: requirementAnswers.length
           ? requirementAnswers.map((a) => ({ q: a.q.slice(0, 200), a: a.a.slice(0, 1000) })).filter((a) => a.a)
@@ -93,12 +92,8 @@ export async function createOrder(
         dueAt: new Date(Date.now() + (pkg.deliveryDays + extraDays) * 24 * 60 * 60 * 1000),
       },
     });
-    return { order, creditApplied };
   });
   await audit({ actorId: buyerId, action: "order.create", entity: "Order", entityId: order.id });
-  if (creditApplied > 0) {
-    await audit({ actorId: buyerId, action: "credit.redeem", entity: "Order", entityId: order.id });
-  }
   void trackEvent("order_created", { userId: buyerId, entityId: order.id, meta: { gigId: gig.id } });
   return order;
 }

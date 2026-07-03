@@ -504,6 +504,7 @@ model Order {
   extrasSnapshot Json?     // [{ title, priceUzs }] selected add-ons
   couponCode   String?
   discountUzs  Int         @default(0) // platform-funded discount on the buyer's payment
+  creditUsedUzs Int        @default(0) // portion of discountUzs funded by the buyer's credit (restorable on refund)
   requirements String?
   requirementAnswers Json?    // [{ q, a }] answers to the gig's requirement prompts
   requirementFileUrls String[] @default([])

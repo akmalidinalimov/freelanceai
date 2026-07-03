@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { fulfillPayoutRequest, tipOrder, sellerAvailableUzs } from "@/server/services/payments";
 import { acceptOrder } from "@/server/services/order";
 import { createReview } from "@/server/services/review";
+import { consumeCreditForOrder, restoreOrderCredit, issueReferralReward } from "@/server/services/affiliate";
 
 let seq = 0;
 const ids: string[] = [];
@@ -56,6 +57,7 @@ async function seed(netUzs: number, status: "COMPLETED" | "DELIVERED" = "COMPLET
 
 afterAll(async () => {
   // Best-effort cleanup so re-runs on a persistent DB stay independent.
+  await prisma.referralReward.deleteMany({ where: { referrerId: { in: ids } } }).catch(() => {});
   await prisma.ledgerEntry.deleteMany({ where: { userId: { in: ids } } }).catch(() => {});
   await prisma.transaction.deleteMany({ where: { order: { sellerId: { in: ids } } } }).catch(() => {});
   await prisma.payoutRequest.deleteMany({ where: { sellerId: { in: ids } } }).catch(() => {});
@@ -152,5 +154,56 @@ describe("order-action authz (Telegram callback surface)", () => {
     await expect(createReview(outId, s.orderId, 5)).rejects.toThrow();
     const review = await createReview(s.buyer.id, s.orderId, 5);
     expect(review.rating).toBe(5);
+  });
+});
+
+// Affiliate credit: spent only at settlement, capped at commission, race-safe, restorable
+// on refund, and rewards issued at most once per referee. Proven against a real DB.
+describe("affiliate credit money paths", () => {
+  it("consumeCreditForOrder caps at commission and is race-safe (balance never goes negative)", async () => {
+    const uid = `it_credit_${++seq}`;
+    ids.push(uid);
+    await prisma.user.create({
+      data: { id: uid, firstName: "Credit", username: uid, role: "BUYER", status: "ACTIVE", onboardingCompleted: true, creditBalanceUzs: 100_000 },
+    });
+    // Two concurrent settlements (commission 30k, no prior discount): each applies ≤ 30k.
+    const [a, b] = await Promise.all([
+      prisma.$transaction((tx) => consumeCreditForOrder(tx, uid, 30_000, 0)),
+      prisma.$transaction((tx) => consumeCreditForOrder(tx, uid, 30_000, 0)),
+    ]);
+    expect(a).toBeLessThanOrEqual(30_000);
+    expect(b).toBeLessThanOrEqual(30_000);
+    const u = (await prisma.user.findUnique({ where: { id: uid } }))!;
+    expect(u.creditBalanceUzs).toBe(100_000 - (a + b)); // exact, consistent
+    expect(u.creditBalanceUzs).toBeGreaterThanOrEqual(0); // never negative
+  });
+
+  it("restoreOrderCredit returns spent credit exactly once (idempotent)", async () => {
+    const s = await seed(0);
+    await prisma.order.update({ where: { id: s.orderId }, data: { creditUsedUzs: 20_000 } });
+    const order = { id: s.orderId, buyerId: s.buyerId, creditUsedUzs: 20_000 };
+    const before = (await prisma.user.findUnique({ where: { id: s.buyerId } }))!.creditBalanceUzs;
+    await prisma.$transaction((tx) => restoreOrderCredit(tx, order));
+    await prisma.$transaction((tx) => restoreOrderCredit(tx, order)); // second call must not double-credit
+    const after = (await prisma.user.findUnique({ where: { id: s.buyerId } }))!.creditBalanceUzs;
+    expect(after - before).toBe(20_000);
+    expect((await prisma.order.findUnique({ where: { id: s.orderId } }))!.creditUsedUzs).toBe(0);
+  });
+
+  it("referral reward is issued at most once per referee, even on repeated completions", async () => {
+    const s = await seed(0);
+    const referrerId = `it_referrer_${seq}`;
+    ids.push(referrerId);
+    await prisma.user.create({
+      data: { id: referrerId, firstName: "Referrer", username: referrerId, role: "BUYER", status: "ACTIVE", onboardingCompleted: true },
+    });
+    await prisma.user.update({ where: { id: s.buyerId }, data: { referredById: referrerId } });
+    await prisma.order.update({ where: { id: s.orderId }, data: { commissionUzs: 25_000 } });
+    const o = { id: s.orderId, buyerId: s.buyerId, commissionUzs: 25_000 };
+    await issueReferralReward(o);
+    await issueReferralReward(o); // idempotent (unique refereeId)
+    expect(await prisma.referralReward.count({ where: { refereeId: s.buyerId } })).toBe(1);
+    // 40% of 25k = 10k, credited once.
+    expect((await prisma.user.findUnique({ where: { id: referrerId } }))!.creditBalanceUzs).toBe(10_000);
   });
 });

@@ -7,10 +7,18 @@ import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 import { onOrderPaid } from "@/server/services/gamification";
+import { consumeCreditForOrder } from "@/server/services/affiliate";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
 
-type OrderRow = { id: string; sellerId: string; amountUzs: number; commissionUzs: number; discountUzs: number };
+type OrderRow = {
+  id: string;
+  buyerId: string;
+  sellerId: string;
+  amountUzs: number;
+  commissionUzs: number;
+  discountUzs: number;
+};
 
 /**
  * Post a balanced payment-in settlement inside a transaction: a SUCCEEDED Transaction
@@ -26,7 +34,13 @@ async function postOrderPaymentTx(
 ): Promise<boolean> {
   const idempotencyKey = `order:${order.id}:payment-in`;
   const existing = await tx.transaction.findUnique({ where: { idempotencyKey } });
-  if (existing) return false; // already settled — no double post
+  if (existing) return false; // already settled — no double post (and no double credit spend)
+
+  // Apply the buyer's promo/referral credit NOW that payment is settling (capped at the
+  // commission → platform stays ≥0, seller net untouched). Recorded on the order so a later
+  // refund can restore it. Only happens once — the idempotency guard above protects retries.
+  const creditApplied = await consumeCreditForOrder(tx, order.buyerId, order.commissionUzs, order.discountUzs);
+  const discount = order.discountUzs + creditApplied;
 
   await tx.transaction.create({
     data: {
@@ -34,16 +48,16 @@ async function postOrderPaymentTx(
       provider,
       type: "PAYMENT_IN",
       status: "SUCCEEDED",
-      // What the buyer actually pays (net of any platform-funded discount).
-      amountUzs: order.amountUzs - order.discountUzs,
+      // What the buyer actually pays (net of any platform-funded discount + credit).
+      amountUzs: order.amountUzs - discount,
       idempotencyKey,
       rawPayload: externalRef ? { externalRef } : undefined,
     },
   });
 
   const postings =
-    order.discountUzs > 0
-      ? discountedPaymentPostings(order.amountUzs, order.commissionUzs, order.discountUzs)
+    discount > 0
+      ? discountedPaymentPostings(order.amountUzs, order.commissionUzs, discount)
       : paymentPostings(order.amountUzs, order.commissionUzs);
   await tx.ledgerEntry.createMany({
     data: postings.map((p) => ({
@@ -55,7 +69,10 @@ async function postOrderPaymentTx(
     })),
   });
 
-  await tx.order.update({ where: { id: order.id }, data: { status: "IN_PROGRESS" } });
+  await tx.order.update({
+    where: { id: order.id },
+    data: { status: "IN_PROGRESS", discountUzs: discount, creditUsedUzs: creditApplied },
+  });
   return true;
 }
 
