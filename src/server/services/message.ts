@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
-import { tgSendMessage } from "@/lib/telegram-bot";
+import { tgSendTracked } from "@/lib/telegram-bot";
 import { stripContactInfo } from "@/lib/sanitize";
 import { sendEmail, renderBrandedEmail } from "@/lib/email";
 import { publishMessage } from "@/lib/message-bus";
@@ -137,7 +137,19 @@ export async function postConversationMessage(
       const link = `${origin}/uz/messages/${conversationId}`;
       // Respect the recipient's notification preferences.
       if (other.notifyTelegram && other.telegramId) {
-        void tgSendMessage(other.telegramId, `💬 New message${ctx}\n\n${preview}\n\n${link}`);
+        // Bot-native quick reply: send a tracked message and remember its id → this
+        // conversation. If the user swipe-replies in Telegram, the webhook posts
+        // their text straight back here (no app switch). Hint that in the text.
+        const tgId = other.telegramId;
+        void tgSendTracked(
+          tgId,
+          `💬 Yangi xabar${ctx}\n\n${preview}\n\n↩️ Javob berish uchun shu xabarga reply qiling yoki oching:\n${link}`
+        ).then((messageId) => {
+          if (messageId == null) return;
+          return prisma.telegramReplyTarget
+            .create({ data: { telegramId: tgId, messageId: BigInt(messageId), conversationId } })
+            .catch(() => {});
+        });
       }
       if (other.notifyEmail && other.email) {
         const { text, html } = renderBrandedEmail({
@@ -155,6 +167,32 @@ export async function postConversationMessage(
     }
   }
   return message;
+}
+
+/**
+ * Bot-native quick reply. A user swipe-replied in Telegram to one of our "new
+ * message" notifications; map reply_to_message.message_id → conversation and post
+ * their text as a real platform message (reusing the full authz + contact-stripping
+ * + notify path). Returns the conversationId if routed, else null.
+ */
+export async function routeTelegramReply(
+  telegramId: string,
+  replyToMessageId: number,
+  text: string
+): Promise<string | null> {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const target = await prisma.telegramReplyTarget.findUnique({
+    where: { telegramId_messageId: { telegramId, messageId: BigInt(replyToMessageId) } },
+  });
+  if (!target) return null;
+  // The replier must be a real, active user linked to this Telegram id.
+  const user = await prisma.user.findFirst({ where: { telegramId, status: "ACTIVE" } });
+  if (!user) return null;
+  // postConversationMessage re-checks that the user is a participant (404 otherwise),
+  // so a stale/forged mapping can't post into a conversation they don't belong to.
+  await postConversationMessage(target.conversationId, user, trimmed);
+  return target.conversationId;
 }
 
 /** Mark all messages from the other party in a conversation as read. */

@@ -10,6 +10,7 @@ import {
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { encryptPII } from "@/lib/pii-crypto";
 import { stampTelegramChat } from "@/server/services/activity";
+import { routeTelegramReply } from "@/server/services/message";
 
 /**
  * Telegram bot webhook. Verified by the secret header. Idempotent (dedups on
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     message?: {
       text?: string;
       contact?: { phone_number?: string; user_id?: number };
+      reply_to_message?: { message_id?: number };
       from?: {
         id: number;
         is_bot?: boolean;
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
   const from = update.message?.from;
   const text = update.message?.text ?? "";
   const contact = update.message?.contact;
+  const replyToId = update.message?.reply_to_message?.message_id;
 
   // Any real inbound message stamps "last chatted with the bot" (admin analytics)
   // and clears a stale bot-blocked marker (the user is clearly reachable again).
@@ -89,6 +92,20 @@ export async function POST(request: Request) {
       });
     }
     return NextResponse.json({ ok: true });
+  }
+
+  // Bot-native quick reply: the user swipe-replied (in Telegram) to a "new message"
+  // notification. Route their text back into that conversation as a real message.
+  if (from && !from.is_bot && replyToId && text && !text.startsWith("/")) {
+    try {
+      const convoId = await routeTelegramReply(String(from.id), replyToId, text);
+      if (convoId) {
+        void tgSendMessage(from.id, "✅ Javobingiz yuborildi.");
+        return NextResponse.json({ ok: true });
+      }
+    } catch {
+      // fall through — treat as an ordinary message if routing failed
+    }
   }
 
   if (from && !from.is_bot && (text.startsWith("/start") || text === "/menu" || text === "/help")) {

@@ -59,6 +59,32 @@ export async function tgSendResult(
   }
 }
 
+/**
+ * Send a message and return its Telegram message_id (or null on failure). Used for
+ * bot-native quick reply: we persist the returned id so that if the recipient
+ * swipe-replies to this message in Telegram, the webhook can route their text back
+ * into the originating conversation. No force_reply — swipe-to-reply is enough and
+ * doesn't hijack the input field.
+ */
+export async function tgSendTracked(
+  chatId: number | string,
+  text: string
+): Promise<number | null> {
+  try {
+    const res = await fetch(api("sendMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    if (!res.ok) return null;
+    const body = (await res.json().catch(() => null)) as { ok?: boolean; result?: { message_id?: number } } | null;
+    return body?.ok && typeof body.result?.message_id === "number" ? body.result.message_id : null;
+  } catch (err) {
+    console.error("tgSendTracked failed", err);
+    return null;
+  }
+}
+
 /** Prompt the user to share their (Telegram-verified) phone via a one-tap contact button. */
 export async function tgRequestContact(chatId: number | string, prompt: string): Promise<void> {
   await tgSendMessage(chatId, prompt, {

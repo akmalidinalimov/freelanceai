@@ -249,6 +249,22 @@ model ProcessedUpdate {
   createdAt DateTime @default(now())
 }
 
+// Bot-native quick reply: when we push a "new message" to a user's Telegram, we
+// record the sent bot-message id → conversation. If the user swipes-to-reply in
+// Telegram, the webhook maps reply_to_message.message_id back to the conversation
+// and posts their text as a real platform message (no app switch needed).
+model TelegramReplyTarget {
+  id             String   @id @default(cuid())
+  telegramId     String // recipient chat id (the user replying)
+  messageId      BigInt // message_id of the bot's notification in that chat
+  conversationId String
+  createdAt      DateTime @default(now())
+
+  @@unique([telegramId, messageId])
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
 // ---------------------------------------------------------------------------
 // Seller profile & portfolio
 // ---------------------------------------------------------------------------
