@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { tgSendMessage } from "@/lib/telegram-bot";
+import {
+  tgSendMessage,
+  tgMainKeyboard,
+  tgSetChatMenuButton,
+  tgWelcome,
+  tgHelpText,
+} from "@/lib/telegram-bot";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { encryptPII } from "@/lib/pii-crypto";
 import { stampTelegramChat } from "@/server/services/activity";
@@ -76,30 +82,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (from && !from.is_bot && text.startsWith("/start")) {
-    const payload = text.split(/\s+/)[1];
-    if (!payload) {
-      void tgSendMessage(from.id, "Salom! Saytdagi “Telegram orqali kirish” tugmasini bosing.");
-      return NextResponse.json({ ok: true });
+  if (from && !from.is_bot && (text.startsWith("/start") || text === "/menu" || text === "/help")) {
+    // Load the user (locale + seller capability) to render the right keyboard.
+    const account = await prisma.user.findUnique({
+      where: { telegramId: String(from.id) },
+      select: { firstName: true, locale: true, isSeller: true },
+    });
+    const locale = account?.locale;
+    const name = account?.firstName ?? from.first_name;
+
+    // /start with a login-token payload: confirm the web deep-link login.
+    const payload = text.startsWith("/start") ? text.split(/\s+/)[1] : undefined;
+    if (payload) {
+      const confirmed = await prisma.loginToken.updateMany({
+        where: { token: payload, status: "PENDING", expiresAt: { gt: new Date() } },
+        data: {
+          status: "CONFIRMED",
+          telegramId: String(from.id),
+          firstName: from.first_name,
+          lastName: from.last_name,
+          username: from.username,
+        },
+      });
+      if (confirmed.count > 0) {
+        void tgSendMessage(from.id, "✅ Tasdiqlandi! Saytga qayting — avtomatik kirasiz.");
+      }
     }
 
-    // Single-shot confirm: only a still-PENDING, unexpired token is claimed.
-    const confirmed = await prisma.loginToken.updateMany({
-      where: { token: payload, status: "PENDING", expiresAt: { gt: new Date() } },
-      data: {
-        status: "CONFIRMED",
-        telegramId: String(from.id),
-        firstName: from.first_name,
-        lastName: from.last_name,
-        username: from.username,
-      },
+    if (text === "/help") {
+      void tgSendMessage(from.id, tgHelpText(locale));
+    } else {
+      // Welcome + the always-visible role-aware keyboard + Menu Button → Mini App.
+      void tgSetChatMenuButton(from.id, locale);
+      void tgSendMessage(from.id, tgWelcome(locale, name), tgMainKeyboard(locale, account?.isSeller ?? false));
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  // Help reply-keyboard button (any-locale "ℹ️ …" label) → help text.
+  if (from && !from.is_bot && /^ℹ️/.test(text)) {
+    const account = await prisma.user.findUnique({
+      where: { telegramId: String(from.id) },
+      select: { locale: true },
     });
-    void tgSendMessage(
-      from.id,
-      confirmed.count > 0
-        ? "✅ Tasdiqlandi! Saytga qayting — avtomatik kirasiz."
-        : "Havola eskirgan. Saytda qaytadan urinib koʻring."
-    );
+    void tgSendMessage(from.id, tgHelpText(account?.locale));
+    return NextResponse.json({ ok: true });
   }
 
   return NextResponse.json({ ok: true });
