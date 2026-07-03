@@ -429,7 +429,12 @@
     "contact": "Contact freelancer",
     "inbox": "Messages",
     "inboxEmpty": "No conversations yet.",
-    "empty": "No messages yet. Say hello 👋"
+    "empty": "No messages yet. Say hello 👋",
+    "online": "Online",
+    "offline": "Offline",
+    "lastSeen": "Last seen {time}",
+    "quickRepliesLabel": "Quick replies",
+    "quickReplies": ["On it 👍", "Could you share the details?", "Delivered ✅", "Thank you!"]
   },
   "Admin": {
     "dashboard": "Admin dashboard",

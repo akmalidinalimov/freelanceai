@@ -17,7 +17,7 @@ const TIME_BUDGET_MS = 80_000; // fit within the Cloudflare tunnel response wind
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Recipient filter: reachable, not-blocked, Telegram-enabled, active accounts. */
-function audienceWhere(audience: BroadcastAudience): Prisma.UserWhereInput {
+export function audienceWhere(audience: BroadcastAudience): Prisma.UserWhereInput {
   const base: Prisma.UserWhereInput = {
     telegramId: { not: null },
     telegramBlockedAt: null,

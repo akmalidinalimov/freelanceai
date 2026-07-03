@@ -34,12 +34,31 @@ export default async function ConversationPage({
   }));
 
   // Custom offers are available in direct (gig) conversations with a buyer↔seller pair.
+  // Also resolve the counterpart (name + last-seen) for the thread's presence header —
+  // safe to expose here because the page is authz-scoped to conversation participants.
+  const P = { select: { id: true, firstName: true, name: true, username: true, lastSeenAt: true } } as const;
   const convo = await prisma.conversation.findUnique({
     where: { id: convId },
-    select: { buyerId: true, sellerId: true, gigId: true },
+    select: {
+      buyerId: true,
+      sellerId: true,
+      gigId: true,
+      buyer: P,
+      seller: P,
+      order: { select: { buyerId: true, seller: P, buyer: P } },
+    },
   });
   const isGigConvo = Boolean(convo?.buyerId && convo?.sellerId && convo?.gigId);
   const offerRole = convo?.sellerId === user.id ? "seller" : "buyer";
+
+  const buyerId = convo?.order?.buyerId ?? convo?.buyerId;
+  const other = user.id === buyerId ? convo?.order?.seller ?? convo?.seller : convo?.order?.buyer ?? convo?.buyer;
+  const counterpart = other
+    ? {
+        name: other.firstName ?? other.name ?? other.username ?? "",
+        lastSeenAt: other.lastSeenAt ? other.lastSeenAt.toISOString() : null,
+      }
+    : null;
   const offers = isGigConvo
     ? (await listOffers(convId, user)).map((o) => ({
         id: o.id,
@@ -57,7 +76,7 @@ export default async function ConversationPage({
         ← {t("inbox")}
       </Link>
       <div className="mt-3">
-        <MessageThread conversationId={convId} currentUserId={user.id} initial={msgs} />
+        <MessageThread conversationId={convId} currentUserId={user.id} initial={msgs} counterpart={counterpart} />
       </div>
       {isGigConvo && (
         <div className="mt-4">

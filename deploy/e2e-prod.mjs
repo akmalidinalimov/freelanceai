@@ -109,6 +109,17 @@ check("auth/email callback page 200", (await fetch(`${B}/en/auth/email?token=x`)
 check("admin flags guarded", (await fetch(`${B}/uz/admin/flags`, { redirect: "manual" })).status === 307);
 check("admin conversations guarded", (await fetch(`${B}/uz/admin/conversations`, { redirect: "manual" })).status === 307);
 check("cron red-flags 401 without secret", (await mut("POST", "/api/cron/red-flags")) === 401);
+// TG bot phases (B4/B5/B6): reminders + broadcast surfaces. Feature-gated (404 warn-skip)
+// so an emergency rollback to a pre-bot SHA can't false-fail the deploy gate.
+const bcastGuard = (await fetch(`${B}/uz/admin/broadcast`, { redirect: "manual" })).status;
+if (bcastGuard === 404) console.log("  ⚠ admin broadcast not in this build (rollback?) — skipped");
+else check("admin broadcast guarded", bcastGuard === 307);
+const cronBcast = await mut("POST", "/api/cron/broadcast");
+if (cronBcast === 404) console.log("  ⚠ cron broadcast not in this build (rollback?) — skipped");
+else check("cron broadcast 401 without secret", cronBcast === 401);
+const cronRem = await mut("POST", "/api/cron/order-reminders");
+if (cronRem === 404) console.log("  ⚠ cron order-reminders not in this build (rollback?) — skipped");
+else check("cron order-reminders 401 without secret", cronRem === 401);
 // Feature-gated checks: 404 => warn-skip so rolling back to a pre-feature SHA
 // (deploy-vps.ps1 -Sha <old>) doesn't false-fail the emergency lever.
 const digestStatus = await mut("POST", "/api/cron/digest");

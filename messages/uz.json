@@ -429,7 +429,12 @@
     "contact": "Bogʻlanish",
     "inbox": "Xabarlar",
     "inboxEmpty": "Hali suhbatlar yoʻq.",
-    "empty": "Hali xabarlar yoʻq. Salomlashing 👋"
+    "empty": "Hali xabarlar yoʻq. Salomlashing 👋",
+    "online": "Onlayn",
+    "offline": "Oflayn",
+    "lastSeen": "Oxirgi faollik {time}",
+    "quickRepliesLabel": "Tez javoblar",
+    "quickReplies": ["Boshladim 👍", "Tafsilotlarni yuboring", "Topshirildi ✅", "Rahmat!"]
   },
   "Admin": {
     "dashboard": "Admin paneli",

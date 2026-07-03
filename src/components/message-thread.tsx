@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { GalleryUpload } from "@/components/gallery-upload";
+import { isOnline } from "@/lib/presence";
 
 export interface Msg {
   id: string;
@@ -24,12 +25,18 @@ export function MessageThread({
   conversationId,
   currentUserId,
   initial,
+  counterpart,
 }: {
   conversationId: string;
   currentUserId: string;
   initial: Msg[];
+  counterpart?: { name: string; lastSeenAt: string | null } | null;
 }) {
   const t = useTranslations("Message");
+  const format = useFormatter();
+  const lastSeenMs = counterpart?.lastSeenAt ? new Date(counterpart.lastSeenAt).getTime() : null;
+  const online = isOnline(lastSeenMs, Date.now());
+  const quickReplies = (t.raw("quickReplies") as string[]) ?? [];
   const [messages, setMessages] = useState<Msg[]>(initial);
   const [input, setInput] = useState("");
   const [files, setFiles] = useState<string[]>([]);
@@ -111,7 +118,22 @@ export function MessageThread({
 
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] p-4">
-      <p className="mb-3 text-sm font-medium">{t("title")}</p>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="truncate text-sm font-medium">{counterpart?.name || t("title")}</p>
+        {counterpart && (
+          <span className="flex shrink-0 items-center gap-1.5 text-xs text-[hsl(var(--muted-foreground))]">
+            <span
+              aria-hidden
+              className={`h-2 w-2 rounded-full ${online ? "bg-emerald-500" : "bg-[hsl(var(--muted-foreground))]/40"}`}
+            />
+            {online
+              ? t("online")
+              : lastSeenMs
+                ? t("lastSeen", { time: format.relativeTime(new Date(lastSeenMs)) })
+                : t("offline")}
+          </span>
+        )}
+      </div>
 
       <div className="mb-3 max-h-80 space-y-2 overflow-y-auto">
         {messages.length === 0 ? (
@@ -157,6 +179,20 @@ export function MessageThread({
         <div ref={endRef} />
       </div>
 
+      {!input.trim() && quickReplies.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5" aria-label={t("quickRepliesLabel")}>
+          {quickReplies.map((qr) => (
+            <button
+              key={qr}
+              type="button"
+              onClick={() => setInput(qr)}
+              className="rounded-full border border-[hsl(var(--border))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+            >
+              {qr}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="mb-2">
         <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
       </div>
