@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FreelanceAI — F3 · Spotlight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============ Tokens ============ */
+:root{
+  --bg:#0a0c10;
+  --surface:rgba(255,255,255,.04);
+  --surface-el:#11151c;
+  --border:rgba(255,255,255,.09);
+  --text:#e9eef4;
+  --muted:#9aa7b5;
+  --teal:#14c79a;
+  --teal-soft:rgba(20,199,154,.12);
+  --violet:#7c6cf0;
+  --r-sm:16px;
+  --r-lg:22px;
+  --sec:clamp(76px,11vw,128px);
+  --mx:50vw;
+  --my:32vh;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{max-width:100%;overflow-x:clip}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Manrope",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+/* faint dotted grid */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:radial-gradient(rgba(233,238,244,1) 1px,transparent 1.4px);
+  background-size:30px 30px;
+  opacity:.05;
+}
+/* ============ Spotlight overlay ============ */
+.spot{
+  position:fixed;inset:0;z-index:80;pointer-events:none;
+  background:radial-gradient(720px circle at var(--mx) var(--my),
+    rgba(20,199,154,.12), rgba(20,199,154,.05) 42%, transparent 68%);
+  mix-blend-mode:screen;
+}
+.disp{font-family:"Unbounded",sans-serif;letter-spacing:-.02em}
+.container{width:min(1160px,100% - 40px);margin-inline:auto}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:6px}
+::selection{background:rgba(20,199,154,.28)}
+
+/* ============ Card glow (Vercel border pattern) ============ */
+.glow{position:relative}
+.glow::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;
+  background:radial-gradient(190px circle at var(--x,50%) var(--y,50%),
+    rgba(20,199,154,.6), rgba(20,199,154,.14) 46%, transparent 72%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  opacity:var(--go,0);transition:opacity .35s ease;
+  pointer-events:none;z-index:3;
+}
+
+/* ============ Nav ============ */
+.nav{
+  position:sticky;top:0;z-index:70;
+  background:rgba(10,12,16,.72);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav-in{display:flex;align-items:center;gap:28px;height:64px}
+.brand{font-family:"Unbounded",sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:-.02em;margin-right:auto}
+.brand em{font-style:normal;color:var(--teal)}
+.nav-links{display:none;align-items:center;gap:26px}
+.nav-links a{font-weight:600;font-size:.92rem;color:var(--muted);transition:color .2s}
+@media (hover:hover){.nav-links a:hover{color:var(--text)}}
+.lang{
+  display:none;align-items:center;gap:6px;
+  font-size:.85rem;font-weight:600;color:var(--muted);
+  border:1px solid var(--border);border-radius:99px;padding:8px 14px;min-height:38px;
+}
+.btn-login{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:0 22px;border-radius:99px;
+  background:var(--teal);color:#04211a;font-weight:800;font-size:.92rem;
+  transition:transform .18s ease,box-shadow .25s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 24px -6px rgba(20,199,154,.45)}
+}
+.btn-login:active{transform:scale(.97)}
+@media (min-width:760px){
+  .nav-links{display:flex}
+  .lang{display:inline-flex}
+}
+
+/* ============ Hero ============ */
+.hero{padding-top:clamp(72px,12vw,128px);text-align:center;position:relative;z-index:1}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
+  background:var(--teal-soft);border:1px solid rgba(20,199,154,.25);
+  color:var(--text);border-radius:99px;
+  padding:9px 18px;font-size:.82rem;font-weight:600;
+}
+.eyebrow .star{color:var(--teal)}
+.eyebrow .sep{width:1px;height:12px;background:rgba(255,255,255,.18)}
+.dot{
+  width:7px;height:7px;border-radius:50%;background:var(--teal);
+  display:inline-block;flex:none;
+  animation:pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(20,199,154,.45)}50%{box-shadow:0 0 0 6px rgba(20,199,154,0)}}
+.hero h1{
+  font-size:clamp(2rem,1.05rem + 4.4vw,3.6rem);
+  font-weight:800;line-height:1.14;
+  margin:26px auto 18px;max-width:16ch;
+}
+.hero h1 .tl{color:var(--teal);display:block}
+.hero .sub{
+  color:var(--muted);font-size:clamp(.98rem,.9rem + .4vw,1.12rem);
+  max-width:34rem;margin:0 auto;font-weight:500;
+}
+
+/* ============ AI search card ============ */
+.search-wrap{margin:34px auto 0;max-width:680px;position:relative;z-index:1}
+.search{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding:18px 18px 14px;text-align:left;
+}
+.search-label{
+  display:flex;align-items:center;gap:8px;
+  color:var(--teal);font-size:.76rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;
+}
+.search-row{display:flex;align-items:flex-end;gap:10px}
+.search textarea{
+  flex:1;background:transparent;border:0;resize:none;
+  color:var(--text);font:inherit;font-size:1.02rem;line-height:1.5;
+  min-height:44px;padding:8px 0;outline:none;
+}
+.search textarea::placeholder{color:var(--muted)}
+.icon-btn{
+  flex:none;width:46px;height:46px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:transform .18s ease,background .2s ease,box-shadow .25s ease;
+}
+.icon-btn:active{transform:scale(.97)}
+.mic{border:1px solid var(--border);background:rgba(255,255,255,.03)}
+@media (hover:hover) and (pointer:fine){.mic:hover{background:rgba(255,255,255,.08)}}
+.go{background:var(--teal);color:#04211a;font-weight:800;font-size:1.25rem}
+@media (hover:hover) and (pointer:fine){.go:hover{box-shadow:0 6px 24px -6px rgba(20,199,154,.5);transform:translateY(-1px)}}
+.chips{
+  display:flex;gap:10px;margin-top:16px;
+  overflow-x:auto;padding:2px 2px 8px;
+  scrollbar-width:none;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;white-space:nowrap;
+  border:1px solid var(--border);border-radius:99px;
+  background:rgba(255,255,255,.03);color:var(--muted);
+  font-size:.85rem;font-weight:600;
+  padding:11px 16px;min-height:44px;
+  transition:color .2s,border-color .2s,transform .18s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .chip:hover{color:var(--text);border-color:rgba(20,199,154,.45)}
+}
+.chip:active{transform:scale(.97)}
+
+/* ============ Sections ============ */
+section{position:relative;z-index:1}
+.sec-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  margin-bottom:clamp(24px,4vw,40px);
+}
+.sec-head h2{font-size:clamp(1.35rem,1.1rem + 1.4vw,1.9rem);font-weight:700}
+.sec-link{color:var(--teal);font-weight:700;font-size:.92rem;white-space:nowrap;transition:opacity .2s}
+@media (hover:hover){.sec-link:hover{opacity:.75}}
+.cats{margin-top:var(--sec)}
+
+/* category cards */
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.cat{
+  position:relative;overflow:hidden;border-radius:var(--r-sm);
+  aspect-ratio:4/5;display:block;
+  border:1px solid var(--border);background:var(--surface-el);
+  transition:transform .25s ease,box-shadow .35s ease;
+  transform:perspective(900px);
+}
+.cat:active{transform:scale(.97)}
+.cat img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  transition:transform .5s ease;
+}
+.cat::after{
+  content:"";position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg,transparent 38%,rgba(6,8,12,.55) 68%,rgba(6,8,12,.92) 100%);
+}
+.cat-body{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;
+  padding:14px 14px 13px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:8px;
+}
+.cat-body h3{font-size:clamp(.98rem,.9rem + .4vw,1.12rem);font-weight:800;color:#fff;line-height:1.25}
+.cat-body p{font-size:.8rem;color:rgba(233,238,244,.8);font-weight:500;margin-top:2px}
+.cat-arrow{
+  color:var(--teal);font-weight:800;font-size:1rem;flex:none;
+  opacity:.65;transition:opacity .25s,transform .25s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .cat:hover img{transform:scale(1.045)}
+  .cat:hover .cat-arrow{opacity:1;transform:translateX(3px)}
+}
+@media (min-width:760px){
+  .cat-grid{grid-template-columns:repeat(4,1fr);gap:18px}
+}
+
+/* how it works */
+.how{margin-top:var(--sec)}
+.steps{display:grid;gap:14px}
+.step{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding:24px 22px;
+}
+.step .num{
+  font-family:"Unbounded",sans-serif;font-weight:700;font-size:.95rem;
+  color:var(--teal);display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:12px;
+  background:var(--teal-soft);border:1px solid rgba(20,199,154,.25);
+  margin-bottom:16px;
+}
+.step h3{font-size:1.08rem;font-weight:800;margin-bottom:6px}
+.step p{color:var(--muted);font-size:.94rem;font-weight:500}
+@media (min-width:760px){.steps{grid-template-columns:repeat(3,1fr);gap:18px}}
+
+/* creators rail */
+.creators{margin-top:var(--sec)}
+.rail{
+  display:flex;gap:14px;overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  padding:2px 2px 10px;
+  scrollbar-width:none;
+}
+.rail::-webkit-scrollbar{display:none}
+.creator{
+  flex:0 0 min(260px,74vw);scroll-snap-align:start;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding:22px 20px;
+}
+.avatar{width:56px;height:56px;border-radius:50%;margin-bottom:14px;border:1px solid rgba(255,255,255,.14)}
+.av-1{background:radial-gradient(circle at 32% 28%,#ffc9a8,#e06a8f 62%,#7c3b66)}
+.av-2{background:radial-gradient(circle at 32% 28%,#8ef0d2,#1e9a8c 62%,#0d4c56)}
+.av-3{background:radial-gradient(circle at 32% 28%,#ffe1a1,#e08f4f 62%,#8a4630)}
+.av-4{background:radial-gradient(circle at 32% 28%,#c3bcff,var(--violet) 62%,#3c3480)}
+.creator h3{font-size:1.02rem;font-weight:800;display:flex;align-items:center;gap:7px}
+.vrf{color:var(--teal);font-size:.88rem}
+.creator .role{color:var(--muted);font-size:.88rem;font-weight:500;margin-top:2px}
+.creator .meta{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+.rate{font-weight:700;font-size:.92rem}
+.rate .st{color:var(--teal)}
+.profile{color:var(--teal);font-weight:700;font-size:.88rem;min-height:44px;display:inline-flex;align-items:center}
+@media (hover:hover){.profile:hover{opacity:.75}}
+@media (min-width:760px){.creator{flex-basis:270px}}
+
+/* trust + footer */
+.trust{margin-top:var(--sec);display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.tchip{
+  border:1px solid var(--border);border-radius:99px;
+  background:rgba(255,255,255,.03);
+  color:var(--muted);font-size:.85rem;font-weight:600;
+  padding:10px 18px;display:inline-flex;align-items:center;gap:7px;
+}
+.tchip b{color:var(--teal);font-weight:800}
+footer{
+  margin-top:clamp(44px,7vw,72px);
+  border-top:1px solid var(--border);
+  padding:30px 0 calc(30px + 84px + env(safe-area-inset-bottom));
+  text-align:center;color:var(--muted);font-size:.88rem;font-weight:500;
+  position:relative;z-index:1;
+}
+@media (min-width:760px){footer{padding-bottom:44px}}
+
+/* mobile bottom nav */
+.bnav{
+  position:fixed;left:0;right:0;bottom:0;z-index:90;
+  background:rgba(10,12,16,.78);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  display:flex;
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.bnav a{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  min-height:50px;justify-content:center;
+  color:var(--muted);font-size:.68rem;font-weight:700;border-radius:12px;
+}
+.bnav a:active{transform:scale(.97)}
+.bnav a .ic{font-size:1.15rem;line-height:1}
+.bnav a.on{color:var(--teal)}
+@media (min-width:760px){.bnav{display:none}}
+
+/* ============ Reduced motion ============ */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+  .spot{background:radial-gradient(720px circle at 50% 30%,rgba(20,199,154,.1),transparent 68%)}
+}
+</style>
+</head>
+<body>
+
+<div class="spot" aria-hidden="true"></div>
+
+<!-- ============ Nav ============ -->
+<header class="nav">
+  <div class="container nav-in">
+    <a class="brand" href="#">Freelance<em>AI</em></a>
+    <nav class="nav-links" aria-label="Asosiy">
+      <a href="#cats">Xizmatlar</a>
+      <a href="#creators">Ijodkorlar</a>
+      <a href="#how">Ijodkor boʻlish</a>
+    </nav>
+    <button class="lang" type="button">Oʻzbek <span aria-hidden="true">▾</span></button>
+    <a class="btn-login" href="#">Kirish</a>
+  </div>
+</header>
+
+<main>
+  <!-- ============ Hero ============ -->
+  <section class="hero container">
+    <p class="eyebrow" data-rv>
+      <span class="star" aria-hidden="true">✦</span> AI yordamchi
+      <span class="sep" aria-hidden="true"></span>
+      <span class="dot" aria-hidden="true"></span> 1 240 ijodkor onlayn
+    </p>
+    <h1 class="disp" data-rv>Nima yaratmoqchisiz?<span class="tl">Yozing, topamiz.</span></h1>
+    <p class="sub" data-rv>Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.</p>
+
+    <!-- AI search card -->
+    <div class="search-wrap" data-rv>
+      <div class="search glow tilt">
+        <p class="search-label"><span class="dot" aria-hidden="true"></span> FreelanceAI yordamchi</p>
+        <div class="search-row">
+          <textarea id="q" rows="1" aria-label="Kerakli ishni tasvirlang"
+            placeholder="Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…"></textarea>
+          <button class="icon-btn mic" type="button" aria-label="Ovoz bilan aytish">🎙</button>
+          <button class="icon-btn go" type="button" aria-label="Qidirish">→</button>
+        </div>
+      </div>
+      <div class="chips" role="list" aria-label="Namuna soʻrovlar">
+        <button class="chip" role="listitem" type="button">Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi</button>
+        <button class="chip" role="listitem" type="button">Restoran menyusi uchun mahsulot fotosuratlari, oq fon</button>
+        <button class="chip" role="listitem" type="button">Brendim uchun logotip va vizual identika</button>
+        <button class="chip" role="listitem" type="button">Instagram uchun oʻzbek ovozli talking-head avatar</button>
+        <button class="chip" role="listitem" type="button">Kiyim doʻkoni uchun moda AI videosi (reels)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Categories (centerpiece) ============ -->
+  <section class="cats container" id="cats">
+    <div class="sec-head" data-rv>
+      <h2 class="disp">Mashhur yoʻnalishlar</h2>
+      <a class="sec-link" href="#">Barchasini koʻrish →</a>
+    </div>
+    <div class="cat-grid">
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/ai-video.webp" alt="AI video namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>AI video</h3><p>reklama, reels, explainer</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/ai-image.webp" alt="AI rasm namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>AI rasm / art</h3><p>personaj, poster, art</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/ai-avatar.webp" alt="AI avatar namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>AI avatar</h3><p>talking-head, bloger</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/product-photo.webp" alt="Mahsulot fotosurati namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>Mahsulot fotosurati</h3><p>e-commerce, katalog</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/voiceover.webp" alt="Ovoz yozish namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>Ovoz / dublyaj</h3><p>uz · ru · en</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/branding.webp" alt="Brending namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>Brending</h3><p>logo, identika</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/motion.webp" alt="Motion animatsiya namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>Motion / animatsiya</h3><p>logo animatsiya, intro</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat glow tilt" href="#" data-rv>
+        <img src="mock-assets/image-edit.webp" alt="Rasm tahrirlash namunasi" loading="lazy">
+        <div class="cat-body"><div><h3>Rasm tahrir</h3><p>retush, upscale</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ How it works ============ -->
+  <section class="how container" id="how">
+    <div class="sec-head" data-rv>
+      <h2 class="disp">Qanday ishlaydi</h2>
+    </div>
+    <div class="steps">
+      <div class="step glow" data-rv>
+        <span class="num">1</span>
+        <h3>Tasvirlang</h3>
+        <p>Kerakli ishni oddiy tilda yozing yoki ovozda ayting.</p>
+      </div>
+      <div class="step glow" data-rv>
+        <span class="num">2</span>
+        <h3>Mos ijodkorni tanlang</h3>
+        <p>AI top mosliklarni narx va muddat bilan koʻrsatadi.</p>
+      </div>
+      <div class="step glow" data-rv>
+        <span class="num">3</span>
+        <h3>Xavfsiz toʻlang</h3>
+        <p>Ish tugagach toʻlov ijodkorga oʻtadi — Payme, Click, Uzum.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Featured creators ============ -->
+  <section class="creators container" id="creators">
+    <div class="sec-head" data-rv>
+      <h2 class="disp">Tanlangan ijodkorlar</h2>
+      <a class="sec-link" href="#">Barchasi →</a>
+    </div>
+    <div class="rail" aria-label="Ijodkorlar roʻyxati">
+      <article class="creator glow tilt" data-rv>
+        <div class="avatar av-1" aria-hidden="true"></div>
+        <h3>Malika F. <span class="vrf" title="Tasdiqlangan">✓</span></h3>
+        <p class="role">Fashion AI video</p>
+        <div class="meta">
+          <span class="rate"><span class="st" aria-hidden="true">★</span> 4.9</span>
+          <a class="profile" href="#">Profil →</a>
+        </div>
+      </article>
+      <article class="creator glow tilt" data-rv>
+        <div class="avatar av-2" aria-hidden="true"></div>
+        <h3>Dilnoza R. <span class="vrf" title="Tasdiqlangan">✓</span></h3>
+        <p class="role">AI video</p>
+        <div class="meta">
+          <span class="rate"><span class="st" aria-hidden="true">★</span> 4.9</span>
+          <a class="profile" href="#">Profil →</a>
+        </div>
+      </article>
+      <article class="creator glow tilt" data-rv>
+        <div class="avatar av-3" aria-hidden="true"></div>
+        <h3>Kamila T. <span class="vrf" title="Tasdiqlangan">✓</span></h3>
+        <p class="role">Fotosurat</p>
+        <div class="meta">
+          <span class="rate"><span class="st" aria-hidden="true">★</span> 5.0</span>
+          <a class="profile" href="#">Profil →</a>
+        </div>
+      </article>
+      <article class="creator glow tilt" data-rv>
+        <div class="avatar av-4" aria-hidden="true"></div>
+        <h3>Sardor M. <span class="vrf" title="Tasdiqlangan">✓</span></h3>
+        <p class="role">Brending</p>
+        <div class="meta">
+          <span class="rate"><span class="st" aria-hidden="true">★</span> 4.8</span>
+          <a class="profile" href="#">Profil →</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ Trust ============ -->
+  <div class="trust container" data-rv>
+    <span class="tchip"><b>✓</b> Xavfsiz toʻlov</span>
+    <span class="tchip">Payme · Click · Uzum</span>
+    <span class="tchip"><b>✓</b> Tasdiqlangan ijodkorlar (KYC)</span>
+    <span class="tchip"><b>✓</b> 3 tilda</span>
+  </div>
+</main>
+
+<footer>
+  <div class="container">FreelanceAI — Markaziy Osiyoning AI-ijodkorlar bozori</div>
+</footer>
+
+<!-- ============ Mobile bottom nav ============ -->
+<nav class="bnav" aria-label="Mobil navigatsiya">
+  <a href="#" class="on"><span class="ic" aria-hidden="true">⌂</span>Bosh</a>
+  <a href="#"><span class="ic" aria-hidden="true">🔍</span>Qidiruv</a>
+  <a href="#cats"><span class="ic" aria-hidden="true">▦</span>Xizmatlar</a>
+  <a href="#creators"><span class="ic" aria-hidden="true">✦</span>Ijodkorlar</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var PRM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var FINE = window.matchMedia("(pointer:fine)").matches;
+  var hasGsap = typeof gsap !== "undefined";
+  if (hasGsap && typeof ScrollTrigger !== "undefined") gsap.registerPlugin(ScrollTrigger);
+
+  /* ---------- Spotlight ---------- */
+  var spot = document.querySelector(".spot");
+  if (!PRM && spot) {
+    if (FINE) {
+      // cursor-following spotlight: rAF + lerp
+      var tx = innerWidth / 2, ty = innerHeight * .32, cx = tx, cy = ty;
+      addEventListener("pointermove", function(e){ tx = e.clientX; ty = e.clientY; }, {passive:true});
+      (function loop(){
+        cx += (tx - cx) * .1;
+        cy += (ty - cy) * .1;
+        spot.style.setProperty("--mx", cx.toFixed(1) + "px");
+        spot.style.setProperty("--my", cy.toFixed(1) + "px");
+        requestAnimationFrame(loop);
+      })();
+    } else if (hasGsap && typeof ScrollTrigger !== "undefined") {
+      // mobile: spotlight drifts down with scroll progress
+      spot.style.setProperty("--mx", "50vw");
+      ScrollTrigger.create({
+        start: 0,
+        end: function(){ return Math.max(1, document.documentElement.scrollHeight - innerHeight); },
+        scrub: .6,
+        onUpdate: function(self){
+          var y = innerHeight * (.18 + self.progress * .64);
+          spot.style.setProperty("--my", y.toFixed(1) + "px");
+        }
+      });
+    }
+  }
+
+  /* ---------- Proximity border glow (desktop) ---------- */
+  var glows = Array.prototype.slice.call(document.querySelectorAll(".glow"));
+  if (!PRM && FINE && glows.length) {
+    var gx = -9999, gy = -9999, queued = false;
+    var RANGE = 160;
+    function paint(){
+      queued = false;
+      for (var i = 0; i < glows.length; i++) {
+        var el = glows[i], r = el.getBoundingClientRect();
+        if (r.bottom < -RANGE || r.top > innerHeight + RANGE) { el.style.setProperty("--go", 0); continue; }
+        var nx = Math.max(r.left, Math.min(gx, r.right));
+        var ny = Math.max(r.top, Math.min(gy, r.bottom));
+        var d = Math.hypot(gx - nx, gy - ny);
+        if (d < RANGE) {
+          el.style.setProperty("--x", (gx - r.left).toFixed(1) + "px");
+          el.style.setProperty("--y", (gy - r.top).toFixed(1) + "px");
+          el.style.setProperty("--go", (1 - d / RANGE).toFixed(2));
+        } else {
+          el.style.setProperty("--go", 0);
+        }
+      }
+    }
+    addEventListener("pointermove", function(e){
+      gx = e.clientX; gy = e.clientY;
+      if (!queued) { queued = true; requestAnimationFrame(paint); }
+    }, {passive:true});
+  }
+
+  /* ---------- Minimal tilt (max 4deg, fine pointers only) ---------- */
+  if (!PRM && FINE) {
+    document.querySelectorAll(".tilt").forEach(function(el){
+      el.style.transition = "transform .22s ease";
+      el.addEventListener("pointermove", function(e){
+        var r = el.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - .5;
+        var py = (e.clientY - r.top) / r.height - .5;
+        el.style.transform = "perspective(900px) rotateX(" + (-py * 4).toFixed(2) + "deg) rotateY(" + (px * 4).toFixed(2) + "deg)";
+      });
+      el.addEventListener("pointerleave", function(){
+        el.style.transform = "perspective(900px)";
+      });
+    });
+  }
+
+  /* ---------- Mobile glow-pulse on viewport entry ---------- */
+  if (!PRM && !FINE && hasGsap && typeof ScrollTrigger !== "undefined") {
+    document.querySelectorAll(".cat, .step, .creator").forEach(function(el){
+      ScrollTrigger.create({
+        trigger: el, start: "top 86%", once: true,
+        onEnter: function(){
+          gsap.fromTo(el,
+            {boxShadow: "0 0 0px 0 rgba(20,199,154,0)"},
+            {boxShadow: "0 0 34px -6px rgba(20,199,154,.30)", duration: .55,
+             yoyo: true, repeat: 1, ease: "power1.inOut",
+             clearProps: "boxShadow"});
+          gsap.fromTo(el, {"--go": 0}, {"--go": .8, duration: .55, yoyo: true, repeat: 1});
+        }
+      });
+    });
+  }
+
+  /* ---------- Scroll reveals (gsap.from — content visible without JS) ---------- */
+  if (!PRM && hasGsap) {
+    var heroRv = document.querySelectorAll(".hero [data-rv]");
+    gsap.from(heroRv, {y: 26, opacity: 0, duration: .8, ease: "power3.out", stagger: .09});
+    if (typeof ScrollTrigger !== "undefined") {
+      document.querySelectorAll("section:not(.hero) [data-rv], .trust").forEach(function(el){
+        gsap.from(el, {
+          y: 22, opacity: 0, duration: .7, ease: "power2.out",
+          scrollTrigger: {trigger: el, start: "top 88%", once: true}
+        });
+      });
+    }
+  }
+
+  /* ---------- Typewriter placeholder ---------- */
+  var ta = document.getElementById("q");
+  var lines = [
+    "Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…",
+    "Restoran menyusi uchun mahsulot fotosuratlari, oq fon…",
+    "Brendim uchun logotip va vizual identika…",
+    "Instagram uchun oʻzbek ovozli talking-head avatar…"
+  ];
+  if (ta && !PRM) {
+    var li = 0, ci = 0, deleting = false, stopped = false, timer = null;
+    function tick(){
+      if (stopped) return;
+      var full = lines[li];
+      if (!deleting) {
+        ci++;
+        ta.setAttribute("placeholder", full.slice(0, ci));
+        if (ci >= full.length) { deleting = true; timer = setTimeout(tick, 2100); return; }
+        timer = setTimeout(tick, 34 + Math.random() * 40);
+      } else {
+        ci -= 3;
+        if (ci <= 0) { ci = 0; deleting = false; li = (li + 1) % lines.length; }
+        ta.setAttribute("placeholder", full.slice(0, ci));
+        timer = setTimeout(tick, deleting ? 16 : 420);
+      }
+    }
+    ta.setAttribute("placeholder", "");
+    timer = setTimeout(tick, 900);
+    ta.addEventListener("focus", function(){
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      ta.setAttribute("placeholder", lines[0]);
+    }, {once:true});
+  }
+
+  /* ---------- Example chips fill the textarea ---------- */
+  document.querySelectorAll(".chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      if (!ta) return;
+      ta.value = chip.textContent.trim();
+      ta.focus();
+    });
+  });
+
+  /* ---------- Textarea autosize ---------- */
+  if (ta) {
+    ta.addEventListener("input", function(){
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
+    });
+  }
+})();
+</script>
+</body>
+</html>

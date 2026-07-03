@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FreelanceAI — F5 · Depth Field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
+<style>
+/* ============ tokens ============ */
+:root{
+  --bg:#0a0c10;
+  --surface:rgba(255,255,255,.04);
+  --surface-2:#11151c;
+  --border:rgba(255,255,255,.09);
+  --text:#e9eef4;
+  --muted:#9aa7b5;
+  --teal:#14c79a;
+  --teal-dim:rgba(20,199,154,.12);
+  --violet:#7c6cf0;
+  --r-sm:16px; --r:20px; --r-lg:24px;
+  --nav-h:64px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Manrope',system-ui,sans-serif;
+  font-size:16px;line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.disp{font-family:'Unbounded',sans-serif;letter-spacing:-0.02em;font-weight:700}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+::selection{background:rgba(20,199,154,.3)}
+
+/* ============ depth field (canvas + static fallback) ============ */
+#field{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.static-field{
+  display:none;position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:
+    radial-gradient(rgba(20,199,154,.32) 1px, transparent 1.6px),
+    radial-gradient(rgba(233,238,244,.18) 1px, transparent 1.6px),
+    radial-gradient(rgba(233,238,244,.10) 1px, transparent 1.6px);
+  background-size:210px 180px, 260px 230px, 170px 150px;
+  background-position:24px 40px, 130px 120px, 80px 200px;
+}
+
+/* ============ nav ============ */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,12,16,.72);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav-in{height:var(--nav-h);display:flex;align-items:center;gap:24px}
+.brand{font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-0.02em;display:flex;align-items:center;min-height:44px}
+.brand em{font-style:normal;color:var(--teal)}
+.nav-links{display:none;gap:4px;margin-left:8px}
+.nav-links a{
+  padding:10px 14px;border-radius:12px;font-weight:600;font-size:.92rem;color:var(--muted);
+  transition:color .2s, background-color .2s;
+}
+.nav-spacer{flex:1}
+.lang-chip{
+  display:none;align-items:center;min-height:44px;padding:0 14px;
+  border:1px solid var(--border);border-radius:999px;
+  font-weight:600;font-size:.88rem;color:var(--muted);
+  transition:border-color .2s, color .2s;
+}
+.btn-login{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:0 22px;border-radius:999px;
+  background:var(--teal);color:#04241b;font-weight:800;font-size:.95rem;
+  box-shadow:0 4px 24px rgba(20,199,154,.28);
+  transition:transform .15s, box-shadow .25s;
+}
+@media (hover:hover) and (pointer:fine){
+  .nav-links a:hover{color:var(--text);background:var(--surface)}
+  .lang-chip:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+  .btn-login:hover{box-shadow:0 6px 32px rgba(20,199,154,.45);transform:translateY(-1px)}
+}
+.btn-login:active{transform:scale(.97)}
+@media (min-width:760px){
+  .nav-links{display:flex}
+  .lang-chip{display:inline-flex}
+}
+
+/* ============ hero ============ */
+.hero{position:relative;padding:76px 0 44px;text-align:center}
+.hero-glow{
+  position:absolute;left:50%;top:-160px;transform:translateX(-50%);
+  width:min(880px,140vw);height:620px;pointer-events:none;z-index:-1;
+  background:radial-gradient(closest-side, rgba(20,199,154,.14), rgba(20,199,154,.05) 45%, transparent 72%);
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 16px;border-radius:999px;
+  background:var(--teal-dim);border:1px solid rgba(20,199,154,.28);
+  color:var(--teal);font-weight:700;font-size:.82rem;
+  margin-bottom:26px;
+}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);flex:none}
+h1{
+  font-size:clamp(2rem, 5.4vw + .6rem, 3.6rem);
+  line-height:1.14;font-weight:800;
+  max-width:16ch;margin:0 auto;
+}
+h1 .line2{display:block;color:var(--teal)}
+.hero-sub{color:var(--muted);max-width:42ch;margin:20px auto 0;font-size:1.02rem}
+
+/* ============ search card ============ */
+.search-wrap{max-width:680px;margin:34px auto 0;text-align:left}
+.search-card{
+  background:var(--surface);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px 18px 14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.search-label{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;color:var(--teal);margin-bottom:10px}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.search-row{display:flex;align-items:flex-end;gap:10px}
+.search-card textarea{
+  flex:1;background:transparent;border:0;outline:0;resize:none;
+  color:var(--text);font:inherit;font-size:1rem;line-height:1.5;
+  min-height:44px;padding:9px 0;
+}
+.search-card textarea::placeholder{color:var(--muted)}
+.mic-btn,.go-btn{
+  flex:none;width:46px;height:46px;border-radius:14px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;
+  transition:transform .15s, background-color .2s, box-shadow .25s;
+}
+.mic-btn{background:var(--surface);border:1px solid var(--border)}
+.go-btn{background:var(--teal);color:#04241b;font-weight:800;font-size:1.3rem;box-shadow:0 4px 20px rgba(20,199,154,.3)}
+@media (hover:hover) and (pointer:fine){
+  .mic-btn:hover{background:rgba(255,255,255,.08)}
+  .go-btn:hover{box-shadow:0 6px 28px rgba(20,199,154,.5);transform:translateY(-1px)}
+}
+.mic-btn:active,.go-btn:active{transform:scale(.97)}
+.chip-row{
+  display:flex;gap:10px;margin-top:14px;padding-bottom:6px;
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;min-height:44px;display:inline-flex;align-items:center;
+  padding:0 16px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--muted);font-size:.85rem;font-weight:600;white-space:nowrap;
+  transition:border-color .2s, color .2s, transform .15s;
+}
+@media (hover:hover) and (pointer:fine){
+  .chip:hover{border-color:rgba(20,199,154,.4);color:var(--text)}
+}
+.chip:active{transform:scale(.97)}
+
+/* ============ sections shared ============ */
+.sec{padding:64px 0 0}
+@media (min-width:760px){.sec{padding:96px 0 0}}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:26px}
+.sec-title{font-size:clamp(1.35rem, 2.6vw + .5rem, 1.9rem);font-weight:700}
+.sec-link{color:var(--teal);font-weight:700;font-size:.92rem;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px;transition:opacity .2s}
+@media (hover:hover) and (pointer:fine){.sec-link:hover{opacity:.75}}
+
+/* ============ category cards (3D) ============ */
+.cat-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
+  perspective:1000px;
+}
+@media (min-width:760px){.cat-grid{grid-template-columns:repeat(4,1fr);gap:18px}}
+.cat-card{
+  position:relative;display:block;overflow:hidden;
+  aspect-ratio:4/5;border-radius:var(--r);
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  transform-style:preserve-3d;
+  will-change:transform;
+  transition:box-shadow .35s, border-color .35s;
+}
+.cat-card img{width:100%;height:100%;object-fit:cover}
+.cat-scrim{
+  position:absolute;inset:0;
+  background:linear-gradient(to top, rgba(6,8,12,.92) 0%, rgba(6,8,12,.45) 34%, transparent 62%);
+}
+.cat-body{position:absolute;left:0;right:0;bottom:0;padding:14px 16px}
+.cat-body h3{font-size:1rem;font-weight:800;color:#fff;line-height:1.3}
+.cat-body p{font-size:.8rem;color:rgba(233,238,244,.78);margin-top:2px}
+.cat-arrow{
+  position:absolute;top:12px;right:14px;
+  color:rgba(233,238,244,.65);font-size:1rem;font-weight:700;
+  transition:color .25s, transform .25s;
+}
+@media (hover:hover) and (pointer:fine){
+  .cat-card:hover{
+    border-color:rgba(20,199,154,.45);
+    box-shadow:0 0 0 1px rgba(20,199,154,.25), 0 14px 44px rgba(20,199,154,.14), 0 24px 60px rgba(0,0,0,.5);
+  }
+  .cat-card:hover .cat-arrow{color:var(--teal);transform:translateX(3px)}
+}
+.cat-card:active{transform:scale(.97)}
+/* mobile idle float (touch devices only) */
+@media (hover:none){
+  .cat-card{animation:floaty 6s ease-in-out infinite alternate}
+  .cat-card:nth-child(2){animation-delay:-1.2s}
+  .cat-card:nth-child(3){animation-delay:-2.4s}
+  .cat-card:nth-child(4){animation-delay:-3.6s}
+  .cat-card:nth-child(5){animation-delay:-1.8s}
+  .cat-card:nth-child(6){animation-delay:-3s}
+  .cat-card:nth-child(7){animation-delay:-4.2s}
+  .cat-card:nth-child(8){animation-delay:-.6s}
+}
+@keyframes floaty{from{transform:translateY(4px)}to{transform:translateY(-4px)}}
+
+/* ============ how it works ============ */
+.steps{display:grid;gap:14px}
+@media (min-width:760px){.steps{grid-template-columns:repeat(3,1fr);gap:18px}}
+.step{
+  background:var(--surface);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:var(--r);
+  padding:22px 20px;
+}
+.step-num{
+  width:38px;height:38px;border-radius:12px;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--teal-dim);border:1px solid rgba(20,199,154,.3);
+  color:var(--teal);font-weight:800;font-size:.95rem;
+  margin-bottom:14px;
+}
+.step h3{font-size:1.02rem;font-weight:800;margin-bottom:6px}
+.step p{font-size:.9rem;color:var(--muted)}
+
+/* ============ creators rail ============ */
+.rail{
+  display:flex;gap:14px;overflow-x:auto;
+  scroll-snap-type:x mandatory;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  padding:4px 20px 12px;margin:0 -20px;
+}
+.rail::-webkit-scrollbar{display:none}
+.creator{
+  flex:none;width:250px;scroll-snap-align:start;
+  background:var(--surface);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:var(--r);
+  padding:20px;
+  transition:border-color .25s, box-shadow .25s, transform .15s;
+}
+@media (hover:hover) and (pointer:fine){
+  .creator:hover{border-color:rgba(20,199,154,.35);box-shadow:0 10px 36px rgba(0,0,0,.4)}
+}
+.creator:active{transform:scale(.97)}
+.avatar{width:52px;height:52px;border-radius:50%;margin-bottom:14px;border:1px solid rgba(255,255,255,.14)}
+.av-1{background:radial-gradient(circle at 32% 28%, #f9b8cf, #7c6cf0)}
+.av-2{background:radial-gradient(circle at 32% 28%, #7ff0d4, #0e8a6c)}
+.av-3{background:radial-gradient(circle at 32% 28%, #ffe08a, #e0699e)}
+.av-4{background:radial-gradient(circle at 32% 28%, #b7c4ff, #2b6b8f)}
+.creator-name{display:flex;align-items:center;gap:6px;font-weight:800;font-size:1rem}
+.verified{color:var(--teal);font-size:.9rem}
+.creator-meta{color:var(--muted);font-size:.86rem;margin-top:3px}
+.creator-meta .star{color:var(--teal);font-weight:700}
+.profile-link{
+  display:inline-flex;align-items:center;min-height:44px;margin-top:8px;
+  color:var(--teal);font-weight:700;font-size:.9rem;transition:opacity .2s;
+}
+@media (hover:hover) and (pointer:fine){.profile-link:hover{opacity:.75}}
+
+/* ============ trust + footer ============ */
+.trust{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
+  padding-top:64px;
+}
+@media (min-width:760px){.trust{padding-top:96px}}
+.trust span{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 18px;
+  background:var(--surface);border:1px solid var(--border);border-radius:999px;
+  font-size:.86rem;font-weight:600;color:var(--muted);
+}
+.trust span b{color:var(--teal);font-weight:700;margin-right:6px}
+footer{
+  text-align:center;color:var(--muted);font-size:.86rem;
+  padding:40px 20px 56px;
+}
+
+/* ============ mobile bottom nav ============ */
+.bottom-nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  display:flex;
+  background:rgba(10,12,16,.8);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.bottom-nav a{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:52px;border-radius:12px;
+  color:var(--muted);font-size:.68rem;font-weight:700;
+  transition:color .2s;
+}
+.bottom-nav a .ico{font-size:1.15rem;line-height:1}
+.bottom-nav a.active{color:var(--teal)}
+.bottom-nav a:active{transform:scale(.97)}
+@media (min-width:760px){.bottom-nav{display:none}}
+main{padding-bottom:96px}
+@media (min-width:760px){main{padding-bottom:24px}}
+
+/* ============ reduced motion: everything static & visible ============ */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none !important;transition:none !important}
+  #field{display:none}
+  .static-field{display:block}
+}
+</style>
+</head>
+<body>
+
+<canvas id="field" aria-hidden="true"></canvas>
+<div class="static-field" aria-hidden="true"></div>
+
+<!-- ================= NAV ================= -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#">Freelance<em>AI</em></a>
+    <nav class="nav-links" aria-label="Asosiy">
+      <a href="#cats">Xizmatlar</a>
+      <a href="#creators">Ijodkorlar</a>
+      <a href="#how">Ijodkor boʻlish</a>
+    </nav>
+    <div class="nav-spacer"></div>
+    <button class="lang-chip" type="button">Oʻzbek ▾</button>
+    <a class="btn-login" href="#">Kirish</a>
+  </div>
+</header>
+
+<main>
+  <!-- ================= HERO ================= -->
+  <section class="hero wrap">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="eyebrow rev">✦ AI yordamchi&nbsp;·&nbsp;<span class="dot" aria-hidden="true"></span>&nbsp;1 240 ijodkor onlayn</div>
+    <h1 class="disp rev">Nima yaratmoqchisiz?<span class="line2">Yozing, topamiz.</span></h1>
+    <p class="hero-sub rev">Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.</p>
+
+    <!-- AI search card -->
+    <div class="search-wrap">
+      <div class="search-card rev">
+        <div class="search-label"><span class="pulse-dot" aria-hidden="true"></span> FreelanceAI yordamchi</div>
+        <div class="search-row">
+          <textarea id="q" rows="1" aria-label="Loyihangizni tasvirlang" placeholder="Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…"></textarea>
+          <button class="mic-btn" type="button" aria-label="Ovoz orqali yozish">🎙</button>
+          <button class="go-btn" type="button" aria-label="Qidirish">→</button>
+        </div>
+      </div>
+      <div class="chip-row rev" role="list" aria-label="Namuna soʻrovlar">
+        <button class="chip" type="button" role="listitem">Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…</button>
+        <button class="chip" type="button" role="listitem">Restoran menyusi uchun mahsulot fotosuratlari, oq fon…</button>
+        <button class="chip" type="button" role="listitem">Brendim uchun logotip va vizual identika…</button>
+        <button class="chip" type="button" role="listitem">Instagram uchun oʻzbek ovozli talking-head avatar…</button>
+        <button class="chip" type="button" role="listitem">Kiyim doʻkoni uchun moda AI videosi (reels)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CATEGORIES (centerpiece) ================= -->
+  <section class="sec wrap" id="cats" aria-labelledby="cats-t">
+    <div class="sec-head">
+      <h2 class="sec-title disp rev" id="cats-t">Mashhur yoʻnalishlar</h2>
+      <a class="sec-link rev" href="#">Barchasini koʻrish →</a>
+    </div>
+    <div class="cat-grid">
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/ai-video.webp" alt="AI video xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>AI video</h3><p>reklama, reels, explainer</p></div>
+      </a>
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/ai-image.webp" alt="AI rasm va art xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>AI rasm / art</h3><p>personaj, poster, art</p></div>
+      </a>
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/ai-avatar.webp" alt="AI avatar xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>AI avatar</h3><p>talking-head, bloger</p></div>
+      </a>
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/product-photo.webp" alt="Mahsulot fotosurati xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>Mahsulot fotosurati</h3><p>e-commerce, katalog</p></div>
+      </a>
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/voiceover.webp" alt="Ovoz va dublyaj xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>Ovoz / dublyaj</h3><p>uz · ru · en</p></div>
+      </a>
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/branding.webp" alt="Brending xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>Brending</h3><p>logo, identika</p></div>
+      </a>
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/motion.webp" alt="Motion va animatsiya xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>Motion / animatsiya</h3><p>logo animatsiya, intro</p></div>
+      </a>
+      <a class="cat-card rev" href="#">
+        <img src="mock-assets/image-edit.webp" alt="Rasm tahrirlash xizmati" loading="lazy">
+        <div class="cat-scrim" aria-hidden="true"></div>
+        <span class="cat-arrow" aria-hidden="true">→</span>
+        <div class="cat-body"><h3>Rasm tahrir</h3><p>retush, upscale</p></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section class="sec wrap" id="how" aria-labelledby="how-t">
+    <div class="sec-head">
+      <h2 class="sec-title disp rev" id="how-t">Qanday ishlaydi</h2>
+    </div>
+    <div class="steps">
+      <div class="step rev">
+        <span class="step-num" aria-hidden="true">1</span>
+        <h3>Tasvirlang</h3>
+        <p>Kerakli ishni oddiy tilda yozing yoki ovozda ayting.</p>
+      </div>
+      <div class="step rev">
+        <span class="step-num" aria-hidden="true">2</span>
+        <h3>Mos ijodkorni tanlang</h3>
+        <p>AI top mosliklarni narx va muddat bilan koʻrsatadi.</p>
+      </div>
+      <div class="step rev">
+        <span class="step-num" aria-hidden="true">3</span>
+        <h3>Xavfsiz toʻlang</h3>
+        <p>Ish tugagach toʻlov ijodkorga oʻtadi — Payme, Click, Uzum.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CREATORS ================= -->
+  <section class="sec wrap" id="creators" aria-labelledby="cr-t">
+    <div class="sec-head">
+      <h2 class="sec-title disp rev" id="cr-t">Tanlangan ijodkorlar</h2>
+    </div>
+    <div class="rail">
+      <article class="creator rev">
+        <div class="avatar av-1" aria-hidden="true"></div>
+        <div class="creator-name">Malika F. <span class="verified" title="Tasdiqlangan">✓</span></div>
+        <div class="creator-meta">Fashion AI video · <span class="star">★ 4.9</span></div>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+      <article class="creator rev">
+        <div class="avatar av-2" aria-hidden="true"></div>
+        <div class="creator-name">Dilnoza R. <span class="verified" title="Tasdiqlangan">✓</span></div>
+        <div class="creator-meta">AI video · <span class="star">★ 4.9</span></div>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+      <article class="creator rev">
+        <div class="avatar av-3" aria-hidden="true"></div>
+        <div class="creator-name">Kamila T. <span class="verified" title="Tasdiqlangan">✓</span></div>
+        <div class="creator-meta">Fotosurat · <span class="star">★ 5.0</span></div>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+      <article class="creator rev">
+        <div class="avatar av-4" aria-hidden="true"></div>
+        <div class="creator-name">Sardor M. <span class="verified" title="Tasdiqlangan">✓</span></div>
+        <div class="creator-meta">Brending · <span class="star">★ 4.8</span></div>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= TRUST ================= -->
+  <div class="trust wrap">
+    <span><b>✓</b> Xavfsiz toʻlov</span>
+    <span>Payme · Click · Uzum</span>
+    <span><b>✓</b> Tasdiqlangan ijodkorlar (KYC)</span>
+    <span><b>✓</b> 3 tilda</span>
+  </div>
+</main>
+
+<footer>FreelanceAI — Markaziy Osiyoning AI-ijodkorlar bozori</footer>
+
+<!-- ================= MOBILE BOTTOM NAV ================= -->
+<nav class="bottom-nav" aria-label="Mobil navigatsiya">
+  <a href="#" class="active" aria-current="page"><span class="ico" aria-hidden="true">⌂</span>Bosh</a>
+  <a href="#"><span class="ico" aria-hidden="true">🔍</span>Qidiruv</a>
+  <a href="#cats"><span class="ico" aria-hidden="true">▦</span>Xizmatlar</a>
+  <a href="#creators"><span class="ico" aria-hidden="true">✦</span>Ijodkorlar</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var fine   = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  /* ============ 1. depth field: particle canvas ============ */
+  if (!reduce.matches){
+    var cv = document.getElementById('field');
+    var ctx = cv.getContext('2d');
+    var W = 0, H = 0, pts = [], rafId = 0, running = false;
+    var N = 55, LINK = 110, LINK2 = LINK * LINK;
+
+    function size(){
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function seed(){
+      pts = [];
+      for (var i = 0; i < N; i++){
+        pts.push({
+          x: Math.random() * W, y: Math.random() * H,
+          vx: (Math.random() - .5) * .24, vy: (Math.random() - .5) * .24,
+          r: .6 + Math.random() * 1.1,
+          a: .12 + Math.random() * .42,
+          teal: Math.random() < .45
+        });
+      }
+    }
+    function frame(){
+      if (!running) return;
+      ctx.clearRect(0, 0, W, H);
+      var i, j, p, a, b, dx, dy, d2, d;
+      for (i = 0; i < N; i++){
+        p = pts[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < -8) p.x = W + 8; else if (p.x > W + 8) p.x = -8;
+        if (p.y < -8) p.y = H + 8; else if (p.y > H + 8) p.y = -8;
+      }
+      ctx.lineWidth = 1;
+      for (i = 0; i < N; i++){
+        a = pts[i];
+        for (j = i + 1; j < N; j++){
+          b = pts[j];
+          dx = a.x - b.x; dy = a.y - b.y; d2 = dx * dx + dy * dy;
+          if (d2 < LINK2){
+            d = Math.sqrt(d2);
+            ctx.strokeStyle = 'rgba(20,199,154,' + ((1 - d / LINK) * .08).toFixed(3) + ')';
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        }
+      }
+      for (i = 0; i < N; i++){
+        p = pts[i];
+        ctx.fillStyle = p.teal
+          ? 'rgba(20,199,154,' + p.a + ')'
+          : 'rgba(233,238,244,' + p.a + ')';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+    function start(){ if (!running){ running = true; rafId = requestAnimationFrame(frame); } }
+    function stop(){ running = false; cancelAnimationFrame(rafId); }
+
+    window.addEventListener('resize', size);
+    document.addEventListener('visibilitychange', function(){
+      document.hidden ? stop() : start();
+    });
+    size(); seed(); start();
+  }
+
+  /* ============ 2. typewriter placeholder ============ */
+  var ta = document.getElementById('q');
+  var lines = [
+    'Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…',
+    'Restoran menyusi uchun mahsulot fotosuratlari, oq fon…',
+    'Brendim uchun logotip va vizual identika…',
+    'Instagram uchun oʻzbek ovozli talking-head avatar…'
+  ];
+  if (reduce.matches){
+    ta.placeholder = lines[0];
+  } else {
+    var li = 0, ci = 0, del = false, stopped = false, timer = 0;
+    function type(){
+      if (stopped) return;
+      var s = lines[li];
+      ci += del ? -1 : 1;
+      ta.placeholder = s.slice(0, ci);
+      var wait = del ? 16 : 40;
+      if (!del && ci === s.length){ del = true; wait = 2200; }
+      else if (del && ci === 0){ del = false; li = (li + 1) % lines.length; wait = 420; }
+      timer = setTimeout(type, wait);
+    }
+    function stopType(){
+      if (stopped) return;
+      stopped = true; clearTimeout(timer);
+      ta.placeholder = 'Loyihangizni shu yerda tasvirlang…';
+    }
+    ta.addEventListener('focus', stopType);
+    ta.addEventListener('input', stopType);
+    timer = setTimeout(type, 700);
+  }
+
+  /* ============ 3. example chips fill the textarea ============ */
+  document.querySelectorAll('.chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      ta.value = chip.textContent.trim();
+      ta.focus();
+    });
+  });
+
+  /* ============ 4. 3D tilt on category cards (fine pointers) ============ */
+  if (fine.matches && !reduce.matches){
+    document.querySelectorAll('.cat-card').forEach(function(card){
+      var rx = 0, ry = 0, tx = 0, ty = 0, raf = null;
+      function lerp(){
+        rx += (tx - rx) * .12;
+        ry += (ty - ry) * .12;
+        card.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+        if (Math.abs(tx - rx) > .02 || Math.abs(ty - ry) > .02){
+          raf = requestAnimationFrame(lerp);
+        } else raf = null;
+      }
+      card.addEventListener('pointermove', function(e){
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - .5;   /* -0.5 .. 0.5 */
+        var py = (e.clientY - r.top) / r.height - .5;
+        tx = -py * 12;  /* max ±6deg */
+        ty =  px * 12;
+        if (!raf) raf = requestAnimationFrame(lerp);
+      });
+      card.addEventListener('pointerleave', function(){
+        tx = 0; ty = 0;
+        if (!raf) raf = requestAnimationFrame(lerp);
+      });
+    });
+  }
+
+  /* ============ 5. GSAP: reveals + depth parallax ============ */
+  if (window.gsap && !reduce.matches){
+    gsap.registerPlugin(ScrollTrigger);
+
+    /* entrance reveals (gsap.from — content stays visible without JS) */
+    gsap.from('.nav', { y: -14, opacity: 0, duration: .6, ease: 'power2.out' });
+    gsap.from('.hero .rev, .search-wrap .rev', {
+      y: 26, opacity: 0, duration: .8, stagger: .08, ease: 'power3.out', delay: .12
+    });
+    document.querySelectorAll('.sec, .trust').forEach(function(sec){
+      var items = sec.querySelectorAll('.rev, span');
+      if (!items.length) return;
+      gsap.from(items, {
+        y: 24, opacity: 0, duration: .7, stagger: .06, ease: 'power2.out',
+        scrollTrigger: { trigger: sec, start: 'top 80%' }
+      });
+    });
+
+    /* depth parallax — three layers, three speeds */
+    function drift(target, pct){
+      gsap.to(target, {
+        yPercent: pct, ease: 'none',
+        scrollTrigger: { trigger: target, start: 'top bottom', end: 'bottom top', scrub: true }
+      });
+    }
+    drift('.hero-glow', -4);
+    drift('.cat-grid', -8);
+    document.querySelectorAll('.sec-title').forEach(function(h){ drift(h, -12); });
+  }
+})();
+</script>
+</body>
+</html>

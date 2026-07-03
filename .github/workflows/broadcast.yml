@@ -1,0 +1,26 @@
+name: broadcast
+
+# Hourly backstop that drains any queued admin broadcasts the create-time kick
+# didn't finish. Needs the CRON_SECRET repo secret.
+on:
+  schedule:
+    - cron: "15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: broadcast
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: drain broadcasts
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET repo secret not set — skipping."
+            exit 0
+          fi
+          curl -fsS --max-time 95 -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://gigora.ai/api/cron/broadcast

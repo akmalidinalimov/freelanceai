@@ -33,6 +33,32 @@ export async function tgSendMessage(
   }
 }
 
+/**
+ * Send with a richer result for broadcasts: distinguishes a 403 (user blocked the bot,
+ * so we mark them and stop trying) from a 429 (flood — the caller sleeps retry_after).
+ */
+export async function tgSendResult(
+  chatId: number | string,
+  text: string
+): Promise<{ ok: boolean; blocked: boolean; retryAfter?: number }> {
+  try {
+    const res = await fetch(api("sendMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    if (res.ok) {
+      const b = await res.json().catch(() => null);
+      return { ok: b?.ok === true, blocked: false };
+    }
+    const b = (await res.json().catch(() => null)) as { parameters?: { retry_after?: number } } | null;
+    return { ok: false, blocked: res.status === 403, retryAfter: b?.parameters?.retry_after };
+  } catch (err) {
+    console.error("tgSendResult failed", err);
+    return { ok: false, blocked: false };
+  }
+}
+
 /** Prompt the user to share their (Telegram-verified) phone via a one-tap contact button. */
 export async function tgRequestContact(chatId: number | string, prompt: string): Promise<void> {
   await tgSendMessage(chatId, prompt, {

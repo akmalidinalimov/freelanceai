@@ -58,8 +58,17 @@ export async function POST(request: Request) {
   const text = update.message?.text ?? "";
   const contact = update.message?.contact;
 
-  // Any real inbound message stamps "last chatted with the bot" (admin analytics).
-  if (from && !from.is_bot) stampTelegramChat(String(from.id));
+  // Any real inbound message stamps "last chatted with the bot" (admin analytics)
+  // and clears a stale bot-blocked marker (the user is clearly reachable again).
+  if (from && !from.is_bot) {
+    stampTelegramChat(String(from.id));
+    void prisma.user
+      .updateMany({
+        where: { telegramId: String(from.id), telegramBlockedAt: { not: null } },
+        data: { telegramBlockedAt: null },
+      })
+      .catch(() => {});
+  }
 
   // KYC phone share: the user tapped the "share phone" button (requestContact). Telegram
   // gives us their already-verified phone. Only accept the user's OWN contact.

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FreelanceAI — F2 · Cinematic Hero</title>
+<meta name="description" content="FreelanceAI — Markaziy Osiyoning AI-ijodkorlar bozori. Ishingizni tasvirlang, AI mos ijodkorni topadi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
+<style>
+/* ============ tokens & base ============ */
+:root{
+  --bg:#0a0c10;
+  --elev:#11151c;
+  --text:#e9eef4;
+  --muted:#9aa7b5;
+  --teal:#14c79a;
+  --teal-ink:#052019;
+  --violet:#7c6cf0;
+  --glass:rgba(255,255,255,.04);
+  --line:rgba(255,255,255,.09);
+  --r:18px;
+  --r-lg:22px;
+  --pad:20px;
+  --maxw:1180px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{overflow-x:clip}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Manrope",system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+img,video{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.disp{font-family:"Unbounded",sans-serif;letter-spacing:-.02em;line-height:1.14}
+.wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad)}
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;z-index:99;background:var(--teal);color:var(--teal-ink);padding:10px 16px;border-radius:12px;font-weight:700}
+.skip:focus{left:8px}
+
+/* ============ nav ============ */
+.nav{
+  position:fixed;inset-inline:0;top:0;z-index:50;
+  transition:background .35s ease,border-color .35s ease,box-shadow .35s ease;
+  border-bottom:1px solid transparent;
+}
+.nav.scrolled{
+  background:rgba(10,12,16,.74);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-bottom-color:var(--line);
+}
+.nav-in{max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad);height:64px;display:flex;align-items:center;gap:18px}
+.brand{font-family:"Unbounded",sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:-.02em;display:flex;align-items:center;min-height:44px}
+.brand .ai{color:var(--teal)}
+.nav-links{display:none;align-items:center;gap:4px;margin-left:auto}
+.nav-links a{font-weight:600;font-size:.92rem;color:#c6d1de;padding:10px 12px;border-radius:12px;min-height:44px;display:inline-flex;align-items:center;transition:color .2s ease}
+.lang-chip{
+  display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:8px 14px;
+  border:1px solid var(--line);border-radius:999px;background:var(--glass);
+  font-weight:600;font-size:.86rem;color:#c6d1de;
+}
+.btn-login{
+  margin-left:auto;display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:10px 20px;border-radius:999px;
+  background:var(--teal);color:var(--teal-ink);font-weight:800;font-size:.95rem;
+  transition:transform .18s ease,box-shadow .25s ease;
+}
+.btn-login:active{transform:scale(.97)}
+@media(min-width:760px){
+  .nav-links{display:flex}
+  .btn-login{margin-left:6px}
+}
+@media (hover:hover) and (pointer:fine){
+  .nav-links a:hover{color:var(--text)}
+  .btn-login:hover{box-shadow:0 0 0 5px rgba(20,199,154,.16),0 8px 28px rgba(20,199,154,.25);transform:translateY(-1px)}
+}
+
+/* ============ hero ============ */
+.hero{
+  position:relative;min-height:88vh;overflow:hidden;
+  display:grid;place-items:center;
+  padding:112px var(--pad) 64px;
+}
+@media(min-width:760px){.hero{min-height:92vh}}
+.hero-bg{position:absolute;inset:0;z-index:0;will-change:transform,filter}
+.hero-fallback{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(58% 46% at 72% 18%,rgba(124,108,240,.16),transparent 62%),
+    radial-gradient(52% 44% at 22% 72%,rgba(20,199,154,.13),transparent 60%),
+    linear-gradient(180deg,#0e131b 0%,#0a0c10 100%);
+}
+.hero-media{position:absolute;inset:-4%;will-change:transform;animation:kenburns 24s ease-in-out infinite alternate}
+.hero-media img,.hero-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.12)}}
+.hero-scrim{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to bottom,rgba(6,8,12,.55) 0%,rgba(8,10,14,.68) 55%,rgba(10,12,16,.96) 100%);
+}
+.hero-vignette{position:absolute;inset:0;z-index:1;background:radial-gradient(120% 90% at 50% 30%,transparent 55%,rgba(6,8,12,.5) 100%)}
+.hero-in{position:relative;z-index:2;width:100%;max-width:760px;margin:0 auto;text-align:center;will-change:transform,opacity}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
+  padding:9px 16px;border-radius:999px;margin-bottom:22px;
+  background:rgba(20,199,154,.12);border:1px solid rgba(20,199,154,.28);
+  color:#7fe6c8;font-weight:700;font-size:.82rem;letter-spacing:.01em;
+}
+.eyebrow .sep{opacity:.5}
+.hero h1{
+  font-size:clamp(2.1rem,5.4vw + 1rem,4rem);
+  font-weight:800;color:#fff;
+  text-wrap:balance;
+  text-shadow:0 2px 34px rgba(0,0,0,.55);
+}
+.hero h1 .t2{display:block;color:var(--teal)}
+.hero-sub{
+  margin:18px auto 30px;max-width:520px;
+  color:#c3cedb;font-size:1.03rem;font-weight:500;
+  text-shadow:0 1px 18px rgba(0,0,0,.6);
+}
+
+/* ============ search card ============ */
+.search-card{
+  max-width:680px;margin:0 auto;text-align:left;
+  background:rgba(255,255,255,.05);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.12);border-radius:var(--r-lg);
+  padding:16px 16px 14px;
+  box-shadow:0 24px 70px rgba(0,0,0,.5);
+}
+.search-label{display:flex;align-items:center;gap:8px;color:var(--teal);font-weight:800;font-size:.78rem;letter-spacing:.04em;margin-bottom:8px}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+.search-row{display:flex;align-items:flex-end;gap:10px}
+.search-row textarea{
+  flex:1;min-width:0;resize:none;border:0;background:transparent;
+  color:var(--text);font:inherit;font-size:1rem;line-height:1.5;
+  min-height:44px;padding:9px 2px;outline:none;
+}
+.search-row textarea::placeholder{color:#8494a5}
+.ic-btn{
+  flex:none;width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;font-size:1.1rem;
+  transition:transform .18s ease,box-shadow .25s ease,background .25s ease;
+}
+.ic-btn:active{transform:scale(.97)}
+.mic{background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.go{background:var(--teal);color:var(--teal-ink);font-weight:800;font-size:1.3rem;box-shadow:0 6px 22px rgba(20,199,154,.32)}
+@media (hover:hover) and (pointer:fine){
+  .mic:hover{background:rgba(255,255,255,.12)}
+  .go:hover{box-shadow:0 0 0 5px rgba(20,199,154,.16),0 10px 30px rgba(20,199,154,.4);transform:translateY(-1px)}
+}
+.chips{
+  display:flex;gap:8px;overflow-x:auto;max-width:680px;
+  margin:14px auto 0;padding:4px 2px 8px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;white-space:nowrap;min-height:44px;padding:10px 16px;border-radius:999px;
+  background:rgba(255,255,255,.055);border:1px solid var(--line);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  color:#cdd7e2;font-weight:600;font-size:.85rem;
+  transition:transform .18s ease,border-color .25s ease,background .25s ease;
+}
+.chip:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){
+  .chip:hover{border-color:rgba(20,199,154,.45);background:rgba(20,199,154,.09);color:#e6f7f0}
+}
+
+/* ============ sections ============ */
+main{padding-bottom:110px}
+@media(min-width:760px){main{padding-bottom:0}}
+.sec{padding:72px 0 8px}
+@media(min-width:760px){.sec{padding:96px 0 12px}}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:28px}
+.sec-head h2{font-size:clamp(1.45rem,3.2vw,2.05rem);font-weight:700;color:#fff}
+.sec-link{color:var(--teal);font-weight:700;font-size:.92rem;white-space:nowrap;min-height:44px;display:inline-flex;align-items:center}
+@media (hover:hover) and (pointer:fine){.sec-link:hover{text-decoration:underline;text-underline-offset:4px}}
+
+/* ---- categories ---- */
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:760px){.cat-grid{grid-template-columns:repeat(4,1fr);gap:16px}}
+.cat{
+  position:relative;display:block;aspect-ratio:4/5;overflow:hidden;
+  border-radius:var(--r);border:1px solid var(--line);background:var(--elev);
+  transition:transform .2s ease,border-color .3s ease,box-shadow .35s ease;
+}
+.cat:active{transform:scale(.97)}
+.cat img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.001)}
+.cat::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 38%,rgba(6,8,12,.55) 68%,rgba(6,8,12,.92) 100%);
+}
+.cat-txt{position:absolute;inset-inline:0;bottom:0;z-index:1;padding:14px 14px 13px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.cat-txt h3{color:#fff;font-weight:800;font-size:.98rem;line-height:1.25}
+.cat-txt p{color:#b8c3d0;font-size:.76rem;font-weight:600;margin-top:2px}
+.cat-arrow{flex:none;color:#9fe9d3;font-size:1rem;opacity:.75;transition:transform .3s ease,opacity .3s ease}
+@media (hover:hover) and (pointer:fine){
+  .cat img{transition:transform 6s cubic-bezier(.22,.61,.36,1)}
+  .cat:hover img{transform:scale(1.1) translate3d(1.6%,-1.6%,0)}
+  .cat:hover{border-color:rgba(20,199,154,.35);box-shadow:0 14px 44px rgba(0,0,0,.5)}
+  .cat:hover .cat-arrow{transform:translateX(4px);opacity:1}
+}
+
+/* ---- steps ---- */
+.steps{display:grid;gap:12px}
+@media(min-width:760px){.steps{grid-template-columns:repeat(3,1fr);gap:16px}}
+.step{
+  background:var(--glass);border:1px solid var(--line);border-radius:var(--r);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  padding:24px 22px;
+}
+.step-num{
+  font-family:"Unbounded",sans-serif;font-weight:700;font-size:.9rem;color:var(--teal);
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(20,199,154,.1);border:1px solid rgba(20,199,154,.25);margin-bottom:16px;
+}
+.step h3{color:#fff;font-weight:800;font-size:1.05rem;margin-bottom:6px}
+.step p{color:var(--muted);font-size:.92rem}
+
+/* ---- creators ---- */
+.rail{
+  display:flex;gap:14px;overflow-x:auto;padding:4px 2px 16px;
+  scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.rail::-webkit-scrollbar{display:none}
+.creator{
+  flex:none;width:min(272px,80vw);scroll-snap-align:start;
+  background:var(--glass);border:1px solid var(--line);border-radius:var(--r);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  padding:22px 20px 16px;
+  transition:transform .2s ease,border-color .3s ease,box-shadow .35s ease;
+}
+.creator:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){
+  .creator:hover{border-color:rgba(20,199,154,.3);box-shadow:0 14px 40px rgba(0,0,0,.45);transform:translateY(-3px)}
+}
+.avatar{width:56px;height:56px;border-radius:50%;margin-bottom:14px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.av-1{background:radial-gradient(circle at 30% 28%,#ffc98a,#e0567c 78%)}
+.av-2{background:radial-gradient(circle at 30% 28%,#8fe6ff,#2b6cf0 78%)}
+.av-3{background:radial-gradient(circle at 30% 28%,#c8f5e2,#14c79a 78%)}
+.av-4{background:radial-gradient(circle at 30% 28%,#d4c8ff,#7c6cf0 78%)}
+.creator-name{display:flex;align-items:center;gap:7px;color:#fff;font-weight:800;font-size:1rem}
+.vmark{color:var(--teal);font-size:.9rem}
+.creator-meta{color:var(--muted);font-size:.86rem;font-weight:600;margin-top:3px}
+.creator-meta .star{color:#ffd166}
+.profile-link{display:inline-flex;align-items:center;min-height:44px;margin-top:8px;color:var(--teal);font-weight:700;font-size:.9rem}
+@media (hover:hover) and (pointer:fine){.profile-link:hover{text-decoration:underline;text-underline-offset:4px}}
+
+/* ---- trust & footer ---- */
+.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:56px 0 0}
+.trust span{
+  display:inline-flex;align-items:center;min-height:44px;padding:10px 18px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--line);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  color:#c6d1de;font-weight:600;font-size:.86rem;
+}
+.trust .tk{color:var(--teal);margin-right:7px;font-weight:800}
+.foot{padding:36px var(--pad) 48px;text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid rgba(255,255,255,.06);margin-top:56px}
+
+/* ---- bottom nav (mobile) ---- */
+.bnav{
+  position:fixed;z-index:60;inset-inline:12px;bottom:10px;
+  background:rgba(14,17,23,.78);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:20px;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+}
+.bnav a{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:52px;border-radius:14px;
+  color:var(--muted);font-size:.68rem;font-weight:700;
+}
+.bnav a .bi{font-size:1.15rem;line-height:1}
+.bnav a.on{color:var(--teal);background:rgba(20,199,154,.1)}
+.bnav a:active{transform:scale(.97)}
+@media(min-width:760px){.bnav{display:none}}
+
+/* ============ reduced motion ============ */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  .hero-media{animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Kontentga oʻtish</a>
+
+<nav class="nav" id="nav" aria-label="Asosiy navigatsiya">
+  <div class="nav-in">
+    <a class="brand" href="#">Freelance<span class="ai">AI</span></a>
+    <div class="nav-links">
+      <a href="#kategoriyalar">Xizmatlar</a>
+      <a href="#ijodkorlar">Ijodkorlar</a>
+      <a href="#">Ijodkor boʻlish</a>
+      <button class="lang-chip" type="button">Oʻzbek <span aria-hidden="true">▾</span></button>
+    </div>
+    <a class="btn-login" href="#">Kirish</a>
+  </div>
+</nav>
+
+<header class="hero" id="hero">
+  <div class="hero-bg" id="heroBg" aria-hidden="true">
+    <div class="hero-fallback"></div>
+    <div class="hero-media">
+      <img class="hero-img" src="mock-assets/hero.webp" alt="" loading="eager" fetchpriority="high" onerror="this.style.display='none'">
+      <video muted playsinline loop poster="mock-assets/hero.webp" preload="none">
+        <!-- production loop goes here: <source src="mock-assets/hero-loop.mp4" type="video/mp4"> -->
+      </video>
+    </div>
+  </div>
+  <div class="hero-scrim" aria-hidden="true"></div>
+  <div class="hero-vignette" aria-hidden="true"></div>
+
+  <div class="hero-in" id="heroIn">
+    <p class="eyebrow"><span aria-hidden="true">✦</span> AI yordamchi <span class="sep" aria-hidden="true">·</span> <span aria-hidden="true">●</span> 1 240 ijodkor onlayn</p>
+    <h1 class="disp">Nima yaratmoqchisiz?<span class="t2">Yozing, topamiz.</span></h1>
+    <p class="hero-sub">Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.</p>
+
+    <div class="search-card">
+      <p class="search-label"><span class="pulse-dot" aria-hidden="true"></span> FreelanceAI yordamchi</p>
+      <div class="search-row">
+        <label class="skip" for="q">Kerakli ishni tasvirlang</label>
+        <textarea id="q" rows="1" placeholder="Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…"></textarea>
+        <button class="ic-btn mic" type="button" aria-label="Ovoz orqali aytish">🎙</button>
+        <button class="ic-btn go" type="button" aria-label="Qidirish">→</button>
+      </div>
+    </div>
+
+    <div class="chips" role="list" aria-label="Namuna soʻrovlar">
+      <button class="chip" role="listitem" type="button">Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…</button>
+      <button class="chip" role="listitem" type="button">Restoran menyusi uchun mahsulot fotosuratlari, oq fon…</button>
+      <button class="chip" role="listitem" type="button">Brendim uchun logotip va vizual identika…</button>
+      <button class="chip" role="listitem" type="button">Instagram uchun oʻzbek ovozli talking-head avatar…</button>
+      <button class="chip" role="listitem" type="button">Kiyim doʻkoni uchun moda AI videosi (reels)</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ===== categories ===== -->
+  <section class="sec wrap" id="kategoriyalar" data-reveal-group>
+    <div class="sec-head" data-reveal>
+      <h2 class="disp">Mashhur yoʻnalishlar</h2>
+      <a class="sec-link" href="#">Barchasini koʻrish →</a>
+    </div>
+    <div class="cat-grid">
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/ai-video.webp" alt="AI video xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>AI video</h3><p>reklama, reels, explainer</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/ai-image.webp" alt="AI rasm va art xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>AI rasm / art</h3><p>personaj, poster, art</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/ai-avatar.webp" alt="AI avatar xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>AI avatar</h3><p>talking-head, bloger</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/product-photo.webp" alt="Mahsulot fotosurati xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>Mahsulot fotosurati</h3><p>e-commerce, katalog</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/voiceover.webp" alt="Ovoz berish va dublyaj xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>Ovoz / dublyaj</h3><p>uz · ru · en</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/branding.webp" alt="Brending xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>Brending</h3><p>logo, identika</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/motion.webp" alt="Motion va animatsiya xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>Motion / animatsiya</h3><p>logo animatsiya, intro</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+      <a class="cat" href="#" data-reveal>
+        <img src="mock-assets/image-edit.webp" alt="Rasm tahrirlash xizmatlari" loading="lazy">
+        <div class="cat-txt"><div><h3>Rasm tahrir</h3><p>retush, upscale</p></div><span class="cat-arrow" aria-hidden="true">→</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ===== how it works ===== -->
+  <section class="sec wrap" data-reveal-group>
+    <div class="sec-head" data-reveal>
+      <h2 class="disp">Qanday ishlaydi</h2>
+    </div>
+    <div class="steps">
+      <div class="step" data-reveal>
+        <div class="step-num" aria-hidden="true">1</div>
+        <h3>Tasvirlang</h3>
+        <p>Kerakli ishni oddiy tilda yozing yoki ovozda ayting.</p>
+      </div>
+      <div class="step" data-reveal>
+        <div class="step-num" aria-hidden="true">2</div>
+        <h3>Mos ijodkorni tanlang</h3>
+        <p>AI top mosliklarni narx va muddat bilan koʻrsatadi.</p>
+      </div>
+      <div class="step" data-reveal>
+        <div class="step-num" aria-hidden="true">3</div>
+        <h3>Xavfsiz toʻlang</h3>
+        <p>Ish tugagach toʻlov ijodkorga oʻtadi — Payme, Click, Uzum.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== creators ===== -->
+  <section class="sec wrap" id="ijodkorlar" data-reveal-group>
+    <div class="sec-head" data-reveal>
+      <h2 class="disp">Tanlangan ijodkorlar</h2>
+      <a class="sec-link" href="#">Barchasini koʻrish →</a>
+    </div>
+    <div class="rail">
+      <article class="creator" data-reveal>
+        <div class="avatar av-1" aria-hidden="true"></div>
+        <h3 class="creator-name">Malika F. <span class="vmark" aria-label="Tasdiqlangan">✓</span></h3>
+        <p class="creator-meta">Fashion AI video · <span class="star" aria-hidden="true">★</span> 4.9</p>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+      <article class="creator" data-reveal>
+        <div class="avatar av-2" aria-hidden="true"></div>
+        <h3 class="creator-name">Dilnoza R. <span class="vmark" aria-label="Tasdiqlangan">✓</span></h3>
+        <p class="creator-meta">AI video · <span class="star" aria-hidden="true">★</span> 4.9</p>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+      <article class="creator" data-reveal>
+        <div class="avatar av-3" aria-hidden="true"></div>
+        <h3 class="creator-name">Kamila T. <span class="vmark" aria-label="Tasdiqlangan">✓</span></h3>
+        <p class="creator-meta">Fotosurat · <span class="star" aria-hidden="true">★</span> 5.0</p>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+      <article class="creator" data-reveal>
+        <div class="avatar av-4" aria-hidden="true"></div>
+        <h3 class="creator-name">Sardor M. <span class="vmark" aria-label="Tasdiqlangan">✓</span></h3>
+        <p class="creator-meta">Brending · <span class="star" aria-hidden="true">★</span> 4.8</p>
+        <a class="profile-link" href="#">Profil →</a>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== trust ===== -->
+  <section class="wrap" data-reveal-group>
+    <div class="trust">
+      <span data-reveal><b class="tk" aria-hidden="true">✓</b> Xavfsiz toʻlov</span>
+      <span data-reveal>Payme · Click · Uzum</span>
+      <span data-reveal><b class="tk" aria-hidden="true">✓</b> Tasdiqlangan ijodkorlar (KYC)</span>
+      <span data-reveal><b class="tk" aria-hidden="true">✓</b> 3 tilda</span>
+    </div>
+  </section>
+
+  <footer class="foot">
+    FreelanceAI — Markaziy Osiyoning AI-ijodkorlar bozori
+  </footer>
+</main>
+
+<nav class="bnav" aria-label="Mobil navigatsiya">
+  <a href="#" class="on"><span class="bi" aria-hidden="true">⌂</span>Bosh</a>
+  <a href="#q"><span class="bi" aria-hidden="true">🔍</span>Qidiruv</a>
+  <a href="#kategoriyalar"><span class="bi" aria-hidden="true">▦</span>Xizmatlar</a>
+  <a href="#ijodkorlar"><span class="bi" aria-hidden="true">✦</span>Ijodkorlar</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- nav: transparent over hero -> glass after ---- */
+  var nav = document.getElementById("nav");
+  var hero = document.getElementById("hero");
+  function onScroll(){
+    var gate = hero ? hero.offsetHeight - 76 : 400;
+    nav.classList.toggle("scrolled", window.scrollY > gate);
+  }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+
+  /* ---- typewriter placeholder (stops on focus) ---- */
+  var ta = document.getElementById("q");
+  var lines = [
+    "Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…",
+    "Restoran menyusi uchun mahsulot fotosuratlari, oq fon…",
+    "Brendim uchun logotip va vizual identika…",
+    "Instagram uchun oʻzbek ovozli talking-head avatar…"
+  ];
+  if (ta && !reduced){
+    var si = 0, ci = 0, dir = 1, stopped = false, timer = null;
+    function tick(){
+      if (stopped) return;
+      var s = lines[si];
+      ci += dir;
+      ta.setAttribute("placeholder", s.slice(0, ci));
+      var d = dir > 0 ? 34 : 12;
+      if (dir > 0 && ci >= s.length){ dir = -1; d = 2300; }
+      else if (dir < 0 && ci <= 0){ dir = 1; si = (si + 1) % lines.length; d = 460; }
+      timer = setTimeout(tick, d);
+    }
+    ta.addEventListener("focus", function(){
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      ta.setAttribute("placeholder", lines[0]);
+    }, {once:true});
+    timer = setTimeout(tick, 900);
+  }
+
+  /* ---- example chips fill the textarea (no auto-submit) ---- */
+  document.querySelectorAll(".chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      if (!ta) return;
+      ta.value = chip.textContent.trim();
+      ta.focus();
+    });
+  });
+
+  /* ---- motion system (GSAP) — content is always visible without JS ---- */
+  if (reduced || !window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* 1 · hero scrub: bg scales up + darkens, headline drifts up + fades */
+  gsap.to("#heroBg", {
+    scale: 1.07,
+    filter: "brightness(.5)",
+    ease: "none",
+    scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: true }
+  });
+  gsap.to("#heroIn", {
+    y: -70,
+    opacity: 0,
+    ease: "none",
+    scrollTrigger: { trigger: "#hero", start: "top top", end: "78% top", scrub: true }
+  });
+
+  /* 2 · hero intro (from-only: safe if JS never ran) */
+  gsap.from("#heroIn > *", {
+    y: 26, opacity: 0, duration: .9, ease: "power3.out",
+    stagger: .09, delay: .12, clearProps: "opacity,transform"
+  });
+
+  /* 3 · one tuned stagger for every section below the fold */
+  document.querySelectorAll("[data-reveal-group]").forEach(function(group){
+    var items = group.querySelectorAll("[data-reveal]");
+    if (!items.length) return;
+    gsap.from(items, {
+      y: 28, opacity: 0, duration: .8, ease: "power3.out",
+      stagger: .07, clearProps: "opacity,transform",
+      scrollTrigger: { trigger: group, start: "top 82%", once: true }
+    });
+  });
+})();
+</script>
+</body>
+</html>

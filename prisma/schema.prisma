@@ -83,6 +83,9 @@ model User {
   streakDays    Int       @default(0)
   streakBest    Int       @default(0)
   lastActiveDay DateTime?
+  // Set when the bot gets a 403 sending to this user (they blocked the bot) — skipped
+  // by broadcasts/pushes so we don't hammer a dead chat. Cleared on next inbound message.
+  telegramBlockedAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -614,6 +617,37 @@ enum FlagSeverity {
   LOW
   MEDIUM
   HIGH
+}
+
+// Admin bulk message to Telegram bot users. Queued + processed by a throttled cron
+// (Telegram ~30 msg/s global limit), so a large send never blocks a request or 429s.
+enum BroadcastAudience {
+  ALL
+  BUYERS
+  SELLERS
+  ACTIVE_30D
+}
+
+enum BroadcastStatus {
+  PENDING
+  SENDING
+  DONE
+}
+
+model Broadcast {
+  id          String            @id @default(cuid())
+  message     String
+  audience    BroadcastAudience
+  status      BroadcastStatus   @default(PENDING)
+  sentCount   Int               @default(0)
+  failedCount Int               @default(0)
+  cursor      String? // last-processed user id, for resumable batched sending
+  createdById String?
+  createdAt   DateTime          @default(now())
+  startedAt   DateTime?
+  doneAt      DateTime?
+
+  @@index([status])
 }
 
 // S2 semantic search: one embedding per seller over their "creator document"

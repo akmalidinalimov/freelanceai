@@ -1,0 +1,132 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreelanceAI — B2 · AI Concierge (home)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0c1526;--soft:#4d5a72;--teal:#0f9e79;--teal2:#0a5f4b;--tint:#eef7f3;--coral:#f0623c;--line:#e6ecea;--paper:#fbfdfc}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:var(--paper);
+ background-image:radial-gradient(rgba(15,158,121,.09) 1px,transparent 1px);background-size:22px 22px}
+.disp{font-family:Unbounded,sans-serif;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;height:66px;
+ background:rgba(251,253,252,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:0 24px}
+.navin{max-width:1120px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:Unbounded;font-weight:800;font-size:19px}.brand b{color:var(--teal)}
+.nl{display:flex;gap:24px;align-items:center;font-weight:500;font-size:15px;color:var(--soft)}
+.dark{background:var(--ink);color:#fff;padding:9px 17px;border-radius:11px;font-weight:600}
+.hero{text-align:center;padding:56px 0 26px}
+.tag{display:inline-flex;gap:7px;align-items:center;background:var(--tint);color:var(--teal2);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px}
+h1{font-weight:800;font-size:54px;line-height:1.04;margin:18px auto 0;max-width:15ch;text-wrap:balance}
+h1 .g{color:var(--teal)}
+.sub{color:var(--soft);font-size:18px;margin:18px auto 0;max-width:50ch;line-height:1.5}
+.ai{max-width:660px;margin:30px auto 0;background:#fff;border:1.5px solid var(--line);border-radius:20px;box-shadow:0 40px 80px -44px rgba(11,21,38,.3);padding:16px 16px 12px;text-align:left;transition:.2s}
+.ai:focus-within{border-color:var(--teal);box-shadow:0 40px 80px -40px rgba(15,158,121,.35)}
+.ai .lab{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--teal2)}
+.ai .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(15,158,121,.18);animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(15,158,121,0)}}
+.ai input{width:100%;border:0;outline:0;font-family:inherit;font-size:19px;color:var(--ink);margin-top:12px;padding:2px 0}
+.ai input::placeholder{color:#8a97a8}
+.ai .row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
+.ai .mini{display:flex;gap:8px;flex-wrap:wrap}
+.ai .mini span{font-size:13px;font-weight:600;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;transition:.15s}
+.ai .mini span:hover{border-color:var(--teal);color:var(--teal2);background:var(--tint)}
+.go{background:var(--teal);color:#fff;border:0;font-family:inherit;font-weight:700;font-size:15px;padding:11px 20px;border-radius:12px;cursor:pointer;display:flex;gap:7px;align-items:center;white-space:nowrap;transition:.15s}
+.go:hover{background:var(--teal2)}
+/* result preview */
+.preview{max-width:660px;margin:14px auto 0;display:flex;gap:10px;align-items:center;justify-content:center;color:var(--soft);font-size:13.5px;font-weight:600;opacity:0;animation:fade .6s .9s forwards}
+@keyframes fade{to{opacity:1}}
+.preview .pv{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:7px 12px}
+.preview .av{width:24px;height:24px;border-radius:7px}
+.trust{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:26px;font-size:13.5px;color:var(--soft);font-weight:600}
+.trust b{color:var(--teal2)}
+/* section head */
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin:46px 0 18px}
+.sh h2{font-family:Unbounded;font-size:24px}.sh a{color:var(--teal2);font-weight:600;font-size:15px}
+/* marquee */
+.mq{overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.track{display:flex;gap:16px;width:max-content;animation:scroll 36s linear infinite}
+.mq:hover .track{animation-play-state:paused}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.card{width:220px;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;flex:0 0 auto;transition:.2s}
+.card:hover{transform:translateY(-5px);box-shadow:0 22px 44px -28px rgba(11,21,38,.4)}
+.card .th{height:126px;position:relative}
+.card .vb{position:absolute;top:9px;right:9px;background:#fff;color:var(--teal2);font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px}
+.card .b{padding:11px 12px 13px}.card .s{font-size:12.5px;color:var(--soft);font-weight:600}
+.card h3{font-size:14px;font-weight:700;margin:5px 0 9px;line-height:1.3}
+.card .p{font-family:Unbounded;font-weight:700;font-size:15px}.card .p small{font-weight:600;font-size:11px;color:var(--soft)}
+/* featured creators — IG synced */
+.crail{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 0 16px;scrollbar-width:none}
+.crail::-webkit-scrollbar{display:none}
+.creator{scroll-snap-align:start;flex:0 0 300px;background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:.2s}
+.creator:hover{box-shadow:0 24px 50px -30px rgba(11,21,38,.4);transform:translateY(-3px)}
+.chead{display:flex;align-items:center;gap:11px;padding:15px 15px 12px}
+.cav{width:46px;height:46px;border-radius:14px;flex:0 0 auto}
+.cnm{font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px}
+.vchip{color:var(--teal2);font-size:12px}
+.chandle{font-size:12.5px;color:var(--soft);font-weight:600;display:flex;align-items:center;gap:5px}
+.igglyph{width:13px;height:13px;border-radius:4px;background:linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0);display:inline-block}
+.cwork{display:grid;grid-template-columns:2fr 1fr 1fr;grid-auto-rows:70px;gap:3px}
+.cwork .t{position:relative;overflow:hidden}
+.cwork .t.big{grid-row:span 2}
+.cwork .play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:20px;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.cfoot{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;font-size:13px;font-weight:600;color:var(--soft)}
+.cfoot .r{color:var(--ink)}
+.cfoot .view{color:var(--teal2)}
+.foot{text-align:center;color:var(--soft);font-size:13px;padding:44px 0 34px;border-top:1px solid var(--line);margin-top:44px}
+@media (prefers-reduced-motion:reduce){.track{animation:none}.preview{animation:none;opacity:1}.dot{animation:none}}
+@media(max-width:820px){h1{font-size:36px}.nl a:not(.dark){display:none}.ai .row{flex-direction:column;align-items:stretch}.go{justify-content:center}}
+</style></head><body>
+<nav><div class="navin"><div class="brand">Freelance<b>AI</b></div><div class="nl"><a>Xizmatlar</a><a>Ijodkorlar</a><a>Ijodkor boʻlish</a><a>Oʻzbek ▾</a><a class="dark">Kirish</a></div></div></nav>
+<div class="wrap">
+ <section class="hero">
+  <span class="tag">✦ AI yordamchi sizga mos ijodkorni topadi</span>
+  <h1 class="disp">Kerakli ishni <span class="g">tasvirlab bering</span></h1>
+  <p class="sub">Talabingizni yozing — yordamchimiz eng mos tasdiqlangan ijodkorlarni qidirib topadi. Bepul, majburiyatsiz.</p>
+  <form class="ai" onsubmit="return false">
+   <div class="lab"><span class="dot"></span>FreelanceAI yordamchi</div>
+   <input id="q" aria-label="Qanday ish kerakligini yozing" autocomplete="off">
+   <div class="row">
+    <div class="mini"><span>AI reklama roligi</span><span>Logotip</span><span>Mahsulot fotosurati</span></div>
+    <button class="go">Qidirish <span>→</span></button>
+   </div>
+  </form>
+  <div class="preview"><span>Masalan:</span>
+   <span class="pv"><span class="av" style="background:radial-gradient(circle at 40% 35%,#7ef0d0,#0f9e79)"></span>3 ta mos ijodkor topildi</span>
+   <span class="pv">≈ 150 000–300 000 soʻm</span>
+   <span class="pv">2–4 kun</span>
+  </div>
+  <div class="trust"><span>✓ Xavfsiz <b>toʻlov</b></span><span>Toʻlov: <b>Payme · Click · Uzum</b></span><span>✓ Tasdiqlangan ijodkorlar (KYC)</span><span>✓ 3 tilda</span></div>
+ </section>
+
+ <div class="sh"><h2 class="disp">Tanlangan ijodkorlar</h2><a>Barchasi →</a></div>
+ <div class="crail" id="crail"></div>
+
+ <div class="sh"><h2 class="disp">Mashhur xizmatlar</h2><a>Barchasi →</a></div>
+</div>
+<div class="mq"><div class="wrap" style="padding:0"><div class="track" id="track"></div></div></div>
+<div class="wrap"><p class="foot">FreelanceAI — Markaziy Osiyoning AI-ijodkorlar bozori · Xavfsiz toʻlov · Tasdiqlangan ijodkorlar · oʻzbek / рус / english</p></div>
+<script>
+// real input with animated placeholder that stops on focus/typing
+const ex=["AI reklama roligi kerak, 15 soniya, mahsulotim uchun…","Instagram uchun 10 ta AI rasm, brend ranglarim bilan…","Talking-head avatar video, oʻzbek ovozi bilan…","E-commerce mahsulot fotosuratlari, oq fon…"];
+const q=document.getElementById('q');let ei=0,ci=0,del=false,stop=false;
+function tick(){if(stop)return;const s=ex[ei];q.placeholder=s.slice(0,ci);if(!del){ci++;if(ci>s.length){del=true;return setTimeout(tick,1500)}}else{ci--;if(ci<0){del=false;ei=(ei+1)%ex.length;ci=0}}setTimeout(tick,del?26:52)}tick();
+q.addEventListener('focus',()=>{stop=true;q.placeholder="Qanday ish kerak? tasvirlab bering…"});
+document.querySelectorAll('.mini span').forEach(s=>s.onclick=()=>{stop=true;q.value=s.textContent;q.focus()});
+// featured creators (IG-synced portfolios)
+const G=["radial-gradient(circle at 30% 30%,#f7b24a,#f0623c 60%,#8a2d5a)","radial-gradient(circle at 55% 45%,#7ef0d0,#0f9e79,#0a3f4a)","radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0,#22143f)","radial-gradient(circle at 45% 40%,#c9a2ff,#6d4ad0,#241146)","radial-gradient(circle at 50% 35%,#ffb0c8,#f0623c,#5a1030)","radial-gradient(circle at 35% 55%,#a0f0d8,#0f9e79,#053b2c)"];
+const cr=[["Dilnoza R.","@vividai.uz","AI video · Level 2","4.9","radial-gradient(circle at 40% 35%,#7ef0d0,#0f9e79 60%,#0a3f4a)",[0,1,5,3]],
+["Sardor M.","@qoraquti","Brending · Level 2","4.8","radial-gradient(circle at 40% 35%,#8ab4ff,#5b4ad0 60%,#22143f)",[2,4,1,0]],
+["Kamila T.","@studio.aurora","Fotosurat · Top Rated","5.0","radial-gradient(circle at 45% 40%,#ffd27a,#f0623c 70%)",[4,0,3,5]],
+["Bekzod A.","@neonlab","AI rasm · Level 1","4.7","radial-gradient(circle at 35% 35%,#c9a2ff,#6d4ad0,#241146)",[3,5,2,1]]];
+const CR=document.getElementById('crail');
+CR.innerHTML=cr.map(c=>{const [n,h,role,rat,av,w]=c;const vid=w[0];
+ return `<div class="creator"><div class="chead"><span class="cav" style="background:${av}"></span><div><div class="cnm">${n} <span class="vchip">✓</span></div><div class="chandle"><span class="igglyph"></span>${h} · ulangan</div></div></div>
+ <div class="cwork"><div class="t big" style="background:${G[w[0]]}"><div class="play">▶</div></div><div class="t" style="background:${G[w[1]]}"></div><div class="t" style="background:${G[w[2]]}"></div></div>
+ <div class="cfoot"><span class="r">★ ${rat} · ${role}</span><span class="view">Profil →</span></div></div>`}).join('');
+// popular services marquee
+const cards=[["VividAI","AI reklama roligi — 15s","250 000",1,G[0]],["Sesara","Talking-head avatar","180 000",1,G[1]],["Qora Quti","Brend identikasi","500 000",0,G[2]],["Studio Aurora","Mahsulot fotosurati","100 000",1,G[4]],["NeonLab","AI personaj dizayni","220 000",0,G[3]],["PixelBek","Rasm retush + upscale","60 000",1,G[5]]];
+document.getElementById('track').innerHTML=(()=>{const h=cards.map(c=>`<div class="card"><div class="th" style="background:${c[4]}">${c[3]?'<span class="vb">✓ Tasdiqlangan</span>':''}</div><div class="b"><div class="s">${c[0]}</div><h3>${c[1]}</h3><div class="p">${c[2]} <small>soʻm</small></div></div></div>`).join('');return h+h})();
+</script></body></html>
