@@ -35,8 +35,12 @@ export function MessageThread({
   const t = useTranslations("Message");
   const format = useFormatter();
   const lastSeenMs = counterpart?.lastSeenAt ? new Date(counterpart.lastSeenAt).getTime() : null;
-  const online = isOnline(lastSeenMs, Date.now());
   const quickReplies = (t.raw("quickReplies") as string[]) ?? [];
+  // Presence depends on the current clock, which differs between SSR and hydration —
+  // render it only after mount (client-only) to avoid a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const online = mounted && isOnline(lastSeenMs, Date.now());
   const [messages, setMessages] = useState<Msg[]>(initial);
   const [input, setInput] = useState("");
   const [files, setFiles] = useState<string[]>([]);
@@ -120,7 +124,7 @@ export function MessageThread({
     <div className="rounded-xl border border-[hsl(var(--border))] p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="truncate text-sm font-medium">{counterpart?.name || t("title")}</p>
-        {counterpart && (
+        {counterpart && mounted && (
           <span className="flex shrink-0 items-center gap-1.5 text-xs text-[hsl(var(--muted-foreground))]">
             <span
               aria-hidden
