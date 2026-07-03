@@ -12,7 +12,7 @@ export async function CreatorCard({ creator }: { creator: BrowseCreator }) {
   const inner = (
     <div className="flex h-full flex-col rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))] hover:shadow-[0_18px_40px_-24px_rgba(11,18,32,0.35)]">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary))]">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary-ink))]">
           {creator.avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={creator.avatar} alt="" className="h-full w-full object-cover" />
@@ -38,7 +38,7 @@ export async function CreatorCard({ creator }: { creator: BrowseCreator }) {
           {creator.specializations.slice(0, 3).map((k) => (
             <span
               key={k}
-              className="rounded-full bg-[hsl(var(--primary))]/10 px-2.5 py-0.5 text-[11px] font-medium text-[hsl(var(--primary))]"
+              className="rounded-full bg-[hsl(var(--primary))]/10 px-2.5 py-0.5 text-[11px] font-medium text-[hsl(var(--primary-ink))]"
             >
               {specLabel(k, locale)}
             </span>

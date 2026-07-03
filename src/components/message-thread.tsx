@@ -177,7 +177,7 @@ export function MessageThread({
           <span className="flex shrink-0 items-center gap-1.5 text-xs text-[hsl(var(--muted-foreground))]">
             <span
               aria-hidden
-              className={`h-2 w-2 rounded-full ${online ? "bg-emerald-500" : "bg-[hsl(var(--muted-foreground))]/40"}`}
+              className={`h-2 w-2 rounded-full ${online ? "bg-emerald-600" : "bg-[hsl(var(--muted-foreground))]/40"}`}
             />
             {online
               ? t("online")
@@ -193,6 +193,7 @@ export function MessageThread({
           <button
             type="button"
             onClick={() => setReporting((v) => !v)}
+            aria-expanded={reporting}
             className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:underline"
           >
             {reported ? t("reported") : t("report")}
@@ -217,7 +218,7 @@ export function MessageThread({
             maxLength={1000}
             placeholder={t("reportPlaceholder")}
             aria-label={t("report")}
-            className="w-full rounded-md border border-[hsl(var(--border))] bg-transparent p-2 text-sm"
+            className="w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent p-2 text-sm"
           />
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" onClick={() => setReporting(false)}>
@@ -230,7 +231,7 @@ export function MessageThread({
         </div>
       )}
 
-      <div className="mb-3 max-h-80 space-y-2 overflow-y-auto">
+      <div className="mb-3 max-h-80 space-y-2 overflow-y-auto" aria-live="polite" aria-relevant="additions">
         {messages.length === 0 ? (
           <p className="py-6 text-center text-sm text-[hsl(var(--muted-foreground))]">{t("empty")}</p>
         ) : (
@@ -312,7 +313,7 @@ export function MessageThread({
               }}
               aria-label={t("placeholder")}
               placeholder={t("placeholder")}
-              className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
+              className="h-10 flex-1 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm"
             />
             <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
               {t("send")}

@@ -100,7 +100,7 @@ export function AccountSection() {
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="DELETE"
               autoComplete="off"
-              className="h-10 w-44 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
+              className="h-10 w-44 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm"
             />
           </label>
           <div>
@@ -118,7 +118,7 @@ export function AccountSection() {
       </div>
 
       {error && (
-        <p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </p>
       )}

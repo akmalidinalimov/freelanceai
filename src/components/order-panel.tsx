@@ -101,14 +101,15 @@ export function OrderPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div role="group" aria-label="Package tier" className="flex gap-2">
         {packages.map((p) => (
           <button
             key={p.tier}
             onClick={() => setTier(p.tier)}
+            aria-pressed={p.tier === tier}
             className={`flex-1 rounded-md border px-2 py-1.5 text-xs font-medium ${
               p.tier === tier
-                ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
+                ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary-ink))]"
                 : "border-[hsl(var(--border))]"
             }`}
           >
@@ -142,7 +143,7 @@ export function OrderPanel({
       {extras.length > 0 && viewer !== "owner" && (
         <div className="rounded-xl border border-[hsl(var(--border))] p-4">
           <p className="mb-2 text-sm font-medium">{to("extras")}</p>
-          <div className="space-y-2">
+          <div role="group" aria-label={to("extras")} className="space-y-2">
             {extras.map((e) => (
               <label key={e.id} className="flex cursor-pointer items-center justify-between gap-2 text-sm">
                 <span className="flex items-center gap-2">
@@ -177,7 +178,7 @@ export function OrderPanel({
                   <textarea
                     value={answers[i] ?? ""}
                     onChange={(e) => setAnswers((a) => ({ ...a, [i]: e.target.value }))}
-                    className="min-h-16 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+                    className="min-h-16 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
                   />
                 </label>
               ))}
@@ -185,7 +186,8 @@ export function OrderPanel({
                 value={requirements}
                 onChange={(e) => setRequirements(e.target.value)}
                 placeholder={to("requirementsPh")}
-                className="min-h-24 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+                aria-label={to("requirementsPh")}
+                className="min-h-24 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
               />
               <GalleryUpload
                 value={reqFiles}
@@ -198,11 +200,11 @@ export function OrderPanel({
                 onChange={(e) => setCoupon(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
                 aria-label={to("couponPh")}
                 placeholder={to("couponPh")}
-                className="h-10 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm uppercase"
+                className="h-10 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm uppercase"
               />
             </>
           )}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
           <Button className="w-full" size="lg" onClick={placeOrder} disabled={busy}>
             {busy ? to("placing") : to("placeOrder")}
           </Button>

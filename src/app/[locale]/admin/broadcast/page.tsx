@@ -17,7 +17,7 @@ export default async function AdminBroadcastPage({ params }: { params: Promise<{
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <p className="mb-2 text-sm">
-        <Link href="/admin" className="text-[hsl(var(--primary))] hover:underline">
+        <Link href="/admin" className="text-[hsl(var(--primary-ink))] hover:underline">
           ← Admin
         </Link>
       </p>

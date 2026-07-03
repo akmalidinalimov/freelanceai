@@ -103,7 +103,8 @@ export function OrderActions({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder={t("deliverPh")}
-            className="min-h-20 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+            aria-label={t("deliverPh")}
+            className="min-h-20 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
           />
           <GalleryUpload value={files} onChange={setFiles} prefix="deliveries" label={t("deliverFiles")} video />
           <Button onClick={() => act("deliver", { message, fileUrls: files })} disabled={busy}>
@@ -129,7 +130,7 @@ export function OrderActions({
         </Button>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

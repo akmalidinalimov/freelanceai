@@ -67,7 +67,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
           {t("clearAll")}
         </button>
       </div>
-      <ul className="divide-y divide-[hsl(var(--border))] rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+      <ul aria-live="polite" className="divide-y divide-[hsl(var(--border))] rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
         {items.map((n) => {
           const inner = (
             <div className="flex items-start justify-between gap-3 p-4">

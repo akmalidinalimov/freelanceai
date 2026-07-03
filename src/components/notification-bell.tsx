@@ -35,6 +35,7 @@ export function NotificationBell() {
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-[hsl(var(--muted))]"
     >
       <span aria-hidden className="text-lg">🔔</span>
+      <span className="sr-only" aria-live="polite">{unread > 0 ? `${unread} new` : ""}</span>
       {unread > 0 && (
         <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[hsl(var(--primary))] px-1 text-[10px] font-bold leading-none text-[hsl(var(--primary-foreground))]">
           {unread > 9 ? "9+" : unread}

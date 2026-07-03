@@ -171,7 +171,7 @@ export function HomeSearch() {
         }}
         className="rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 text-left shadow-[0_30px_60px_-40px_rgba(11,21,38,0.35)] transition-colors focus-within:border-[hsl(var(--primary))]"
       >
-        <div className="flex items-center gap-2 px-2 pt-1 text-xs font-bold text-[hsl(var(--primary))]">
+        <div className="flex items-center gap-2 px-2 pt-1 text-xs font-bold text-[hsl(var(--primary-ink))]">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--primary))]" />
           {t("searchAssistant")}
         </div>
@@ -235,10 +235,10 @@ export function HomeSearch() {
       </form>
 
       {state !== "idle" && (
-        <div className="mt-4 text-left">
+        <div className="mt-4 text-left" aria-live="polite" aria-busy={state === "loading"}>
           {state === "loading" ? (
-            <>
-              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[hsl(var(--primary))]">
+            <div role="status">
+              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[hsl(var(--primary-ink))]">
                 <span className="flex gap-1">
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[hsl(var(--primary))] [animation-delay:0ms]" />
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[hsl(var(--primary))] [animation-delay:150ms]" />
@@ -251,7 +251,7 @@ export function HomeSearch() {
                   <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-[hsl(var(--muted))]/60" />
                 ))}
               </div>
-            </>
+            </div>
           ) : results.length === 0 ? (
             <p className="text-sm text-[hsl(var(--muted-foreground))]">{ts("noResults")}</p>
           ) : (
@@ -264,7 +264,7 @@ export function HomeSearch() {
                   {specLabels.map((l) => (
                     <span
                       key={l}
-                      className="rounded-lg bg-[hsl(var(--primary))]/10 px-2.5 py-1 text-xs font-bold text-[hsl(var(--primary))]"
+                      className="rounded-lg bg-[hsl(var(--primary))]/10 px-2.5 py-1 text-xs font-bold text-[hsl(var(--primary-ink))]"
                     >
                       {l}
                     </span>
@@ -301,7 +301,7 @@ export function HomeSearch() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 font-bold">
                           <span className="truncate">{r.name}</span>
-                          {r.verified && <span className="text-xs text-[hsl(var(--primary))]">✓</span>}
+                          {r.verified && <span className="text-xs text-[hsl(var(--primary-ink))]">✓</span>}
                         </div>
                         <p className="mt-0.5 line-clamp-1 text-xs font-semibold text-[hsl(var(--muted-foreground))]">
                           {reason}
@@ -323,7 +323,7 @@ export function HomeSearch() {
                         }}
                       >
                         <div className="absolute inset-1 rounded-full bg-[hsl(var(--card))]" />
-                        <span className="relative text-xs font-extrabold text-[hsl(var(--primary))]">
+                        <span className="relative text-xs font-extrabold text-[hsl(var(--primary-ink))]">
                           {r.score}%
                         </span>
                       </div>

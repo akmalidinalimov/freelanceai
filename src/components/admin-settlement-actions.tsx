@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
-const field = "h-9 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+const field = "h-9 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
 
 export function ConfirmPaymentButton({ orderId }: { orderId: string }) {
   const t = useTranslations("Admin");
@@ -84,7 +84,7 @@ export function PayoutForm({
       <Button size="sm" onClick={go} disabled={busy}>
         {t("recordPayout")}
       </Button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-red-600" role="alert">{error}</span>}
     </div>
   );
 }

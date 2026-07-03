@@ -26,7 +26,7 @@ export async function GamificationStrip({
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 px-4 py-3">
-      <span className="rounded-full bg-[hsl(var(--primary))]/10 px-2.5 py-1 text-xs font-semibold text-[hsl(var(--primary))]">
+      <span className="rounded-full bg-[hsl(var(--primary))]/10 px-2.5 py-1 text-xs font-semibold text-[hsl(var(--primary-ink))]">
         {level.label} · {xp} XP
         {level.nextAt !== null && (
           <span className="ml-1 font-normal text-[hsl(var(--muted-foreground))]">

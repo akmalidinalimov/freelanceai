@@ -37,8 +37,9 @@ export function CreateCollection() {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t("newPh")}
+        aria-label={t("newPh")}
         maxLength={60}
-        className="h-9 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
+        className="h-9 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm"
       />
       <Button type="submit" size="sm" disabled={busy || !name.trim()}>
         {t("create")}
@@ -90,7 +91,7 @@ export function CollectionSelect({
       onChange={change}
       disabled={busy}
       aria-label={t("assign")}
-      className="mt-1 h-8 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-2 text-xs"
+      className="mt-1 h-8 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-2 text-xs"
     >
       <option value="">{t("uncategorized")}</option>
       {collections.map((c) => (

@@ -24,7 +24,7 @@ export function ReviewReply({ reviewId }: { reviewId: string }) {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="mt-2 text-xs text-[hsl(var(--primary))] hover:underline">
+      <button onClick={() => setOpen(true)} aria-expanded={open} className="mt-2 text-xs text-[hsl(var(--primary-ink))] hover:underline">
         {t("reply")}
       </button>
     );
@@ -36,7 +36,8 @@ export function ReviewReply({ reviewId }: { reviewId: string }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={t("replyPh")}
-        className="min-h-16 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+        aria-label={t("replyPh")}
+        className="min-h-16 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
       />
       <Button size="sm" onClick={submit} disabled={busy}>
         {t("sendReply")}

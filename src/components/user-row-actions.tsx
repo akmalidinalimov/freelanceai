@@ -32,7 +32,7 @@ export function UserRowActions({
   return (
     <span className="flex items-center gap-2 text-xs">
       {status === "SUSPENDED" ? (
-        <button onClick={() => act("unsuspend")} disabled={busy} className="text-[hsl(var(--primary))] hover:underline">
+        <button onClick={() => act("unsuspend")} disabled={busy} className="text-[hsl(var(--primary-ink))] hover:underline">
           {t("unsuspend")}
         </button>
       ) : (

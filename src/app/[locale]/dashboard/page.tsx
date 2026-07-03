@@ -87,11 +87,11 @@ export default async function DashboardPage({
       </div>
 
       <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
-        <h3 className="mb-3 font-semibold">{t("orders")}</h3>
+        <h2 className="mb-3 font-semibold">{t("orders")}</h2>
         {orders.length === 0 ? (
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
             {to("noOrders")}{" "}
-            <Link href="/gigs" className="text-[hsl(var(--primary))] hover:underline">
+            <Link href="/gigs" className="text-[hsl(var(--primary-ink))] hover:underline">
               {to("browse")}
             </Link>
           </p>
@@ -117,7 +117,7 @@ export default async function DashboardPage({
       {referralUrl && (
         <div className="mb-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="font-semibold">{tr("inviteTitle")}</h3>
+            <h2 className="font-semibold">{tr("inviteTitle")}</h2>
             <span className="text-sm text-[hsl(var(--muted-foreground))]">
               {tr("invited", { n: referral.count })}
             </span>
@@ -127,7 +127,7 @@ export default async function DashboardPage({
             readOnly
             value={referralUrl}
             aria-label={tr("inviteTitle")}
-            className="w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+            className="w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
           />
         </div>
       )}
@@ -136,8 +136,8 @@ export default async function DashboardPage({
 
       <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-semibold">{t("saved")}</h3>
-          <Link href="/dashboard/saved" className="text-sm text-[hsl(var(--primary))] hover:underline">
+          <h2 className="font-semibold">{t("saved")}</h2>
+          <Link href="/dashboard/saved" className="text-sm text-[hsl(var(--primary-ink))] hover:underline">
             {t("manageSaved")}
           </Link>
         </div>
@@ -153,7 +153,7 @@ export default async function DashboardPage({
                   href={`/gigs/${g.slug}`}
                   className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
                 >
-                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary))]">
+                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary-ink))]">
                     {g.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

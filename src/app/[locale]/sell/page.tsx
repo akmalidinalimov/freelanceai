@@ -29,7 +29,7 @@ export default async function SellPage({
       <ul className="w-full space-y-3 text-left">
         {benefits.map((b) => (
           <li key={b} className="flex items-start gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
-            <span aria-hidden className="mt-0.5 text-[hsl(var(--primary))]">✓</span>
+            <span aria-hidden className="mt-0.5 text-[hsl(var(--primary-ink))]">✓</span>
             <span className="text-sm">{b}</span>
           </li>
         ))}

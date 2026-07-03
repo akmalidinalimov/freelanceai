@@ -10,7 +10,7 @@ const buttonVariants = cva(
         default:
           "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90",
         outline:
-          "border border-[hsl(var(--border))] bg-transparent hover:bg-[hsl(var(--muted))]",
+          "border border-[hsl(var(--input-border))] bg-transparent hover:bg-[hsl(var(--muted))]",
         ghost: "hover:bg-[hsl(var(--muted))]",
         accent:
           "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] hover:opacity-90",

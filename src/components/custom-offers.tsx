@@ -35,7 +35,7 @@ export function CustomOffers({
   const [days, setDays] = useState("3");
   const [rev, setRev] = useState("1");
 
-  const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+  const field = "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
 
   async function send() {
     setBusy(true);
@@ -163,8 +163,8 @@ export function CustomOffers({
           ))}
         </ul>
       )}
-      {sent && <p className="mt-2 text-sm font-medium text-green-800">{t("sent")}</p>}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {sent && <p className="mt-2 text-sm font-medium text-green-800" role="status">{t("sent")}</p>}
+      {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
     </div>
   );
 }

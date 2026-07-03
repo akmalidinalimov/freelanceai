@@ -68,7 +68,7 @@ export default async function HomePage({
       >
         {/* Hero — AI concierge search */}
         <section className="flex flex-col items-center gap-4 py-12 text-center sm:py-20">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary))]">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary-ink))]">
             ✦ {t("eyebrowAI")}
             {creatorCount > 0 && (
               <>
@@ -80,7 +80,7 @@ export default async function HomePage({
           </span>
           <h1 className="font-display max-w-[16ch] text-3xl font-extrabold leading-[1.08] text-balance sm:text-5xl">
             {t("searchHeadline")}{" "}
-            <span className="text-[hsl(var(--primary))]">{t("searchHeadline2")}</span>
+            <span className="text-[hsl(var(--primary-ink))]">{t("searchHeadline2")}</span>
           </h1>
           <p className="max-w-[42ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
             {t("searchSub")}
@@ -111,7 +111,7 @@ export default async function HomePage({
         <section className="py-6">
           <div className="mb-4 flex items-baseline justify-between px-1">
             <h2 className="font-display text-xl font-bold sm:text-2xl">{t("categoriesTitle")}</h2>
-            <Link href="/browse" className="text-sm font-semibold text-[hsl(var(--primary))] hover:underline">
+            <Link href="/browse" className="text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline">
               {t("viewAll")}
             </Link>
           </div>
@@ -122,10 +122,10 @@ export default async function HomePage({
                 href={`/browse/${specSlug(c.spec)}`}
                 className="group relative overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))]"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary-ink))]">
                   <c.Icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
-                <ArrowRight className="absolute right-4 top-4 h-4 w-4 text-[hsl(var(--muted-foreground))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--primary))]" />
+                <ArrowRight className="absolute right-4 top-4 h-4 w-4 text-[hsl(var(--muted-foreground))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--primary-ink))]" />
                 <h3 className="mt-3 text-sm font-bold">{specLabel(c.spec, locale)}</h3>
                 <p className="mt-0.5 text-xs font-medium text-[hsl(var(--muted-foreground))]">
                   {t(c.desc)}
@@ -161,7 +161,7 @@ export default async function HomePage({
           <section className="py-8">
             <div className="mb-4 flex items-baseline justify-between px-1">
               <h2 className="font-display text-xl font-bold sm:text-2xl">{t("featuredCreators")}</h2>
-              <Link href="/creators" className="text-sm font-semibold text-[hsl(var(--primary))] hover:underline">
+              <Link href="/creators" className="text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline">
                 {t("viewAll")}
               </Link>
             </div>

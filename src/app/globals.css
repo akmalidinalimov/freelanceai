@@ -5,13 +5,24 @@
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
   --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
+  /* Secondary text — darkened from 47%→40% L so it clears 4.5:1 on the muted
+     panel background too (WCAG 1.4.3), not just on white. */
+  --muted-foreground: 215 20% 40%;
   --border: 214 32% 91%;
+  /* Form-field boundary — darker than the decorative card border so an input's
+     edge clears 3:1 non-text contrast (WCAG 1.4.11). Used only on inputs. */
+  --input-border: 214 20% 69%;
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
   /* Brand: a confident teal/emerald for an "AI + trust" feel. */
   --primary: 173 80% 36%;
+  /* Darker teal for teal-on-white TEXT only (fills keep --primary). Clears
+     4.5:1 for small text (WCAG 1.4.3) while preserving the brand hue. */
+  --primary-ink: 173 84% 21%;
   --primary-foreground: 0 0% 100%;
+  /* Keyboard focus ring — referenced by inputs that opt out of the default
+     outline via focus-visible:ring-[hsl(var(--ring))]. Mirrors --primary. */
+  --ring: 173 80% 36%;
   /* B3 identity: coral accent alongside the teal primary. */
   --accent: 11 86% 59%;
   --accent-foreground: 0 0% 100%;
@@ -24,9 +35,11 @@
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-border: hsl(var(--border));
+  --color-input-border: hsl(var(--input-border));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
   --color-primary: hsl(var(--primary));
+  --color-primary-ink: hsl(var(--primary-ink));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
@@ -63,6 +76,13 @@ body {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* Ensure placeholder text meets 4.5:1 (WCAG 1.4.3) — don't rely on the browser
+   default (~#9CA3AF ≈ 2.8:1 on white). Uses the (darkened) secondary-text token. */
+::placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: 1;
 }
 
 /* Printing (receipts): drop the site chrome for a clean page. */

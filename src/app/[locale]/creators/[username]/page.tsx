@@ -66,7 +66,7 @@ export default async function CreatorProfilePage({
     <div className="mx-auto max-w-5xl px-4 py-10">
       {/* Identity card */}
       <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 sm:flex-row sm:items-center">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-2xl font-bold text-[hsl(var(--primary))]">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-2xl font-bold text-[hsl(var(--primary-ink))]">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="" className="h-full w-full object-cover" />
@@ -149,7 +149,7 @@ export default async function CreatorProfilePage({
                   title={ok ? t("specVerified") : undefined}
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     ok
-                      ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))]"
+                      ? "bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary-ink))]"
                       : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
                   }`}
                 >
@@ -282,7 +282,7 @@ export default async function CreatorProfilePage({
                 href={`/gigs/${g.slug}`}
                 className="flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
               >
-                <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-xl font-bold text-[hsl(var(--primary))]">
+                <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-xl font-bold text-[hsl(var(--primary-ink))]">
                   {g.coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

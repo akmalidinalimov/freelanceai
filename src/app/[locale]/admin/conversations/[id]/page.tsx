@@ -33,7 +33,7 @@ export default async function AdminConversationPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <p className="mb-2 text-sm">
-        <Link href="/admin/conversations" className="text-[hsl(var(--primary))] hover:underline">
+        <Link href="/admin/conversations" className="text-[hsl(var(--primary-ink))] hover:underline">
           ← All conversations
         </Link>
       </p>

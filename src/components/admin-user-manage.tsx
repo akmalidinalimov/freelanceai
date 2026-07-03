@@ -96,7 +96,7 @@ export function AdminUserManage({
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               aria-label='Type DELETE to confirm'
-              className="h-9 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-2"
+              className="h-9 flex-1 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-2"
             />
             <button
               className={`${btn} border-red-400 bg-red-600 text-white hover:bg-red-700`}
@@ -109,7 +109,7 @@ export function AdminUserManage({
         </div>
       )}
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
       <p className="mt-3 text-xs text-[hsl(var(--muted-foreground))]">
         Admin role cannot be granted here — it is allowlist-only (ADMIN_TELEGRAM_IDS), by design.
       </p>

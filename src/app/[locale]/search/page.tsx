@@ -57,7 +57,7 @@ export default async function SearchPage({
           defaultValue={query}
           placeholder={t("placeholder")}
           aria-label={t("placeholder")}
-          className="flex-1 rounded-xl border border-[hsl(var(--border))] bg-transparent px-4 py-3 text-sm"
+          className="flex-1 rounded-xl border border-[hsl(var(--input-border))] bg-transparent px-4 py-3 text-sm"
         />
         <button
           type="submit"
@@ -100,7 +100,7 @@ export default async function SearchPage({
               {data.intent.specLabels.map((l) => (
                 <span
                   key={l}
-                  className="rounded-lg bg-[hsl(var(--primary))]/10 px-2.5 py-1 text-xs font-semibold text-[hsl(var(--primary))]"
+                  className="rounded-lg bg-[hsl(var(--primary))]/10 px-2.5 py-1 text-xs font-semibold text-[hsl(var(--primary-ink))]"
                 >
                   {l}
                 </span>
@@ -119,7 +119,7 @@ export default async function SearchPage({
                 {data.results.map((r) => {
                   const inner = (
                     <div className="flex items-center gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-colors hover:border-[hsl(var(--primary))]">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary))]">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary-ink))]">
                         {r.avatar ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.avatar} alt="" className="h-full w-full object-cover" />
@@ -150,7 +150,7 @@ export default async function SearchPage({
                         )}
                       </div>
                       <div className="flex shrink-0 flex-col items-center">
-                        <span className="text-sm font-bold tabular-nums text-[hsl(var(--primary))]">
+                        <span className="text-sm font-bold tabular-nums text-[hsl(var(--primary-ink))]">
                           {r.score}%
                         </span>
                         <span className="text-[10px] font-medium text-[hsl(var(--muted-foreground))]">

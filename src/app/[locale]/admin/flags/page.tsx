@@ -34,7 +34,7 @@ export default async function AdminFlagsPage({ params }: { params: Promise<{ loc
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <p className="mb-2 text-sm">
-        <Link href="/admin" className="text-[hsl(var(--primary))] hover:underline">
+        <Link href="/admin" className="text-[hsl(var(--primary-ink))] hover:underline">
           ← Admin
         </Link>
       </p>
@@ -57,7 +57,7 @@ export default async function AdminFlagsPage({ params }: { params: Promise<{ loc
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <Link
                   href={`/admin/users/${user.id}`}
-                  className="font-semibold text-[hsl(var(--primary))] hover:underline"
+                  className="font-semibold text-[hsl(var(--primary-ink))] hover:underline"
                 >
                   {user.username ? `@${user.username}` : (user.firstName ?? user.email ?? user.id)}
                 </Link>
@@ -68,7 +68,7 @@ export default async function AdminFlagsPage({ params }: { params: Promise<{ loc
                 )}
                 <Link
                   href={`/admin/conversations?user=${user.id}`}
-                  className="text-xs text-[hsl(var(--primary))] hover:underline"
+                  className="text-xs text-[hsl(var(--primary-ink))] hover:underline"
                 >
                   conversations →
                 </Link>

@@ -41,13 +41,14 @@ export function BuyerReviewForm({ orderId }: { orderId: string }) {
   return (
     <div className="space-y-3 rounded-xl border border-[hsl(var(--border))] p-5">
       <p className="text-sm font-medium">{t("reviewBuyer")}</p>
-      <div className="flex gap-1" onMouseLeave={() => setHover(0)}>
+      <div role="group" aria-label={t("pickRating")} className="flex gap-1" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             type="button"
             onClick={() => setRating(n)}
             onMouseEnter={() => setHover(n)}
+            aria-pressed={n <= rating}
             className="text-3xl leading-none transition-colors"
             style={{ color: n <= (hover || rating) ? "#f5a623" : "hsl(var(--border))" }}
             aria-label={`${n}`}
@@ -60,9 +61,10 @@ export function BuyerReviewForm({ orderId }: { orderId: string }) {
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder={t("commentPh")}
-        className="min-h-20 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+        aria-label={t("commentPh")}
+        className="min-h-20 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       <Button onClick={submit} disabled={busy}>
         {busy ? t("submitting") : t("submit")}
       </Button>

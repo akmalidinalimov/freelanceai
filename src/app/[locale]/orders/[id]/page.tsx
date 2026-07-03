@@ -56,7 +56,7 @@ export default async function OrderPage({
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link href={`/gigs/${order.gig.slug}`} className="text-sm text-[hsl(var(--primary))] hover:underline">
+          <Link href={`/gigs/${order.gig.slug}`} className="text-sm text-[hsl(var(--primary-ink))] hover:underline">
             {order.gig.title}
           </Link>
           <h1 className="text-2xl font-bold">{t("order")} #{order.id.slice(-6)}</h1>
@@ -64,7 +64,7 @@ export default async function OrderPage({
         <div className="flex items-center gap-3">
           <Link
             href={`/orders/${order.id}/receipt`}
-            className="text-sm text-[hsl(var(--primary))] hover:underline"
+            className="text-sm text-[hsl(var(--primary-ink))] hover:underline"
           >
             {t("receipt")}
           </Link>
@@ -117,7 +117,7 @@ export default async function OrderPage({
             </p>
           )}
           {order.discountUzs > 0 && (
-            <p className="mt-1 text-xs font-medium text-[hsl(var(--primary))]">
+            <p className="mt-1 text-xs font-medium text-[hsl(var(--primary-ink))]">
               {t("discount")} {order.couponCode ? `(${order.couponCode})` : ""}: −{formatUzs(order.discountUzs)} so&apos;m
             </p>
           )}
@@ -154,7 +154,7 @@ export default async function OrderPage({
                 <a
                   key={url}
                   href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
-                  className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary))] hover:underline"
+                  className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary-ink))] hover:underline"
                 >
                   {t("file")} {i + 1}
                 </a>
@@ -177,7 +177,7 @@ export default async function OrderPage({
                       <a
                         key={url}
                         href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
-                        className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary))] hover:underline"
+                        className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary-ink))] hover:underline"
                       >
                         {t("file")} {i + 1}
                       </a>

@@ -58,7 +58,7 @@ export function CookieConsent() {
       <div className="mx-auto flex max-w-4xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-[hsl(var(--foreground))]">
           {t("message")}{" "}
-          <Link href="/legal/privacy" className="underline hover:text-[hsl(var(--primary))]">
+          <Link href="/legal/privacy" className="underline hover:text-[hsl(var(--primary-ink))]">
             {t("learnMore")}
           </Link>
         </p>

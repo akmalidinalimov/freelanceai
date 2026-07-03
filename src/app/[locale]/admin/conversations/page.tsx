@@ -25,7 +25,7 @@ export default async function AdminConversationsPage({
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <p className="mb-2 text-sm">
-        <Link href="/admin" className="text-[hsl(var(--primary))] hover:underline">
+        <Link href="/admin" className="text-[hsl(var(--primary-ink))] hover:underline">
           ← Admin
         </Link>
       </p>
@@ -35,7 +35,7 @@ export default async function AdminConversationsPage({
         {user && (
           <>
             {" "}Filtered to user <span className="font-mono">{user}</span> —{" "}
-            <Link href="/admin/conversations" className="text-[hsl(var(--primary))] hover:underline">
+            <Link href="/admin/conversations" className="text-[hsl(var(--primary-ink))] hover:underline">
               clear filter
             </Link>
           </>
@@ -89,7 +89,7 @@ export default async function AdminConversationsPage({
                   <td className="px-3 py-2 text-right">
                     <Link
                       href={`/admin/conversations/${c.id}`}
-                      className="text-[hsl(var(--primary))] hover:underline"
+                      className="text-[hsl(var(--primary-ink))] hover:underline"
                     >
                       View
                     </Link>

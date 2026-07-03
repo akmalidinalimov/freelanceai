@@ -59,7 +59,7 @@ export default async function SavedPage({
             return (
               <div key={g.id} className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-3">
                 <Link href={`/gigs/${g.slug}`} className="flex flex-col hover:opacity-90">
-                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary))]">
+                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary-ink))]">
                     {g.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

@@ -48,7 +48,7 @@ export function TipButton({ orderId }: { orderId: string }) {
           </Button>
         ))}
         <input
-          className="h-9 w-28 rounded-md border border-[hsl(var(--border))] bg-transparent px-2 text-sm"
+          className="h-9 w-28 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-2 text-sm"
           inputMode="numeric"
           aria-label={t("tipCustom")}
           placeholder={t("tipCustom")}

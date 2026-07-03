@@ -46,7 +46,7 @@ export function OnboardingChoice({ locale }: { locale: string }) {
           disabled={busy !== null}
           className="flex items-start gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 text-left transition-colors hover:border-[hsl(var(--primary))] disabled:opacity-60"
         >
-          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]">
+          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary-ink))]">
             <Icon size={20} />
           </span>
           <span>

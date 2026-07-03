@@ -135,7 +135,7 @@ export function GigForm({
   }
 
   const field =
-    "w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm";
+    "w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm";
   const tiers: Tier[] = ["BASIC", "STANDARD", "PREMIUM"];
   const tierLabel: Record<Tier, string> = {
     BASIC: t("basic"),
@@ -205,6 +205,7 @@ export function GigForm({
                 <input
                   className={field}
                   placeholder={t("faqQ")}
+                  aria-label={t("faqQ")}
                   value={f.q}
                   onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, q: e.target.value } : x)))}
                 />
@@ -220,6 +221,7 @@ export function GigForm({
               <textarea
                 className={`${field} min-h-16`}
                 placeholder={t("faqA")}
+                aria-label={t("faqA")}
                 value={f.a}
                 onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, a: e.target.value } : x)))}
               />
@@ -245,6 +247,7 @@ export function GigForm({
               <input
                 className={`${field} flex-1`}
                 placeholder={t("extraTitle")}
+                aria-label={t("extraTitle")}
                 value={e.title}
                 onChange={(ev) => setExtras((arr) => arr.map((x, j) => (j === i ? { ...x, title: ev.target.value } : x)))}
               />
@@ -252,6 +255,7 @@ export function GigForm({
                 className={`${field} w-28`}
                 inputMode="numeric"
                 placeholder={`${t("price")} (so'm)`}
+                aria-label={`${t("price")} (so'm)`}
                 value={e.priceUzs}
                 onChange={(ev) => setExtras((arr) => arr.map((x, j) => (j === i ? { ...x, priceUzs: ev.target.value.replace(/\D/g, "") } : x)))}
               />
@@ -259,6 +263,7 @@ export function GigForm({
                 className={`${field} w-24`}
                 inputMode="numeric"
                 placeholder={t("extraDays")}
+                aria-label={t("extraDays")}
                 value={e.deliveryDays}
                 onChange={(ev) => setExtras((arr) => arr.map((x, j) => (j === i ? { ...x, deliveryDays: ev.target.value.replace(/\D/g, "") } : x)))}
               />
@@ -292,6 +297,7 @@ export function GigForm({
               <input
                 className={`${field} flex-1`}
                 placeholder={t("requirementQ")}
+                aria-label={t("requirementQ")}
                 value={p}
                 onChange={(e) => setReqPrompts((arr) => arr.map((x, j) => (j === i ? e.target.value : x)))}
               />
@@ -327,6 +333,7 @@ export function GigForm({
                 <input
                   className={field}
                   placeholder={t("pkgTitle")}
+                  aria-label={`${tierLabel[tier]} — ${t("pkgTitle")}`}
                   value={pkgs[tier].title}
                   onChange={(e) => setPkg(tier, "title", e.target.value)}
                 />
@@ -334,6 +341,7 @@ export function GigForm({
                   className={field}
                   inputMode="numeric"
                   placeholder={`${t("price")} (so'm)`}
+                  aria-label={`${tierLabel[tier]} — ${t("price")} (so'm)`}
                   value={pkgs[tier].priceUzs}
                   onChange={(e) => setPkg(tier, "priceUzs", e.target.value.replace(/\D/g, ""))}
                 />
@@ -341,6 +349,7 @@ export function GigForm({
                   className={field}
                   inputMode="numeric"
                   placeholder={t("deliveryDays")}
+                  aria-label={`${tierLabel[tier]} — ${t("deliveryDays")}`}
                   value={pkgs[tier].deliveryDays}
                   onChange={(e) => setPkg(tier, "deliveryDays", e.target.value.replace(/\D/g, ""))}
                 />
@@ -348,6 +357,7 @@ export function GigForm({
                   className={field}
                   inputMode="numeric"
                   placeholder={t("revisions")}
+                  aria-label={`${tierLabel[tier]} — ${t("revisions")}`}
                   value={pkgs[tier].revisions}
                   onChange={(e) => setPkg(tier, "revisions", e.target.value.replace(/\D/g, ""))}
                 />
@@ -358,7 +368,7 @@ export function GigForm({
         <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{t("packagesHint")}</p>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       <div className="flex gap-2">
         <Button type="submit" size="lg" disabled={busy}>

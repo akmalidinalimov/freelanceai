@@ -57,7 +57,7 @@ export default async function GigsPage({
   };
 
   const field =
-    "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+    "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -72,6 +72,7 @@ export default async function GigsPage({
           name="q"
           defaultValue={sp.q ?? ""}
           placeholder={tg("searchPh")}
+          aria-label={tg("searchPh")}
           className={`${field} min-w-48 flex-1`}
         />
         <select name="category" defaultValue={sp.category ?? ""} className={field} aria-label={tg("category")}>
@@ -87,6 +88,7 @@ export default async function GigsPage({
           inputMode="numeric"
           defaultValue={sp.min ?? ""}
           placeholder={tg("minPrice")}
+          aria-label={tg("minPrice")}
           className={`${field} w-28`}
         />
         <input
@@ -94,6 +96,7 @@ export default async function GigsPage({
           inputMode="numeric"
           defaultValue={sp.max ?? ""}
           placeholder={tg("maxPrice")}
+          aria-label={tg("maxPrice")}
           className={`${field} w-28`}
         />
         <select name="sort" defaultValue={sort} className={field} aria-label={tg("sort")}>

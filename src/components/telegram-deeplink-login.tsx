@@ -118,7 +118,7 @@ export function TelegramDeepLinkLogin({ locale }: { locale: string }) {
               href={deepLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-[hsl(var(--primary))] underline"
+              className="text-sm font-medium text-[hsl(var(--primary-ink))] underline"
             >
               {t("openInTelegram")}
             </a>

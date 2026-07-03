@@ -90,7 +90,7 @@ export default async function GigDetailPage({
       />
       <RecentlyViewedTracker gigId={gig.id} />
       <div>
-        <div className="mb-5 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-5xl font-bold text-[hsl(var(--primary))]">
+        <div className="mb-5 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-5xl font-bold text-[hsl(var(--primary-ink))]">
           {gig.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={gig.coverUrl} alt={gig.title} className="h-full w-full object-cover" />
@@ -128,7 +128,7 @@ export default async function GigDetailPage({
           {gig.seller.username ? (
             <Link
               href={`/creators/${gig.seller.username}`}
-              className="font-medium text-[hsl(var(--primary))] hover:underline"
+              className="font-medium text-[hsl(var(--primary-ink))] hover:underline"
             >
               {seller}
             </Link>
@@ -170,7 +170,7 @@ export default async function GigDetailPage({
               <Link
                 key={tag}
                 href={`/gigs?q=${encodeURIComponent(tag)}`}
-                className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--primary))]/15 hover:text-[hsl(var(--primary))]"
+                className="rounded-full bg-[hsl(var(--muted))] px-3 py-1 text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--primary))]/15 hover:text-[hsl(var(--primary-ink))]"
               >
                 {tag}
               </Link>
@@ -288,7 +288,7 @@ export default async function GigDetailPage({
                   href={`/gigs/${g.slug}`}
                   className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-2 transition-colors hover:border-[hsl(var(--primary))]"
                 >
-                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary))]">
+                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary-ink))]">
                     {g.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

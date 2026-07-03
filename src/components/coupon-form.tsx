@@ -42,12 +42,13 @@ export function CouponForm() {
     }
   }
 
-  const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+  const field = "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
   return (
     <form onSubmit={submit} className="flex flex-wrap items-end gap-3 rounded-xl border border-[hsl(var(--border))] p-4">
       <input
         className={`${field} w-40 uppercase`}
         placeholder="CODE"
+        aria-label="CODE"
         value={code}
         onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
         required
@@ -60,6 +61,7 @@ export function CouponForm() {
         className={`${field} w-28`}
         inputMode="numeric"
         placeholder={kind === "percent" ? "10" : "50000"}
+        aria-label={kind === "percent" ? "10" : "50000"}
         value={value}
         onChange={(e) => setValue(e.target.value.replace(/\D/g, ""))}
         required
@@ -68,13 +70,14 @@ export function CouponForm() {
         className={`${field} w-24`}
         inputMode="numeric"
         placeholder="max uses"
+        aria-label="max uses"
         value={maxUses}
         onChange={(e) => setMaxUses(e.target.value.replace(/\D/g, ""))}
       />
       <Button type="submit" disabled={busy}>
         {busy ? "…" : "Create"}
       </Button>
-      {error && <p className="w-full text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="w-full text-sm text-red-600">{error}</p>}
     </form>
   );
 }

@@ -21,7 +21,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
       <h1 className="text-3xl font-bold">Privacy Policy</h1>
       <p className="text-sm text-[hsl(var(--muted-foreground))]">
         Effective: 2 July 2026 (draft — under legal review) ·{" "}
-        <Link href="/legal/terms" className="text-[hsl(var(--primary))] underline">
+        <Link href="/legal/terms" className="text-[hsl(var(--primary-ink))] underline">
           Terms of Service
         </Link>
       </p>

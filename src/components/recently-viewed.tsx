@@ -27,7 +27,7 @@ export async function RecentlyViewed({ excludeId }: { excludeId?: string }) {
               href={`/gigs/${g.slug}`}
               className="flex w-44 shrink-0 flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 transition-colors hover:border-[hsl(var(--primary))]"
             >
-              <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary))]">
+              <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary-ink))]">
                 {g.coverUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={g.coverUrl} alt="" className="h-full w-full object-cover" />

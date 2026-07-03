@@ -47,7 +47,7 @@ export default async function BrowseSpecPage({
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Link href="/browse" className="text-sm font-medium text-[hsl(var(--primary))] hover:underline">
+      <Link href="/browse" className="text-sm font-medium text-[hsl(var(--primary-ink))] hover:underline">
         ← {t("allSpecs")}
       </Link>
       <h1 className="font-display mt-3 text-3xl font-extrabold">{t("heading", { spec: label })}</h1>
@@ -69,7 +69,7 @@ export default async function BrowseSpecPage({
             const inner = (
               <div className="flex h-full flex-col rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))]">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary))]">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary-ink))]">
                     {c.avatar ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={c.avatar} alt="" className="h-full w-full object-cover" />

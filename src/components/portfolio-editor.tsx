@@ -92,6 +92,7 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
+            aria-label="Add image"
             className="flex h-24 w-32 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-2xl text-[hsl(var(--muted-foreground))]"
           >
             {busy ? "…" : "+"}
@@ -109,7 +110,7 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
           e.target.value = "";
         }}
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
     </div>
   );
 }

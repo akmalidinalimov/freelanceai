@@ -87,7 +87,7 @@ export async function GigCard({
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <span className="select-none text-4xl font-black tracking-tight text-[hsl(var(--primary))]/30 transition-transform duration-500 group-hover:scale-110">
+          <span className="select-none text-4xl font-black tracking-tight text-[hsl(var(--primary-ink))]/30 transition-transform duration-500 group-hover:scale-110">
             {gig.title.slice(0, 1).toUpperCase()}
           </span>
         )}
@@ -100,7 +100,7 @@ export async function GigCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
           ) : (
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/15 text-[10px] font-bold text-[hsl(var(--primary))]">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/15 text-[10px] font-bold text-[hsl(var(--primary-ink))]">
               {seller.slice(0, 1).toUpperCase()}
             </span>
           )}

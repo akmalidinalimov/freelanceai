@@ -30,7 +30,7 @@ export function MobileBottomNav() {
             href={it.href}
             aria-current={active ? "page" : undefined}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-semibold ${
-              active ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]"
+              active ? "text-[hsl(var(--primary-ink))]" : "text-[hsl(var(--muted-foreground))]"
             }`}
           >
             <it.Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />

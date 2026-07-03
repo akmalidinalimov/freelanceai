@@ -30,7 +30,7 @@ export function LocaleSwitcher() {
       value={locale}
       onChange={onChange}
       disabled={isPending}
-      className="h-9 rounded-md border border-[hsl(var(--border))] bg-transparent px-2 text-sm"
+      className="h-9 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-2 text-sm"
     >
       {locales.map((l) => (
         <option key={l} value={l}>

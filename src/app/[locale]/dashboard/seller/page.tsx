@@ -93,7 +93,7 @@ export default async function SellerDashboardPage({
 
       {!onboardingComplete && (
         <div className="mb-4 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">
-          <h3 className="mb-3 font-semibold">{t("checklistTitle")}</h3>
+          <h2 className="mb-3 font-semibold">{t("checklistTitle")}</h2>
           <ul className="space-y-2">
             {checklist.map((c) => (
               <li key={c.key} className="flex items-center gap-2 text-sm">
@@ -109,7 +109,7 @@ export default async function SellerDashboardPage({
                 {c.done ? (
                   <span className="text-[hsl(var(--muted-foreground))] line-through">{t(`ck_${c.key}`)}</span>
                 ) : (
-                  <Link href={c.href} className="text-[hsl(var(--primary))] hover:underline">
+                  <Link href={c.href} className="text-[hsl(var(--primary-ink))] hover:underline">
                     {t(`ck_${c.key}`)}
                   </Link>
                 )}
@@ -146,7 +146,7 @@ export default async function SellerDashboardPage({
       {/* Gigs */}
       <div id="gigs" className="mb-4 scroll-mt-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-semibold">{t("gigs")}</h3>
+          <h2 className="font-semibold">{t("gigs")}</h2>
           <Link href="/dashboard/seller/gigs/new">
             <Button size="sm">{tg("createGig")}</Button>
           </Link>
@@ -186,7 +186,7 @@ export default async function SellerDashboardPage({
 
       {/* Orders to fulfill */}
       <div id="orders" className="mb-4 scroll-mt-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
-        <h3 className="mb-3 font-semibold">{t("orders")}</h3>
+        <h2 className="mb-3 font-semibold">{t("orders")}</h2>
         {orders.length === 0 ? (
           <p className="text-sm text-[hsl(var(--muted-foreground))]">{to("noSellerOrders")}</p>
         ) : (
@@ -210,7 +210,7 @@ export default async function SellerDashboardPage({
 
       {/* Analytics */}
       <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
-        <h3 className="mb-3 font-semibold">{t("analytics")}</h3>
+        <h2 className="mb-3 font-semibold">{t("analytics")}</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {[
             { label: t("statViews"), value: stats.views.toLocaleString() },

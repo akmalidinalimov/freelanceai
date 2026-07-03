@@ -64,7 +64,16 @@ export function MediaUpload({
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium">{t("cover")}</span>
       <div
+        role="button"
+        tabIndex={0}
+        aria-label={t("addCover")}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            if (e.key === " ") e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         className="flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 text-sm text-[hsl(var(--muted-foreground))]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -96,7 +105,7 @@ export function MediaUpload({
           {t("removeCover")}
         </button>
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
     </div>
   );
 }

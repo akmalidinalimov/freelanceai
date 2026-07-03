@@ -26,7 +26,7 @@ export default async function AdminAuditPage({
   const t = await getTranslations("AdminAudit");
   const logs = await listAuditLogs(action);
 
-  const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+  const field = "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <h1 className="mb-4 text-2xl font-bold">{t("title")}</h1>

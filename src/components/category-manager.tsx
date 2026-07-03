@@ -62,24 +62,25 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
     await post({ action: "delete", id });
   }
 
-  const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+  const field = "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
   return (
     <div>
       <form onSubmit={create} className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-[hsl(var(--border))] p-4">
         <input
           className={`${field} w-40`}
           placeholder="slug (ai-video)"
+          aria-label="slug (ai-video)"
           value={slug}
           onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
           required
         />
-        <input className={`${field} w-40`} placeholder="Name (UZ)" value={nameUz} onChange={(e) => setNameUz(e.target.value)} required />
-        <input className={`${field} w-40`} placeholder="Name (RU)" value={nameRu} onChange={(e) => setNameRu(e.target.value)} required />
-        <input className={`${field} w-40`} placeholder="Name (EN)" value={nameEn} onChange={(e) => setNameEn(e.target.value)} required />
+        <input className={`${field} w-40`} placeholder="Name (UZ)" aria-label="Name (UZ)" value={nameUz} onChange={(e) => setNameUz(e.target.value)} required />
+        <input className={`${field} w-40`} placeholder="Name (RU)" aria-label="Name (RU)" value={nameRu} onChange={(e) => setNameRu(e.target.value)} required />
+        <input className={`${field} w-40`} placeholder="Name (EN)" aria-label="Name (EN)" value={nameEn} onChange={(e) => setNameEn(e.target.value)} required />
         <Button type="submit" disabled={busy}>
           {busy ? "…" : "Add"}
         </Button>
-        {error && <p className="w-full text-sm text-red-600">{error}</p>}
+        {error && <p role="alert" className="w-full text-sm text-red-600">{error}</p>}
       </form>
 
       {categories.length === 0 ? (

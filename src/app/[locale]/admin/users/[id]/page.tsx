@@ -54,7 +54,7 @@ export default async function AdminUserDetailPage({
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <p className="mb-2 text-sm">
-        <Link href="/admin/users" className="text-[hsl(var(--primary))] hover:underline">
+        <Link href="/admin/users" className="text-[hsl(var(--primary-ink))] hover:underline">
           ← All users
         </Link>
       </p>
@@ -73,7 +73,7 @@ export default async function AdminUserDetailPage({
         id {u.id} ·{" "}
         <Link
           href={`/admin/conversations?user=${u.id}`}
-          className="text-[hsl(var(--primary))] hover:underline"
+          className="text-[hsl(var(--primary-ink))] hover:underline"
         >
           View conversations
         </Link>

@@ -33,7 +33,7 @@ export async function SiteHeader() {
           href="/"
           className="font-display flex items-center gap-1.5 text-lg font-extrabold tracking-tight"
         >
-          <span className="text-[hsl(var(--primary))]">●</span>
+          <span className="text-[hsl(var(--primary-ink))]">●</span>
           {t("Brand.name")}
         </Link>
 
@@ -77,7 +77,7 @@ export async function SiteHeader() {
                 </Link>
               )}
               {user.role === "ADMIN" && (
-                <Link href="/admin" className="text-sm font-medium text-[hsl(var(--primary))]">
+                <Link href="/admin" className="text-sm font-medium text-[hsl(var(--primary-ink))]">
                   {t("Dash.admin")}
                 </Link>
               )}

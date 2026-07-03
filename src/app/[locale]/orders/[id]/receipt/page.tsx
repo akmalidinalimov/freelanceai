@@ -42,7 +42,7 @@ export default async function ReceiptPage({
 
       <div className="rounded-xl border border-[hsl(var(--border))] p-6 text-sm">
         <div className="mb-4 flex items-center justify-between border-b border-[hsl(var(--border))] pb-3">
-          <span className="text-lg font-bold text-[hsl(var(--primary))]">{BRAND_NAME}</span>
+          <span className="text-lg font-bold text-[hsl(var(--primary-ink))]">{BRAND_NAME}</span>
           <span className="text-[hsl(var(--muted-foreground))]">
             #{order.id.slice(-8)} · {new Date(order.createdAt).toLocaleDateString()}
           </span>
@@ -73,7 +73,7 @@ export default async function ReceiptPage({
             </div>
           ))}
           {order.discountUzs > 0 && (
-            <div className={`${row} text-[hsl(var(--primary))]`}>
+            <div className={`${row} text-[hsl(var(--primary-ink))]`}>
               <span>
                 {t("discount")} {order.couponCode ? `(${order.couponCode})` : ""}
               </span>
@@ -92,7 +92,7 @@ export default async function ReceiptPage({
       </div>
 
       <div className="mt-4 print:hidden">
-        <Link href={`/orders/${order.id}`} className="text-sm text-[hsl(var(--primary))] hover:underline">
+        <Link href={`/orders/${order.id}`} className="text-sm text-[hsl(var(--primary-ink))] hover:underline">
           ← {t("backToOrder")}
         </Link>
       </div>

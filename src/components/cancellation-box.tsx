@@ -72,7 +72,8 @@ export function CancellationBox({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={t("reasonPh")}
-            className="min-h-20 w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+            aria-label={t("reasonPh")}
+            className="min-h-20 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
           />
           <div className="flex gap-2">
             <Button

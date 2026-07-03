@@ -59,7 +59,7 @@ export function SettingsForm({
   }
 
   const row = "flex items-center justify-between gap-4 rounded-xl border border-[hsl(var(--border))] p-4";
-  const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+  const field = "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
   const kycLabel =
     initial.kycStatus === "VERIFIED" ? t("kycVerified") : initial.phone ? t("kycPending") : t("kycNone");
 
@@ -100,18 +100,20 @@ export function SettingsForm({
         />
       </label>
 
-      <p className="pt-2 text-sm font-medium">{t("categories")}</p>
-      {(["orders", "messages", "reviews"] as const).map((key) => (
-        <label key={key} className={row}>
-          <span className="font-medium">{t(`cat_${key}`)}</span>
-          <input
-            type="checkbox"
-            className="h-5 w-5"
-            checked={prefs[key]}
-            onChange={(e) => togglePref(key, e.target.checked)}
-          />
-        </label>
-      ))}
+      <div role="group" aria-label={t("categories")} className="space-y-3">
+        <p className="pt-2 text-sm font-medium">{t("categories")}</p>
+        {(["orders", "messages", "reviews"] as const).map((key) => (
+          <label key={key} className={row}>
+            <span className="font-medium">{t(`cat_${key}`)}</span>
+            <input
+              type="checkbox"
+              className="h-5 w-5"
+              checked={prefs[key]}
+              onChange={(e) => togglePref(key, e.target.checked)}
+            />
+          </label>
+        ))}
+      </div>
 
       {/* KYC / verification */}
       <div className="pt-4">
@@ -128,6 +130,7 @@ export function SettingsForm({
             <input
               className={`${field} w-44`}
               placeholder="+998 90 123 45 67"
+              aria-label={t("phone")}
               inputMode="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -152,6 +155,7 @@ export function SettingsForm({
               <input
                 className={`${field} w-44`}
                 placeholder="8600 1234 5678 9012"
+                aria-label={t("payoutCard")}
                 inputMode="numeric"
                 value={card}
                 onChange={(e) => setCard(e.target.value)}
@@ -164,7 +168,7 @@ export function SettingsForm({
         </div>
       )}
 
-      {saved && <p className="text-sm text-green-800">{t("saved")}</p>}
+      {saved && <p role="status" className="text-sm text-green-800">{t("saved")}</p>}
     </div>
   );
 }

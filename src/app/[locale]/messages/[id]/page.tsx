@@ -74,7 +74,7 @@ export default async function ConversationPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/messages" className="text-sm text-[hsl(var(--primary))] hover:underline">
+      <Link href="/messages" className="text-sm text-[hsl(var(--primary-ink))] hover:underline">
         ← {t("inbox")}
       </Link>
       <div className="mt-3">

@@ -17,7 +17,7 @@ async function Rail({ title, gigs }: { title: string; gigs: FeedGig[] }) {
             href={`/gigs/${g.slug}`}
             className="flex flex-col rounded-lg border border-[hsl(var(--border))] p-2 transition-colors hover:border-[hsl(var(--primary))]"
           >
-            <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-sm font-bold text-[hsl(var(--primary))]">
+            <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-sm font-bold text-[hsl(var(--primary-ink))]">
               {g.coverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

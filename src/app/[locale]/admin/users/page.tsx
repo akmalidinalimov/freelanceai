@@ -29,7 +29,7 @@ export default async function AdminUsersPage({
   const t = await getTranslations("AdminUsers");
   const users = await listUsersForAdmin(q);
 
-  const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
+  const field = "h-10 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="mb-4 text-2xl font-bold">{t("title")}</h1>
@@ -66,7 +66,7 @@ export default async function AdminUsersPage({
               {users.map((u) => (
                 <tr key={u.id} className="border-b border-[hsl(var(--border))]">
                   <td className="py-2">
-                    <Link href={`/admin/users/${u.id}`} className="font-medium text-[hsl(var(--primary))] hover:underline">
+                    <Link href={`/admin/users/${u.id}`} className="font-medium text-[hsl(var(--primary-ink))] hover:underline">
                       {u.name || "(no name)"}
                     </Link>
                     {u.username && (

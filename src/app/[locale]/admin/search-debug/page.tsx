@@ -32,7 +32,7 @@ export default async function SearchDebugPage({
           name="q"
           defaultValue={query}
           placeholder="e.g. fashion AI video"
-          className="flex-1 rounded-lg border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm"
+          className="flex-1 rounded-lg border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
         />
         <button
           type="submit"

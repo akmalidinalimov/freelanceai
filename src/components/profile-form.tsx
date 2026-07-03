@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SKILLS, NICHES, specLabel } from "@/lib/specializations";
 
 const field =
-  "w-full rounded-md border border-[hsl(var(--border))] bg-transparent px-3 py-2 text-sm";
+  "w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm";
 
 export function ProfileForm({
   initial,
@@ -129,7 +129,7 @@ export function ProfileForm({
         <Button onClick={save} disabled={busy}>
           {busy ? "…" : t("save")}
         </Button>
-        {saved && <span className="text-sm text-green-800">{t("saved")}</span>}
+        {saved && <span className="text-sm text-green-800" role="status">{t("saved")}</span>}
       </div>
     </div>
   );

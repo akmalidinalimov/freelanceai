@@ -21,7 +21,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
       <h1 className="text-3xl font-bold">Terms of Service</h1>
       <p className="text-sm text-[hsl(var(--muted-foreground))]">
         Effective: 2 July 2026 (draft — under legal review) ·{" "}
-        <Link href="/legal/privacy" className="text-[hsl(var(--primary))] underline">
+        <Link href="/legal/privacy" className="text-[hsl(var(--primary-ink))] underline">
           Privacy Policy
         </Link>
       </p>
