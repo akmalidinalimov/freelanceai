@@ -20,6 +20,11 @@ export function resolveRole(telegramId: string, adminIds: Set<string>): UserRole
   return adminIds.has(telegramId) ? "ADMIN" : "BUYER";
 }
 
+/** Live allowlist check by Telegram id — the authoritative admin gate for bot actions. */
+export function isAdminTelegramId(telegramId: string | number, raw: string | undefined): boolean {
+  return parseAdminIds(raw).has(String(telegramId));
+}
+
 /** True when a role transition strips admin (→ revoke that user's sessions). */
 export function isDemotion(prev: UserRole | undefined, next: UserRole): boolean {
   return prev === "ADMIN" && next !== "ADMIN";

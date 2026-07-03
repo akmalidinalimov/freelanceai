@@ -222,3 +222,19 @@ export async function getAdminStats(): Promise<AdminStats> {
     ledgerImbalanced,
   };
 }
+
+/** Counts of the four admin action queues — for the bot's /pending command. */
+export async function getAdminPendingCounts(): Promise<{
+  gigs: number;
+  kyc: number;
+  disputes: number;
+  payouts: number;
+}> {
+  const [gigs, kyc, disputes, payouts] = await Promise.all([
+    prisma.gig.count({ where: { status: "PENDING_REVIEW", deletedAt: null } }),
+    prisma.user.count({ where: { kycStatus: "PENDING" } }),
+    prisma.dispute.count({ where: { status: "OPEN" } }),
+    prisma.payoutRequest.count({ where: { status: "REQUESTED" } }),
+  ]);
+  return { gigs, kyc, disputes, payouts };
+}

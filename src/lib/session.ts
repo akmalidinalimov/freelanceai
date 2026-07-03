@@ -3,6 +3,7 @@ import { cache } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { touchLastSeen } from "@/server/services/activity";
+import { resolveRole, parseAdminIds } from "@/lib/roles";
 import type { User } from "@prisma/client";
 
 /**
@@ -18,6 +19,17 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user || user.status !== "ACTIVE") return null;
   touchLastSeen(user.id); // throttled fire-and-forget (admin activity analytics)
+
+  // Reconcile the admin role against the LIVE allowlist so a demotion (or promotion)
+  // takes effect on the next request, not the next login. Telegram-id based; email-only
+  // users (no telegramId) are left as-is. The corrected role is used this request.
+  if (user.telegramId) {
+    const expected = resolveRole(user.telegramId, parseAdminIds(process.env.ADMIN_TELEGRAM_IDS));
+    if (expected !== user.role) {
+      void prisma.user.update({ where: { id: user.id }, data: { role: expected } }).catch(() => {});
+      return { ...user, role: expected };
+    }
+  }
   return user;
 });
 

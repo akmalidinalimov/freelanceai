@@ -120,7 +120,11 @@ const asLoc = (l?: string): Loc => (l === "ru" || l === "en" ? l : "uz");
  * passwordless via initData (see telegram-miniapp-bootstrap). This is the founder's
  * "buttons on the keyboard that are always visible", not inline buttons.
  */
-export function tgMainKeyboard(locale: string | undefined, isSeller: boolean): Record<string, unknown> {
+export function tgMainKeyboard(
+  locale: string | undefined,
+  isSeller: boolean,
+  isAdmin = false
+): Record<string, unknown> {
   const loc = asLoc(locale);
   const origin = appOrigin();
   const wa = (path: string) => ({ url: `${origin}/${loc}${path}` });
@@ -139,6 +143,8 @@ export function tgMainKeyboard(locale: string | undefined, isSeller: boolean): R
         [{ text: L.profile, web_app: wa("/dashboard/settings") }, { text: L.help }],
       ];
 
+  // Admins get a one-tap shortcut to the console (Mini App) at the top.
+  if (isAdmin) rows.unshift([{ text: L.admin, web_app: wa("/admin") }]);
   return { keyboard: rows, is_persistent: true, resize_keyboard: true };
 }
 
@@ -168,19 +174,19 @@ const KEYBOARD_LABELS: Record<Loc, Record<string, string>> = {
     search: "🔍 Qidirish", messages: "📨 Xabarlar", orders: "🛒 Buyurtmalarim",
     saved: "❤️ Saqlangan", profile: "👤 Profil", help: "ℹ️ Yordam",
     dashboard: "📊 Boshqaruv", gigs: "📦 Gaglarim", newGig: "➕ Yangi gig",
-    openApp: "🚀 Gigora'ni ochish",
+    openApp: "🚀 Gigora'ni ochish", admin: "🛠 Admin",
   },
   ru: {
     search: "🔍 Поиск", messages: "📨 Сообщения", orders: "🛒 Мои заказы",
     saved: "❤️ Избранное", profile: "👤 Профиль", help: "ℹ️ Помощь",
     dashboard: "📊 Панель", gigs: "📦 Мои услуги", newGig: "➕ Новая услуга",
-    openApp: "🚀 Открыть Gigora",
+    openApp: "🚀 Открыть Gigora", admin: "🛠 Admin",
   },
   en: {
     search: "🔍 Search", messages: "📨 Messages", orders: "🛒 My orders",
     saved: "❤️ Saved", profile: "👤 Profile", help: "ℹ️ Help",
     dashboard: "📊 Dashboard", gigs: "📦 My gigs", newGig: "➕ New gig",
-    openApp: "🚀 Open Gigora",
+    openApp: "🚀 Open Gigora", admin: "🛠 Admin",
   },
 };
 

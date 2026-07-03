@@ -16,6 +16,8 @@ import { routeTelegramReply } from "@/server/services/message";
 import { acceptOrder, requestRevision } from "@/server/services/order";
 import { createReview } from "@/server/services/review";
 import { approveGig, rejectGig } from "@/server/services/gig";
+import { isAdminTelegramId } from "@/lib/roles";
+import { getAdminStats, getAdminPendingCounts } from "@/server/services/analytics";
 
 /**
  * Telegram bot webhook. Verified by the secret header. Idempotent (dedups on
@@ -94,17 +96,18 @@ export async function POST(request: Request) {
         await createReview(account.id, orderId ?? "", Number(n));
         void tgAnswerCallback(cb.id, `⭐ ${Number(n)} — rahmat!`);
       } else if (data.startsWith("ag:")) {
-        // Admin moderation from a gig-review push. The role gate here is the security
-        // boundary (callback_data is guessable); approveGig/rejectGig also re-check ADMIN.
-        if (account.role !== "ADMIN") {
+        // Admin moderation from a gig-review push. The LIVE allowlist is the security
+        // boundary (also closes the stale-role window); approveGig/rejectGig re-check ADMIN.
+        if (!isAdminTelegramId(cbFrom, process.env.ADMIN_TELEGRAM_IDS)) {
           void tgAnswerCallback(cb.id, "Faqat administrator uchun.");
         } else {
+          const admin = { ...account, role: "ADMIN" as const };
           const [, act, gigId] = data.split(":");
           if (act === "a") {
-            await approveGig(gigId ?? "", account);
+            await approveGig(gigId ?? "", admin);
             void tgAnswerCallback(cb.id, "✅ Gig tasdiqlandi.");
           } else if (act === "r") {
-            await rejectGig(gigId ?? "", account);
+            await rejectGig(gigId ?? "", admin);
             void tgAnswerCallback(cb.id, "❌ Gig rad etildi.");
           } else {
             void tgAnswerCallback(cb.id);
@@ -192,14 +195,45 @@ export async function POST(request: Request) {
   // Admin-only: /broadcast opens the broadcast composer (compose + audience + schedule)
   // in the Mini App — one tap, no clunky chat state machine.
   if (from && !from.is_bot && text === "/broadcast") {
-    const account = await prisma.user.findUnique({
-      where: { telegramId: String(from.id) },
-      select: { role: true, locale: true },
-    });
-    if (account?.role === "ADMIN") {
-      void tgSendMessage(from.id, "📣 Ommaviy xabar yuborish (darhol yoki rejalashtirilgan):", tgOpenButton(account.locale, "/admin/broadcast"));
-    } else {
+    if (!isAdminTelegramId(from.id, process.env.ADMIN_TELEGRAM_IDS)) {
       void tgSendMessage(from.id, "Bu buyruq faqat administratorlar uchun.");
+      return NextResponse.json({ ok: true });
+    }
+    const account = await prisma.user.findUnique({ where: { telegramId: String(from.id) }, select: { locale: true } });
+    void tgSendMessage(from.id, "📣 Ommaviy xabar yuborish (darhol yoki rejalashtirilgan):", tgOpenButton(account?.locale, "/admin/broadcast"));
+    return NextResponse.json({ ok: true });
+  }
+
+  // Admin-only: quick platform metrics (/stats) and action-queue counts (/pending) in chat.
+  if (from && !from.is_bot && (text === "/stats" || text === "/pending")) {
+    if (!isAdminTelegramId(from.id, process.env.ADMIN_TELEGRAM_IDS)) {
+      void tgSendMessage(from.id, "Bu buyruq faqat administratorlar uchun.");
+      return NextResponse.json({ ok: true });
+    }
+    const fmt = (n: number) => n.toLocaleString("ru-RU");
+    if (text === "/stats") {
+      const s = await getAdminStats();
+      void tgSendMessage(
+        from.id,
+        `📊 Gigora — statistika\n\n` +
+          `👥 Foydalanuvchilar: ${fmt(s.users)} (sotuvchi: ${fmt(s.sellers)})\n` +
+          `📦 Aktiv xizmatlar: ${fmt(s.gigsActive)}\n` +
+          `🧾 Buyurtmalar: ${fmt(s.totalOrders)}\n` +
+          `💰 GMV: ${fmt(s.gmvUzs)} soʻm\n` +
+          `🏦 Platforma daromadi: ${fmt(s.platformRevenueUzs)} soʻm` +
+          (s.ledgerImbalanced > 0 ? `\n⚠️ Balanssiz buyurtmalar: ${fmt(s.ledgerImbalanced)}` : ``)
+      );
+    } else {
+      const p = await getAdminPendingCounts();
+      void tgSendMessage(
+        from.id,
+        `📋 Navbatdagi vazifalar (${fmt(p.gigs + p.kyc + p.disputes + p.payouts)})\n\n` +
+          `🆕 Gig moderatsiyasi: ${fmt(p.gigs)}\n` +
+          `🪪 KYC: ${fmt(p.kyc)}\n` +
+          `⚠️ Nizolar: ${fmt(p.disputes)}\n` +
+          `💸 Toʻlovlar: ${fmt(p.payouts)}`,
+        tgOpenButton(undefined, "/admin")
+      );
     }
     return NextResponse.json({ ok: true });
   }
@@ -236,7 +270,11 @@ export async function POST(request: Request) {
     } else {
       // Welcome + the always-visible role-aware keyboard + Menu Button → Mini App.
       void tgSetChatMenuButton(from.id, locale);
-      void tgSendMessage(from.id, tgWelcome(locale, name), tgMainKeyboard(locale, account?.isSeller ?? false));
+      void tgSendMessage(
+        from.id,
+        tgWelcome(locale, name),
+        tgMainKeyboard(locale, account?.isSeller ?? false, isAdminTelegramId(from.id, process.env.ADMIN_TELEGRAM_IDS))
+      );
     }
     return NextResponse.json({ ok: true });
   }
