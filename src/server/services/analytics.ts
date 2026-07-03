@@ -238,3 +238,68 @@ export async function getAdminPendingCounts(): Promise<{
   ]);
   return { gigs, kyc, disputes, payouts };
 }
+
+export interface AdminInfographics {
+  users: number;
+  sellers: number;
+  buyers: number;
+  activeGigs: number;
+  totalOrders: number;
+  completedOrders: number;
+  gmvUzs: number;
+  platformRevenueUzs: number;
+  signups: { d1: number; d3: number; d7: number; d30: number };
+  dailySignups: { day: string; n: number }[];
+  dailyOrders: { day: string; n: number }[];
+  byStatus: Record<string, number>;
+}
+
+/** Grouped daily counts over the last 14 days, gap-filled to a contiguous series. */
+async function dailySeries(table: "User" | "Order", since: Date): Promise<{ day: string; n: number }[]> {
+  // Table name can't be parameterized, so branch on two literal queries (no injection);
+  // the date bound IS parameterized. count(*)::int keeps it a JS number, not bigint.
+  const rows =
+    table === "User"
+      ? await prisma.$queryRaw<{ day: Date; n: number }[]>`
+          SELECT date_trunc('day', "createdAt") AS day, count(*)::int AS n
+          FROM "User" WHERE "createdAt" >= ${since} GROUP BY 1`
+      : await prisma.$queryRaw<{ day: Date; n: number }[]>`
+          SELECT date_trunc('day', "createdAt") AS day, count(*)::int AS n
+          FROM "Order" WHERE "createdAt" >= ${since} GROUP BY 1`;
+  const map = new Map(rows.map((r) => [new Date(r.day).toISOString().slice(0, 10), Number(r.n)]));
+  const out: { day: string; n: number }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const key = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
+    out.push({ day: key, n: map.get(key) ?? 0 });
+  }
+  return out;
+}
+
+/** Everything the admin infographic dashboard (and the bot's Stats button) needs. */
+export async function getAdminInfographics(): Promise<AdminInfographics> {
+  const now = Date.now();
+  const ago = (d: number) => new Date(now - d * 86_400_000);
+  const [core, d1, d3, d7, d30, dailySignups, dailyOrders] = await Promise.all([
+    getAdminStats(),
+    prisma.user.count({ where: { createdAt: { gte: ago(1) } } }),
+    prisma.user.count({ where: { createdAt: { gte: ago(3) } } }),
+    prisma.user.count({ where: { createdAt: { gte: ago(7) } } }),
+    prisma.user.count({ where: { createdAt: { gte: ago(30) } } }),
+    dailySeries("User", ago(14)).catch(() => []),
+    dailySeries("Order", ago(14)).catch(() => []),
+  ]);
+  return {
+    users: core.users,
+    sellers: core.sellers,
+    buyers: Math.max(0, core.users - core.sellers),
+    activeGigs: core.gigsActive,
+    totalOrders: core.totalOrders,
+    completedOrders: core.byStatus["COMPLETED"] ?? 0,
+    gmvUzs: core.gmvUzs,
+    platformRevenueUzs: core.platformRevenueUzs,
+    signups: { d1, d3, d7, d30 },
+    dailySignups,
+    dailyOrders,
+    byStatus: core.byStatus,
+  };
+}

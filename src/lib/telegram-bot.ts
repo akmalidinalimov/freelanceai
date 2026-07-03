@@ -130,6 +130,20 @@ export function tgMainKeyboard(
   const wa = (path: string) => ({ url: `${origin}/${loc}${path}` });
   const L = KEYBOARD_LABELS[loc];
 
+  // Admins get a purpose-built ops keyboard — not the buyer/seller nav. Stats opens the
+  // infographic dashboard; the rest jump straight to the relevant console section.
+  if (isAdmin) {
+    return {
+      keyboard: [
+        [{ text: L.stats, web_app: wa("/admin/stats") }, { text: L.users, web_app: wa("/admin/users") }],
+        [{ text: L.queue, web_app: wa("/admin/moderation") }, { text: L.broadcast, web_app: wa("/admin/broadcast") }],
+        [{ text: L.admin, web_app: wa("/admin") }, { text: L.help }],
+      ],
+      is_persistent: true,
+      resize_keyboard: true,
+    };
+  }
+
   const rows = isSeller
     ? [
         [{ text: L.dashboard, web_app: wa("/dashboard/seller") }, { text: L.messages, web_app: wa("/messages") }],
@@ -143,8 +157,6 @@ export function tgMainKeyboard(
         [{ text: L.profile, web_app: wa("/dashboard/settings") }, { text: L.help }],
       ];
 
-  // Admins get a one-tap shortcut to the console (Mini App) at the top.
-  if (isAdmin) rows.unshift([{ text: L.admin, web_app: wa("/admin") }]);
   return { keyboard: rows, is_persistent: true, resize_keyboard: true };
 }
 
@@ -174,19 +186,22 @@ const KEYBOARD_LABELS: Record<Loc, Record<string, string>> = {
     search: "🔍 Qidirish", messages: "📨 Xabarlar", orders: "🛒 Buyurtmalarim",
     saved: "❤️ Saqlangan", profile: "👤 Profil", help: "ℹ️ Yordam",
     dashboard: "📊 Boshqaruv", gigs: "📦 Gaglarim", newGig: "➕ Yangi gig",
-    openApp: "🚀 Gigora'ni ochish", admin: "🛠 Admin",
+    openApp: "🚀 Gigora'ni ochish", admin: "🛠 Konsol",
+    stats: "📊 Statistika", users: "👥 Foydalanuvchilar", queue: "📋 Navbat", broadcast: "📣 Xabar",
   },
   ru: {
     search: "🔍 Поиск", messages: "📨 Сообщения", orders: "🛒 Мои заказы",
     saved: "❤️ Избранное", profile: "👤 Профиль", help: "ℹ️ Помощь",
     dashboard: "📊 Панель", gigs: "📦 Мои услуги", newGig: "➕ Новая услуга",
-    openApp: "🚀 Открыть Gigora", admin: "🛠 Admin",
+    openApp: "🚀 Открыть Gigora", admin: "🛠 Консоль",
+    stats: "📊 Статистика", users: "👥 Пользователи", queue: "📋 Очередь", broadcast: "📣 Рассылка",
   },
   en: {
     search: "🔍 Search", messages: "📨 Messages", orders: "🛒 My orders",
     saved: "❤️ Saved", profile: "👤 Profile", help: "ℹ️ Help",
     dashboard: "📊 Dashboard", gigs: "📦 My gigs", newGig: "➕ New gig",
-    openApp: "🚀 Open Gigora", admin: "🛠 Admin",
+    openApp: "🚀 Open Gigora", admin: "🛠 Console",
+    stats: "📊 Stats", users: "👥 Users", queue: "📋 Queue", broadcast: "📣 Broadcast",
   },
 };
 
