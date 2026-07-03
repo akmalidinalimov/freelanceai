@@ -17,6 +17,7 @@ import { BuyerReviewForm } from "@/components/buyer-review-form";
 import { Stars } from "@/components/stars";
 import { MessageThread } from "@/components/message-thread";
 import { TipButton } from "@/components/tip-button";
+import { ShareButton } from "@/components/share-button";
 
 export default async function OrderPage({
   params,
@@ -29,6 +30,7 @@ export default async function OrderPage({
   const t = await getTranslations("Order");
   const tr = await getTranslations("Review");
   const tc = await getTranslations("Common");
+  const tsh = await getTranslations("Share");
 
   const order = await getOrderForUser(id, user).catch(() => null);
   if (!order) notFound();
@@ -241,6 +243,12 @@ export default async function OrderPage({
           {role === "buyer" && (
             <div className="mt-4">
               <TipButton orderId={order.id} />
+            </div>
+          )}
+          {role === "buyer" && order.status === "COMPLETED" && (
+            <div className="mt-4 rounded-xl border border-[hsl(var(--border))] p-4">
+              <p className="mb-2 text-sm font-medium">{tsh("orderPrompt")}</p>
+              <ShareButton path={`/${locale}/gigs/${order.gig.slug}`} title={order.gig.title} />
             </div>
           )}
           {role === "seller" && (

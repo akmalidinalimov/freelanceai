@@ -5,7 +5,7 @@
  * keepalive lets the beacon survive the navigation the click usually triggers.
  * Never throws, never blocks the UI.
  */
-export function track(type: "order_cta_click" | "contact_cta_click", entityId?: string): void {
+export function track(type: "order_cta_click" | "contact_cta_click" | "share", entityId?: string): void {
   try {
     void fetch("/api/events", {
       method: "POST",
@@ -13,12 +13,11 @@ export function track(type: "order_cta_click" | "contact_cta_click", entityId?: 
       body: JSON.stringify({ type, ...(entityId ? { entityId } : {}) }),
       keepalive: true,
     }).catch(() => {});
-    // Mirror to the Meta Pixel (standard events) so ad campaigns can optimize on
-    // real funnel actions. No-op when the pixel isn't loaded.
-    (window as { fbq?: (...args: unknown[]) => void }).fbq?.(
-      "track",
-      type === "order_cta_click" ? "InitiateCheckout" : "Contact"
-    );
+    // Mirror the two CTA funnel actions to the Meta Pixel (standard events) so ad
+    // campaigns can optimize. "share" is virality analytics, not an ad-optimizable
+    // funnel event, so it's not mirrored. No-op when the pixel isn't loaded.
+    const fbEvent = type === "order_cta_click" ? "InitiateCheckout" : type === "contact_cta_click" ? "Contact" : null;
+    if (fbEvent) (window as { fbq?: (...args: unknown[]) => void }).fbq?.("track", fbEvent);
   } catch {
     // best-effort
   }

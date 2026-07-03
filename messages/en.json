@@ -4,7 +4,8 @@
     "telegram": "Telegram",
     "copyLink": "Copy link",
     "copied": "Copied!",
-    "shareTelegram": "Share on Telegram"
+    "shareTelegram": "Share on Telegram",
+    "orderPrompt": "Loved the result? Share this gig with your network."
   },
   "BotMigration": {
     "aria": "Telegram bot update notice",

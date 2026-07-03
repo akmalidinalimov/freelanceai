@@ -4,7 +4,8 @@
     "telegram": "Telegram",
     "copyLink": "Havolani nusxalash",
     "copied": "Nusxalandi!",
-    "shareTelegram": "Telegram'da ulashish"
+    "shareTelegram": "Telegram'da ulashish",
+    "orderPrompt": "Natija yoqdimi? Bu xizmatni doʻstlaringizga ulashing."
   },
   "BotMigration": {
     "aria": "Telegram bot yangilanishi",

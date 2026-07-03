@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { track } from "@/lib/track";
 
 /**
  * "Made with Gigora" share loop: one-tap Telegram share + copy-link on public content
@@ -31,6 +32,7 @@ export function ShareButton({ path, title }: { path: string; title: string }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      track("share", path);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       /* clipboard blocked — no-op */
@@ -46,6 +48,7 @@ export function ShareButton({ path, title }: { path: string; title: string }) {
         href={tgHref}
         target="_blank"
         rel="noreferrer"
+        onClick={() => track("share", path)}
         className={btn}
         aria-label={t("shareTelegram")}
       >

@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 /** Client-emittable event types (via POST /api/events). Server-side conversions
  * (order_created, order_paid) are written directly by their services instead —
  * clients can't forge funnel denominators they don't own. */
-export const CLIENT_EVENT_TYPES = ["order_cta_click", "contact_cta_click"] as const;
+export const CLIENT_EVENT_TYPES = ["order_cta_click", "contact_cta_click", "share"] as const;
 export type ClientEventType = (typeof CLIENT_EVENT_TYPES)[number];
 
 export async function trackEvent(
