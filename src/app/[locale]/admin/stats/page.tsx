@@ -47,7 +47,15 @@ function Bars({ title, data }: { title: string; data: { label: string; value: nu
 }
 
 /** Server-rendered area+line SVG trend for a 14-day daily series. */
-function Trend({ title, series }: { title: string; series: { day: string; n: number }[] }) {
+function Trend({
+  title,
+  series,
+  valueFmt = nf,
+}: {
+  title: string;
+  series: { day: string; n: number }[];
+  valueFmt?: (n: number) => string;
+}) {
   if (series.length === 0) {
     return (
       <figure className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
@@ -74,14 +82,14 @@ function Trend({ title, series }: { title: string; series: { day: string; n: num
       <figcaption className="mb-3 flex items-baseline justify-between">
         <span className="text-sm font-semibold">{title}</span>
         <span className="text-xs text-[hsl(var(--muted-foreground))]">
-          {nf(total)} total · last 14 days
+          {valueFmt(total)} total · last 14 days
         </span>
       </figcaption>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="h-40 w-full"
         role="img"
-        aria-label={`${title} over the last 14 days, ${nf(total)} total, peak ${nf(max)} per day`}
+        aria-label={`${title} over the last 14 days, ${valueFmt(total)} total, peak ${valueFmt(max)} per day`}
         preserveAspectRatio="none"
       >
         {[0.25, 0.5, 0.75].map((g) => (
@@ -158,6 +166,11 @@ export default async function AdminStatsPage({ params }: { params: Promise<{ loc
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Trend title="Daily signups" series={s.dailySignups} />
         <Trend title="Daily orders" series={s.dailyOrders} />
+      </div>
+
+      {/* Money coming in */}
+      <div className="mt-4">
+        <Trend title="Revenue (completed orders)" series={s.dailyRevenue} valueFmt={(n) => `${formatUzs(n)} so'm`} />
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import {
   tgHelpText,
   tgOpenButton,
   tgAnswerCallback,
+  tgSetChatCommands,
+  ADMIN_BOT_COMMANDS,
 } from "@/lib/telegram-bot";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { encryptPII } from "@/lib/pii-crypto";
@@ -269,11 +271,14 @@ export async function POST(request: Request) {
       void tgSendMessage(from.id, tgHelpText(locale));
     } else {
       // Welcome + the always-visible role-aware keyboard + Menu Button → Mini App.
+      const isAdmin = isAdminTelegramId(from.id, process.env.ADMIN_TELEGRAM_IDS);
       void tgSetChatMenuButton(from.id, locale);
+      // Give admins the ops commands (/stats, /pending, /broadcast) in their "/" autocomplete.
+      if (isAdmin) void tgSetChatCommands(from.id, ADMIN_BOT_COMMANDS);
       void tgSendMessage(
         from.id,
         tgWelcome(locale, name),
-        tgMainKeyboard(locale, account?.isSeller ?? false, isAdminTelegramId(from.id, process.env.ADMIN_TELEGRAM_IDS))
+        tgMainKeyboard(locale, account?.isSeller ?? false, isAdmin)
       );
     }
     return NextResponse.json({ ok: true });

@@ -251,10 +251,22 @@ export interface AdminInfographics {
   signups: { d1: number; d3: number; d7: number; d30: number };
   dailySignups: { day: string; n: number }[];
   dailyOrders: { day: string; n: number }[];
+  dailyRevenue: { day: string; n: number }[];
   byStatus: Record<string, number>;
 }
 
-/** Grouped daily counts over the last 14 days, gap-filled to a contiguous series. */
+/** Gap-fill grouped rows into a contiguous 14-day series (oldest → newest). */
+function fillDays(rows: { day: Date; n: bigint | number }[]): { day: string; n: number }[] {
+  const map = new Map(rows.map((r) => [new Date(r.day).toISOString().slice(0, 10), Number(r.n)]));
+  const out: { day: string; n: number }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const key = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
+    out.push({ day: key, n: map.get(key) ?? 0 });
+  }
+  return out;
+}
+
+/** Daily signup/order COUNTS over the last 14 days. */
 async function dailySeries(table: "User" | "Order", since: Date): Promise<{ day: string; n: number }[]> {
   // Table name can't be parameterized, so branch on two literal queries (no injection);
   // the date bound IS parameterized. count(*)::int keeps it a JS number, not bigint.
@@ -266,20 +278,22 @@ async function dailySeries(table: "User" | "Order", since: Date): Promise<{ day:
       : await prisma.$queryRaw<{ day: Date; n: number }[]>`
           SELECT date_trunc('day', "createdAt") AS day, count(*)::int AS n
           FROM "Order" WHERE "createdAt" >= ${since} GROUP BY 1`;
-  const map = new Map(rows.map((r) => [new Date(r.day).toISOString().slice(0, 10), Number(r.n)]));
-  const out: { day: string; n: number }[] = [];
-  for (let i = 13; i >= 0; i--) {
-    const key = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
-    out.push({ day: key, n: map.get(key) ?? 0 });
-  }
-  return out;
+  return fillDays(rows);
+}
+
+/** Daily realized revenue (sum of COMPLETED order value by completion day), UZS. */
+async function dailyRevenueSeries(since: Date): Promise<{ day: string; n: number }[]> {
+  const rows = await prisma.$queryRaw<{ day: Date; n: bigint }[]>`
+    SELECT date_trunc('day', "completedAt") AS day, COALESCE(sum("amountUzs"), 0)::bigint AS n
+    FROM "Order" WHERE status = 'COMPLETED' AND "completedAt" >= ${since} GROUP BY 1`;
+  return fillDays(rows);
 }
 
 /** Everything the admin infographic dashboard (and the bot's Stats button) needs. */
 export async function getAdminInfographics(): Promise<AdminInfographics> {
   const now = Date.now();
   const ago = (d: number) => new Date(now - d * 86_400_000);
-  const [core, d1, d3, d7, d30, dailySignups, dailyOrders] = await Promise.all([
+  const [core, d1, d3, d7, d30, dailySignups, dailyOrders, dailyRevenue] = await Promise.all([
     getAdminStats(),
     prisma.user.count({ where: { createdAt: { gte: ago(1) } } }),
     prisma.user.count({ where: { createdAt: { gte: ago(3) } } }),
@@ -287,6 +301,7 @@ export async function getAdminInfographics(): Promise<AdminInfographics> {
     prisma.user.count({ where: { createdAt: { gte: ago(30) } } }),
     dailySeries("User", ago(14)).catch(() => []),
     dailySeries("Order", ago(14)).catch(() => []),
+    dailyRevenueSeries(ago(14)).catch(() => []),
   ]);
   return {
     users: core.users,
@@ -300,6 +315,7 @@ export async function getAdminInfographics(): Promise<AdminInfographics> {
     signups: { d1, d3, d7, d30 },
     dailySignups,
     dailyOrders,
+    dailyRevenue,
     byStatus: core.byStatus,
   };
 }

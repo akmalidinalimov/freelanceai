@@ -181,6 +181,32 @@ export async function tgSetChatMenuButton(chatId: number | string, locale?: stri
   }
 }
 
+/** Command list shown (via a chat-scoped menu) only to admins — includes ops commands. */
+export const ADMIN_BOT_COMMANDS = [
+  { command: "start", description: "Boshlash / Start" },
+  { command: "menu", description: "Asosiy menyu / Main menu" },
+  { command: "stats", description: "Statistika / Platform stats" },
+  { command: "pending", description: "Navbatdagi vazifalar / Pending queue" },
+  { command: "broadcast", description: "Ommaviy xabar / Broadcast" },
+  { command: "help", description: "Yordam / Help" },
+];
+
+/** Set a chat-scoped command list (autocomplete) for one chat — e.g. an admin's DM. */
+export async function tgSetChatCommands(
+  chatId: number | string,
+  commands: { command: string; description: string }[]
+): Promise<void> {
+  try {
+    await fetch(api("setMyCommands"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ commands, scope: { type: "chat", chat_id: chatId } }),
+    });
+  } catch (err) {
+    console.error("tgSetChatCommands failed", err);
+  }
+}
+
 const KEYBOARD_LABELS: Record<Loc, Record<string, string>> = {
   uz: {
     search: "🔍 Qidirish", messages: "📨 Xabarlar", orders: "🛒 Buyurtmalarim",
