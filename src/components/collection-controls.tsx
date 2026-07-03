@@ -59,7 +59,7 @@ export function DeleteCollection({ id }: { id: string }) {
     setBusy(false);
   }
   return (
-    <button onClick={del} disabled={busy} className="text-xs text-red-600 hover:underline">
+    <button onClick={del} disabled={busy} className="text-xs text-red-700 hover:underline">
       {t("delete")}
     </button>
   );

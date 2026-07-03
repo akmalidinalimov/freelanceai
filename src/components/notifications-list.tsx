@@ -101,7 +101,7 @@ export function NotificationsList({ initial }: { initial: NotificationItem[] }) 
                 disabled={busy}
                 aria-label={t("delete")}
                 title={t("delete")}
-                className="shrink-0 px-3 text-[hsl(var(--muted-foreground))] hover:text-red-600 disabled:opacity-50"
+                className="shrink-0 px-3 text-[hsl(var(--muted-foreground))] hover:text-red-700 disabled:opacity-50"
               >
                 ✕
               </button>

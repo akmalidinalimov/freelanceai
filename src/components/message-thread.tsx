@@ -202,7 +202,7 @@ export function MessageThread({
             type="button"
             onClick={toggleBlock}
             disabled={tsBusy}
-            className="text-[hsl(var(--muted-foreground))] hover:text-red-600 hover:underline disabled:opacity-50"
+            className="text-[hsl(var(--muted-foreground))] hover:text-red-700 hover:underline disabled:opacity-50"
           >
             {blocked ? t("unblock") : t("block")}
           </button>
@@ -319,7 +319,7 @@ export function MessageThread({
               {t("send")}
             </Button>
           </div>
-          {sendError && <p className="mt-2 text-sm text-red-600" role="alert">{sendError}</p>}
+          {sendError && <p className="mt-2 text-sm text-red-700" role="alert">{sendError}</p>}
         </>
       )}
     </div>

@@ -204,7 +204,7 @@ export function OrderPanel({
               />
             </>
           )}
-          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
           <Button className="w-full" size="lg" onClick={placeOrder} disabled={busy}>
             {busy ? to("placing") : to("placeOrder")}
           </Button>

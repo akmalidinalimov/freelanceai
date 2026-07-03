@@ -148,17 +148,13 @@ export default async function GigsPage({
       {gigs.length === 0 ? (
         <p className="text-[hsl(var(--muted-foreground))]">{tg("noResults")}</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {gigs.map((g) => (
-            <GigCard
-              key={g.id}
-              gig={g}
-              locale={locale}
-              saved={savedSet.has(g.id)}
-              isGuest={!me}
-            />
+            <li key={g.id}>
+              <GigCard gig={g} locale={locale} saved={savedSet.has(g.id)} isGuest={!me} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

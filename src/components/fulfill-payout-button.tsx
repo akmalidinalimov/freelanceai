@@ -29,7 +29,7 @@ export function FulfillPayoutButton({ requestId }: { requestId: string }) {
       <Button size="sm" variant="accent" onClick={go} disabled={busy}>
         Mark paid
       </Button>
-      {error && <span className="text-xs text-red-600" role="alert">{error}</span>}
+      {error && <span className="text-xs text-red-700" role="alert">{error}</span>}
     </span>
   );
 }

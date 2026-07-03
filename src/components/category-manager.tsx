@@ -80,7 +80,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
         <Button type="submit" disabled={busy}>
           {busy ? "…" : "Add"}
         </Button>
-        {error && <p role="alert" className="w-full text-sm text-red-600">{error}</p>}
+        {error && <p role="alert" className="w-full text-sm text-red-700">{error}</p>}
       </form>
 
       {categories.length === 0 ? (
@@ -110,7 +110,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
                     onClick={() => remove(c.id, c.nameEn)}
                     disabled={busy || c._count.gigs > 0}
                     title={c._count.gigs > 0 ? "Reassign gigs first" : "Delete"}
-                    className="text-red-600 hover:underline disabled:opacity-40"
+                    className="text-red-700 hover:underline disabled:opacity-40"
                   >
                     Delete
                   </button>

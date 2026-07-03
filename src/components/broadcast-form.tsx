@@ -87,7 +87,7 @@ export function BroadcastForm() {
           {state === "sending" ? "Queuing…" : schedule ? "Schedule broadcast" : "Send now"}
         </Button>
         {result && (
-          <span className={`text-sm ${state === "error" ? "text-red-700" : "text-emerald-700"}`}>{result}</span>
+          <span role="status" className={`text-sm ${state === "error" ? "text-red-700" : "text-emerald-700"}`}>{result}</span>
         )}
       </div>
       <p className="text-xs text-[hsl(var(--muted-foreground))]">

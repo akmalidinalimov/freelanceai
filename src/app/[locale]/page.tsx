@@ -115,12 +115,12 @@ export default async function HomePage({
               {t("viewAll")}
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {CATS.map((c) => (
+              <li key={c.spec}>
               <Link
-                key={c.spec}
                 href={`/browse/${specSlug(c.spec)}`}
-                className="group relative overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))]"
+                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all hover:-translate-y-1 hover:border-[hsl(var(--primary))]"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary-ink))]">
                   <c.Icon className="h-5 w-5" strokeWidth={1.75} />
@@ -131,8 +131,9 @@ export default async function HomePage({
                   {t(c.desc)}
                 </p>
               </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
         {/* How it works */}

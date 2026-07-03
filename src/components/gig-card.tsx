@@ -49,7 +49,7 @@ export async function GigCard({
   return (
     <Link
       href={`/gigs/${gig.slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[hsl(var(--primary))]/60 hover:shadow-[0_20px_40px_-16px_hsl(var(--primary)/0.25)]"
+      className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[hsl(var(--primary))]/60 hover:shadow-[0_20px_40px_-16px_hsl(var(--primary)/0.25)]"
     >
       {/* Browser chrome */}
       <div className="flex items-center gap-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/60 px-3 py-2">

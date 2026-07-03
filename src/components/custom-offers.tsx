@@ -164,7 +164,7 @@ export function CustomOffers({
         </ul>
       )}
       {sent && <p className="mt-2 text-sm font-medium text-green-800" role="status">{t("sent")}</p>}
-      {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-700" role="alert">{error}</p>}
     </div>
   );
 }

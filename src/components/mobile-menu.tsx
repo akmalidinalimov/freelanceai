@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 
 interface NavItem {
@@ -11,9 +11,25 @@ interface NavItem {
 /** Collapsible hamburger menu for the mobile header. */
 export function MobileMenu({ items, logoutLabel }: { items: NavItem[]; logoutLabel: string | null }) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // Escape closes the menu and returns focus to the trigger (keyboard a11y, WCAG 2.1.2/2.4.3).
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-label="Menu"
         aria-expanded={open}

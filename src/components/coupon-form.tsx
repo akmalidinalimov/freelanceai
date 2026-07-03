@@ -77,7 +77,7 @@ export function CouponForm() {
       <Button type="submit" disabled={busy}>
         {busy ? "…" : "Create"}
       </Button>
-      {error && <p role="alert" className="w-full text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="w-full text-sm text-red-700">{error}</p>}
     </form>
   );
 }

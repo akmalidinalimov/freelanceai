@@ -53,11 +53,11 @@ export default async function SavedPage({
       {saved.length === 0 ? (
         <p className="text-sm text-[hsl(var(--muted-foreground))]">{tg("noSaved")}</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {saved.map(({ gig: g, collectionId }) => {
             const from = g.packages[0]?.priceUzs ?? 0;
             return (
-              <div key={g.id} className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-3">
+              <li key={g.id} className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-3">
                 <Link href={`/gigs/${g.slug}`} className="flex flex-col hover:opacity-90">
                   <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary-ink))]">
                     {g.coverUrl ? (
@@ -75,10 +75,10 @@ export default async function SavedPage({
                 {collOptions.length > 0 && (
                   <CollectionSelect gigId={g.id} collections={collOptions} current={collectionId} />
                 )}
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

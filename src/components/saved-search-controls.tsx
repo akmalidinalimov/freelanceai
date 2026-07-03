@@ -51,7 +51,7 @@ export function DeleteSavedSearch({ id }: { id: string }) {
     setBusy(false);
   }
   return (
-    <button onClick={del} disabled={busy} aria-label={t("delete")} className="text-[hsl(var(--muted-foreground))] hover:text-red-600">
+    <button onClick={del} disabled={busy} aria-label={t("delete")} className="text-[hsl(var(--muted-foreground))] hover:text-red-700">
       ×
     </button>
   );

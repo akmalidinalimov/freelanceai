@@ -273,14 +273,14 @@ export default async function CreatorProfilePage({
       {gigs.length === 0 ? (
         <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("noGigs")}</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {gigs.map((g) => {
             const from = g.packages[0]?.priceUzs ?? 0;
             return (
+              <li key={g.id}>
               <Link
-                key={g.id}
                 href={`/gigs/${g.slug}`}
-                className="flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
+                className="flex h-full flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
               >
                 <div className="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-xl font-bold text-[hsl(var(--primary-ink))]">
                   {g.coverUrl ? (
@@ -295,9 +295,10 @@ export default async function CreatorProfilePage({
                   {tg("from")} {formatUzs(from)} so&apos;m
                 </p>
               </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

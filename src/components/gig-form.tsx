@@ -368,7 +368,7 @@ export function GigForm({
         <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{t("packagesHint")}</p>
       </div>
 
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
 
       <div className="flex gap-2">
         <Button type="submit" size="lg" disabled={busy}>

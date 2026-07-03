@@ -84,7 +84,7 @@ export function PayoutForm({
       <Button size="sm" onClick={go} disabled={busy}>
         {t("recordPayout")}
       </Button>
-      {error && <span className="text-xs text-red-600" role="alert">{error}</span>}
+      {error && <span className="text-xs text-red-700" role="alert">{error}</span>}
     </div>
   );
 }
