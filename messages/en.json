@@ -623,5 +623,12 @@
     "fromFollowed": "New from creators you follow",
     "forYou": "For you",
     "trending": "Trending now"
+  },
+  "Consent": {
+    "title": "Cookie consent",
+    "message": "We use analytics to improve the site. Accepting enables cookies and analytics.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "learnMore": "Learn more"
   }
 }

@@ -32,7 +32,7 @@ export function AccountSection() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "freelanceai-data.json";
+      a.download = "gigora-data.json";
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {

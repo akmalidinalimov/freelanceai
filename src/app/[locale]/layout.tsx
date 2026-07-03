@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ClarityAnalytics } from "@/components/clarity-analytics";
 import { MetaPixel } from "@/components/meta-pixel";
+import { CookieConsent } from "@/components/cookie-consent";
 import "../globals.css";
 
 // Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
@@ -78,6 +79,7 @@ export default async function LocaleLayout({
           </main>
           <SiteFooter />
           <MobileBottomNav />
+          <CookieConsent />
         </NextIntlClientProvider>
         <ClarityAnalytics />
         <MetaPixel />

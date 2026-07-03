@@ -623,5 +623,12 @@
     "fromFollowed": "Kuzatayotgan ijodkorlaringizdan yangi",
     "forYou": "Siz uchun",
     "trending": "Hozir mashhur"
+  },
+  "Consent": {
+    "title": "Cookie roziligi",
+    "message": "Biz saytni yaxshilash uchun analitikadan foydalanamiz. Qabul qilsangiz, cookie va analitika yoqiladi.",
+    "accept": "Qabul qilish",
+    "decline": "Rad etish",
+    "learnMore": "Batafsil"
   }
 }

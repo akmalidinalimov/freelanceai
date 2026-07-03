@@ -42,6 +42,9 @@ export function MetaPixel() {
       t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
       document,'script','https://connect.facebook.net/en_US/fbevents.js');
       fbq('init', '${PIXEL_ID}');
+      // Consent-gated: hold all tracking until the cookie banner grants. A returning
+      // visitor who already accepted (cookieconsent=granted) is granted immediately.
+      fbq('consent', /(?:^|;\\s*)cookieconsent=granted/.test(document.cookie) ? 'grant' : 'revoke');
       fbq('track', 'PageView');`}
     </Script>
   );
