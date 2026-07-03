@@ -107,7 +107,7 @@ export async function GigCard({
           <span className="truncate text-sm text-[hsl(var(--muted-foreground))]">{seller}</span>
           {ratingCount > 0 && (
             <span className="ml-auto flex shrink-0 items-center gap-1 text-sm">
-              <Star className="h-3.5 w-3.5 fill-[#f5a623] text-[#f5a623]" />
+              <Star className="h-3.5 w-3.5 fill-[hsl(var(--star))] text-[hsl(var(--star))]" />
               <span className="font-semibold tabular-nums">{rating.toFixed(1)}</span>
               <span className="text-xs text-[hsl(var(--muted-foreground))]">({ratingCount})</span>
             </span>

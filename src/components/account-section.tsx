@@ -80,8 +80,8 @@ export function AccountSection() {
       </div>
 
       {/* Danger zone */}
-      <div className="rounded-xl border border-red-300 p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+      <div className="rounded-xl border border-[hsl(var(--danger))]/40 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--danger))]">
           {t("dangerTitle")}
         </p>
         <div className="mt-2 flex flex-col gap-3">
@@ -108,7 +108,7 @@ export function AccountSection() {
               size="sm"
               onClick={deleteAccount}
               disabled={confirmText !== "DELETE" || deleting}
-              className="bg-red-600 text-white hover:opacity-90"
+              variant="destructive"
             >
               <Trash2 className="h-4 w-4" />
               {deleting ? t("deleting") : t("deleteBtn")}
@@ -118,7 +118,7 @@ export function AccountSection() {
       </div>
 
       {error && (
-        <p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-md border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger-soft))] px-3 py-2 text-sm text-[hsl(var(--danger))]">
           {error}
         </p>
       )}

@@ -39,8 +39,8 @@ export function InstagramConnect({
           : null;
   const markerTone =
     marker === "connected"
-      ? "border-green-300 bg-green-50 text-green-800"
-      : "border-amber-300 bg-amber-50 text-amber-800";
+      ? "border-[hsl(var(--success))]/40 bg-[hsl(var(--success-soft))] text-[hsl(var(--success))]"
+      : "border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning-soft))] text-[hsl(var(--warning))]";
 
   async function disconnect() {
     if (!window.confirm(t("disconnectWarn"))) return;
@@ -103,7 +103,7 @@ export function InstagramConnect({
         )}
       </div>
       {error && (
-        <p className="mt-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mt-3 rounded-md border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger-soft))] px-3 py-2 text-sm text-[hsl(var(--danger))]">
           {error}
         </p>
       )}

@@ -48,7 +48,7 @@ export function ReviewForm({ orderId }: { orderId: string }) {
             onClick={() => setRating(n)}
             onMouseEnter={() => setHover(n)}
             className="text-3xl leading-none transition-colors"
-            style={{ color: n <= (hover || rating) ? "#f5a623" : "hsl(var(--border))" }}
+            style={{ color: n <= (hover || rating) ? "hsl(var(--star))" : "hsl(var(--border))" }}
             aria-label={`${n}`}
           >
             ★

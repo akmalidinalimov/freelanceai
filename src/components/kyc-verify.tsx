@@ -58,7 +58,7 @@ export function KycVerify({
   }
 
   if (verified) {
-    return <p className="text-sm font-medium text-green-800">{t("verifyVerified")}</p>;
+    return <p className="text-sm font-medium text-[hsl(var(--success))]">{t("verifyVerified")}</p>;
   }
 
   const field = "h-10 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm";
