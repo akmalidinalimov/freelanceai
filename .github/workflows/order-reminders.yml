@@ -1,0 +1,26 @@
+name: order-reminders
+
+# Order deadline reminders (2d/1d/overdue to sellers) + review nudges to buyers.
+# Every 6 hours. Needs the CRON_SECRET repo secret to match the app env.
+on:
+  schedule:
+    - cron: "30 */6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: order-reminders
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger order reminders
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET repo secret not set — skipping."
+            exit 0
+          fi
+          curl -fsS --max-time 90 -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://gigora.ai/api/cron/order-reminders

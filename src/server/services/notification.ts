@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { tgSendMessage, tgOpenButton } from "@/lib/telegram-bot";
 
 /**
  * In-app notifications. `notify` is best-effort (a failure here must never break the
@@ -29,6 +30,34 @@ export async function notify(
     });
   } catch (err) {
     logger.warn("notify_failed", { userId, type, err: String(err) });
+  }
+}
+
+/**
+ * In-app notification PLUS a Telegram push (pref-gated), with an "open in app" button
+ * that deep-links the Mini App. Use for events that should reach the user's phone
+ * (order lifecycle, reminders, review nudges). Best-effort end to end.
+ */
+export async function notifyAndPush(
+  userId: string,
+  type: string,
+  title: string,
+  opts?: { body?: string; link?: string }
+): Promise<void> {
+  await notify(userId, type, title, opts);
+  try {
+    const u = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { telegramId: true, notifyTelegram: true, notifyPrefs: true, locale: true },
+    });
+    if (!u?.telegramId || !u.notifyTelegram) return;
+    const prefs = (u.notifyPrefs as Record<string, boolean> | null) ?? null;
+    if (prefs && prefs[notificationCategory(type)] === false) return;
+    const text = opts?.body ? `${title}\n\n${opts.body}` : title;
+    const markup = opts?.link ? tgOpenButton(u.locale, opts.link) : undefined;
+    await tgSendMessage(u.telegramId, text, markup);
+  } catch (err) {
+    logger.warn("notify_push_failed", { userId, type, err: String(err) });
   }
 }
 

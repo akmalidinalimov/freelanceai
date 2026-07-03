@@ -122,6 +122,20 @@ export const HELP_LABELS: Record<Loc, string> = {
   uz: "ℹ️ Yordam", ru: "ℹ️ Помощь", en: "ℹ️ Help",
 };
 
+const OPEN_LABEL: Record<Loc, string> = { uz: "Ochish", ru: "Открыть", en: "Open" };
+
+/** Full Mini App URL for a platform path (used in notification "open" buttons). */
+export function miniAppUrl(locale: string | undefined, path: string): string {
+  return `${appOrigin()}/${asLoc(locale)}${path}`;
+}
+
+/** Inline "open in the app" button (opens the Mini App at `path`). */
+export function tgOpenButton(locale: string | undefined, path: string): Record<string, unknown> {
+  return {
+    inline_keyboard: [[{ text: OPEN_LABEL[asLoc(locale)], web_app: { url: miniAppUrl(locale, path) } }]],
+  };
+}
+
 export function tgWelcome(locale: string | undefined, name?: string): string {
   const loc = asLoc(locale);
   const who = name ? `, ${name}` : "";
