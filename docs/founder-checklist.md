@@ -6,19 +6,21 @@ chat; this is the tracking copy.
 
 | # | Item | Status | Hands to platform team | Verified by |
 |---|------|--------|------------------------|-------------|
-| 1 | Meta Business + App (Instagram Business Login, redirect URI set) + Pixel + IG tester | ☐ | App ID, App Secret, Pixel ID | Live IG connect on founder's profile; Pixel wired consent-gated |
+| 1 | Meta Business + App (Instagram Business Login, redirect URI set) + Pixel + IG tester | 🟡 partial | App ID, App Secret | Pixel DONE (Gigora 1338643884912603, live + consent-gated). IG App still needed for portfolio sync go-live. |
 | 2 | Anthropic API key (console.anthropic.com) | ✅ 2026-07-03 | delivered | S3 LIVE — verified: RU fuzzy query → understood echo + fashion niche detected |
-| 3 | Voyage AI key (voyageai.com) | ✅ 2026-07-03 | delivered | key validated (1024-dim); S2 build next (pgvector DB-image swap) |
-| 4 | Buy gigora.ai (Cloudflare Registrar) | ☐ | "bought" | Rebrand runbook executed, suite green on gigora.ai |
-| 5 | Microsoft Clarity project | ☐ | Project ID | Recordings/heatmaps flowing (consent-gated) |
+| 3 | Voyage AI key (voyageai.com) | ✅ 2026-07-03 | delivered | S2 LIVE — pgvector on prod; Uzbek-Latin eval passed (fashion creator tops uz/ru/en); no pivot-translate needed |
+| 4 | Buy gigora.ai (Cloudflare Registrar) | ✅ 2026-07-03 | bought | DNS+tunnel wired via CF API; rebrand deployed; suite green on gigora.ai. Cutover 301 STAGED (REDIRECT_LEGACY_HOST). |
+| 5 | Microsoft Clarity project | ✅ 2026-07-03 | x75r7mib33 | Live + consent-gated (cookie banner shipped). Verify Strict masking + Require-consent in dashboard. |
 | 6 | support@aicreator.academy (CF Email Routing → Gmail) | ☐ | "done" | Test email received |
-| 7 | Rotate exposed tokens: @kontent_pro_bot (BotFather /revoke) + OpenAI key | ☐ | new values | SMM bot redeployed + answering |
+| 7 | Rotate exposed tokens: @kontent_pro_bot (BotFather /revoke) + OpenAI key + Cloudflare API token (used for DNS wiring) | ☐ | new values | SMM bot redeployed + answering; CF token revoked |
 | 8 | Counsel email (docs/legal-notes.md + chat-review/Clarity disclosure question) | ☐ | counsel reply | Legal pages updated if needed |
 | 9 | Cloudflare edge-cache rule (LAST — after redesign settles) | ☐ | rule created | Load-test before/after numbers |
+| 10 | **Google OAuth redirect URI** → add https://gigora.ai/api/auth/callback/google (rebrand cutover gate) | ☐ | "added" | Google login works on gigora.ai; then flip 301 |
+| 11 | Telegram BotFather `/setdomain` → gigora.ai (only if the Login Widget is used; deep-link flow works without it) | ☐ | "done" | — |
 
 Notes:
-- #1 first: Meta App Review is the 2–4 week long pole; the same errand unlocks
-  Instagram AND ads retargeting.
-- #2+#3 together: one build run delivers both search upgrades (tasks #98/#99).
-- Platform Phase 1 (email login, admin conversation viewer, red-flag engine,
-  pair + category stats) runs independently on the founder's "go phase 1".
+- #10 is the one real user-facing gap post-rebrand: Google login on gigora.ai fails
+  until the redirect URI is added. Telegram + email login already work there.
+  Once #10 is confirmed, platform flips REDIRECT_LEGACY_HOST=1 (301 old→new) in one deploy.
+- #1: Pixel done; remaining IG App Review is the 2–4 week long pole.
+- Platform code gaps remaining: none critical. Cookie-consent banner shipped 2026-07-03.
