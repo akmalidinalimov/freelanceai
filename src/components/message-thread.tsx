@@ -310,6 +310,7 @@ export function MessageThread({
                   send();
                 }
               }}
+              aria-label={t("placeholder")}
               placeholder={t("placeholder")}
               className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
             />
