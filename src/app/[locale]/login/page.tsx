@@ -35,7 +35,7 @@ export default async function LoginPage({
       </div>
 
       {error === "auth" && (
-        <p className="w-full rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <p className="w-full rounded-md border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger-soft))] px-4 py-2 text-sm text-[hsl(var(--danger))]">
           Authentication failed. Please try again.
         </p>
       )}

@@ -53,7 +53,7 @@ export default async function SearchDebugPage({
           <div
             className={`mb-4 inline-block rounded-lg px-3 py-1.5 text-sm ${
               data.results.length === 0
-                ? "bg-red-500/10 text-red-700"
+                ? "bg-[hsl(var(--danger))]/10 text-[hsl(var(--danger))]"
                 : "bg-[hsl(var(--muted))]/50"
             }`}
           >

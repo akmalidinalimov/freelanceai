@@ -29,7 +29,7 @@ export function FulfillPayoutButton({ requestId }: { requestId: string }) {
       <Button size="sm" variant="accent" onClick={go} disabled={busy}>
         Mark paid
       </Button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-[hsl(var(--danger))]">{error}</span>}
     </span>
   );
 }

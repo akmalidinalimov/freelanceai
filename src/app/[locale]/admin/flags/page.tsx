@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 const dt = (d: Date) => new Date(d).toISOString().slice(0, 16).replace("T", " ") + " UTC";
 
 const SEVERITY_STYLE: Record<string, string> = {
-  HIGH: "bg-red-100 text-red-800 border-red-300",
-  MEDIUM: "bg-amber-100 text-amber-900 border-amber-300",
+  HIGH: "bg-[hsl(var(--danger-soft))] text-[hsl(var(--danger))] border-[hsl(var(--danger))]/40",
+  MEDIUM: "bg-[hsl(var(--warning-soft))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/40",
   LOW: "bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]",
 };
 
@@ -61,7 +61,7 @@ export default async function AdminFlagsPage({ params }: { params: Promise<{ loc
                   {user.username ? `@${user.username}` : (user.firstName ?? user.email ?? user.id)}
                 </Link>
                 {user.status !== "ACTIVE" && (
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+                  <span className="rounded-full bg-[hsl(var(--danger-soft))] px-2 py-0.5 text-xs font-semibold text-[hsl(var(--danger))]">
                     {user.status}
                   </span>
                 )}

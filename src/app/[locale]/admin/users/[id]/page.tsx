@@ -61,7 +61,7 @@ export default async function AdminUserDetailPage({
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <h1 className="text-2xl font-bold">{u.name || "(no name)"}</h1>
         {u.username && <span className="text-[hsl(var(--muted-foreground))]">@{u.username}</span>}
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${u.status === "ACTIVE" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
+        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${u.status === "ACTIVE" ? "bg-[hsl(var(--success-soft))] text-[hsl(var(--success))]" : "bg-[hsl(var(--danger-soft))] text-[hsl(var(--danger))]"}`}>
           {u.status}
         </span>
         <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs font-semibold">
@@ -81,9 +81,9 @@ export default async function AdminUserDetailPage({
 
       {/* Red flags (trust & safety) */}
       {d.flags.length > 0 && (
-        <section className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4">
-          <h2 className="mb-2 font-semibold text-red-900">Red flags</h2>
-          <ul className="space-y-1 text-sm text-red-900">
+        <section className="mb-6 rounded-xl border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger-soft))] p-4">
+          <h2 className="mb-2 font-semibold text-[hsl(var(--danger))]">Red flags</h2>
+          <ul className="space-y-1 text-sm text-[hsl(var(--danger))]">
             {d.flags.map((f) => (
               <li key={f.id}>
                 <b>{f.severity}</b> · <span className="font-mono">{f.type}</span>

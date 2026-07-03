@@ -202,7 +202,7 @@ export function OrderPanel({
               />
             </>
           )}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
           <Button className="w-full" size="lg" onClick={placeOrder} disabled={busy}>
             {busy ? to("placing") : to("placeOrder")}
           </Button>

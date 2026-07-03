@@ -98,7 +98,7 @@ export function KycVerify({
         </Button>
       </div>
       {msg && <p className="text-sm text-[hsl(var(--primary))]">{msg}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

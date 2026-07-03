@@ -51,7 +51,7 @@ export default async function AdminConversationPage({
         {" "}· {c.totalMessages} messages
         {c.totalMessages > c.messages.length && ` (showing last ${c.messages.length})`}
       </p>
-      <p className="mb-6 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+      <p className="mb-6 rounded-md border border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning-soft))] px-3 py-2 text-xs text-[hsl(var(--warning))]">
         Read-only moderation view. This access has been recorded in the audit log under your admin
         account.
       </p>

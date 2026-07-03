@@ -76,7 +76,7 @@ export function AdminUserManage({
           </button>
         )}
         <button
-          className={`${btn} border-red-300 text-red-700`}
+          className={`${btn} border-[hsl(var(--danger))]/40 text-[hsl(var(--danger))]`}
           disabled={!!busy}
           onClick={() => setShowDelete((s) => !s)}
         >
@@ -85,7 +85,7 @@ export function AdminUserManage({
       </div>
 
       {showDelete && (
-        <div className="mt-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm dark:bg-red-950/20">
+        <div className="mt-3 rounded-lg border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger-soft))] p-3 text-sm">
           <p className="mb-2">
             Irreversible: anonymizes the account (orders/ledger kept as anonymous records),
             deletes portfolio media, revokes Instagram, kills sessions. Blocked while the
@@ -99,7 +99,7 @@ export function AdminUserManage({
               className="h-9 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-2"
             />
             <button
-              className={`${btn} border-red-400 bg-red-600 text-white hover:bg-red-700`}
+              className={`${btn} border-[hsl(var(--danger))]/50 bg-[hsl(var(--danger))] text-white hover:opacity-90`}
               disabled={confirmText !== "DELETE" || !!busy}
               onClick={() => act("delete", { confirm: confirmText })}
             >
@@ -109,7 +109,7 @@ export function AdminUserManage({
         </div>
       )}
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
       <p className="mt-3 text-xs text-[hsl(var(--muted-foreground))]">
         Admin role cannot be granted here — it is allowlist-only (ADMIN_TELEGRAM_IDS), by design.
       </p>

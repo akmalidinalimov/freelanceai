@@ -35,12 +35,12 @@ export async function GamificationStrip({
         )}
       </span>
       {typeof weeklyRank === "number" && (
-        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+        <span className="rounded-full bg-[hsl(var(--success-soft))] px-2.5 py-1 text-xs font-semibold text-[hsl(var(--success))]">
           🏅 {t("weeklyRank", { rank: weeklyRank })}
         </span>
       )}
       {streakDays >= 2 && (
-        <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-800">
+        <span className="rounded-full bg-[hsl(var(--warning-soft))] px-2.5 py-1 text-xs font-semibold text-[hsl(var(--warning))]">
           🔥 {t("streak", { days: streakDays })}
         </span>
       )}
@@ -58,7 +58,7 @@ export async function GamificationStrip({
         );
       })}
       {completeness && completeness.score < 100 && (
-        <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900">
+        <span className="rounded-full border border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning-soft))] px-2.5 py-1 text-xs font-medium text-[hsl(var(--warning))]">
           {t("profileScore", { score: completeness.score })}
         </span>
       )}

@@ -46,7 +46,7 @@ export function PayoutRequestButton({ availableUzs }: { availableUzs: number }) 
           {t("request")}
         </Button>
       )}
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

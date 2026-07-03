@@ -58,7 +58,7 @@ export function OnboardingChoice({ locale }: { locale: string }) {
           </span>
         </button>
       ))}
-      {error && <p className="text-sm text-red-600">{t("error")}</p>}
+      {error && <p className="text-sm text-[hsl(var(--danger))]">{t("error")}</p>}
     </div>
   );
 }

@@ -35,7 +35,7 @@ export function FollowButton({ sellerId, initialFollowing }: { sellerId: string;
       <Button size="sm" variant={following ? "outline" : "default"} onClick={toggle} disabled={busy}>
         {following ? t("following") : t("follow")}
       </Button>
-      {error && <span className="text-xs text-red-600" role="alert">{t("followError")}</span>}
+      {error && <span className="text-xs text-[hsl(var(--danger))]" role="alert">{t("followError")}</span>}
     </span>
   );
 }

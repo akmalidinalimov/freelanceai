@@ -44,7 +44,7 @@ export function GigRowActions({ gigId, status }: { gigId: string; status: string
       <button onClick={() => act("duplicate")} disabled={busy} className="hover:underline">
         {t("duplicate")}
       </button>
-      <button onClick={() => act("delete")} disabled={busy} className="text-red-600 hover:underline">
+      <button onClick={() => act("delete")} disabled={busy} className="text-[hsl(var(--danger))] hover:underline">
         {t("delete")}
       </button>
     </span>

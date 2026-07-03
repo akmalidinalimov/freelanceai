@@ -220,7 +220,7 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
                   <td className="px-3 py-2 tabular-nums">{p.orders}</td>
                   <td className="px-3 py-2 tabular-nums">{formatUzs(p.paidUzs)} so&apos;m</td>
                   <td className="px-3 py-2 tabular-nums">{p.completed}</td>
-                  <td className={`px-3 py-2 tabular-nums ${p.disputed > 0 ? "font-bold text-red-700" : ""}`}>
+                  <td className={`px-3 py-2 tabular-nums ${p.disputed > 0 ? "font-bold text-[hsl(var(--danger))]" : ""}`}>
                     {p.disputed}
                   </td>
                 </tr>
@@ -235,7 +235,7 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
         className={`rounded-xl border p-5 ${
           stats.ledgerImbalanced === 0
             ? "border-[hsl(var(--border))] bg-[hsl(var(--card))]"
-            : "border-red-500 bg-red-500/10"
+            : "border-[hsl(var(--danger))] bg-[hsl(var(--danger))]/10"
         }`}
       >
         <p className="text-sm font-medium">{t("ledgerIntegrity")}</p>

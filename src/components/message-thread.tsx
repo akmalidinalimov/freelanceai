@@ -177,7 +177,7 @@ export function MessageThread({
           {t("send")}
         </Button>
       </div>
-      {sendError && <p className="mt-2 text-sm text-red-600" role="alert">{sendError}</p>}
+      {sendError && <p className="mt-2 text-sm text-[hsl(var(--danger))]" role="alert">{sendError}</p>}
     </div>
   );
 }
