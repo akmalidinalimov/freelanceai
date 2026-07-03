@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/confirm-dialog";
 
 interface Cat {
   id: string;
@@ -22,6 +23,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
   const [nameEn, setNameEn] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   async function post(body: Record<string, unknown>) {
     setError(null);
@@ -58,7 +60,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
   }
 
   async function remove(id: string, label: string) {
-    if (!window.confirm(`Delete category "${label}"?`)) return;
+    if (!(await confirm({ title: `Delete category "${label}"?`, danger: true }))) return;
     await post({ action: "delete", id });
   }
 

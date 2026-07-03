@@ -6,6 +6,8 @@ import { rateLimitInfo } from "@/lib/rate-limit";
 import { matchCreators } from "@/server/services/match";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { Stars } from "@/components/stars";
+import { EmptyState } from "@/components/empty-state";
+import { SearchX } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +33,7 @@ export default async function SearchPage({
   setRequestLocale(locale);
   const t = await getTranslations("Search");
   const tp = await getTranslations("Profile");
+  const tn = await getTranslations("Nav");
 
   // Same 300-char bound as the API route's zod schema — the SSR path must not be an
   // unbounded-input bypass into pg_trgm/Claude.
@@ -109,7 +112,7 @@ export default async function SearchPage({
           )}
 
           {data.results.length === 0 ? (
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("noResults")}</p>
+            <EmptyState icon={SearchX} title={t("noResults")} ctaLabel={tn("explore")} ctaHref="/gigs" />
           ) : (
             <>
               <h2 className="mb-3 font-semibold">

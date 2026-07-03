@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { useConfirm } from "@/components/confirm-dialog";
 
 /** Pause / resume / delete actions for a gig row on the creator dashboard. */
 export function GigRowActions({ gigId, status }: { gigId: string; status: string }) {
   const t = useTranslations("Gig");
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
 
   async function act(action: "pause" | "resume" | "delete" | "publish" | "duplicate") {
-    if (action === "delete" && !window.confirm(t("confirmDelete"))) return;
+    if (action === "delete" && !(await confirm({ title: t("delete"), message: t("confirmDelete"), danger: true })))
+      return;
     setBusy(true);
     const r = await fetch(`/api/gigs/${gigId}`, {
       method: "POST",
