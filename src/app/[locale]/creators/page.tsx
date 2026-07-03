@@ -27,7 +27,12 @@ export default async function CreatorsIndexPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="font-display text-3xl font-extrabold">{t("title")}</h1>
+      <div className="flex flex-wrap items-baseline gap-x-3">
+        <h1 className="font-display text-3xl font-extrabold">{t("title")}</h1>
+        {creators.length > 0 && (
+          <span className="text-sm font-medium text-[hsl(var(--muted-foreground))]">{creators.length}</span>
+        )}
+      </div>
       <p className="mt-1 text-[hsl(var(--muted-foreground))]">{t("sub")}</p>
 
       {creators.length === 0 ? (

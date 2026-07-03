@@ -49,14 +49,14 @@ export async function GigCard({
   return (
     <Link
       href={`/gigs/${gig.slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[hsl(var(--primary))]/60 hover:shadow-[0_20px_40px_-16px_hsl(var(--primary)/0.25)]"
+      className="group relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-[var(--shadow-soft)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-[hsl(var(--primary))]/30 hover:shadow-[var(--shadow-hover)]"
     >
-      {/* Browser chrome */}
-      <div className="flex items-center gap-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/60 px-3 py-2">
+      {/* Browser chrome — warm-white bar, softened traffic lights */}
+      <div className="flex items-center gap-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--surface-2))] px-3 py-2">
         <span className="flex shrink-0 gap-1.5" aria-hidden>
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/85" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/85" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]/85" />
         </span>
         <span className="ml-1 flex min-w-0 flex-1 items-center gap-1.5 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-2 py-1 text-[11px] text-[hsl(var(--muted-foreground))]">
           <Lock className="h-3 w-3 shrink-0 text-[#28c840]" strokeWidth={2.25} />
