@@ -10,8 +10,9 @@ $token = $dv['TELEGRAM_BOT_TOKEN']
 $secret = $dv['TELEGRAM_WEBHOOK_SECRET']
 if (-not $token -or -not $secret) { throw "TELEGRAM_BOT_TOKEN / TELEGRAM_WEBHOOK_SECRET missing" }
 
-$webhookUrl = "https://freelanceai.aicreator.academy/api/telegram/webhook"
-$body = @{ url = $webhookUrl; secret_token = $secret; allowed_updates = @("message"); drop_pending_updates = $true } | ConvertTo-Json
+$webhookUrl = "https://gigora.ai/api/telegram/webhook"
+# callback_query is required so inline action buttons (accept/revise/rate) are delivered.
+$body = @{ url = $webhookUrl; secret_token = $secret; allowed_updates = @("message", "callback_query"); drop_pending_updates = $false } | ConvertTo-Json
 $set = Invoke-RestMethod -Method Post -Uri "https://api.telegram.org/bot$token/setWebhook" -ContentType "application/json" -Body $body
 "setWebhook: ok=$($set.ok) desc=$($set.description)"
 
