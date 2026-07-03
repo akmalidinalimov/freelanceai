@@ -11,6 +11,7 @@ import { ClarityAnalytics } from "@/components/clarity-analytics";
 import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
+import { UIProviders } from "@/components/ui-providers";
 import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
 import { ReferralCapture } from "@/components/referral-capture";
 import { Suspense } from "react";
@@ -80,6 +81,7 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="flex min-h-screen flex-col">
         <NextIntlClientProvider messages={messages}>
+          <UIProviders>
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[hsl(var(--primary))] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-[hsl(var(--primary-foreground))]"
@@ -96,6 +98,7 @@ export default async function LocaleLayout({
           <SiteFooter />
           <MobileBottomNav />
           <CookieConsent />
+          </UIProviders>
         </NextIntlClientProvider>
         <Suspense fallback={null}>
           <ReferralCapture />

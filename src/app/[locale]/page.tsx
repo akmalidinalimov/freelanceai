@@ -105,7 +105,7 @@ export default async function HomePage({
 
         {/* Platform stats — real counts, each shown only when non-zero */}
         {statTiles.length > 0 && (
-          <section className="grid grid-cols-3 gap-3 pb-6">
+          <section className="grid grid-cols-1 gap-3 pb-6 sm:grid-cols-3">
             {statTiles.map((s) => (
               <div
                 key={s.key}

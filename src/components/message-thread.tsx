@@ -289,6 +289,7 @@ export function MessageThread({
             }
           }}
           placeholder={t("placeholder")}
+          aria-label={t("placeholder")}
           className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
         />
         <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>

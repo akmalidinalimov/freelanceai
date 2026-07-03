@@ -19,21 +19,27 @@
   --muted: 38 26% 94%;
   --muted-foreground: 220 12% 40%;
   --border: 36 20% 88%;
+  /* Darker, cooler border for form controls (WCAG 1.4.11 non-text contrast) —
+     the warm --border is too faint on inputs. Referenced widely; keep defined. */
+  --input-border: 214 20% 69%;
 
   /* Brand: teal primary (AI + trust), coral accent (B3 identity). */
   --primary: 173 80% 34%;
   --primary-foreground: 0 0% 100%;
+  /* Text-safe deep teal for links/labels on light surfaces (≈7:1). Referenced
+     widely as hsl(var(--primary-ink)); must stay defined or those links lose color. */
+  --primary-ink: 173 84% 21%;
   --accent: 11 86% 58%;
   --accent-foreground: 0 0% 100%;
 
   /* Semantic status — soft tint + readable ink, one home for both themes. */
-  --success: 152 58% 36%;
+  --success: 152 60% 27%;
   --success-foreground: 0 0% 100%;
   --success-soft: 152 52% 93%;
   --danger: 0 72% 47%;
   --danger-foreground: 0 0% 100%;
   --danger-soft: 0 80% 96%;
-  --warning: 33 92% 44%;
+  --warning: 33 95% 33%;
   --warning-foreground: 40 60% 12%;
   --warning-soft: 40 90% 92%;
   --info: 218 80% 50%;
@@ -68,9 +74,11 @@
     --muted: 26 11% 18%;
     --muted-foreground: 40 8% 64%;
     --border: 30 10% 24%;
+    --input-border: 215 14% 42%; /* visible form-control border on dark charcoal */
 
     --primary: 172 62% 46%;
     --primary-foreground: 173 45% 8%;
+    --primary-ink: 172 60% 62%; /* lighter teal for link text on dark charcoal */
     --accent: 12 82% 62%;
     --accent-foreground: 15 40% 10%;
 
