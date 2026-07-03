@@ -13,12 +13,14 @@ import { describe, it, expect, afterAll } from "vitest";
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { fulfillPayoutRequest, tipOrder, sellerAvailableUzs } from "@/server/services/payments";
+import { acceptOrder } from "@/server/services/order";
+import { createReview } from "@/server/services/review";
 
 let seq = 0;
 const ids: string[] = [];
 
-/** Create a seller with a single COMPLETED order worth `netUzs`, plus a buyer and an admin. */
-async function seed(netUzs: number) {
+/** Create a seller with a single order worth `netUzs` (COMPLETED by default), plus a buyer and an admin. */
+async function seed(netUzs: number, status: "COMPLETED" | "DELIVERED" = "COMPLETED") {
   const n = ++seq;
   const sellerId = `it_seller_${n}`;
   const buyerId = `it_buyer_${n}`;
@@ -42,7 +44,9 @@ async function seed(netUzs: number) {
   await prisma.order.create({
     data: {
       id: orderId, gigId, buyerId, sellerId, packageTier: "BASIC", packageTitle: "Basic",
-      amountUzs: netUzs, sellerNetUzs: netUzs, status: "COMPLETED", completedAt: new Date(),
+      amountUzs: netUzs, sellerNetUzs: netUzs, status,
+      deliveredAt: new Date(),
+      completedAt: status === "COMPLETED" ? new Date() : null,
     },
   });
   const admin = (await prisma.user.findUnique({ where: { id: adminId } })) as User;
@@ -117,5 +121,36 @@ describe("tip idempotency", () => {
     const tips = await prisma.transaction.count({ where: { orderId: s.orderId, type: "TIP" } });
     expect(tips).toBe(2);
     expect(await sellerAvailableUzs(s.sellerId)).toBe(20_000);
+  });
+});
+
+// The Telegram inline buttons (accept / revise / rate) dispatch straight into these services
+// with an order id taken from callback_data. The security guarantee is that the SERVICE — not
+// the webhook — re-checks ownership against the acting user, so a forged id from a non-owner
+// is rejected regardless of what the button carries. Prove that against a real DB.
+describe("order-action authz (Telegram callback surface)", () => {
+  it("a non-owner cannot accept or review another user's order; the real buyer can", async () => {
+    const s = await seed(0, "DELIVERED");
+
+    // A third user who is party to nothing — the "attacker" tapping a guessed order id.
+    const outId = `it_out_${seq}`;
+    ids.push(outId);
+    await prisma.user.create({
+      data: { id: outId, firstName: "Outsider", username: outId, role: "BUYER", status: "ACTIVE", onboardingCompleted: true },
+    });
+    const outsider = (await prisma.user.findUnique({ where: { id: outId } })) as User;
+
+    // Accept: outsider is forbidden; order stays DELIVERED.
+    await expect(acceptOrder(s.orderId, outsider)).rejects.toThrow();
+    expect((await prisma.order.findUnique({ where: { id: s.orderId } }))?.status).toBe("DELIVERED");
+
+    // The real buyer can accept → COMPLETED.
+    await acceptOrder(s.orderId, s.buyer);
+    expect((await prisma.order.findUnique({ where: { id: s.orderId } }))?.status).toBe("COMPLETED");
+
+    // Review: outsider is forbidden; the real buyer can leave the 1-tap star rating.
+    await expect(createReview(outId, s.orderId, 5)).rejects.toThrow();
+    const review = await createReview(s.buyer.id, s.orderId, 5);
+    expect(review.rating).toBe(5);
   });
 });
