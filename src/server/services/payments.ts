@@ -5,7 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
-import { notify } from "@/server/services/notification";
+import { notify, notifyAndPush } from "@/server/services/notification";
 import { onOrderPaid } from "@/server/services/gamification";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -60,7 +60,7 @@ async function postOrderPaymentTx(
 }
 
 async function notifySellerPaid(orderId: string, sellerId: string) {
-  await notify(sellerId, "order.paid", "Toʻlov tasdiqlandi", {
+  await notifyAndPush(sellerId, "order.paid", "Toʻlov tasdiqlandi", {
     body: "Buyurtma toʻlovi tasdiqlandi — ishni boshlang.",
     link: `/orders/${orderId}`,
   });
@@ -159,7 +159,7 @@ export async function tipOrder(orderId: string, buyer: User, amountUzs: number) 
     });
   });
   await audit({ actorId: buyer.id, action: "order.tip", entity: "Order", entityId: orderId });
-  await notify(order.sellerId, "order.tip", "Choychaqa oldingiz", {
+  await notifyAndPush(order.sellerId, "order.tip", "Choychaqa oldingiz", {
     body: "Buyurtmachi sizga choychaqa qoldirdi.",
     link: `/orders/${orderId}`,
   });
@@ -404,4 +404,8 @@ export async function fulfillPayoutRequest(admin: User, requestId: string) {
     });
   });
   await audit({ actorId: admin.id, action: "payout.fulfill", entity: "PayoutRequest", entityId: requestId });
+  await notifyAndPush(req.sellerId, "payout.paid", "Toʻlov amalga oshirildi", {
+    body: `${req.amountUzs.toLocaleString("ru-RU")} soʻm hisobingizga oʻtkazildi.`,
+    link: `/dashboard/seller`,
+  });
 }

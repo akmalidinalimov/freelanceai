@@ -8,6 +8,7 @@ import { stripContactInfo } from "@/lib/sanitize";
 import { Errors } from "@/lib/api";
 import { gigEditWhereForUser } from "@/lib/authz";
 import { notifyFollowersOfNewGig } from "@/server/services/follow";
+import { notifyAndPush } from "@/server/services/notification";
 
 export type GigSort = "newest" | "price_asc" | "price_desc" | "popular";
 export interface GigFilters {
@@ -242,10 +243,24 @@ async function moderateGig(gigId: string, admin: GigActor, status: "ACTIVE" | "R
   const res = await prisma.gig.updateMany({ where: { id: gigId, deletedAt: null }, data: { status } });
   if (res.count === 0) throw Errors.notFound("Gig not found");
   await audit({ actorId: admin.id, action, entity: "Gig", entityId: gigId });
-  // A newly-approved gig is now public — let the seller's followers know (best-effort).
+  const gig = await prisma.gig.findUnique({
+    where: { id: gigId },
+    select: { sellerId: true, title: true, slug: true },
+  });
+  if (!gig) return;
+  // Tell the seller the moderation outcome (both approve + reject).
   if (status === "ACTIVE") {
-    const gig = await prisma.gig.findUnique({ where: { id: gigId }, select: { sellerId: true, title: true, slug: true } });
-    if (gig) await notifyFollowersOfNewGig(gig.sellerId, gig.title, gig.slug).catch(() => {});
+    await notifyAndPush(gig.sellerId, "gig.approved", "Xizmatingiz tasdiqlandi", {
+      body: `"${gig.title}" endi omma uchun koʻrinadi.`,
+      link: `/gigs/${gig.slug}`,
+    });
+    // A newly-approved gig is now public — let the seller's followers know (best-effort).
+    await notifyFollowersOfNewGig(gig.sellerId, gig.title, gig.slug).catch(() => {});
+  } else {
+    await notifyAndPush(gig.sellerId, "gig.rejected", "Xizmat tasdiqlanmadi", {
+      body: `"${gig.title}" moderatsiyadan oʻtmadi. Iltimos, qoidalarni tekshirib qayta yuboring.`,
+      link: `/dashboard/seller`,
+    });
   }
 }
 

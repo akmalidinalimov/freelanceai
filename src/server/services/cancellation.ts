@@ -5,7 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { reversalPostings } from "@/lib/commission";
-import { notify } from "@/server/services/notification";
+import { notifyAndPush } from "@/server/services/notification";
 
 /** A party requests a mutual cancellation of an active order. */
 export async function requestCancellation(orderId: string, user: User, reason: string) {
@@ -27,7 +27,7 @@ export async function requestCancellation(orderId: string, user: User, reason: s
   });
   await audit({ actorId: user.id, action: "cancellation.request", entity: "Order", entityId: orderId });
   const otherId = user.id === order.buyerId ? order.sellerId : order.buyerId;
-  await notify(otherId, "cancellation.requested", "Bekor qilish soʻrovi", {
+  await notifyAndPush(otherId, "cancellation.requested", "Bekor qilish soʻrovi", {
     body: "Buyurtmani bekor qilish soʻraldi — tasdiqlang yoki rad eting.",
     link: `/orders/${orderId}`,
   });
@@ -45,7 +45,7 @@ export async function respondCancellation(orderId: string, user: User, approve: 
   if (!approve) {
     await prisma.cancellationRequest.update({ where: { orderId }, data: { status: "DECLINED" } });
     await audit({ actorId: user.id, action: "cancellation.decline", entity: "Order", entityId: orderId });
-    await notify(req.requestedById, "cancellation.declined", "Bekor qilish rad etildi", {
+    await notifyAndPush(req.requestedById, "cancellation.declined", "Bekor qilish rad etildi", {
       link: `/orders/${orderId}`,
     });
     return;
@@ -84,7 +84,7 @@ export async function respondCancellation(orderId: string, user: User, approve: 
     await tx.cancellationRequest.update({ where: { orderId }, data: { status: "APPROVED" } });
   });
   await audit({ actorId: user.id, action: "cancellation.approve", entity: "Order", entityId: orderId });
-  await notify(req.requestedById, "cancellation.approved", "Buyurtma bekor qilindi", {
+  await notifyAndPush(req.requestedById, "cancellation.approved", "Buyurtma bekor qilindi", {
     link: `/orders/${orderId}`,
   });
 }

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
-import { notify } from "@/server/services/notification";
+import { notifyAndPush } from "@/server/services/notification";
 import { createOrderFromOffer } from "@/server/services/order";
 
 async function loadConvo(conversationId: string, user: User) {
@@ -45,7 +45,7 @@ export async function createOffer(user: User, conversationId: string, input: Off
       status: "PENDING",
     },
   });
-  await notify(convo.buyerId, "offer.new", "Yangi maxsus taklif", {
+  await notifyAndPush(convo.buyerId, "offer.new", "Yangi maxsus taklif", {
     body: input.title.trim(),
     link: `/messages/${conversationId}`,
   });
@@ -68,6 +68,10 @@ export async function acceptOffer(offerId: string, user: User): Promise<string> 
   const order = await createOrderFromOffer(offer);
   await prisma.customOffer.update({ where: { id: offerId }, data: { status: "ACCEPTED", orderId: order.id } });
   await audit({ actorId: user.id, action: "offer.accept", entity: "CustomOffer", entityId: offerId });
+  await notifyAndPush(offer.sellerId, "offer.accepted", "Taklifingiz qabul qilindi", {
+    body: "Buyurtmachi maxsus taklifingizni qabul qildi — toʻlovdan soʻng ishni boshlashingiz mumkin.",
+    link: `/orders/${order.id}`,
+  });
   return order.id;
 }
 
@@ -77,4 +81,11 @@ export async function declineOffer(offerId: string, user: User): Promise<void> {
   if (!offer || offer.status !== "PENDING") throw Errors.conflict("Offer is no longer available");
   if (offer.buyerId !== user.id && offer.sellerId !== user.id) throw Errors.forbidden();
   await prisma.customOffer.update({ where: { id: offerId }, data: { status: "DECLINED" } });
+  await audit({ actorId: user.id, action: "offer.decline", entity: "CustomOffer", entityId: offerId });
+  // Notify the other participant (whoever didn't decline).
+  const otherId = user.id === offer.sellerId ? offer.buyerId : offer.sellerId;
+  await notifyAndPush(otherId, "offer.declined", "Maxsus taklif rad etildi", {
+    body: offer.title,
+    link: `/messages/${offer.conversationId}`,
+  });
 }

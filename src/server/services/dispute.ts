@@ -5,7 +5,7 @@ import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { reversalPostings } from "@/lib/commission";
-import { notify } from "@/server/services/notification";
+import { notifyAndPush } from "@/server/services/notification";
 
 const NAME = { select: { firstName: true, name: true, username: true } } as const;
 
@@ -27,7 +27,7 @@ export async function openDispute(orderId: string, user: User, reason: string) {
   ]);
   await audit({ actorId: user.id, action: "dispute.open", entity: "Order", entityId: orderId });
   const otherId = user.id === order.buyerId ? order.sellerId : order.buyerId;
-  await notify(otherId, "dispute.opened", "Nizo ochildi", {
+  await notifyAndPush(otherId, "dispute.opened", "Nizo ochildi", {
     body: "Buyurtma boʻyicha nizo ochildi — administrator koʻrib chiqadi.",
     link: `/orders/${orderId}`,
   });

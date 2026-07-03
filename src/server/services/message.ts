@@ -130,7 +130,7 @@ export async function postConversationMessage(
       select: { telegramId: true, email: true, notifyTelegram: true, notifyEmail: true },
     });
     if (other) {
-      const origin = process.env.APP_ORIGIN ?? "https://freelanceai.aicreator.academy";
+      const origin = process.env.APP_ORIGIN ?? "https://gigora.ai";
       const ctx = convo.gig?.title ? ` "${convo.gig.title}"` : "";
       const previewText = text ?? (files.length ? "📎 fayl" : "");
       const preview = previewText.length > 160 ? `${previewText.slice(0, 160)}…` : previewText;

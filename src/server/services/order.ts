@@ -8,7 +8,7 @@ import { trackEvent } from "@/server/services/activity";
 import { canTransition } from "@/lib/order-state";
 import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
-import { notify } from "@/server/services/notification";
+import { notify, notifyAndPush } from "@/server/services/notification";
 import { findValidCoupon } from "@/server/services/coupon";
 
 function commissionPct(): number {
@@ -192,7 +192,7 @@ export async function deliverOrder(orderId: string, seller: User, message: strin
     prisma.order.update({ where: { id: orderId }, data: { status: "DELIVERED", deliveredAt: new Date() } }),
   ]);
   await audit({ actorId: seller.id, action: "order.deliver", entity: "Order", entityId: orderId });
-  await notify(order.buyerId, "order.delivered", "Buyurtmangiz topshirildi", {
+  await notifyAndPush(order.buyerId, "order.delivered", "Buyurtmangiz topshirildi", {
     body: "Ijrochi ishni topshirdi — koʻrib chiqing va qabul qiling.",
     link: `/orders/${orderId}`,
   });
@@ -207,7 +207,7 @@ export async function acceptOrder(orderId: string, buyer: User) {
   await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED", completedAt: new Date() } });
   await recomputeSellerStats(order.sellerId);
   await audit({ actorId: buyer.id, action: "order.complete", entity: "Order", entityId: orderId });
-  await notify(order.sellerId, "order.completed", "Buyurtma yakunlandi", {
+  await notifyAndPush(order.sellerId, "order.completed", "Buyurtma yakunlandi", {
     body: "Buyurtmachi ishni qabul qildi. Mablagʻ hisobingizga oʻtkazildi.",
     link: `/orders/${orderId}`,
   });
@@ -221,6 +221,10 @@ export async function requestRevision(orderId: string, buyer: User) {
   assertTransition(order.status, "REVISION");
   await prisma.order.update({ where: { id: orderId }, data: { status: "REVISION" } });
   await audit({ actorId: buyer.id, action: "order.revision", entity: "Order", entityId: orderId });
+  await notifyAndPush(order.sellerId, "order.revision", "Oʻzgartirish soʻraldi", {
+    body: "Buyurtmachi ishga oʻzgartirish kiritishni soʻradi — batafsil buyurtmada.",
+    link: `/orders/${orderId}`,
+  });
 }
 
 /** Auto-complete deliveries the buyer didn't act on after `days`. Returns the count completed. */
