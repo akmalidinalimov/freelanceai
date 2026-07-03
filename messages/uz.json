@@ -1,4 +1,10 @@
 {
+  "BotMigration": {
+    "aria": "Telegram bot yangilanishi",
+    "text": "Biz yangi Telegram botga oʻtdik. Buyurtma yangiliklari va xabarlarni olishda davom etish uchun qayta ulaning.",
+    "cta": "{bot}ni ochish",
+    "dismiss": "Yopish"
+  },
   "Notifications": {
     "title": "Bildirishnomalar",
     "empty": "Hozircha bildirishnoma yoʻq.",

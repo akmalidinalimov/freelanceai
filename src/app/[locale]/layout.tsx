@@ -11,6 +11,9 @@ import { ClarityAnalytics } from "@/components/clarity-analytics";
 import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
+import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
+import { getCurrentUser } from "@/lib/session";
+import { needsBotReconnect } from "@/lib/telegram-migration";
 import "../globals.css";
 
 // Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
@@ -59,6 +62,13 @@ export default async function LocaleLayout({
   // (without this, next-intl only forwards namespaces accessed by server components
   // on the page — e.g. OrderPanel's "Order" namespace would be missing on the gig page).
   const messages = await getMessages();
+
+  // Telegram bot migration: nudge users linked to the old bot to open the new one
+  // (getCurrentUser is request-cached, so this reuses SiteHeader's load — no extra query).
+  const user = await getCurrentUser();
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME;
+  const showReconnect = Boolean(user && botUsername && needsBotReconnect(user));
+
   const skip =
     ({ uz: "Asosiy kontentga oʻtish", ru: "Перейти к содержимому", en: "Skip to content" } as Record<string, string>)[
       locale
@@ -75,6 +85,9 @@ export default async function LocaleLayout({
             {skip}
           </a>
           <SiteHeader />
+          {showReconnect && botUsername && (
+            <BotReconnectBanner deepLink={`https://t.me/${botUsername}`} botName={`@${botUsername}`} />
+          )}
           <main id="main" className="flex-1 pb-16 md:pb-0">
             {children}
           </main>

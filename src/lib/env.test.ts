@@ -41,7 +41,7 @@ describe("parseEnv", () => {
         ...base,
         NODE_ENV: "production",
         TELEGRAM_BOT_TOKEN: "123:abc",
-        TELEGRAM_BOT_USERNAME: "aifrilance_bot",
+        TELEGRAM_BOT_USERNAME: "gigoro_ai_bot",
         TELEGRAM_WEBHOOK_SECRET: "a-sufficiently-long-secret",
         AUTH_SECRET: "another-sufficiently-long-secret",
       })

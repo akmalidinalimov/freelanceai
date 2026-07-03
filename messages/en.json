@@ -1,4 +1,10 @@
 {
+  "BotMigration": {
+    "aria": "Telegram bot update notice",
+    "text": "We've moved to a new Telegram bot. Reconnect to keep getting order updates and messages.",
+    "cta": "Open {bot}",
+    "dismiss": "Dismiss"
+  },
   "Notifications": {
     "title": "Notifications",
     "empty": "No notifications yet.",

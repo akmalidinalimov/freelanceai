@@ -4,6 +4,13 @@ Status: drafted 2026-07-03 (research-grounded: Fiverr feature/notification audit
 Telegram Bot API + Mini Apps docs, internal code audit). Goal: everything a user can
 do on gigora.ai, they can do inside Telegram — passwordless, app-like, addictive.
 
+**Live bot (2026-07):** `@gigoro_ai_bot` (id 8929763464, display name "Gigora"), replacing
+the earlier `@aifrilance_bot`. Token + `TELEGRAM_BOT_USERNAME` live in `.env.deploy.local`;
+webhook registered via `deploy/set-webhook.ps1` (→ `https://gigora.ai/api/telegram/webhook`,
+`allowed_updates=[message,callback_query]`). Users linked to the old bot must open the new
+one before it can push to them — the site shows a one-time reconnect banner
+(`needsBotReconnect` in `src/lib/telegram-migration.ts`) that clears once they `/start`.
+
 ## 1. Architecture — HYBRID (reply-keyboard nav + Mini App screens + bot push)
 
 Three layers, each playing to its strength:
