@@ -552,7 +552,10 @@
     "markerConnected": "Instagram успешно подключён!",
     "markerError": "Не удалось подключить Instagram. Попробуйте ещё раз.",
     "markerUnavailable": "Подключение Instagram пока недоступно.",
-    "viewOnInstagram": "Смотреть в Instagram"
+    "viewOnInstagram": "Смотреть в Instagram",
+    "showcaseLabel": "Лента Instagram",
+    "postBy": "Пост в Instagram от @{handle}",
+    "close": "Закрыть"
   },
   "Account": {
     "title": "Аккаунт",

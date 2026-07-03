@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/session";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { FollowButton } from "@/components/follow-button";
 import { VerifiedBadge } from "@/components/verified-badge";
+import { InstagramShowcase } from "@/components/instagram-showcase";
 import { specLabel } from "@/lib/specializations";
 import { badgeDef, badgeLabel } from "@/lib/badges";
 import { getUserBadges } from "@/server/services/gamification";
@@ -51,6 +52,13 @@ export default async function CreatorProfilePage({
   const name = user.firstName ?? user.name ?? user.username ?? "";
   const avatar = user.image ?? user.photoUrl ?? null;
   const memberYear = new Date(user.createdAt).getFullYear();
+
+  // Split portfolio: Instagram-synced content becomes the auto-flowing showcase;
+  // manual uploads keep their own gallery further down.
+  const igItems = (profile?.portfolio ?? [])
+    .filter((p) => p.source === "instagram")
+    .map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, permalink: p.permalink, caption: p.caption }));
+  const uploadItems = (profile?.portfolio ?? []).filter((p) => p.source !== "instagram");
 
   const proven =
     (profile?.specializations?.length ?? 0) > 0
@@ -137,6 +145,9 @@ export default async function CreatorProfilePage({
         </div>
       </div>
 
+      {/* Instagram showcase — auto-flowing strip beneath the identity card */}
+      <InstagramShowcase items={igItems} handle={profile?.instagramUsername ?? null} />
+
       {(profile?.specializations?.length ?? 0) > 0 && (
         <div className="mb-8">
           <h2 className="mb-2 font-semibold">{t("specializations")}</h2>
@@ -209,12 +220,12 @@ export default async function CreatorProfilePage({
         </div>
       )}
 
-      {/* Portfolio — horizontal snap carousel (manual uploads first, then IG-synced) */}
-      {(profile?.portfolio?.length ?? 0) > 0 && (
+      {/* Portfolio — manual uploads only (Instagram-synced items are in the showcase above) */}
+      {uploadItems.length > 0 && (
         <div className="mb-8">
           <h2 className="mb-4 text-xl font-semibold">{t("portfolio")}</h2>
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
-            {profile!.portfolio.map((p) => {
+            {uploadItems.map((p) => {
               const fromIg = p.source === "instagram";
               const isVideo = p.mediaType === "video";
               const media = (

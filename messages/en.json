@@ -552,7 +552,10 @@
     "markerConnected": "Instagram connected!",
     "markerError": "Couldn't connect Instagram. Please try again.",
     "markerUnavailable": "Instagram connection isn't available yet.",
-    "viewOnInstagram": "View on Instagram"
+    "viewOnInstagram": "View on Instagram",
+    "showcaseLabel": "From Instagram",
+    "postBy": "Instagram post by @{handle}",
+    "close": "Close"
   },
   "Account": {
     "title": "Account",

@@ -552,7 +552,10 @@
     "markerConnected": "Instagram muvaffaqiyatli ulandi!",
     "markerError": "Instagram ulanmadi. Qayta urinib koʻring.",
     "markerUnavailable": "Instagram ulanishi hozircha mavjud emas.",
-    "viewOnInstagram": "Instagram'da koʻrish"
+    "viewOnInstagram": "Instagram'da koʻrish",
+    "showcaseLabel": "Instagram lentasi",
+    "postBy": "@{handle} ning Instagram posti",
+    "close": "Yopish"
   },
   "Account": {
     "title": "Hisob",
