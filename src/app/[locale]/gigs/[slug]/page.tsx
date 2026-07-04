@@ -206,6 +206,29 @@ export default async function GigDetailPage({
                     </td>
                   ))}
                 </tr>
+                {/* Included features per tier — "✓ "-lines from package.description */}
+                {packages.some((p) => p.description?.includes("✓")) && (
+                  <tr className="align-top">
+                    <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("included")}</td>
+                    {packages.map((p) => (
+                      <td key={p.tier} className="p-3">
+                        <ul className="space-y-1.5">
+                          {(p.description ?? "")
+                            .split("\n")
+                            .filter((l) => l.trim())
+                            .map((line, i) => (
+                              <li key={i} className="flex gap-1.5 text-[13px] leading-snug">
+                                <span aria-hidden className="mt-0.5 shrink-0 font-bold text-[hsl(var(--success))]">
+                                  ✓
+                                </span>
+                                <span>{line.replace(/^✓\s*/, "")}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      </td>
+                    ))}
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

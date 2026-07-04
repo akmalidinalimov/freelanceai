@@ -324,6 +324,7 @@
     "feature": "Feature",
     "unfeature": "Unfeature",
     "comparePackages": "Compare packages",
+    "included": "What's included",
     "relatedTitle": "Similar gigs",
     "requirements": "Requirements (questions)",
     "requirementQ": "Question (e.g. Brand color?)",
