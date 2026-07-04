@@ -496,7 +496,9 @@ export function getGigBySlug(slug: string) {
           name: true,
           image: true,
           kycStatus: true,
-          sellerProfile: { select: { headline: true, bio: true, ratingAvg: true, ratingCount: true, level: true } },
+          sellerProfile: {
+            select: { headline: true, bio: true, ratingAvg: true, ratingCount: true, level: true, responseMins: true },
+          },
         },
       },
     },

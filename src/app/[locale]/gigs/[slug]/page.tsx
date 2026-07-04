@@ -98,8 +98,11 @@ export default async function GigDetailPage({
       {/* min-w-0: without it the compare table's min-w-[460px] propagates through
           the grid item (min-width:auto) and forces body-level horizontal scroll at 390px. */}
       <div className="min-w-0">
+        {/* Seller's own work leads the hero; the category cover is only a trailing
+            fallback (critique P1: a shared category photo fronting every gig is the
+            biggest remaining "AI made this" tell on a trust-first money page). */}
         <GigGallery
-          images={[...(gig.coverUrl ? [gig.coverUrl] : []), ...gig.galleryUrls]}
+          images={[...gig.galleryUrls, ...(gig.coverUrl ? [gig.coverUrl] : [])]}
           title={gig.title}
         />
         <div className="flex flex-wrap items-center gap-2">
@@ -394,6 +397,10 @@ export default async function GigDetailPage({
                 <>
                   ★ {gig.seller.sellerProfile.ratingAvg.toFixed(1)} ({gig.seller.sellerProfile.ratingCount})
                 </>
+              ) : gig.seller.sellerProfile?.responseMins ? (
+                // New seller (no ratings yet) → lead with a real positive proxy
+                // (response speed) rather than a bare "Yangi ijodkor" (critique P3).
+                tp("respondsIn", { h: Math.max(1, Math.round(gig.seller.sellerProfile.responseMins / 60)) })
               ) : (
                 tp(`level.${gig.seller.sellerProfile?.level ?? "NEW"}`)
               )}

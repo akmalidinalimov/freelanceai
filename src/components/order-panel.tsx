@@ -145,30 +145,37 @@ export function OrderPanel({
           </div>
           {selected.description &&
             (selected.description.includes("✓") ? (
-              /* "✓ "-lines = included features; other lines = tier tagline/intro */
-              <div className="mt-3">
-                {selected.description
-                  .split("\n")
-                  .filter((l) => l.trim() && !l.startsWith("✓"))
-                  .map((line, i) => (
-                    <p key={i} className="mb-2 text-[13px] font-semibold text-[hsl(var(--primary-ink))]">
-                      {line}
-                    </p>
-                  ))}
-                <ul className="space-y-1.5">
-                  {selected.description
-                    .split("\n")
-                    .filter((l) => l.startsWith("✓"))
-                    .map((line, i) => (
-                      <li key={i} className="flex gap-2 text-sm leading-snug">
-                        <span aria-hidden className="mt-0.5 shrink-0 font-bold text-[hsl(var(--success))]">
-                          ✓
-                        </span>
-                        <span>{line.replace(/^✓\s*/, "")}</span>
-                      </li>
+              (() => {
+                const lines = selected.description.split("\n");
+                const taglines = lines.filter((l) => l.trim() && !l.startsWith("✓"));
+                const features = lines.filter((l) => l.startsWith("✓")).map((l) => l.replace(/^✓\s*/, ""));
+                // Condensed: top 3 features here; the compare table below is the single
+                // full source (critique P2: the same list was read twice per scroll).
+                const shown = features.slice(0, 3);
+                const rest = features.length - shown.length;
+                return (
+                  <div className="mt-3">
+                    {taglines.map((line, i) => (
+                      <p key={i} className="mb-2 text-[13px] font-semibold text-[hsl(var(--primary-ink))]">
+                        {line}
+                      </p>
                     ))}
-                </ul>
-              </div>
+                    <ul className="space-y-1.5">
+                      {shown.map((line, i) => (
+                        <li key={i} className="flex gap-2 text-sm leading-snug">
+                          <span aria-hidden className="mt-0.5 shrink-0 font-bold text-[hsl(var(--success))]">
+                            ✓
+                          </span>
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {rest > 0 && (
+                      <p className="mt-1.5 text-xs text-[hsl(var(--muted-foreground))]">{to("andMore", { count: rest })}</p>
+                    )}
+                  </div>
+                );
+              })()
             ) : (
               <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{selected.description}</p>
             ))}
@@ -247,7 +254,13 @@ export function OrderPanel({
               />
             </>
           )}
-          {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
+          {error && (
+            <div role="alert" className="rounded-md border border-[hsl(var(--danger))]/30 bg-[hsl(var(--danger-soft))] px-3 py-2">
+              <p className="text-sm font-medium text-[hsl(var(--danger))]">{error}</p>
+              {/* No lost work — the buyer's tier/requirements are still in state. */}
+              <p className="mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">{to("errorRetry")}</p>
+            </div>
+          )}
           <Button className="w-full" size="lg" onClick={placeOrder} disabled={busy}>
             {busy ? to("placing") : to("placeOrder")}
           </Button>

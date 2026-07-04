@@ -402,7 +402,7 @@
     "receipt": "Kvitansiya",
     "ownGig": "Bu sizning xizmatingiz.",
     "requirementsPh": "Nima kerakligini yozing (ixtiyoriy)...",
-    "noPaymentYet": "Buyurtmadan soʻng toʻlov jamoamiz tomonidan qoʻlda tasdiqlanadi.",
+    "noPaymentYet": "Har bir buyurtma jamoamiz tomonidan tekshiriladi — pulingiz himoyada.",
     "awaitingPayment": "Toʻlov tasdiqlanishi kutilmoqda — tasdiqlangach, ish boshlanadi.",
     "payTitle": "Toʻlovni amalga oshiring",
     "payNow": "Hozir toʻlash",
@@ -436,7 +436,10 @@
       "COMPLETED": "Yakunlangan",
       "CANCELLED": "Bekor qilingan",
       "DISPUTED": "Nizo"
-    }
+    },
+    "goToOrder": "Buyurtmaga oʻtish",
+    "andMore": "va yana {count} ta — quyidagi jadvalda",
+    "errorRetry": "Tanlovlaringiz saqlandi — qayta urinib koʻring."
   },
   "Review": {
     "leaveReview": "Sharh qoldiring",
@@ -590,7 +593,8 @@
       "LEVEL_1": "1-daraja",
       "LEVEL_2": "2-daraja",
       "TOP_RATED": "Top reyting"
-    }
+    },
+    "respondsIn": "~{h} soat ichida javob beradi"
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",

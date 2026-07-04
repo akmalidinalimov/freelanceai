@@ -402,7 +402,7 @@
     "receipt": "Receipt",
     "ownGig": "This is your own gig.",
     "requirementsPh": "Describe what you need (optional)...",
-    "noPaymentYet": "After you order, our team arranges and confirms payment manually.",
+    "noPaymentYet": "Every order is checked by our team — your money is protected.",
     "awaitingPayment": "Awaiting payment confirmation — once our team confirms it, work begins.",
     "payTitle": "Complete payment",
     "payNow": "Pay now",
@@ -436,7 +436,10 @@
       "COMPLETED": "Completed",
       "CANCELLED": "Cancelled",
       "DISPUTED": "Disputed"
-    }
+    },
+    "goToOrder": "To order",
+    "andMore": "and {count} more — in the table below",
+    "errorRetry": "Your selections are saved — please try again."
   },
   "Review": {
     "leaveReview": "Leave a review",
@@ -590,7 +593,8 @@
       "LEVEL_1": "Level 1",
       "LEVEL_2": "Level 2",
       "TOP_RATED": "Top rated"
-    }
+    },
+    "respondsIn": "responds in ~{h}h"
   },
   "Instagram": {
     "connect": "Connect Instagram",

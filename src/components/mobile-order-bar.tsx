@@ -53,8 +53,11 @@ export function MobileOrderBar({
           {formatUzs(fromPriceUzs)} so&apos;m
         </span>
       </span>
+      {/* Scroll-intent verb, NOT "Buyurtma berish" — this jumps to the panel, it
+          doesn't place the order (critique P3: the identical label made the first
+          tap feel like a dead action). */}
       <Button size="lg" className="shrink-0" onClick={goToPanel}>
-        {to("placeOrder")}
+        {to("goToOrder")}
       </Button>
     </div>
   );
