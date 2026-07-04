@@ -92,7 +92,9 @@ export default async function GigDetailPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <RecentlyViewedTracker gigId={gig.id} />
-      <div>
+      {/* min-w-0: without it the compare table's min-w-[460px] propagates through
+          the grid item (min-width:auto) and forces body-level horizontal scroll at 390px. */}
+      <div className="min-w-0">
         <GigGallery
           images={[...(gig.coverUrl ? [gig.coverUrl] : []), ...gig.galleryUrls]}
           title={gig.title}
