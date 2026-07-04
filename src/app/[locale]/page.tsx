@@ -57,12 +57,15 @@ export default async function HomePage({
 
   return (
     <>
+      {/* Mounted at the root, NOT inside the positioned hero: a positioned
+          ancestor traps the fixed layer in its stacking context and paints it
+          over earlier content (ticker/header). Root-level + -z-10 = truly behind. */}
+      <LivingBackground variant={bgVariant} />
       <ActivityTicker items={tickerItems} />
       {/* dot texture now lives in the AmberClassic background layer */}
       <div className="mx-auto max-w-5xl px-4">
         {/* Hero — AI concierge search over the living background */}
-        <section className="relative isolate -mx-4 overflow-hidden rounded-b-[2rem] px-4">
-          <LivingBackground variant={bgVariant} />
+        <section className="relative isolate -mx-4 px-4">
           {bg && (
             <span className="pointer-events-none absolute bottom-2 right-2 z-20 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))]/80 px-2.5 py-1 text-[10px] font-semibold text-[hsl(var(--muted-foreground))] backdrop-blur">
               bg {bgVariant} · {BG_CONCEPTS[bgVariant].name}

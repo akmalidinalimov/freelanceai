@@ -171,7 +171,9 @@ body {
 
 /* ===== Amber Classic living background (founder-chosen, 2026-07-04) ===== */
 .amber-dots {
-  background-image: radial-gradient(hsl(18 50% 42% / 0.11) 1.1px, transparent 1.5px);
+  /* founder decision: the dotted pattern must clearly read — it sits above the
+     washes, so slightly stronger ink */
+  background-image: radial-gradient(hsl(18 50% 40% / 0.14) 1.15px, transparent 1.55px);
   background-size: 21px 21px;
   animation: amber-pan 90s linear infinite;
 }
