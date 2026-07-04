@@ -113,7 +113,7 @@ export function OrderPanel({
                 : "text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
             }`}
           >
-            {tierLabel[p.tier]}
+            {p.tier === "STANDARD" ? `⭐ ${tierLabel[p.tier]}` : tierLabel[p.tier]}
           </button>
         ))}
       </div>
@@ -133,17 +133,30 @@ export function OrderPanel({
           </div>
           {selected.description &&
             (selected.description.includes("✓") ? (
-              /* "✓ "-prefixed lines = the tier's included-features checklist */
-              <ul className="mt-3 space-y-1.5">
-                {selected.description.split("\n").map((line, i) => (
-                  <li key={i} className="flex gap-2 text-sm leading-snug">
-                    <span aria-hidden className="mt-0.5 shrink-0 font-bold text-[hsl(var(--success))]">
-                      ✓
-                    </span>
-                    <span>{line.replace(/^✓\s*/, "")}</span>
-                  </li>
-                ))}
-              </ul>
+              /* "✓ "-lines = included features; other lines = tier tagline/intro */
+              <div className="mt-3">
+                {selected.description
+                  .split("\n")
+                  .filter((l) => l.trim() && !l.startsWith("✓"))
+                  .map((line, i) => (
+                    <p key={i} className="mb-2 text-[13px] font-semibold text-[hsl(var(--primary-ink))]">
+                      {line}
+                    </p>
+                  ))}
+                <ul className="space-y-1.5">
+                  {selected.description
+                    .split("\n")
+                    .filter((l) => l.startsWith("✓"))
+                    .map((line, i) => (
+                      <li key={i} className="flex gap-2 text-sm leading-snug">
+                        <span aria-hidden className="mt-0.5 shrink-0 font-bold text-[hsl(var(--success))]">
+                          ✓
+                        </span>
+                        <span>{line.replace(/^✓\s*/, "")}</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
             ) : (
               <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{selected.description}</p>
             ))}

@@ -215,7 +215,7 @@ export default async function GigDetailPage({
                         <ul className="space-y-1.5">
                           {(p.description ?? "")
                             .split("\n")
-                            .filter((l) => l.trim())
+                            .filter((l) => l.startsWith("✓"))
                             .map((line, i) => (
                               <li key={i} className="flex gap-1.5 text-[13px] leading-snug">
                                 <span aria-hidden className="mt-0.5 shrink-0 font-bold text-[hsl(var(--success))]">

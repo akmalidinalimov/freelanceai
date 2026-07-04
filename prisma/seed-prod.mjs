@@ -811,6 +811,13 @@ async function main() {
   const coverFor = (cat) => (publicBase ? `${publicBase}/covers/${cat}.png` : null);
   const TIER_NAMES = ["BASIC", "STANDARD", "PREMIUM"];
   const TIER_TITLES = ["Basic", "Standard", "Premium"];
+  // Positioning tagline shown above each tier's checklist (non-✓ first line):
+  // answers "why this tier?" before the buyer reads a single feature.
+  const TIER_TAGLINES = [
+    "Sinab koʻrish uchun ideal start",
+    "Eng ommabop tanlov — eng yaxshi narx/qiymat",
+    "Jiddiy natija uchun toʻliq quvvat",
+  ];
 
   for (const g of GIGS) {
     const cat = await prisma.category.findUnique({ where: { slug: g.cat } });
@@ -843,7 +850,9 @@ async function main() {
     // Packages: per-tier upsert (unique [gigId, tier]) with "✓ " feature lines.
     for (let i = 0; i < 3; i++) {
       const features = g.tiers?.[i]?.f ?? [];
-      const desc = features.map((f) => `✓ ${f}`).join("\n") || null;
+      const desc = features.length
+        ? [TIER_TAGLINES[i], ...features.map((f) => `✓ ${f}`)].join("\n")
+        : null;
       await prisma.gigPackage.upsert({
         where: { gigId_tier: { gigId, tier: TIER_NAMES[i] } },
         update: {
