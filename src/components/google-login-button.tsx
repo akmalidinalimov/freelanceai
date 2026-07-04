@@ -4,15 +4,15 @@ import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
-/** One-click Google sign-in via Auth.js. */
-export function GoogleLoginButton({ locale }: { locale: string }) {
+/** One-click Google sign-in via Auth.js. `next` = validated same-origin return path. */
+export function GoogleLoginButton({ locale, next }: { locale: string; next?: string }) {
   const t = useTranslations("Auth");
   return (
     <Button
       variant="outline"
       size="lg"
       className="w-full"
-      onClick={() => signIn("google", { callbackUrl: `/${locale}` })}
+      onClick={() => signIn("google", { callbackUrl: next ?? `/${locale}` })}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
         <path

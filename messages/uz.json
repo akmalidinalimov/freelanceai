@@ -221,7 +221,8 @@
     "emailSent": "Havolani emailingizga yubordik. Kirish uchun undagi tugmani bosing (15 daqiqa amal qiladi).",
     "emailError": "Yuborib boʻlmadi. Qaytadan urinib koʻring.",
     "emailSigningIn": "Hisobingizga kirilmoqda...",
-    "emailLinkInvalid": "Havola yaroqsiz yoki muddati oʻtgan. Qaytadan urinib koʻring."
+    "emailLinkInvalid": "Havola yaroqsiz yoki muddati oʻtgan. Qaytadan urinib koʻring.",
+    "loginToContinue": "Davom etish uchun kiring — 30 soniya kifoya. Tanlovingiz saqlanadi."
   },
   "Onboarding": {
     "title": "Gigora dan qanday foydalanasiz?",
@@ -376,7 +377,12 @@
     "pause": "Toʻxtatish",
     "resume": "Davom ettirish",
     "delete": "Oʻchirish",
-    "confirmDelete": "Xizmat oʻchirilsinmi? U bozordan olib tashlanadi."
+    "confirmDelete": "Xizmat oʻchirilsinmi? U bozordan olib tashlanadi.",
+    "fromPrice": "Boshlangʻich narx",
+    "escrowTitle": "Xavfsiz kelishuv",
+    "escrowStep1": "Buyurtma berasiz — toʻlov himoyada saqlanadi",
+    "escrowStep2": "Ijodkor ishni bajarib, sizga topshiradi",
+    "escrowStep3": "Siz qabul qilgach, pul ijodkorga oʻtadi"
   },
   "Order": {
     "bannerRevision": "Tahrir jarayonda",
@@ -463,7 +469,12 @@
     "offline": "Oflayn",
     "lastSeen": "Oxirgi faollik {time}",
     "quickRepliesLabel": "Tez javoblar",
-    "quickReplies": ["Boshladim 👍", "Tafsilotlarni yuboring", "Topshirildi ✅", "Rahmat!"],
+    "quickReplies": [
+      "Boshladim 👍",
+      "Tafsilotlarni yuboring",
+      "Topshirildi ✅",
+      "Rahmat!"
+    ],
     "block": "Bloklash",
     "unblock": "Blokdan chiqarish",
     "report": "Shikoyat qilish",
@@ -575,7 +586,7 @@
     "portfolioError": "Yuklashda xatolik",
     "portfolioRemove": "Oʻchirish",
     "level": {
-      "NEW": "Yangi ijrochi",
+      "NEW": "Yangi ijodkor",
       "LEVEL_1": "1-daraja",
       "LEVEL_2": "2-daraja",
       "TOP_RATED": "Top reyting"

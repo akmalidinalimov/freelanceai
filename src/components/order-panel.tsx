@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { track } from "@/lib/track";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,15 @@ export function OrderPanel({
   const t = useTranslations("Gig");
   const to = useTranslations("Order");
   const [tier, setTier] = useState<Pkg["tier"]>(packages[0]?.tier ?? "BASIC");
+
+  // Restore the tier a guest had picked before being sent through login
+  // (?tier=… is round-tripped via the login `next` param). Post-mount to
+  // keep server and first client render identical (no hydration mismatch).
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tier");
+    if (wanted && packages.some((p) => p.tier === wanted)) setTier(wanted as Pkg["tier"]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [requirements, setRequirements] = useState("");
   const [reqFiles, setReqFiles] = useState<string[]>([]);
   const [coupon, setCoupon] = useState("");
@@ -66,7 +75,10 @@ export function OrderPanel({
   async function placeOrder() {
     track("order_cta_click", gigId); // funnel numerator lives server-side (order_created)
     if (viewer === "guest") {
-      window.location.href = `/${locale}/login`;
+      // Round-trip the gig AND the chosen tier through login so the buyer
+      // returns exactly where they left off (critique P1: context loss).
+      const next = encodeURIComponent(`${window.location.pathname}?tier=${tier}`);
+      window.location.href = `/${locale}/login?next=${next}`;
       return;
     }
     setBusy(true);

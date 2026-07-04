@@ -4,11 +4,14 @@ import { ok } from "@/lib/api";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 import { emailConfigured, sendEmail, renderBrandedEmail } from "@/lib/email";
 import { createMagicToken, normalizeEmail } from "@/lib/email-auth";
+import { safeInternalPath } from "@/lib/utils";
 
 const schema = z
   .object({
     email: z.string().email().max(200),
     locale: z.enum(["uz", "ru", "en"]).optional(),
+    // login-return path; re-validated server-side before entering the magic link
+    next: z.string().max(500).optional(),
   })
   .strict();
 
@@ -52,7 +55,8 @@ export const POST = defineHandler({ schema, sameOrigin: true }, async ({ body, r
     const copy = COPY[locale];
     const token = await createMagicToken(body.email);
     const origin = (process.env.APP_ORIGIN ?? "https://gigora.ai").replace(/\/$/, "");
-    const url = `${origin}/${locale}/auth/email?token=${token}`;
+    const next = safeInternalPath(body.next ?? null);
+    const url = `${origin}/${locale}/auth/email?token=${token}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
     const { text, html } = renderBrandedEmail({
       title: copy.title,
       lines: [copy.line, copy.ignore],

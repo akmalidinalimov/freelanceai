@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
  * provider (which consumes it + upserts the user), then Auth.js redirects to home.
  * On failure it falls back to the login page with an error marker.
  */
-export function EmailCallback({ token, locale }: { token: string; locale: string }) {
+export function EmailCallback({ token, locale, next }: { token: string; locale: string; next?: string }) {
   const t = useTranslations("Auth");
   const [failed, setFailed] = useState(false);
   const started = useRef(false);
@@ -24,13 +24,15 @@ export function EmailCallback({ token, locale }: { token: string; locale: string
     signIn("email-link", { token, redirect: false })
       .then((res) => {
         if (res?.ok && !res.error) {
-          window.location.assign(`/${locale}`);
+          // `next` was validated (same-origin relative) server-side; belt-and-braces here.
+          const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : `/${locale}`;
+          window.location.assign(dest);
         } else {
           setFailed(true);
         }
       })
       .catch(() => setFailed(true));
-  }, [token, locale]);
+  }, [token, locale, next]);
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">

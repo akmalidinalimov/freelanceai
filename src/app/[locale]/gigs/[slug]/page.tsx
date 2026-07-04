@@ -33,6 +33,7 @@ import { GigGallery } from "@/components/gig-gallery";
 import { Stars } from "@/components/stars";
 import { ChevronDown } from "lucide-react";
 import { ContactSellerButton } from "@/components/contact-seller-button";
+import { MobileOrderBar } from "@/components/mobile-order-bar";
 import { SaveButton } from "@/components/save-button";
 import { ShareButton } from "@/components/share-button";
 import { ReviewReply } from "@/components/review-reply";
@@ -85,7 +86,8 @@ export default async function GigDetailPage({
   };
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_360px]">
+    // pb-28: room for the sticky mobile order bar so it never covers page-end content
+    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 pb-28 lg:grid-cols-[1fr_360px] lg:pb-10">
       <script
         type="application/ld+json"
         // Structured data for search engines (Product + offers + rating).
@@ -171,9 +173,11 @@ export default async function GigDetailPage({
           <div className="mt-8 overflow-x-auto">
             <h2 className="mb-3 text-xl font-semibold">{t("comparePackages")}</h2>
             <table className="w-full min-w-[460px] border-collapse text-sm">
+              {/* label column sticks during horizontal scroll at 390px so Basic vs
+                  Premium comparison never becomes a memory task */}
               <thead>
                 <tr>
-                  <th className="p-3" />
+                  <th className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3" />
                   {packages.map((p) => (
                     <th key={p.tier} className="border-b border-[hsl(var(--border))] p-3 text-left font-semibold">
                       {tierLabel[p.tier]}
@@ -183,7 +187,7 @@ export default async function GigDetailPage({
               </thead>
               <tbody>
                 <tr>
-                  <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("price")}</td>
+                  <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("price")}</td>
                   {packages.map((p) => (
                     <td key={p.tier} className="p-3 font-semibold tabular-nums">
                       {formatUzs(p.priceUzs)} so&apos;m
@@ -191,7 +195,7 @@ export default async function GigDetailPage({
                   ))}
                 </tr>
                 <tr>
-                  <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("daysDelivery")}</td>
+                  <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("daysDelivery")}</td>
                   {packages.map((p) => (
                     <td key={p.tier} className="p-3 tabular-nums">
                       {p.deliveryDays}
@@ -199,7 +203,7 @@ export default async function GigDetailPage({
                   ))}
                 </tr>
                 <tr>
-                  <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("revisionsLabel")}</td>
+                  <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("revisionsLabel")}</td>
                   {packages.map((p) => (
                     <td key={p.tier} className="p-3 tabular-nums">
                       {p.revisions}
@@ -209,7 +213,7 @@ export default async function GigDetailPage({
                 {/* Included features per tier — "✓ "-lines from package.description */}
                 {packages.some((p) => p.description?.includes("✓")) && (
                   <tr className="align-top">
-                    <td className="p-3 text-[hsl(var(--muted-foreground))]">{t("included")}</td>
+                    <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("included")}</td>
                     {packages.map((p) => (
                       <td key={p.tier} className="p-3">
                         <ul className="space-y-1.5">
@@ -319,7 +323,7 @@ export default async function GigDetailPage({
                   </div>
                   <p className="line-clamp-2 text-xs font-medium">{g.title}</p>
                   <p className="mt-auto pt-1 text-xs font-semibold tabular-nums">
-                    {t("from")} {formatUzs(g.packages[0]?.priceUzs ?? 0)}
+                    {t("from")} {formatUzs(g.packages[0]?.priceUzs ?? 0)} so&apos;m
                   </p>
                 </Link>
               ))}
@@ -329,7 +333,47 @@ export default async function GigDetailPage({
       </div>
 
       {/* Packages + order */}
-      <aside className="lg:sticky lg:top-24 lg:self-start">
+      <aside id="order-panel" className="scroll-mt-20 lg:sticky lg:top-24 lg:self-start">
+        {/* Trust evidence at the decision point: who am I paying? */}
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3">
+          {gig.seller.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={gig.seller.image}
+              alt=""
+              className="h-11 w-11 shrink-0 rounded-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span
+              aria-hidden
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/12 font-bold text-[hsl(var(--primary-ink))]"
+            >
+              {seller.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-sm font-semibold">
+              {gig.seller.username ? (
+                <Link href={`/creators/${gig.seller.username}`} className="truncate hover:underline">
+                  {seller}
+                </Link>
+              ) : (
+                <span className="truncate">{seller}</span>
+              )}
+              {gig.seller.kycStatus === "VERIFIED" && <VerifiedBadge label={tp("verified")} />}
+            </p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+              {gig.seller.sellerProfile?.ratingCount ? (
+                <>
+                  ★ {gig.seller.sellerProfile.ratingAvg.toFixed(1)} ({gig.seller.sellerProfile.ratingCount})
+                </>
+              ) : (
+                tp(`level.${gig.seller.sellerProfile?.level ?? "NEW"}`)
+              )}
+            </p>
+          </div>
+        </div>
         <OrderPanel
           gigId={gig.id}
           locale={locale}
@@ -354,7 +398,22 @@ export default async function GigDetailPage({
         <div className="mt-3">
           <ContactSellerButton gigId={gig.id} locale={locale} viewer={viewer} fullWidth />
         </div>
+        {/* Escrow 1-2-3 — "is my money safe?" answered where the decision happens. */}
+        <div className="mt-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface-2))] p-4">
+          <p className="text-sm font-semibold">🛡 {t("escrowTitle")}</p>
+          <ol className="mt-2 space-y-1.5 text-[13px] leading-snug text-[hsl(var(--muted-foreground))]">
+            {[t("escrowStep1"), t("escrowStep2"), t("escrowStep3")].map((step, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="shrink-0 font-bold tabular-nums text-[hsl(var(--primary-ink))]">{i + 1}.</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </aside>
+      {viewer !== "owner" && packages[0] && (
+        <MobileOrderBar fromPriceUzs={packages[0].priceUzs} targetId="order-panel" />
+      )}
     </div>
   );
 }

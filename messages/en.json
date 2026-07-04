@@ -221,7 +221,8 @@
     "emailSent": "We emailed you a login link. Tap the button in it to sign in (valid 15 minutes).",
     "emailError": "Couldn't send. Please try again.",
     "emailSigningIn": "Signing you in...",
-    "emailLinkInvalid": "This link is invalid or expired. Please try again."
+    "emailLinkInvalid": "This link is invalid or expired. Please try again.",
+    "loginToContinue": "Sign in to continue — takes 30 seconds. Your selection is saved."
   },
   "Onboarding": {
     "title": "How will you use Gigora?",
@@ -376,7 +377,12 @@
     "pause": "Pause",
     "resume": "Resume",
     "delete": "Delete",
-    "confirmDelete": "Delete this gig? It will be removed from the marketplace."
+    "confirmDelete": "Delete this gig? It will be removed from the marketplace.",
+    "fromPrice": "Starting at",
+    "escrowTitle": "Safe deal",
+    "escrowStep1": "You place the order — payment stays protected",
+    "escrowStep2": "The creator does the work and delivers it to you",
+    "escrowStep3": "Money reaches the creator only after you accept"
   },
   "Order": {
     "bannerRevision": "Revision in progress",
@@ -463,7 +469,12 @@
     "offline": "Offline",
     "lastSeen": "Last seen {time}",
     "quickRepliesLabel": "Quick replies",
-    "quickReplies": ["On it 👍", "Could you share the details?", "Delivered ✅", "Thank you!"],
+    "quickReplies": [
+      "On it 👍",
+      "Could you share the details?",
+      "Delivered ✅",
+      "Thank you!"
+    ],
     "block": "Block",
     "unblock": "Unblock",
     "report": "Report",

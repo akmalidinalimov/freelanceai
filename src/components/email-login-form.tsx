@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
  * a magic link. Always shows the same "check your inbox" success (the API never reveals
  * whether the address exists), so this form can't be used to enumerate accounts.
  */
-export function EmailLoginForm({ locale }: { locale: string }) {
+export function EmailLoginForm({ locale, next }: { locale: string; next?: string }) {
   const t = useTranslations("Auth");
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -22,7 +22,7 @@ export function EmailLoginForm({ locale }: { locale: string }) {
       const res = await fetch("/api/auth/email/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), locale }),
+        body: JSON.stringify({ email: email.trim(), locale, ...(next ? { next } : {}) }),
       });
       setState(res.ok ? "sent" : "error");
     } catch {

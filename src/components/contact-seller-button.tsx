@@ -26,7 +26,9 @@ export function ContactSellerButton({
   async function go() {
     track("contact_cta_click", gigId);
     if (viewer === "guest") {
-      window.location.href = `/${locale}/login`;
+      // Return the buyer to this gig after login instead of dumping them home.
+      const next = encodeURIComponent(window.location.pathname);
+      window.location.href = `/${locale}/login?next=${next}`;
       return;
     }
     setBusy(true);
