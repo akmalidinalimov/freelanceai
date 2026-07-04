@@ -21,6 +21,16 @@ export default function middleware(request: NextRequest) {
       return NextResponse.redirect(dest, 301);
     }
   }
+  // Creator vanity URLs: gigora.ai/@username → the public profile. Bio-link
+  // friendly (Instagram/TikTok/Telegram bios). 302 (not 308) so the target can
+  // become locale-smart later without poisoning caches. Telegram-style
+  // usernames only (letters/digits/underscore — the matcher already excludes
+  // any path containing a dot).
+  const vanity = request.nextUrl.pathname.match(/^\/@([a-zA-Z0-9_]{3,32})$/);
+  if (vanity) {
+    return NextResponse.redirect(new URL(`/uz/creators/${vanity[1]}`, request.url), 302);
+  }
+
   return intlMiddleware(request);
 }
 

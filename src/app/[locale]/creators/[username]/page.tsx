@@ -55,11 +55,20 @@ export default async function CreatorProfilePage({
   const memberYear = new Date(user.createdAt).getFullYear();
 
   // Split portfolio: Instagram-synced content becomes the auto-flowing showcase;
-  // manual uploads keep their own gallery further down.
+  // manual uploads keep their own gallery further down. FALLBACK (until the
+  // Instagram sync unlocks with Meta App Review): when a creator has no synced
+  // IG media, their manual uploads flow through the same showcase so every
+  // profile leads with a living film strip — it upgrades to real Instagram
+  // automatically once the sync goes live.
   const igItems = (profile?.portfolio ?? [])
     .filter((p) => p.source === "instagram")
     .map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, permalink: p.permalink, caption: p.caption }));
-  const uploadItems = (profile?.portfolio ?? []).filter((p) => p.source !== "instagram");
+  const uploads = (profile?.portfolio ?? []).filter((p) => p.source !== "instagram");
+  const showcaseItems = igItems.length
+    ? igItems
+    : uploads.map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, permalink: null, caption: p.caption }));
+  // Uploads promoted into the showcase don't repeat in the gallery below.
+  const uploadItems = igItems.length ? uploads : [];
 
   const proven =
     (profile?.specializations?.length ?? 0) > 0
@@ -150,7 +159,10 @@ export default async function CreatorProfilePage({
       </div>
 
       {/* Instagram showcase — auto-flowing strip beneath the identity card */}
-      <InstagramShowcase items={igItems} handle={profile?.instagramUsername ?? null} />
+      <InstagramShowcase
+        items={showcaseItems}
+        handle={igItems.length ? (profile?.instagramUsername ?? null) : null}
+      />
 
       {(profile?.specializations?.length ?? 0) > 0 && (
         <div className="mb-8">
