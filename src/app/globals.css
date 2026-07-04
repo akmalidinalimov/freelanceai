@@ -63,8 +63,11 @@
   --radius: 1rem;
 }
 
-/* ---- DARK (automatic): deep warm charcoal, embers, same accent hue --------- */
-@media (prefers-color-scheme: dark) {
+/* ---- DARK — DISABLED by founder decision (2026-07-04): light is pinned as
+   the only theme ("the white background is what keeps people trusting").
+   The palette is kept under `.theme-dark` (never applied) so re-enabling later
+   is a one-line change back to the media query. --------------------------- */
+.theme-dark {
   :root {
     --background: 24 14% 9%;
     --foreground: 40 22% 92%;
@@ -148,6 +151,10 @@
   --font-display: var(--font-unbounded), var(--font-manrope), sans-serif;
 }
 
+html {
+  color-scheme: light; /* light pinned — see the disabled .theme-dark block above */
+}
+
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
@@ -160,6 +167,44 @@ body {
 .font-display {
   font-family: var(--font-unbounded), var(--font-manrope), sans-serif;
   letter-spacing: -0.02em;
+}
+
+/* ===== Amber Classic living background (founder-chosen, 2026-07-04) ===== */
+.amber-dots {
+  background-image: radial-gradient(hsl(18 50% 42% / 0.11) 1.1px, transparent 1.5px);
+  background-size: 21px 21px;
+  animation: amber-pan 90s linear infinite;
+}
+.amber-wash {
+  filter: blur(54px) saturate(1.12);
+  will-change: transform, border-radius;
+}
+@keyframes amber-pan {
+  to { background-position: 210px 105px; }
+}
+@keyframes amber-morph-a {
+  0%   { border-radius: 42% 58% 63% 37% / 45% 45% 55% 55%; transform: translate(0, 0) rotate(0deg) scale(1); }
+  50%  { border-radius: 62% 38% 36% 64% / 60% 40% 60% 40%; transform: translate(7vmax, -5vmax) rotate(8deg) scale(1.08); }
+  100% { border-radius: 36% 64% 56% 44% / 38% 62% 38% 62%; transform: translate(-5vmax, 5vmax) rotate(-7deg) scale(0.96); }
+}
+@keyframes amber-morph-b {
+  0%   { border-radius: 55% 45% 40% 60% / 50% 55% 45% 50%; transform: translate(0, 0) rotate(0deg) scale(1); }
+  50%  { border-radius: 38% 62% 60% 40% / 42% 58% 42% 58%; transform: translate(-7vmax, 6vmax) rotate(-9deg) scale(1.1); }
+  100% { border-radius: 60% 40% 45% 55% / 58% 42% 58% 42%; transform: translate(6vmax, -4vmax) rotate(7deg) scale(0.94); }
+}
+
+/* ===== Prism category tiles (founder-chosen Pattern A + zipper type) ===== */
+.prism-tile { container-type: inline-size; } /* zipper letters scale with tile width (cqw) */
+.prism-tile .zip-up   { transform: translateY(-0.3em); transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+.prism-tile .zip-down { transform: translateY(0.3em);  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+.prism-tile:hover .zip-up,
+.prism-tile:hover .zip-down { transform: translateY(0); }
+.prism-tile img { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+.prism-tile:hover img { transform: var(--tile-flip, scaleX(1)) scale(1.04); }
+.prism-grain {
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
 }
 
 /* Live activity ticker marquee (content is duplicated; scrolls one copy width). */

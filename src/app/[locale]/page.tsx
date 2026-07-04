@@ -5,31 +5,23 @@ import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
+import { PrismCategoryCard } from "@/components/prism-category-card";
 import { LivingBackground, normalizeBg, BG_CONCEPTS } from "@/components/living-background";
 import { cardClass } from "@/components/ui/card";
-import {
-  ArrowRight,
-  Camera,
-  Clapperboard,
-  Film,
-  Image as ImageIcon,
-  Mic,
-  PenTool,
-  UserRound,
-  Wand2,
-} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+/* Prism category tiles (founder-chosen): the zipper `word` is a brand graphic
+   kept identical across locales; the localized name/desc live in aria + pill. */
 const CATS = [
-  { spec: "ai_video", Icon: Clapperboard, desc: "catVideo" },
-  { spec: "ai_image", Icon: ImageIcon, desc: "catImage" },
-  { spec: "ai_avatar", Icon: UserRound, desc: "catAvatar" },
-  { spec: "product_photo", Icon: Camera, desc: "catPhoto" },
-  { spec: "voiceover", Icon: Mic, desc: "catVoice" },
-  { spec: "branding", Icon: PenTool, desc: "catBranding" },
-  { spec: "motion", Icon: Film, desc: "catMotion" },
-  { spec: "image_edit", Icon: Wand2, desc: "catEdit" },
+  { spec: "ai_video", word: "AI VIDEO", desc: "catVideo" },
+  { spec: "ai_image", word: "AI RASM", desc: "catImage" },
+  { spec: "ai_avatar", word: "AVATAR", desc: "catAvatar" },
+  { spec: "product_photo", word: "FOTO", desc: "catPhoto" },
+  { spec: "voiceover", word: "OVOZ", desc: "catVoice" },
+  { spec: "branding", word: "BREND", desc: "catBranding" },
+  { spec: "motion", word: "MOTION", desc: "catMotion" },
+  { spec: "image_edit", word: "RETUSH", desc: "catEdit" },
 ] as const;
 
 export default async function HomePage({
@@ -66,13 +58,8 @@ export default async function HomePage({
   return (
     <>
       <ActivityTicker items={tickerItems} />
-      <div
-        className="mx-auto max-w-5xl px-4"
-        style={{
-          backgroundImage: "radial-gradient(hsl(var(--primary) / 0.06) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
-      >
+      {/* dot texture now lives in the AmberClassic background layer */}
+      <div className="mx-auto max-w-5xl px-4">
         {/* Hero — AI concierge search over the living background */}
         <section className="relative isolate -mx-4 overflow-hidden rounded-b-[2rem] px-4">
           <LivingBackground variant={bgVariant} />
@@ -131,21 +118,15 @@ export default async function HomePage({
             </Link>
           </div>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {CATS.map((c) => (
+            {CATS.map((c, i) => (
               <li key={c.spec}>
-              <Link
-                href={`/browse/${specSlug(c.spec)}`}
-                className={cardClass(true, "group relative overflow-hidden p-4")}
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))]">
-                  <c.Icon className="h-5 w-5" strokeWidth={1.75} />
-                </span>
-                <ArrowRight className="absolute right-4 top-4 h-4 w-4 text-[hsl(var(--muted-foreground))] transition-transform group-hover:translate-x-1 group-hover:text-[hsl(var(--primary-ink))]" />
-                <h3 className="mt-3 text-sm font-bold">{specLabel(c.spec, locale)}</h3>
-                <p className="mt-0.5 text-xs font-medium text-[hsl(var(--muted-foreground))]">
-                  {t(c.desc)}
-                </p>
-              </Link>
+                <PrismCategoryCard
+                  href={`/browse/${specSlug(c.spec)}`}
+                  word={c.word}
+                  label={specLabel(c.spec, locale)}
+                  sub={t(c.desc)}
+                  index={i}
+                />
               </li>
             ))}
           </ul>
