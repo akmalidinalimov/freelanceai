@@ -58,7 +58,7 @@ export function PrismCategoryCard({
         style={{
           objectPosition: pos,
           transform: flip ? "scaleX(-1)" : undefined,
-          filter: `brightness(1.07) saturate(1.04)${hue ? ` hue-rotate(${hue}deg)` : ""}`,
+          filter: `brightness(1.02) contrast(1.06) saturate(1.06)${hue ? ` hue-rotate(${hue}deg)` : ""}`,
         }}
       />
       {/* readability scrim under the word only */}

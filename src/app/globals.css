@@ -204,7 +204,7 @@ body {
 .prism-tile img { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
 .prism-tile:hover img { transform: var(--tile-flip, scaleX(1)) scale(1.04); }
 .prism-grain {
-  opacity: 0.3;
+  opacity: 0.14; /* was .3 — founder review: the heavy grain read as a film over the photo */
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
 }
