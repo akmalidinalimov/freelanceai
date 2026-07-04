@@ -57,10 +57,9 @@ export default async function HomePage({
 
   return (
     <>
-      {/* Mounted at the root, NOT inside the positioned hero: a positioned
-          ancestor traps the fixed layer in its stacking context and paints it
-          over earlier content (ticker/header). Root-level + -z-10 = truly behind. */}
-      <LivingBackground variant={bgVariant} />
+      {/* Amber Classic now ships from the locale layout on every page; the lab
+          variants (?bg=2|3|4) still render here for comparison only. */}
+      {bgVariant !== "1" && <LivingBackground variant={bgVariant} />}
       <ActivityTicker items={tickerItems} />
       {/* dot texture now lives in the AmberClassic background layer */}
       <div className="mx-auto max-w-5xl px-4">

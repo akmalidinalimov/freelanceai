@@ -10,10 +10,13 @@ export function ContactSellerButton({
   gigId,
   locale,
   viewer,
+  fullWidth = false,
 }: {
   gigId: string;
   locale: string;
   viewer: "guest" | "buyer" | "owner";
+  /** order-panel placement: full-width secondary action right under the CTA */
+  fullWidth?: boolean;
 }) {
   const t = useTranslations("Message");
   const [busy, setBusy] = useState(false);
@@ -42,8 +45,14 @@ export function ContactSellerButton({
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={go} disabled={busy}>
-      {busy ? "…" : t("contact")}
+    <Button
+      variant="outline"
+      size={fullWidth ? "lg" : "sm"}
+      className={fullWidth ? "w-full" : undefined}
+      onClick={go}
+      disabled={busy}
+    >
+      {busy ? "…" : `💬 ${t("contact")}`}
     </Button>
   );
 }

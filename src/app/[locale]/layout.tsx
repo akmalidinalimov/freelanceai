@@ -12,6 +12,7 @@ import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
 import { UIProviders } from "@/components/ui-providers";
+import { AmberClassic } from "@/components/living-background/amber-classic";
 import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
 import { ReferralCapture } from "@/components/referral-capture";
 import { Suspense } from "react";
@@ -80,6 +81,9 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="flex min-h-screen flex-col">
+        {/* The chosen world lives on EVERY page, not just home (founder review
+            2026-07-04: /sell, /login etc. felt like a different, plain site). */}
+        <AmberClassic />
         <NextIntlClientProvider messages={messages}>
           <UIProviders>
           <a

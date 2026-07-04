@@ -8,21 +8,15 @@ import { listPublicGigs } from "@/server/services/gig";
 
 type GigItem = Awaited<ReturnType<typeof listPublicGigs>>[number];
 
-/** Deterministic soft gradient for gigs without a cover image. */
-const PALETTES = [
-  ["#14b8a6", "#0f766e"], // teal
-  ["#8b5cf6", "#6d28d9"], // violet
-  ["#f59e0b", "#d97706"], // amber
-  ["#ec4899", "#be185d"], // pink
-  ["#3b82f6", "#1d4ed8"], // blue
-  ["#06b6d4", "#0e7490"], // cyan
-] as const;
-
-function coverGradient(seed: string): string {
+/* Gigs without a cover get the branded prism photograph, varied per gig by
+   crop / mirror / hue (founder review 2026-07-04: the old near-transparent
+   gradient fallback read as EMPTY white cards across the marketplace). */
+function prismVariant(seed: string) {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const [a, b] = PALETTES[h % PALETTES.length];
-  return `linear-gradient(135deg, ${a}22, ${b}33), radial-gradient(80% 90% at 20% 10%, ${a}2e, transparent 60%)`;
+  const hues = [0, 14, -16, 26, -8] as const;
+  const pos = ["50% 25%", "50% 50%", "50% 75%"] as const;
+  return { flip: h % 2 === 1, hue: hues[h % hues.length], pos: pos[h % pos.length] };
 }
 
 /** A gig card styled like a macOS browser window (traffic-light chrome + address bar). */
@@ -67,10 +61,7 @@ export async function GigCard({
       </div>
 
       {/* Viewport (the "page") */}
-      <div
-        className="relative flex aspect-video items-center justify-center overflow-hidden"
-        style={gig.coverUrl ? undefined : { backgroundImage: coverGradient(gig.id) }}
-      >
+      <div className="relative flex aspect-video items-center justify-center overflow-hidden">
         <SaveHeart gigId={gig.id} locale={locale} initialSaved={saved} isGuest={isGuest} />
         {gig.featured && (
           <span className="absolute left-2 top-2 z-10 rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--primary-foreground))] shadow-sm">
@@ -87,9 +78,32 @@ export async function GigCard({
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <span className="select-none text-4xl font-black tracking-tight text-[hsl(var(--primary-ink))]/30 transition-transform duration-500 group-hover:scale-110">
-            {gig.title.slice(0, 1).toUpperCase()}
-          </span>
+          (() => {
+            const v = prismVariant(gig.id);
+            return (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/prism/pattern-sweep-v2.webp"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  style={{
+                    objectPosition: v.pos,
+                    transform: v.flip ? "scaleX(-1)" : undefined,
+                    filter: `brightness(1.02) contrast(1.06) saturate(1.06)${v.hue ? ` hue-rotate(${v.hue}deg)` : ""}`,
+                  }}
+                />
+                <span
+                  className="font-display absolute select-none text-4xl font-black tracking-tight text-white/90 transition-transform duration-500 group-hover:scale-110"
+                  style={{ textShadow: "0 2px 16px hsl(20 20% 10% / .35)" }}
+                >
+                  {gig.title.slice(0, 1).toUpperCase()}
+                </span>
+              </>
+            );
+          })()
         )}
       </div>
 

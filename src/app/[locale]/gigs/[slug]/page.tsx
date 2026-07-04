@@ -148,7 +148,8 @@ export default async function GigDetailPage({
           </p>
         )}
         <div className="mt-4 flex gap-2">
-          <ContactSellerButton gigId={gig.id} locale={locale} viewer={viewer} />
+          {/* Contact moved into the order panel (under the CTA) where buyers look —
+              founder review 2026-07-04. Save stays with the content. */}
           <SaveButton gigId={gig.id} locale={locale} viewer={viewer} initialSaved={saved} />
         </div>
         <p className="mt-6 whitespace-pre-wrap leading-relaxed">{gig.description}</p>
@@ -326,6 +327,10 @@ export default async function GigDetailPage({
           }))}
           requirementPrompts={Array.isArray(gig.requirementPrompts) ? (gig.requirementPrompts as string[]) : []}
         />
+        {/* Secondary action lives where the buyer's eye already is. */}
+        <div className="mt-3">
+          <ContactSellerButton gigId={gig.id} locale={locale} viewer={viewer} fullWidth />
+        </div>
       </aside>
     </div>
   );
