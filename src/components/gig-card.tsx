@@ -2,22 +2,12 @@ import { getTranslations } from "next-intl/server";
 import { Lock, Star, Clock } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { formatUzs } from "@/lib/utils";
+import { coverVariant } from "@/lib/cover-variant";
 import { approxPrice } from "@/lib/currency";
 import { SaveHeart } from "@/components/save-heart";
 import { listPublicGigs } from "@/server/services/gig";
 
 type GigItem = Awaited<ReturnType<typeof listPublicGigs>>[number];
-
-/* Gigs without a cover get the branded prism photograph, varied per gig by
-   crop / mirror / hue (founder review 2026-07-04: the old near-transparent
-   gradient fallback read as EMPTY white cards across the marketplace). */
-function prismVariant(seed: string) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const hues = [0, 14, -16, 26, -8] as const;
-  const pos = ["50% 25%", "50% 50%", "50% 75%"] as const;
-  return { flip: h % 2 === 1, hue: hues[h % hues.length], pos: pos[h % pos.length] };
-}
 
 /** A gig card styled like a macOS browser window (traffic-light chrome + address bar). */
 export async function GigCard({
@@ -69,17 +59,25 @@ export async function GigCard({
           </span>
         )}
         {gig.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={gig.coverUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          (() => {
+            // Covers are per-category, so same-category gigs share one photo.
+            // Crop + mirror per gig id so a grid / related rail isn't 4 clones.
+            const v = coverVariant(gig.id);
+            return (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={gig.coverUrl}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                style={{ objectPosition: v.pos, transform: v.flip ? "scaleX(-1)" : undefined }}
+              />
+            );
+          })()
         ) : (
           (() => {
-            const v = prismVariant(gig.id);
+            const v = coverVariant(gig.id);
             return (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}

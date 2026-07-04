@@ -156,17 +156,31 @@ async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
 
   const events: ActivityEvent[] = [];
   const trim = (s: string) => (s.length > 44 ? `${s.slice(0, 44).trimEnd()}…` : s);
+  // A real display name (drops single-letter seed handles like "B" that read as
+  // fabricated social proof). Also dedupe by person: one name appears at most
+  // once across the whole ticker, so it can't repeat ("B joined ×2").
+  const seen = new Set<string>();
+  const goodName = (n: string) => n.trim().length >= 2;
   for (const o of delivered) {
     const name = sellerName(o.seller);
-    if (name) events.push({ type: "delivered", name, extra: trim(o.gig.title) });
+    if (goodName(name) && !seen.has(name)) {
+      seen.add(name);
+      events.push({ type: "delivered", name, extra: trim(o.gig.title) });
+    }
   }
   for (const r of reviews) {
     const name = sellerName(r.gig.seller);
-    if (name) events.push({ type: "review", name, extra: String(r.rating) });
+    if (goodName(name) && !seen.has(name)) {
+      seen.add(name);
+      events.push({ type: "review", name, extra: String(r.rating) });
+    }
   }
   for (const u of joined) {
     const name = sellerName(u);
-    if (name) events.push({ type: "joined", name, extra: "" });
+    if (goodName(name) && !seen.has(name)) {
+      seen.add(name);
+      events.push({ type: "joined", name, extra: "" });
+    }
   }
 
   // Interleave the three streams so the ticker doesn't read as blocks of one kind.
@@ -179,7 +193,9 @@ async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
       if (e && mixed.length < 10) mixed.push(e);
     }
   }
-  return mixed;
+  // Below a real-activity floor the marquee just loops 1-2 items, which reads as
+  // fake. Better to show nothing (the ticker renders null on an empty array).
+  return mixed.length >= 4 ? mixed : [];
 }
 
 export const listRecentActivity = unstable_cache(listRecentActivityUncached, ["home-activity"], {

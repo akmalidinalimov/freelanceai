@@ -34,6 +34,7 @@ import { Stars } from "@/components/stars";
 import { ChevronDown } from "lucide-react";
 import { ContactSellerButton } from "@/components/contact-seller-button";
 import { MobileOrderBar } from "@/components/mobile-order-bar";
+import { coverVariant } from "@/lib/cover-variant";
 import { SaveButton } from "@/components/save-button";
 import { ShareButton } from "@/components/share-button";
 import { ReviewReply } from "@/components/review-reply";
@@ -313,14 +314,39 @@ export default async function GigDetailPage({
                   href={`/gigs/${g.slug}`}
                   className="flex flex-col rounded-xl border border-[hsl(var(--border))] p-2 transition-colors hover:border-[hsl(var(--primary))]"
                 >
-                  <div className="mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(var(--primary))]/15 to-[hsl(var(--accent))]/15 text-lg font-bold text-[hsl(var(--primary-ink))]">
-                    {g.coverUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-                    ) : (
-                      g.title.slice(0, 1).toUpperCase()
-                    )}
-                  </div>
+                  {(() => {
+                    // Related gigs are same-category → same cover photo; vary the
+                    // crop/mirror per gig, and use the branded prism fallback (not a
+                    // near-invisible gradient) when a gig has no cover at all.
+                    const v = coverVariant(g.id);
+                    return (
+                      <div className="relative mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={g.coverUrl ?? "/prism/pattern-sweep-v2.webp"}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover"
+                          style={{
+                            objectPosition: v.pos,
+                            transform: v.flip ? "scaleX(-1)" : undefined,
+                            filter: g.coverUrl
+                              ? undefined
+                              : `brightness(1.02) contrast(1.06) saturate(1.06)${v.hue ? ` hue-rotate(${v.hue}deg)` : ""}`,
+                          }}
+                        />
+                        {!g.coverUrl && (
+                          <span
+                            className="font-display absolute select-none text-2xl font-black tracking-tight text-white/90"
+                            style={{ textShadow: "0 2px 16px hsl(20 20% 10% / .35)" }}
+                          >
+                            {g.title.slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <p className="line-clamp-2 text-xs font-medium">{g.title}</p>
                   <p className="mt-auto pt-1 text-xs font-semibold tabular-nums">
                     {t("from")} {formatUzs(g.packages[0]?.priceUzs ?? 0)} so&apos;m
