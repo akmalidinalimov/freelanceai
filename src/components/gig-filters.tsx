@@ -77,7 +77,12 @@ export function GigFilters({ categories, values }: { categories: Category[]; val
         </div>
         <div className="flex items-center justify-between md:hidden">
           <h3 className="font-display text-lg font-bold">{tg("filters")}</h3>
-          <button type="button" onClick={() => setOpen(false)} aria-label={tg("done")}>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label={tg("done")}
+            className="-m-3 grid h-11 w-11 place-items-center"
+          >
             <X className="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
           </button>
         </div>
