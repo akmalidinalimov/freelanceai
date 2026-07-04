@@ -50,7 +50,7 @@ export function PrismCategoryCard({
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- decorative art, single shared asset */}
       <img
-        src="/prism/pattern-sweep.webp"
+        src="/prism/pattern-sweep-v2.webp"
         alt=""
         loading="lazy"
         decoding="async"
@@ -65,7 +65,7 @@ export function PrismCategoryCard({
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-[30%] z-[2] h-[42%]"
-        style={{ background: "radial-gradient(70% 100% at 50% 50%, hsl(25 20% 12% / .14), transparent 75%)" }}
+        style={{ background: "radial-gradient(70% 100% at 50% 50%, hsl(25 20% 12% / .2), transparent 75%)" }}
       />
       {/* the zipper word */}
       <span
