@@ -157,8 +157,8 @@ describe("order-action authz (Telegram callback surface)", () => {
   });
 });
 
-// Affiliate credit: spent only at settlement, capped at commission, race-safe, restorable
-// on refund, and rewards issued at most once per referee. Proven against a real DB.
+// Affiliate credit: reserved at checkout (order creation), capped at commission, race-safe,
+// restorable on cancel/refund/expiry, and rewards issued at most once per referee. Real DB.
 describe("affiliate credit money paths", () => {
   it("consumeCreditForOrder caps at commission and is race-safe (balance never goes negative)", async () => {
     const uid = `it_credit_${++seq}`;

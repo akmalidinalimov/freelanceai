@@ -7,7 +7,6 @@ import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 import { onOrderPaid } from "@/server/services/gamification";
-import { consumeCreditForOrder } from "@/server/services/affiliate";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
 
@@ -36,11 +35,10 @@ async function postOrderPaymentTx(
   const existing = await tx.transaction.findUnique({ where: { idempotencyKey } });
   if (existing) return false; // already settled — no double post (and no double credit spend)
 
-  // Apply the buyer's promo/referral credit NOW that payment is settling (capped at the
-  // commission → platform stays ≥0, seller net untouched). Recorded on the order so a later
-  // refund can restore it. Only happens once — the idempotency guard above protects retries.
-  const creditApplied = await consumeCreditForOrder(tx, order.buyerId, order.commissionUzs, order.discountUzs);
-  const discount = order.discountUzs + creditApplied;
+  // The buyer's coupon + referral credit were already reserved at order creation and are
+  // baked into order.discountUzs (so the PSP charge = amountUzs − discountUzs matched). Nothing
+  // more to consume here — just post the ledger against that discount.
+  const discount = order.discountUzs;
 
   await tx.transaction.create({
     data: {
@@ -69,9 +67,10 @@ async function postOrderPaymentTx(
     })),
   });
 
+  // discountUzs + creditUsedUzs were finalized at order creation; only the status moves here.
   await tx.order.update({
     where: { id: order.id },
-    data: { status: "IN_PROGRESS", discountUzs: discount, creditUsedUzs: creditApplied },
+    data: { status: "IN_PROGRESS" },
   });
   return true;
 }

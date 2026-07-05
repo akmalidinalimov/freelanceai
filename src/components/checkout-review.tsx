@@ -21,6 +21,7 @@ export async function CheckoutReview({
   extras,
   couponCode,
   discountUzs,
+  creditUsedUzs,
   totalUzs,
   dueAt,
   sellerName,
@@ -40,6 +41,7 @@ export async function CheckoutReview({
   extras: { title: string; priceUzs: number }[];
   couponCode: string | null;
   discountUzs: number;
+  creditUsedUzs: number;
   totalUzs: number;
   dueAt: string | null;
   sellerName: string;
@@ -138,12 +140,20 @@ export async function CheckoutReview({
                 <span className="text-[hsl(var(--muted-foreground))]">{t("subtotal")}</span>
                 <span className="tabular-nums">{formatUzs(totalUzs + discountUzs)}</span>
               </div>
-              <div className={`${li} font-medium text-[hsl(var(--primary-ink))]`}>
-                <span>
-                  {t("discount")} {couponCode ? `(${couponCode})` : ""}
-                </span>
-                <span className="tabular-nums">−{formatUzs(discountUzs)}</span>
-              </div>
+              {discountUzs - creditUsedUzs > 0 && (
+                <div className={`${li} font-medium text-[hsl(var(--primary-ink))]`}>
+                  <span>
+                    {t("discount")} {couponCode ? `(${couponCode})` : ""}
+                  </span>
+                  <span className="tabular-nums">−{formatUzs(discountUzs - creditUsedUzs)}</span>
+                </div>
+              )}
+              {creditUsedUzs > 0 && (
+                <div className={`${li} font-medium text-[hsl(var(--primary-ink))]`}>
+                  <span>{t("creditApplied")}</span>
+                  <span className="tabular-nums">−{formatUzs(creditUsedUzs)}</span>
+                </div>
+              )}
             </>
           )}
           <div className="mt-1 flex items-baseline justify-between border-t border-[hsl(var(--border))] pt-3">

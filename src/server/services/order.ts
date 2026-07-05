@@ -10,7 +10,7 @@ import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { notifyAndPush } from "@/server/services/notification";
 import { findValidCoupon } from "@/server/services/coupon";
-import { issueReferralReward } from "@/server/services/affiliate";
+import { issueReferralReward, consumeCreditForOrder, restoreOrderCredit } from "@/server/services/affiliate";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -64,9 +64,7 @@ export async function createOrder(
 
   const order = await prisma.$transaction(async (tx) => {
     if (couponId) await tx.coupon.update({ where: { id: couponId }, data: { uses: { increment: 1 } } });
-    // NOTE: promo/referral credit is applied at PAYMENT SETTLEMENT (postOrderPaymentTx),
-    // never here — so an unpaid order that's abandoned or cancelled never spends credit.
-    return tx.order.create({
+    const created = await tx.order.create({
       data: {
         gigId: gig.id,
         buyerId,
@@ -92,6 +90,20 @@ export async function createOrder(
         dueAt: new Date(Date.now() + (pkg.deliveryDays + extraDays) * 24 * 60 * 60 * 1000),
       },
     });
+    // Reserve the buyer's referral credit NOW so it lowers the amount they pay at checkout
+    // (the PSP is charged amountUzs − discountUzs). Capped at the platform commission, so the
+    // seller's net is untouched. Restored if the order is cancelled or expires unpaid
+    // (see cancelOrder / respondCancellation / expireStalePendingOrders).
+    const credit = await consumeCreditForOrder(tx, buyerId, commissionUzs, discountUzs);
+    if (credit > 0) {
+      await tx.order.update({
+        where: { id: created.id },
+        data: { discountUzs: discountUzs + credit, creditUsedUzs: credit },
+      });
+      created.discountUzs = discountUzs + credit;
+      created.creditUsedUzs = credit;
+    }
+    return created;
   });
   await audit({ actorId: buyerId, action: "order.create", entity: "Order", entityId: order.id });
   void trackEvent("order_created", { userId: buyerId, entityId: order.id, meta: { gigId: gig.id } });
@@ -117,19 +129,29 @@ export async function createOrderFromOffer(offer: {
   if (offer.buyerId === offer.sellerId) throw Errors.forbidden("You cannot order your own gig");
 
   const { amountUzs, commissionUzs, sellerNetUzs } = orderTotals(offer.priceUzs, [], commissionPct());
-  const order = await prisma.order.create({
-    data: {
-      gigId: offer.gigId,
-      buyerId: offer.buyerId,
-      sellerId: offer.sellerId,
-      packageTier: "BASIC",
-      packageTitle: offer.title,
-      amountUzs,
-      commissionUzs,
-      sellerNetUzs,
-      status: "PENDING_PAYMENT",
-      dueAt: new Date(Date.now() + offer.deliveryDays * 24 * 60 * 60 * 1000),
-    },
+  const order = await prisma.$transaction(async (tx) => {
+    const created = await tx.order.create({
+      data: {
+        gigId: offer.gigId,
+        buyerId: offer.buyerId,
+        sellerId: offer.sellerId,
+        packageTier: "BASIC",
+        packageTitle: offer.title,
+        amountUzs,
+        commissionUzs,
+        sellerNetUzs,
+        status: "PENDING_PAYMENT",
+        dueAt: new Date(Date.now() + offer.deliveryDays * 24 * 60 * 60 * 1000),
+      },
+    });
+    // Reserve referral credit at checkout, same as a normal order (no coupon on offers).
+    const credit = await consumeCreditForOrder(tx, offer.buyerId, commissionUzs, 0);
+    if (credit > 0) {
+      await tx.order.update({ where: { id: created.id }, data: { discountUzs: credit, creditUsedUzs: credit } });
+      created.discountUzs = credit;
+      created.creditUsedUzs = credit;
+    }
+    return created;
   });
   await audit({ actorId: offer.buyerId, action: "order.create.offer", entity: "Order", entityId: order.id });
   return order;
@@ -272,6 +294,40 @@ export async function cancelOrder(orderId: string, user: User) {
     throw Errors.forbidden();
   }
   assertTransition(order.status, "CANCELLED");
-  await prisma.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
+  await prisma.$transaction(async (tx) => {
+    // An unpaid order reserves referral credit at creation — hand it back on cancel.
+    // (Paid orders refund + restore credit via the mutual-cancellation / dispute paths.)
+    if (order.status === "PENDING_PAYMENT") {
+      await restoreOrderCredit(tx, { id: order.id, buyerId: order.buyerId, creditUsedUzs: order.creditUsedUzs });
+    }
+    await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
+  });
   await audit({ actorId: user.id, action: "order.cancel", entity: "Order", entityId: orderId });
+}
+
+/**
+ * Cancel PENDING_PAYMENT orders left unpaid past `hours`, returning any referral credit that
+ * was reserved at checkout. Idempotent + race-safe per order. Runs from the cron job.
+ */
+export async function expireStalePendingOrders(hours = 48): Promise<number> {
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+  const stale = await prisma.order.findMany({
+    where: { status: "PENDING_PAYMENT", createdAt: { lt: cutoff } },
+    select: { id: true },
+  });
+  let expired = 0;
+  for (const { id } of stale) {
+    const ok = await prisma.$transaction(async (tx) => {
+      const o = await tx.order.findUnique({
+        where: { id },
+        select: { status: true, buyerId: true, creditUsedUzs: true },
+      });
+      if (!o || o.status !== "PENDING_PAYMENT") return false; // paid/cancelled since we listed it
+      await restoreOrderCredit(tx, { id, buyerId: o.buyerId, creditUsedUzs: o.creditUsedUzs });
+      await tx.order.update({ where: { id }, data: { status: "CANCELLED" } });
+      return true;
+    });
+    if (ok) expired++;
+  }
+  return expired;
 }

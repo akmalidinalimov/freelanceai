@@ -1,4 +1,4 @@
-import { autoCompleteDeliveredOrders } from "@/server/services/order";
+import { autoCompleteDeliveredOrders, expireStalePendingOrders } from "@/server/services/order";
 import { checkSavedSearches } from "@/server/services/saved-search";
 
 /**
@@ -12,6 +12,7 @@ export async function POST(request: Request) {
     return new Response("unauthorized", { status: 401 });
   }
   const completed = await autoCompleteDeliveredOrders(3);
+  const expired = await expireStalePendingOrders(48).catch(() => 0);
   const searchAlerts = await checkSavedSearches().catch(() => 0);
-  return Response.json({ completed, searchAlerts });
+  return Response.json({ completed, expired, searchAlerts });
 }

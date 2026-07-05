@@ -94,6 +94,7 @@ export default async function OrderPage({
         extras={extras}
         couponCode={order.couponCode}
         discountUzs={order.discountUzs}
+        creditUsedUzs={order.creditUsedUzs}
         totalUzs={order.amountUzs - order.discountUzs}
         dueAt={order.dueAt ? order.dueAt.toISOString() : null}
         sellerName={cpName}

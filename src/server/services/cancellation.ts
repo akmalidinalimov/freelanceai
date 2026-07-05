@@ -80,9 +80,10 @@ export async function respondCancellation(orderId: string, user: User, approve: 
           memo: `Cancellation refund for order ${orderId}`,
         })),
       });
-      // Give the buyer back any credit spent on this (now refunded) paid order.
-      await restoreOrderCredit(tx, order);
     }
+    // Return any referral credit reserved on this order — whether it was paid (refunded above)
+    // or still unpaid (credit was reserved at checkout). Idempotent, so it can't double-credit.
+    await restoreOrderCredit(tx, order);
     await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
     await tx.cancellationRequest.update({ where: { orderId }, data: { status: "APPROVED" } });
   });
