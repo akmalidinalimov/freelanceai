@@ -542,6 +542,7 @@
     "cancel": "Cancel",
     "blockedNotice": "You blocked this user. Unblock to message again.",
     "selectConversation": "Select a conversation to start messaging.",
+    "messageSeller": "Message seller",
     "escrowStrip": "Protected by Gigora — payments & disputes are only covered on the platform.",
     "filteredNote": "A contact detail was hidden to keep you protected.",
     "filteredWhy": "Payments and disputes are only protected on Gigora. Sharing contact details off-platform removes that protection.",

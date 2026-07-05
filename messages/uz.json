@@ -542,6 +542,7 @@
     "cancel": "Bekor qilish",
     "blockedNotice": "Siz bu foydalanuvchini bloklagansiz. Yozish uchun blokdan chiqaring.",
     "selectConversation": "Suhbatni tanlab, yozishni boshlang.",
+    "messageSeller": "Sotuvchiga yozish",
     "escrowStrip": "Gigora himoyasida — toʻlov va nizolar faqat platformada kafolatlanadi.",
     "filteredNote": "Aloqa maʼlumoti sizni himoya qilish uchun yashirildi.",
     "filteredWhy": "Toʻlov va nizolar faqat Gigorada himoyalangan. Platformadan tashqarida aloqa almashish bu himoyadan mahrum qiladi.",

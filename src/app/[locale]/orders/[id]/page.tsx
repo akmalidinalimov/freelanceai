@@ -88,6 +88,7 @@ export default async function OrderPage({
       <CheckoutReview
         gigTitle={order.gig.title}
         orderId={order.id}
+        conversationId={conversationId}
         packageTitle={order.packageTitle}
         baseUzs={order.amountUzs - order.extrasUzs}
         extras={extras}
@@ -100,6 +101,13 @@ export default async function OrderPage({
         ratingCount={sp?.ratingCount ?? 0}
         checkoutUrl={checkoutUrl}
         providerId={activeProvider()?.id ?? null}
+        currentUserId={user.id}
+        cancellationPending={
+          cancellation?.status === "PENDING"
+            ? { requestedById: cancellation.requestedById, reason: cancellation.reason }
+            : null
+        }
+        canCancel={canTransition(order.status, "CANCELLED") && cancellation?.status !== "PENDING"}
       />
     );
   }

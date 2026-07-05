@@ -2,6 +2,7 @@ import { getTranslations, getFormatter } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { formatUzs } from "@/lib/utils";
 import { Stars } from "@/components/stars";
+import { CancellationBox } from "@/components/cancellation-box";
 
 /**
  * "Review-first" checkout: the PENDING_PAYMENT buyer view of an order. Opens as a
@@ -14,6 +15,7 @@ import { Stars } from "@/components/stars";
 export async function CheckoutReview({
   gigTitle,
   orderId,
+  conversationId,
   packageTitle,
   baseUzs,
   extras,
@@ -26,9 +28,13 @@ export async function CheckoutReview({
   ratingCount,
   checkoutUrl,
   providerId,
+  currentUserId,
+  cancellationPending,
+  canCancel,
 }: {
   gigTitle: string;
   orderId: string;
+  conversationId: string;
   packageTitle: string;
   baseUzs: number;
   extras: { title: string; priceUzs: number }[];
@@ -41,8 +47,12 @@ export async function CheckoutReview({
   ratingCount: number;
   checkoutUrl: string | null;
   providerId: string | null;
+  currentUserId: string;
+  cancellationPending: { requestedById: string; reason: string } | null;
+  canCancel: boolean;
 }) {
   const t = await getTranslations("Order");
+  const tm = await getTranslations("Message");
   const format = await getFormatter();
   const providerName = providerId === "payme" ? "Payme" : providerId === "click" ? "Click" : null;
 
@@ -50,7 +60,7 @@ export async function CheckoutReview({
   const initial = (sellerName.replace(/^@/, "").charAt(0) || "•").toUpperCase();
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-5xl px-4 pb-28 pt-8 lg:pb-8">
       <div className="mb-6">
         <p className="text-sm text-[hsl(var(--muted-foreground))]">{gigTitle}</p>
         <h1 className="text-2xl font-bold">{t("reviewPay")}</h1>
@@ -108,6 +118,12 @@ export async function CheckoutReview({
                 </p>
               )}
             </div>
+            <Link
+              href={`/messages/${conversationId}`}
+              className="ml-auto shrink-0 text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline"
+            >
+              {tm("messageSeller")}
+            </Link>
           </div>
         </div>
 
@@ -162,6 +178,35 @@ export async function CheckoutReview({
           </Link>
         </div>
       </div>
+
+      {/* Cancellation — keep the buyer able to answer a seller's request (or abandon
+          the unpaid order) without leaving this page. */}
+      {(canCancel || cancellationPending) && (
+        <div className="mt-5">
+          <CancellationBox
+            orderId={orderId}
+            currentUserId={currentUserId}
+            pending={cancellationPending}
+            canRequest={canCancel}
+          />
+        </div>
+      )}
+
+      {/* Mobile: sticky pay bar so the CTA is always reachable without scrolling. */}
+      {checkoutUrl && providerName && (
+        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-3 shadow-[0_-4px_14px_-6px_hsl(30_30%_28%/0.12)] lg:hidden">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--muted-foreground))]">{t("total")}</p>
+            <p className="text-lg font-extrabold tabular-nums leading-none">{formatUzs(totalUzs)}</p>
+          </div>
+          <a
+            href={checkoutUrl}
+            className="ml-auto flex items-center justify-center rounded-xl bg-[hsl(var(--primary))] px-5 py-3 text-sm font-extrabold text-[hsl(var(--primary-foreground))]"
+          >
+            {t("payAmount", { amount: formatUzs(totalUzs) })}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
