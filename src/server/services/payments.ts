@@ -35,6 +35,17 @@ async function postOrderPaymentTx(
   const existing = await tx.transaction.findUnique({ where: { idempotencyKey } });
   if (existing) return false; // already settled — no double post (and no double credit spend)
 
+  // Atomically claim the settlement: only a still-PENDING_PAYMENT order may move to IN_PROGRESS.
+  // If it was cancelled/expired between the webhook's pre-check and here — which also restored
+  // the reserved credit — this matches 0 rows and we post nothing, rather than resurrecting a
+  // cancelled order and booking a discount whose credit was already refunded. (Row-locked, so it
+  // serializes against the expiry / cancellation / dispute transactions on the same order.)
+  const claimed = await tx.order.updateMany({
+    where: { id: order.id, status: "PENDING_PAYMENT" },
+    data: { status: "IN_PROGRESS" },
+  });
+  if (claimed.count === 0) return false;
+
   // The buyer's coupon + referral credit were already reserved at order creation and are
   // baked into order.discountUzs (so the PSP charge = amountUzs − discountUzs matched). Nothing
   // more to consume here — just post the ledger against that discount.
@@ -67,11 +78,6 @@ async function postOrderPaymentTx(
     })),
   });
 
-  // discountUzs + creditUsedUzs were finalized at order creation; only the status moves here.
-  await tx.order.update({
-    where: { id: order.id },
-    data: { status: "IN_PROGRESS" },
-  });
   return true;
 }
 
