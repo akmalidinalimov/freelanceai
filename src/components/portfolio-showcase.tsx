@@ -40,14 +40,24 @@ export function PortfolioShowcase({ items, igHandle }: { items: Item[]; igHandle
     const fromIg = p.source === "instagram";
     const inner = (
       <span className="relative block aspect-square overflow-hidden rounded-[var(--radius-md)] border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={p.mediaUrl}
-          alt={p.caption ?? ""}
-          loading={eager ? "eager" : "lazy"}
-          decoding="async"
-          className="h-full w-full object-cover"
-        />
+        {isVideo ? (
+          <video
+            src={p.mediaUrl}
+            muted
+            playsInline
+            preload="metadata"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={p.mediaUrl}
+            alt={p.caption ?? ""}
+            loading={eager ? "eager" : "lazy"}
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
+        )}
         {/* Source glyph: only Instagram tiles get a badge; uploads stay clean. */}
         {fromIg && (
           <span className="absolute left-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm">
@@ -112,12 +122,23 @@ export function PortfolioShowcase({ items, igHandle }: { items: Item[]; igHandle
           >
             <X className="h-5 w-5" />
           </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={lightbox.mediaUrl}
-            alt={lightbox.caption ?? ""}
-            className="max-h-[85vh] max-w-full rounded-[var(--radius-md)] object-contain"
-          />
+          {lightbox.mediaType === "video" ? (
+            <video
+              src={lightbox.mediaUrl}
+              controls
+              autoPlay
+              playsInline
+              className="max-h-[85vh] max-w-full rounded-[var(--radius-md)] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={lightbox.mediaUrl}
+              alt={lightbox.caption ?? ""}
+              className="max-h-[85vh] max-w-full rounded-[var(--radius-md)] object-contain"
+            />
+          )}
         </div>
       )}
     </section>

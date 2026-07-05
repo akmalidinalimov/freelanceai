@@ -313,7 +313,9 @@
     "overdue": "Overdue",
     "dueToday": "Due today",
     "dueTomorrow": "Due tomorrow",
-    "dueInDays": "Due in {n} days"
+    "dueInDays": "Due in {n} days",
+    "revenueTrend": "Revenue trend",
+    "revenuePeriod": "Last {n} weeks"
   },
   "Gig": {
     "createTitle": "Create a gig",
@@ -619,10 +621,12 @@
     "saved": "Saved ✓",
     "viewPublic": "View public profile",
     "portfolio": "Portfolio",
-    "portfolioType": "Unsupported image format",
-    "portfolioSize": "File too large (max 8MB)",
+    "portfolioType": "Unsupported file — use an image or MP4/WebM video",
+    "portfolioSize": "File too large (image ≤8MB, video ≤100MB)",
     "portfolioError": "Upload failed",
     "portfolioRemove": "Remove",
+    "portfolioAdd": "Add media",
+    "portfolioUploadHint": "Images or short videos (MP4/WebM) — up to 12.",
     "level": {
       "NEW": "New seller",
       "LEVEL_1": "Level 1",

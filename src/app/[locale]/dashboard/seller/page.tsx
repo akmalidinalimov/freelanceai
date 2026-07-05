@@ -6,7 +6,8 @@ import { requireSellerUser } from "@/lib/auth-guards";
 import { listSellerGigs } from "@/server/services/gig";
 import { listSellerOrders, autoCompleteDeliveredOrders } from "@/server/services/order";
 import { getSellerEarnings } from "@/server/services/payments";
-import { getSellerStats } from "@/server/services/analytics";
+import { getSellerStats, getSellerRevenueSeries } from "@/server/services/analytics";
+import { RevenueTrend } from "@/components/revenue-trend";
 import { getUserBadges, computeCompleteness } from "@/server/services/gamification";
 import { GamificationStrip } from "@/components/gamification-strip";
 import { myWeeklyRank } from "@/server/services/engagement";
@@ -45,6 +46,7 @@ export default async function SellerDashboardPage({
   const orders = await listSellerOrders(user.id);
   const earnings = await getSellerEarnings(user.id);
   const stats = await getSellerStats(user.id);
+  const revenue = await getSellerRevenueSeries(user.id);
   const profile = await getOwnProfile(user.id);
 
   const firstName = user.firstName || user.name || "";
@@ -312,6 +314,7 @@ export default async function SellerDashboardPage({
         <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
           {t("analytics")}
         </h2>
+        <RevenueTrend weeks={revenue.weeks} totalUzs={revenue.totalUzs} weekCount={revenue.weekCount} />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {[
             { label: t("statViews"), value: stats.views.toLocaleString() },

@@ -27,7 +27,7 @@ export default async function PortfolioHubPage({
   // Direct uploads only in the upload card; Instagram-synced items are managed by the IG card.
   const uploads = (profile?.portfolio ?? [])
     .filter((p) => p.source !== "instagram")
-    .map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, caption: p.caption }));
+    .map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, caption: p.caption }));
 
   const Card = ({
     icon,

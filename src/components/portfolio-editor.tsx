@@ -7,13 +7,17 @@ import { useTranslations } from "next-intl";
 interface Item {
   id: string;
   mediaUrl: string;
+  mediaType: string; // "image" | "video"
   caption: string | null;
 }
 
-const ACCEPT = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const MAX = 8 * 1024 * 1024;
+const IMAGE = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const VIDEO = ["video/mp4", "video/webm"];
+const ACCEPT = [...IMAGE, ...VIDEO];
+const MAX_IMAGE = 8 * 1024 * 1024; // 8 MB
+const MAX_VIDEO = 100 * 1024 * 1024; // 100 MB
 
-/** Seller portfolio manager: upload images (presign → R2 → persist) and remove them. */
+/** Seller portfolio manager: upload images or short videos (presign → R2 → persist) and remove them. */
 export function PortfolioEditor({ items }: { items: Item[] }) {
   const t = useTranslations("Profile");
   const router = useRouter();
@@ -23,8 +27,10 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
 
   async function add(file: File) {
     setError(null);
-    if (!ACCEPT.includes(file.type)) return setError(t("portfolioType"));
-    if (file.size > MAX) return setError(t("portfolioSize"));
+    const isVideo = VIDEO.includes(file.type);
+    const isImage = IMAGE.includes(file.type);
+    if (!isImage && !isVideo) return setError(t("portfolioType"));
+    if (file.size > (isVideo ? MAX_VIDEO : MAX_IMAGE)) return setError(t("portfolioSize"));
     setBusy(true);
     try {
       const pre = await fetch("/api/media/presign", {
@@ -43,7 +49,7 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
       const save = await fetch("/api/me/portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mediaUrl: pj.data.publicUrl, mediaType: "image" }),
+        body: JSON.stringify({ mediaUrl: pj.data.publicUrl, mediaType: isVideo ? "video" : "image" }),
       });
       if (!(await save.json()).ok) return setError(t("portfolioError"));
       router.refresh();
@@ -73,9 +79,21 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
       <span className="text-sm font-medium">{t("portfolio")}</span>
       <div className="flex flex-wrap gap-2">
         {items.map((it) => (
-          <div key={it.id} className="relative h-24 w-32 overflow-hidden rounded-lg border border-[hsl(var(--border))]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={it.mediaUrl} alt={it.caption ?? ""} className="h-full w-full object-cover" />
+          <div key={it.id} className="relative h-24 w-32 overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--surface-2))]">
+            {it.mediaType === "video" ? (
+              <>
+                <video src={it.mediaUrl} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 grid place-items-center text-white [text-shadow:0_1px_3px_rgba(0,0,0,.6)]"
+                >
+                  ▶
+                </span>
+              </>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={it.mediaUrl} alt={it.caption ?? ""} className="h-full w-full object-cover" />
+            )}
             <button
               type="button"
               onClick={() => remove(it.id)}
@@ -92,13 +110,14 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            aria-label="Add image"
+            aria-label={t("portfolioAdd")}
             className="flex h-24 w-32 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))] text-2xl text-[hsl(var(--muted-foreground))]"
           >
             {busy ? "…" : "+"}
           </button>
         )}
       </div>
+      <p className="text-xs text-[hsl(var(--muted-foreground))]">{t("portfolioUploadHint")}</p>
       <input
         ref={inputRef}
         type="file"

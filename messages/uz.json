@@ -313,7 +313,9 @@
     "overdue": "Muddati oʻtgan",
     "dueToday": "Muddati bugun",
     "dueTomorrow": "Muddati ertaga",
-    "dueInDays": "Muddati {n} kundan keyin"
+    "dueInDays": "Muddati {n} kundan keyin",
+    "revenueTrend": "Daromad dinamikasi",
+    "revenuePeriod": "Soʻnggi {n} hafta"
   },
   "Gig": {
     "createTitle": "Yangi xizmat yaratish",
@@ -619,10 +621,12 @@
     "saved": "Saqlandi ✓",
     "viewPublic": "Ommaviy profil",
     "portfolio": "Portfolio",
-    "portfolioType": "Rasm formati notoʻgʻri",
-    "portfolioSize": "Rasm hajmi katta (maks. 8MB)",
+    "portfolioType": "Fayl qoʻllab-quvvatlanmaydi — rasm yoki MP4/WebM video yuklang",
+    "portfolioSize": "Fayl hajmi katta (rasm ≤8MB, video ≤100MB)",
     "portfolioError": "Yuklashda xatolik",
     "portfolioRemove": "Oʻchirish",
+    "portfolioAdd": "Media qoʻshish",
+    "portfolioUploadHint": "Rasm yoki qisqa video (MP4/WebM) — 12 tagacha.",
     "level": {
       "NEW": "Yangi ijodkor",
       "LEVEL_1": "1-daraja",

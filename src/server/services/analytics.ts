@@ -57,6 +57,34 @@ export async function getSellerStats(sellerId: string): Promise<SellerStats> {
   };
 }
 
+export interface RevenueSeries {
+  /** Net earnings per week bucket, oldest → newest (zero-filled). */
+  weeks: number[];
+  totalUzs: number;
+  weekCount: number;
+}
+
+/**
+ * Weekly net-revenue series for the seller dashboard trend — the real thing, from
+ * completed orders' sellerNetUzs, bucketed in JS so empty weeks are zero-filled
+ * (a marketplace has quiet weeks; the trend should show them, not skip them).
+ */
+export async function getSellerRevenueSeries(sellerId: string, weekCount = 8): Promise<RevenueSeries> {
+  const now = Date.now();
+  const since = new Date(now - weekCount * 7 * 24 * 3600 * 1000);
+  const rows = await prisma.order.findMany({
+    where: { sellerId, status: "COMPLETED", updatedAt: { gte: since } },
+    select: { updatedAt: true, sellerNetUzs: true },
+  });
+  const weeks = new Array(weekCount).fill(0);
+  for (const r of rows) {
+    const ageDays = (now - r.updatedAt.getTime()) / (24 * 3600 * 1000);
+    const idx = weekCount - 1 - Math.floor(ageDays / 7); // most recent week = last bucket
+    if (idx >= 0 && idx < weekCount) weeks[idx] += r.sellerNetUzs;
+  }
+  return { weeks, totalUzs: weeks.reduce((a, b) => a + b, 0), weekCount };
+}
+
 export interface BuyerStats {
   ordersTotal: number;
   ordersActive: number;
