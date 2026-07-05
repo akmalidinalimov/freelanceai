@@ -21,6 +21,19 @@ import { MessageThread } from "@/components/message-thread";
 import { TipButton } from "@/components/tip-button";
 import { ShareButton } from "@/components/share-button";
 
+/** The current viewer's headline next-step, or null when they're waiting on the other side. */
+function nextActionKey(role: string, status: string): string | null {
+  if (role === "buyer" && status === "PENDING_PAYMENT") return "naPay";
+  if (role === "admin" && status === "PENDING_PAYMENT") return "naConfirm";
+  if ((role === "seller" || role === "admin") && (status === "IN_PROGRESS" || status === "REVISION")) return "naDeliver";
+  if (role === "buyer" && status === "DELIVERED") return "naReview";
+  if (role === "buyer" && status === "COMPLETED") return "naDone";
+  return null;
+}
+
+const sectionCard = "rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5";
+const sectionH = "mb-3 text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]";
+
 export default async function OrderPage({
   params,
 }: {
@@ -50,26 +63,30 @@ export default async function OrderPage({
     sender: { firstName: m.sender.firstName, name: m.sender.name, username: m.sender.username },
     createdAt: m.createdAt.toISOString(),
   }));
-  const role =
-    user.id === order.buyerId ? "buyer" : user.id === order.sellerId ? "seller" : "admin";
+  const role = user.id === order.buyerId ? "buyer" : user.id === order.sellerId ? "seller" : "admin";
   const counterpart = role === "buyer" ? order.seller : order.buyer;
-  const cpName =
-    counterpart.firstName ?? counterpart.name ?? counterpart.username ?? tc("deletedUser");
+  const cpName = counterpart.firstName ?? counterpart.name ?? counterpart.username ?? tc("deletedUser");
+
+  const naKey = nextActionKey(role, order.status);
+  const checkoutUrl =
+    role === "buyer" && order.status === "PENDING_PAYMENT"
+      ? (activeProvider()?.checkoutUrl({ id: order.id, amountUzs: order.amountUzs - order.discountUzs }) ?? null)
+      : null;
+  const completed = order.status === "COMPLETED";
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href={`/gigs/${order.gig.slug}`} className="text-sm text-[hsl(var(--primary-ink))] hover:underline">
             {order.gig.title}
           </Link>
-          <h1 className="text-2xl font-bold">{t("order")} #{order.id.slice(-6)}</h1>
+          <h1 className="text-2xl font-bold">
+            {t("order")} #{order.id.slice(-6)}
+          </h1>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href={`/orders/${order.id}/receipt`}
-            className="text-sm text-[hsl(var(--primary-ink))] hover:underline"
-          >
+          <Link href={`/orders/${order.id}/receipt`} className="text-sm text-[hsl(var(--primary-ink))] hover:underline">
             {t("receipt")}
           </Link>
           <StatusChip status={order.status} label={t(`status.${order.status}`)} />
@@ -80,146 +97,159 @@ export default async function OrderPage({
         <OrderTimeline status={order.status} />
       </div>
 
-      {!["CANCELLED", "DISPUTED"].includes(order.status) && (
-        <div className="mb-6 flex items-center gap-1">
-          {(["PENDING_PAYMENT", "IN_PROGRESS", "DELIVERED", "COMPLETED"] as const).map((s, i) => {
-            const idx =
-              ({ PENDING_PAYMENT: 0, PAID: 1, IN_PROGRESS: 1, REVISION: 1, DELIVERED: 2, COMPLETED: 3 } as Record<string, number>)[
-                order.status
-              ] ?? 0;
-            const done = i <= idx;
-            return (
-              <div key={s} className="flex flex-1 items-center gap-2">
-                <div
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
-                    done
-                      ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                      : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
-                  }`}
-                >
-                  {i + 1}
-                </div>
-                <span
-                  className={`hidden text-xs sm:inline ${done ? "font-medium" : "text-[hsl(var(--muted-foreground))]"}`}
-                >
-                  {t(`status.${s}`)}
-                </span>
-                {i < 3 && <div className="h-px flex-1 bg-[hsl(var(--border))]" />}
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        {/* Main column — the work */}
+        <div className="space-y-6">
+          {order.deliveries.length > 0 && (
+            <div className={sectionCard}>
+              <h2 className={sectionH}>{t("deliveries")}</h2>
+              <ul className="space-y-3">
+                {order.deliveries.map((d) => (
+                  <li key={d.id} className="rounded-lg bg-[hsl(var(--surface-2))] p-3 text-sm">
+                    {d.message}
+                    {d.fileUrls.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {d.fileUrls.map((url, i) => (
+                          <a
+                            key={url}
+                            href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
+                            className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary-ink))] hover:underline"
+                          >
+                            {t("file")} {i + 1}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-[hsl(var(--border))] p-5">
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">{order.packageTitle}</p>
-          <p className="mt-1 text-2xl font-bold tabular-nums">
-            {formatUzs(order.amountUzs)} <span className="text-base font-normal">so&apos;m</span>
-          </p>
-          {order.extrasUzs > 0 && (
-            <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-              {t("extras")}: +{formatUzs(order.extrasUzs)} so&apos;m
-            </p>
-          )}
-          {order.discountUzs > 0 && (
-            <p className="mt-1 text-xs font-medium text-[hsl(var(--primary-ink))]">
-              {t("discount")} {order.couponCode ? `(${order.couponCode})` : ""}: −{formatUzs(order.discountUzs)} so&apos;m
-            </p>
-          )}
-          <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-            {role === "buyer" ? t("seller") : t("buyer")}: {cpName}
-          </p>
-          {role === "seller" && buyerRating.count > 0 && (
-            <div className="mt-1 flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
-              <Stars value={buyerRating.avg} />
-              <span className="tabular-nums">
-                {buyerRating.avg.toFixed(1)} ({buyerRating.count})
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="rounded-xl border border-[hsl(var(--border))] p-5">
-          <p className="mb-1 text-sm font-medium">{t("requirements")}</p>
-          {Array.isArray(order.requirementAnswers) && order.requirementAnswers.length > 0 && (
-            <div className="mb-2 space-y-2">
-              {(order.requirementAnswers as { q: string; a: string }[]).map((qa, i) => (
-                <div key={i}>
-                  <p className="text-xs font-medium">{qa.q}</p>
-                  <p className="text-sm text-[hsl(var(--muted-foreground))]">{qa.a}</p>
-                </div>
-              ))}
-            </div>
-          )}
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">
-            {order.requirements || t("noRequirements")}
-          </p>
-          {order.requirementFileUrls.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {order.requirementFileUrls.map((url, i) => (
-                <a
-                  key={url}
-                  href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
-                  className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary-ink))] hover:underline"
-                >
-                  {t("file")} {i + 1}
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {order.deliveries.length > 0 && (
-        <div className="mb-6 rounded-xl border border-[hsl(var(--border))] p-5">
-          <p className="mb-2 text-sm font-medium">{t("deliveries")}</p>
-          <ul className="space-y-3">
-            {order.deliveries.map((d) => (
-              <li key={d.id} className="rounded-lg bg-[hsl(var(--muted))]/40 p-3 text-sm">
-                {d.message}
-                {d.fileUrls.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {d.fileUrls.map((url, i) => (
-                      <a
-                        key={url}
-                        href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
-                        className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary-ink))] hover:underline"
-                      >
-                        {t("file")} {i + 1}
-                      </a>
-                    ))}
+          <div className={sectionCard}>
+            <h2 className={sectionH}>{t("requirements")}</h2>
+            {Array.isArray(order.requirementAnswers) && order.requirementAnswers.length > 0 && (
+              <div className="mb-2 space-y-2">
+                {(order.requirementAnswers as { q: string; a: string }[]).map((qa, i) => (
+                  <div key={i}>
+                    <p className="text-xs font-medium">{qa.q}</p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">{qa.a}</p>
                   </div>
-                )}
-              </li>
-            ))}
-          </ul>
+                ))}
+              </div>
+            )}
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">{order.requirements || t("noRequirements")}</p>
+            {order.requirementFileUrls.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {order.requirementFileUrls.map((url, i) => (
+                  <a
+                    key={url}
+                    href={`/api/orders/${order.id}/file?u=${encodeURIComponent(url)}`}
+                    className="rounded border border-[hsl(var(--border))] px-2 py-1 text-xs text-[hsl(var(--primary-ink))] hover:underline"
+                  >
+                    {t("file")} {i + 1}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className={sectionCard}>
+            <h2 className={sectionH}>{t("conversation")}</h2>
+            <MessageThread conversationId={conversationId} currentUserId={user.id} initial={initialMessages} />
+          </div>
+
+          {/* Completed: review / tip / share (buyer) or review-your-buyer (seller) */}
+          {completed && (
+            <div className="space-y-4">
+              {review ? (
+                <div className={sectionCard}>
+                  <p className="mb-1 text-sm font-medium">{tr("yourReview")}</p>
+                  <Stars value={review.rating} className="text-lg" />
+                  {review.comment && <p className="mt-2 text-sm">{review.comment}</p>}
+                </div>
+              ) : role === "buyer" ? (
+                <ReviewForm orderId={order.id} />
+              ) : null}
+              {role === "buyer" && <TipButton orderId={order.id} />}
+              {role === "buyer" && (
+                <div className={sectionCard}>
+                  <p className="mb-2 text-sm font-medium">{tsh("orderPrompt")}</p>
+                  <ShareButton path={`/${locale}/gigs/${order.gig.slug}`} title={order.gig.title} />
+                </div>
+              )}
+              {role === "seller" &&
+                (buyerReview ? (
+                  <div className={sectionCard}>
+                    <p className="mb-1 text-sm font-medium">{tr("yourBuyerReview")}</p>
+                    <Stars value={buyerReview.rating} className="text-lg" />
+                    {buyerReview.comment && <p className="mt-2 text-sm">{buyerReview.comment}</p>}
+                  </div>
+                ) : (
+                  <BuyerReviewForm orderId={order.id} />
+                ))}
+            </div>
+          )}
         </div>
-      )}
 
-      <div className="mb-6">
-        <MessageThread conversationId={conversationId} currentUserId={user.id} initial={initialMessages} />
+        {/* Sticky rail — next action + summary */}
+        <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          {naKey && (
+            <div className="rounded-2xl border border-[hsl(var(--violet))]/35 bg-[hsl(var(--violet-soft))]/50 p-5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[hsl(var(--violet))]">{t("naTag")}</p>
+              <p className="mb-3 mt-1 text-base font-bold">{t(naKey)}</p>
+              <OrderActions orderId={order.id} status={order.status} role={role} checkoutUrl={checkoutUrl} />
+            </div>
+          )}
+
+          <div className={sectionCard}>
+            <h2 className={sectionH}>{t("summary")}</h2>
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm text-[hsl(var(--muted-foreground))]">{order.packageTitle}</span>
+              <span className="text-lg font-bold tabular-nums">{formatUzs(order.amountUzs)}</span>
+            </div>
+            {order.extrasUzs > 0 && (
+              <p className="mt-1 flex justify-between text-xs text-[hsl(var(--muted-foreground))]">
+                <span>{t("extras")}</span>
+                <span className="tabular-nums">+{formatUzs(order.extrasUzs)}</span>
+              </p>
+            )}
+            {order.discountUzs > 0 && (
+              <p className="mt-1 flex justify-between text-xs font-medium text-[hsl(var(--primary-ink))]">
+                <span>
+                  {t("discount")} {order.couponCode ? `(${order.couponCode})` : ""}
+                </span>
+                <span className="tabular-nums">−{formatUzs(order.discountUzs)}</span>
+              </p>
+            )}
+            <div className="mt-3 flex items-center justify-between border-t border-[hsl(var(--border))] pt-3 text-sm">
+              <span className="text-[hsl(var(--muted-foreground))]">{role === "buyer" ? t("seller") : t("buyer")}</span>
+              <span className="font-semibold">{cpName}</span>
+            </div>
+            {role === "seller" && buyerRating.count > 0 && (
+              <div className="mt-1 flex items-center justify-end gap-1 text-xs text-[hsl(var(--muted-foreground))]">
+                <Stars value={buyerRating.avg} />
+                <span className="tabular-nums">
+                  {buyerRating.avg.toFixed(1)} ({buyerRating.count})
+                </span>
+              </div>
+            )}
+            {order.dueAt && !["COMPLETED", "CANCELLED"].includes(order.status) && (
+              <div className="mt-1 flex items-center justify-between text-sm">
+                <span className="text-[hsl(var(--muted-foreground))]">{t("deadline")}</span>
+                <span className="font-semibold tabular-nums">
+                  {new Date(order.dueAt).toLocaleDateString(locale)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <OrderActions
-        orderId={order.id}
-        status={order.status}
-        role={role}
-        checkoutUrl={
-          role === "buyer" && order.status === "PENDING_PAYMENT"
-            ? (activeProvider()?.checkoutUrl({
-                id: order.id,
-                amountUzs: order.amountUzs - order.discountUzs,
-              }) ?? null)
-            : null
-        }
-      />
-
-      <div className="mt-4">
+      {/* Escalation paths — kept out of the main flow */}
+      <div className="mt-6 space-y-4">
         <DisputeBox orderId={order.id} status={order.status} />
-      </div>
-
-      {(role === "buyer" || role === "seller") && (
-        <div className="mt-4">
+        {(role === "buyer" || role === "seller") && (
           <CancellationBox
             orderId={order.id}
             currentUserId={user.id}
@@ -230,46 +260,8 @@ export default async function OrderPage({
             }
             canRequest={canTransition(order.status, "CANCELLED") && cancellation?.status !== "PENDING"}
           />
-        </div>
-      )}
-
-      {order.status === "COMPLETED" && (
-        <div className="mt-6">
-          {review ? (
-            <div className="rounded-xl border border-[hsl(var(--border))] p-5">
-              <p className="mb-1 text-sm font-medium">{tr("yourReview")}</p>
-              <Stars value={review.rating} className="text-lg" />
-              {review.comment && <p className="mt-2 text-sm">{review.comment}</p>}
-            </div>
-          ) : role === "buyer" ? (
-            <ReviewForm orderId={order.id} />
-          ) : null}
-          {role === "buyer" && (
-            <div className="mt-4">
-              <TipButton orderId={order.id} />
-            </div>
-          )}
-          {role === "buyer" && order.status === "COMPLETED" && (
-            <div className="mt-4 rounded-xl border border-[hsl(var(--border))] p-4">
-              <p className="mb-2 text-sm font-medium">{tsh("orderPrompt")}</p>
-              <ShareButton path={`/${locale}/gigs/${order.gig.slug}`} title={order.gig.title} />
-            </div>
-          )}
-          {role === "seller" && (
-            <div className="mt-4">
-              {buyerReview ? (
-                <div className="rounded-xl border border-[hsl(var(--border))] p-5">
-                  <p className="mb-1 text-sm font-medium">{tr("yourBuyerReview")}</p>
-                  <Stars value={buyerReview.rating} className="text-lg" />
-                  {buyerReview.comment && <p className="mt-2 text-sm">{buyerReview.comment}</p>}
-                </div>
-              ) : (
-                <BuyerReviewForm orderId={order.id} />
-              )}
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
