@@ -7,6 +7,8 @@ import { getOrderReview, getOrderBuyerReview, getBuyerRating } from "@/server/se
 import { getOrderConversationId, listConversationMessages } from "@/server/services/message";
 import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
+import { CheckoutReview } from "@/components/checkout-review";
+import { prisma } from "@/lib/prisma";
 import { activeProvider } from "@/lib/payments";
 import { DisputeBox } from "@/components/dispute-box";
 import { CancellationBox } from "@/components/cancellation-box";
@@ -73,6 +75,34 @@ export default async function OrderPage({
       ? (activeProvider()?.checkoutUrl({ id: order.id, amountUzs: order.amountUzs - order.discountUzs }) ?? null)
       : null;
   const completed = order.status === "COMPLETED";
+
+  // Review-first checkout: the buyer's PENDING_PAYMENT view IS the receipt + pay hand-off.
+  if (role === "buyer" && order.status === "PENDING_PAYMENT") {
+    const sp = await prisma.sellerProfile
+      .findUnique({ where: { userId: order.sellerId }, select: { ratingAvg: true, ratingCount: true } })
+      .catch(() => null);
+    const extras = Array.isArray(order.extrasSnapshot)
+      ? (order.extrasSnapshot as { title: string; priceUzs: number }[])
+      : [];
+    return (
+      <CheckoutReview
+        gigTitle={order.gig.title}
+        orderId={order.id}
+        packageTitle={order.packageTitle}
+        baseUzs={order.amountUzs - order.extrasUzs}
+        extras={extras}
+        couponCode={order.couponCode}
+        discountUzs={order.discountUzs}
+        totalUzs={order.amountUzs - order.discountUzs}
+        dueAt={order.dueAt ? order.dueAt.toISOString() : null}
+        sellerName={cpName}
+        ratingAvg={sp?.ratingAvg ?? 0}
+        ratingCount={sp?.ratingCount ?? 0}
+        checkoutUrl={checkoutUrl}
+        providerId={activeProvider()?.id ?? null}
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
