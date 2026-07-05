@@ -34,14 +34,18 @@ async function posterFrame(file: File): Promise<Blob> {
     v.playsInline = true;
     v.preload = "auto";
     v.src = url;
-    await new Promise<void>((res, rej) => {
-      v.onloadeddata = () => res();
-      v.onerror = () => rej(new Error("decode"));
-    });
+    // Bound every wait so a corrupt/undecodable video can't hang the uploader forever.
+    const withTimeout = <T,>(p: Promise<T>, ms: number) =>
+      Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+    await withTimeout(
+      new Promise<void>((res, rej) => {
+        v.onloadeddata = () => res();
+        v.onerror = () => rej(new Error("decode"));
+      }),
+      8000
+    );
     v.currentTime = Math.min(0.1, (v.duration || 1) - 0.01);
-    await new Promise<void>((res) => {
-      v.onseeked = () => res();
-    });
+    await withTimeout(new Promise<void>((res) => (v.onseeked = () => res())), 4000);
     const canvas = document.createElement("canvas");
     canvas.width = v.videoWidth || 1280;
     canvas.height = v.videoHeight || 720;

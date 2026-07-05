@@ -51,8 +51,15 @@ export function ProfileBanner({
   }, [type]);
 
   useEffect(() => {
-    if (play && ref.current) ref.current.play().catch(() => {});
-  }, [play]);
+    const v = ref.current;
+    if (!play || !v) return;
+    // Assign the source via the DOM property + explicit load() — appending a <source>
+    // child to an already-mounted <video> doesn't reliably kick resource selection in
+    // every browser. This is the point where video bytes actually start loading.
+    v.src = url;
+    v.load();
+    v.play().catch(() => {});
+  }, [play, url]);
 
   const box =
     "relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface-2))] sm:aspect-[5/2]";
@@ -69,9 +76,9 @@ export function ProfileBanner({
           preload="none"
           aria-hidden
           className="h-full w-full object-cover"
-        >
-          {play && <source src={url} />}
-        </video>
+        />
+        {/* src is assigned in the effect (post-idle), never at SSR — keeps the video
+            bytes off the critical path. */}
       </div>
     );
   }
