@@ -224,11 +224,15 @@ export function MessageThread({
         )}
       </div>
 
-      {/* Escrow / protection strip — loss-framed, not accusatory */}
-      <div className="flex items-center gap-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--success-soft))]/50 px-4 py-2 text-[11.5px] font-medium text-[hsl(var(--success))]">
-        <span aria-hidden>🛡</span>
-        {t("escrowStrip")}
-      </div>
+      {/* Escrow / protection strip — loss-framed, not accusatory. Inbox-context only
+          (a counterpart is set on the Messages page; the order page embeds the thread
+          without one and carries its own trust context). */}
+      {counterpart && (
+        <div className="flex items-center gap-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--success-soft))] px-4 py-2 text-[11.5px] font-medium text-[hsl(var(--success))]">
+          <span aria-hidden>🛡</span>
+          {t("escrowStrip")}
+        </div>
+      )}
 
       {reporting && !reported && (
         <div className="space-y-2 border-b border-[hsl(var(--border))] p-3">
@@ -266,11 +270,15 @@ export function MessageThread({
             const mine = m.senderId === currentUserId;
             const prev = messages[i - 1];
             const newDay = !prev || dayKey(prev.createdAt) !== dayKey(m.createdAt);
-            const grouped = !newDay && prev?.senderId === m.senderId;
+            // Group on sender only (tz-independent); the divider carries the day break.
+            const grouped = prev?.senderId === m.senderId;
             const redacted = m.body?.includes(REDACTION);
             return (
               <div key={m.id}>
-                {newDay && (
+                {/* Day computation uses the local calendar day, which differs between the
+                    SSR (server tz) and client render — gate it behind mount to avoid a
+                    hydration mismatch near midnight. */}
+                {mounted && newDay && (
                   <div className="my-2 flex justify-center">
                     <span className="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-0.5 text-[11px] font-semibold text-[hsl(var(--muted-foreground))]">
                       {dayLabel(m.createdAt)}
@@ -314,9 +322,10 @@ export function MessageThread({
                         🛈 {t("filteredNote")}
                       </p>
                     )}
-                    <p className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-white/70" : "text-[hsl(var(--muted-foreground))]"}`}>
+                    <p className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-white/80" : "text-[hsl(var(--muted-foreground))]"}`}>
                       {mounted && format.dateTime(new Date(m.createdAt), { hour: "2-digit", minute: "2-digit" })}
-                      {mine && <span aria-hidden>{m.readAt ? "✓✓" : "✓"}</span>}
+                      {/* Read ticks only in the Messages inbox context (order page passes no counterpart). */}
+                      {mine && counterpart && <span aria-hidden>{m.readAt ? "✓✓" : "✓"}</span>}
                     </p>
                   </div>
                 </div>
