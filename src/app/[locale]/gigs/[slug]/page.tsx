@@ -54,6 +54,7 @@ export default async function GigDetailPage({
   const tr = await getTranslations("Review");
   const tp = await getTranslations("Profile");
   const tc = await getTranslations("Common");
+  const tn = await getTranslations("Nav");
 
   const gig = await getGigBySlug(slug);
   if (!gig) notFound();
@@ -98,6 +99,23 @@ export default async function GigDetailPage({
       {/* min-w-0: without it the compare table's min-w-[460px] propagates through
           the grid item (min-width:auto) and forces body-level horizontal scroll at 390px. */}
       <div className="min-w-0">
+        {/* Breadcrumb — a way back to services/category (critique: no breadcrumb;
+            part of the chosen "Klassik" gig layout). */}
+        <nav aria-label="breadcrumb" className="mb-3 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-[hsl(var(--muted-foreground))]">
+          <Link href="/gigs" className="hover:text-[hsl(var(--foreground))]">
+            {tn("explore")}
+          </Link>
+          {gig.category && (
+            <>
+              <span aria-hidden className="opacity-50">›</span>
+              <Link href={`/gigs?category=${gig.category.slug}`} className="hover:text-[hsl(var(--foreground))]">
+                {locale === "ru" ? gig.category.nameRu : locale === "en" ? gig.category.nameEn : gig.category.nameUz}
+              </Link>
+            </>
+          )}
+          <span aria-hidden className="opacity-50">›</span>
+          <span className="truncate text-[hsl(var(--foreground))]">{gig.title}</span>
+        </nav>
         {/* Seller's own work leads the hero; the category cover is only a trailing
             fallback (critique P1: a shared category photo fronting every gig is the
             biggest remaining "AI made this" tell on a trust-first money page). */}
