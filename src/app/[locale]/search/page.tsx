@@ -48,8 +48,14 @@ export default async function SearchPage({
   let limited = false;
   if (query) {
     const h = await headers();
+    // Same IP rule as clientIp(): trust cf-connecting-ip only in prod (x-forwarded-for is
+    // client-spoofable → would nullify the limit); XFF fallback stays for local/dev.
     const ip =
-      h.get("cf-connecting-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+      h.get("cf-connecting-ip") ??
+      (process.env.NODE_ENV !== "production"
+        ? h.get("x-forwarded-for")?.split(",")[0]?.trim()
+        : undefined) ??
+      "unknown";
     limited = !rateLimitInfo(`search:${ip}`, 60, 60_000).ok;
   }
 

@@ -49,13 +49,19 @@ export function enforceRateLimit(key: string, limit: number, windowMs: number): 
   if (!r.ok) throw Errors.rateLimited(undefined, r.retryAfterSec);
 }
 
-/** Best-effort client IP behind Cloudflare. */
+/**
+ * Client IP for rate-limit keying. Cloudflare (tunnel) sets `cf-connecting-ip` and is the
+ * authoritative source in prod. `x-forwarded-for` is CLIENT-SPOOFABLE — trusting it lets an
+ * attacker set a unique value per request and get a fresh bucket every time (rate limiting
+ * nullified). So in production we key on `cf-connecting-ip` only, collapsing its absence to a
+ * shared "unknown" bucket; the XFF fallback is kept for local/dev where there's no CF in front.
+ */
 export function clientIp(request: Request): string {
-  return (
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
+  const cf = request.headers.get("cf-connecting-ip");
+  if (cf) return cf;
+  if (process.env.NODE_ENV !== "production")
+    return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  return "unknown";
 }
 
 export function sha256(value: string): string {

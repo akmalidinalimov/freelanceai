@@ -480,7 +480,6 @@ export async function matchGigs(
       coverUrl: true,
       tags: true,
       featured: true,
-      trendingScore: true,
       sellerId: true,
       category: { select: { slug: true } },
       packages: { select: { priceUzs: true, deliveryDays: true } },
@@ -589,8 +588,10 @@ export async function matchGigs(
       ((p?.ratingAvg ?? 0) / 5) * 0.7 +
       Math.min(1, (p?.ratingCount ?? 0) / 30) * 0.15 +
       (LEVEL_RANK[p?.level ?? "NEW"] / 3) * 0.15;
-    let raw = 0.5 * relevance + 0.25 * proof + 0.25 * quality;
-    if (g.featured) raw += 0.02; // gentle promoted nudge, never a rank override
+    // Match % reflects TRUE fit only — featured placement is applied as a sort bonus below,
+    // never baked into the displayed score (inflating a "match %" for paid promotion would
+    // mislead buyers).
+    const raw = 0.5 * relevance + 0.25 * proof + 0.25 * quality;
     const display = raw >= 1 ? 0.9 + (Math.min(raw, 1.25) - 1) * 0.28 : raw * 0.9;
     const score = Math.round(Math.max(0.05, Math.min(0.99, display)) * 100);
     const band: GigMatch["band"] = score >= 82 ? "strong" : score >= 62 ? "good" : "broad";
@@ -633,10 +634,16 @@ export async function matchGigs(
     };
   });
 
-  // Deterministic order: score desc, then gigId as a stable tiebreak so equal-score gigs
-  // (score is a rounded 0..99 int → many ties) don't reorder run-to-run and the per-seller
-  // cap keeps the same gigs each call.
-  scored.sort((a, b) => b.score - a.score || a.gigId.localeCompare(b.gigId));
+  // Featured gigs get a real ordering bump (a paid gig can jump up to ~FEATURED_SORT_BONUS
+  // match-points of RANKING) without changing the honest match % on the card. Applied only
+  // to sorting, so promoted placement is meaningful but never a total override of fit.
+  const FEATURED_SORT_BONUS = 8;
+  const featuredBy = new Map(usable.map((g) => [g.id, g.featured]));
+  const sortScore = (m: GigMatch) => m.score + (featuredBy.get(m.gigId) ? FEATURED_SORT_BONUS : 0);
+  // Deterministic order: (featured-boosted) score desc, then gigId as a stable tiebreak so
+  // equal-score gigs (score is a rounded 0..99 int → many ties) don't reorder run-to-run and
+  // the per-seller cap keeps the same gigs each call.
+  scored.sort((a, b) => sortScore(b) - sortScore(a) || a.gigId.localeCompare(b.gigId));
 
   // per-seller cap so one prolific seller can't monopolise the grid
   const perSellerCount = new Map<string, number>();
