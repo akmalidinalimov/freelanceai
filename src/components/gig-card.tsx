@@ -138,10 +138,12 @@ export async function GigCard({
             <span />
           )}
           <span className="text-right">
+            {/* "starting-at" framing: sets an honest expectation (entry point, not a
+                ceiling) beside the price filter, in a calm weight so it doesn't shout. */}
             <span className="block text-[10px] uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
-              {tg("from")}
+              {tg("startingFrom")}
             </span>
-            <span className="block text-sm font-bold tabular-nums">
+            <span className="block text-sm font-semibold tabular-nums">
               {formatUzs(from)} so&apos;m
             </span>
             <span className="block text-[11px] text-[hsl(var(--muted-foreground))]">

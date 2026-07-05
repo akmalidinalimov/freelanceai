@@ -371,6 +371,7 @@
     "createGig": "Xizmat yaratish",
     "noGigs": "Hali xizmatlar yoʻq. Birinchisini yarating!",
     "from": "narxi",
+    "startingFrom": "boshlanadi",
     "becomeCreator": "Ijodkor boʻlish",
     "becomeCreatorTitle": "Ijodkor sifatida ishlang",
     "becomeCreatorDesc": "AI ishlaringizni soting va daromad oling.",

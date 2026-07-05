@@ -371,6 +371,7 @@
     "createGig": "Create a gig",
     "noGigs": "No gigs yet. Create your first!",
     "from": "from",
+    "startingFrom": "from",
     "becomeCreator": "Become a creator",
     "becomeCreatorTitle": "Work as a creator",
     "becomeCreatorDesc": "Sell your AI work and earn.",
