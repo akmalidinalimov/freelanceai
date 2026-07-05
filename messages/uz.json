@@ -701,7 +701,7 @@
   },
   "Telegram": {
     "portfolio": "Telegram portfolio",
-    "editHint": "Telegram kanalingizdagi post havolalarini qoʻshing — rasm va videolar shu yerda jonli koʻrinadi.",
+    "editHint": "Kanal handle’ini kiriting — soʻnggi postlar avtomatik chiqadi. Yoki aniq post havolalarini qoʻshib, eng yaxshi ishlaringizni birinchi qiling (yopiq kanallar uchun ham).",
     "channel": "Telegram kanal",
     "channelHint": "@kanal yoki t.me/kanal",
     "posts": "Post havolalari",

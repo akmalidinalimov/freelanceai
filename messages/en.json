@@ -701,7 +701,7 @@
   },
   "Telegram": {
     "portfolio": "Telegram portfolio",
-    "editHint": "Add links to your Telegram channel posts — images and videos show here live.",
+    "editHint": "Enter your channel handle — recent posts appear automatically. Or add specific post links to pin your best work first (and for private channels).",
     "channel": "Telegram channel",
     "channelHint": "@channel or t.me/channel",
     "posts": "Post links",

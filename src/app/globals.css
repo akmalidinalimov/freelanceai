@@ -216,6 +216,29 @@ body {
   }
 }
 
+/* Instagram zoom-grid: a few tiles periodically zoom to draw the eye. Only under
+   no-preference so reduced-motion users get a calm static grid. */
+@keyframes ig-zoom {
+  0%, 70%, 100% {
+    transform: scale(1);
+    box-shadow: none;
+    z-index: 1;
+  }
+  10%, 55% {
+    transform: scale(1.12);
+    box-shadow: 0 12px 30px -10px hsl(20 50% 30% / 0.4);
+    z-index: 3;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ig-zoom-grid > *:nth-child(6n + 1) {
+    animation: ig-zoom 12s infinite;
+  }
+  .ig-zoom-grid > *:nth-child(6n + 4) {
+    animation: ig-zoom 12s infinite 6s;
+  }
+}
+
 /* Skeleton shimmer (Task 7) — token-based so it reads in both themes. */
 @keyframes shimmer {
   100% {
