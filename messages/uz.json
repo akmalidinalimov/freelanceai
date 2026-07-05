@@ -233,6 +233,28 @@
     "offerDesc": "Men ijodkor sifatida xizmat koʻrsatmoqchiman",
     "error": "Xatolik yuz berdi. Qaytadan urinib koʻring."
   },
+  "Sell": {
+    "eyebrow": "Ijodkorlar uchun",
+    "title": "AI ijodingizni daromadga aylantiring",
+    "subtitle": "AI video, rasm va brending xizmatlaringizni Oʻzbekiston bozorida soting. Bepul boshlang — faqat sotuvdan komissiya olamiz.",
+    "ctaSecondary": "Qanday ishlaydi",
+    "benefitsTitle": "Nega Gigora?",
+    "howTitle": "Qanday ishlaydi",
+    "step1Title": "Ijodkor boʻling",
+    "step1Desc": "Bir marta bosing — profilingiz tayyor boʻladi.",
+    "step2Title": "Xizmat joylang",
+    "step2Desc": "Paketlar, narx va ish namunalari bilan xizmat yarating.",
+    "step3Title": "Buyurtma oling",
+    "step3Desc": "Mijozlar bilan chatda kelishing va ishni yetkazing.",
+    "step4Title": "Toʻlovni oling",
+    "step4Desc": "Ish qabul qilingach, toʻlov kartangizga chiqariladi.",
+    "trustTitle": "Ishonchli va xavfsiz",
+    "trust1": "Toʻlov ish yetkazilgunga qadar himoyalangan holda saqlanadi.",
+    "trust2": "Bildirishnomalar Telegram orqali — hech narsani oʻtkazib yubormaysiz.",
+    "trust3": "Oldindan toʻlov yoʻq — faqat sotuvdan komissiya olamiz.",
+    "finalTitle": "Bugun boshlang",
+    "finalDesc": "Birinchi xizmatingizni bir necha daqiqada joylang."
+  },
   "Dash": {
     "buyer": "Xaridor paneli",
     "creator": "Ijodkor paneli",

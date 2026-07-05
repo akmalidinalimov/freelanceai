@@ -25,12 +25,22 @@ export default async function OnboardingPage({
   const t = await getTranslations("Onboarding");
 
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center gap-6 px-4 py-12">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">{t("title")}</h1>
+    <div className="relative mx-auto flex min-h-[60vh] max-w-md flex-col justify-center gap-6 px-4 py-12">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-4 mx-auto h-52 max-w-sm rounded-[50%] opacity-70 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 50% 40%, hsl(var(--primary)/.16), transparent 70%), radial-gradient(40% 50% at 70% 60%, hsl(var(--accent)/.12), transparent 70%)",
+        }}
+      />
+      <div className="relative text-center">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight">{t("title")}</h1>
         <p className="mt-2 text-[hsl(var(--muted-foreground))]">{t("subtitle")}</p>
       </div>
-      <OnboardingChoice locale={locale} />
+      <div className="relative">
+        <OnboardingChoice locale={locale} />
+      </div>
     </div>
   );
 }

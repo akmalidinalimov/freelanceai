@@ -233,6 +233,28 @@
     "offerDesc": "I want to provide services as a creator",
     "error": "Something went wrong. Please try again."
   },
+  "Sell": {
+    "eyebrow": "For creators",
+    "title": "Turn your AI craft into income",
+    "subtitle": "Sell your AI video, image and branding services to the Uzbek market. Start free — commission only on sales.",
+    "ctaSecondary": "How it works",
+    "benefitsTitle": "Why Gigora?",
+    "howTitle": "How it works",
+    "step1Title": "Become a creator",
+    "step1Desc": "One tap — your profile is ready.",
+    "step2Title": "Post a service",
+    "step2Desc": "Create a gig with packages, price and work samples.",
+    "step3Title": "Get orders",
+    "step3Desc": "Chat with clients and deliver the work.",
+    "step4Title": "Get paid",
+    "step4Desc": "Once the work is accepted, payment is withdrawn to your card.",
+    "trustTitle": "Safe and trusted",
+    "trust1": "Payment is held securely until the work is delivered.",
+    "trust2": "Notifications via Telegram — you never miss a thing.",
+    "trust3": "No upfront fees — commission only on sales.",
+    "finalTitle": "Start today",
+    "finalDesc": "Post your first service in a couple of minutes."
+  },
   "Dash": {
     "buyer": "Buyer dashboard",
     "creator": "Creator dashboard",
