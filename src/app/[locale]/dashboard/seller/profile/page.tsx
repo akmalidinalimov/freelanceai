@@ -4,6 +4,7 @@ import { requireSellerUser } from "@/lib/auth-guards";
 import { getOwnProfile } from "@/server/services/profile";
 import { ProfileForm } from "@/components/profile-form";
 import { PortfolioEditor } from "@/components/portfolio-editor";
+import { BannerUploader } from "@/components/banner-uploader";
 import { InstagramConnect } from "@/components/instagram-connect";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,15 @@ export default async function EditProfilePage({
             {t("viewPublic")}
           </Link>
         )}
+      </div>
+      <div className="mb-6">
+        <BannerUploader
+          initial={
+            profile?.bannerUrl && profile.bannerType
+              ? { url: profile.bannerUrl, type: profile.bannerType, poster: profile.bannerPosterUrl ?? null }
+              : null
+          }
+        />
       </div>
       <div className="mb-6">
         <InstagramConnect

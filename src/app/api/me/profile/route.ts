@@ -14,6 +14,9 @@ const schema = z
     instagramUsername: z.string().max(40).optional(),
     telegramChannel: z.string().max(120).optional(),
     telegramPosts: z.array(z.string().max(200)).max(12).optional(),
+    bannerUrl: z.string().max(500).nullable().optional(),
+    bannerType: z.enum(["image", "video"]).optional(),
+    bannerPosterUrl: z.string().max(500).nullable().optional(),
   })
   .strict();
 

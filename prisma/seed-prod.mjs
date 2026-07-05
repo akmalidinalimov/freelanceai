@@ -142,6 +142,9 @@ const SELLER_PROFILES = {
       "https://t.me/telegram/353",
       "https://t.me/telegram/346",
     ],
+    // Demo hero banner (image). A real creator uploads their own image OR autoplay
+    // showreel video from the profile editor — same slot, same behavior.
+    banner: "covers/ai-video.png",
   },
 };
 
@@ -809,6 +812,9 @@ async function main() {
         instagramUsername: prof.instagramUsername,
         ...(prof.telegramChannel !== undefined ? { telegramChannel: prof.telegramChannel } : {}),
         ...(prof.telegramPosts !== undefined ? { telegramPosts: prof.telegramPosts } : {}),
+        ...(prof.banner && process.env.S3_PUBLIC_BASE_URL
+          ? { bannerUrl: `${process.env.S3_PUBLIC_BASE_URL.replace(/\/$/, "")}/${prof.banner}`, bannerType: "image" }
+          : {}),
       };
       await prisma.sellerProfile.upsert({
         where: { userId: s.id },

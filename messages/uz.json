@@ -594,7 +594,15 @@
       "LEVEL_2": "2-daraja",
       "TOP_RATED": "Top reyting"
     },
-    "respondsIn": "~{h} soat ichida javob beradi"
+    "respondsIn": "~{h} soat ichida javob beradi",
+    "banner": "Profil banneri",
+    "bannerHint": "Rasm yoki qisqa showreel video (avtomatik, ovozsiz aylanadi). Video sahifa yuklanishini sekinlashtirmaydi — avval poster koʻrinadi.",
+    "bannerAdd": "Banner qoʻshish",
+    "bannerReplace": "Bannerni almashtirish",
+    "bannerRemove": "Oʻchirish",
+    "bannerType": "Faqat rasm (JPG/PNG/WebP) yoki video (MP4/WebM)",
+    "bannerSize": "Fayl juda katta (rasm ≤8MB, video ≤40MB)",
+    "bannerError": "Yuklashda xatolik. Qayta urinib koʻring."
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",

@@ -594,7 +594,15 @@
       "LEVEL_2": "Level 2",
       "TOP_RATED": "Top rated"
     },
-    "respondsIn": "responds in ~{h}h"
+    "respondsIn": "responds in ~{h}h",
+    "banner": "Profile banner",
+    "bannerHint": "An image or a short showreel video (autoplay, muted, looped). The video never slows the page — the poster shows first.",
+    "bannerAdd": "Add banner",
+    "bannerReplace": "Replace banner",
+    "bannerRemove": "Remove",
+    "bannerType": "Image (JPG/PNG/WebP) or video (MP4/WebM) only",
+    "bannerSize": "File too large (image ≤8MB, video ≤40MB)",
+    "bannerError": "Upload failed. Please try again."
   },
   "Instagram": {
     "connect": "Connect Instagram",

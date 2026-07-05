@@ -309,6 +309,12 @@ model SellerProfile {
   // as live Telegram posts — the common "my Telegram channel is my portfolio" case.
   telegramChannel String?
   telegramPosts   String[] @default([])
+  // Profile hero banner: an uploaded image OR short showreel video. bannerPoster is
+  // the video's first frame (extracted client-side at upload) so the profile paints
+  // instantly and the video bytes load only after the page is idle.
+  bannerUrl       String?
+  bannerType      String? // image | video
+  bannerPosterUrl String?
   // Instagram sync (Business Login). Token stored encrypted (pii-crypto).
   instagramUserId        String?
   instagramTokenEnc      String?

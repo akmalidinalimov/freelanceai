@@ -7,6 +7,7 @@ import { computeSellerLevel } from "@/lib/seller-level";
 import { sanitizeSpecKeys } from "@/lib/specializations";
 import { provenSpecKeys } from "@/lib/niche-evidence";
 import { normalizeTelegramChannel, normalizeTelegramPost } from "@/lib/telegram-link";
+import { keyFromPublicUrl } from "@/lib/media";
 
 const PORTFOLIO_MAX = 12;
 
@@ -155,6 +156,14 @@ export interface ProfileInput {
   instagramUsername?: string;
   telegramChannel?: string;
   telegramPosts?: string[];
+  bannerUrl?: string | null;
+  bannerType?: string;
+  bannerPosterUrl?: string | null;
+}
+
+/** Only accept a banner media URL that is one of OUR R2 public objects (else null). */
+function ownUrlOrNull(url: string | null | undefined): string | null {
+  return url && keyFromPublicUrl(url) ? url : null;
 }
 
 /** Update the caller's own seller profile (level/rating excluded — job-set only). Bio/headline sanitized. */
@@ -184,6 +193,12 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
           ).slice(0, PORTFOLIO_MAX),
         }
       : {}),
+    // Banner: media URLs must be our own R2 objects; clearing sends null.
+    ...(input.bannerUrl !== undefined ? { bannerUrl: ownUrlOrNull(input.bannerUrl) } : {}),
+    ...(input.bannerType !== undefined
+      ? { bannerType: input.bannerType === "video" ? "video" : input.bannerType === "image" ? "image" : null }
+      : {}),
+    ...(input.bannerPosterUrl !== undefined ? { bannerPosterUrl: ownUrlOrNull(input.bannerPosterUrl) } : {}),
   };
   return prisma.sellerProfile.upsert({
     where: { userId },

@@ -11,6 +11,7 @@ import { ShareButton } from "@/components/share-button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { InstagramShowcase } from "@/components/instagram-showcase";
 import { TelegramShowcase } from "@/components/telegram-showcase";
+import { ProfileBanner } from "@/components/profile-banner";
 import { specLabel } from "@/lib/specializations";
 import { badgeDef, badgeLabel } from "@/lib/badges";
 import { getUserBadges } from "@/server/services/gamification";
@@ -83,6 +84,13 @@ export default async function CreatorProfilePage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      {/* Hero banner — the creator's showreel/work leads (variant 2: work speaks first).
+          Poster paints instantly; a video banner autoplays only after the page is idle. */}
+      {profile?.bannerUrl && profile.bannerType && (
+        <div className="mb-6">
+          <ProfileBanner url={profile.bannerUrl} type={profile.bannerType} poster={profile.bannerPosterUrl ?? null} />
+        </div>
+      )}
       {/* Identity card */}
       <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 sm:flex-row sm:items-center">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-2xl font-bold text-[hsl(var(--primary-ink))]">
