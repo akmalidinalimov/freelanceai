@@ -293,14 +293,22 @@ export async function cancelOrder(orderId: string, user: User) {
   if (order.buyerId !== user.id && order.sellerId !== user.id && user.role !== "ADMIN") {
     throw Errors.forbidden();
   }
-  assertTransition(order.status, "CANCELLED");
+  // Direct cancel is ONLY for an unpaid order (abandon before paying). A paid order must go
+  // through the mutual-cancellation request (respondCancellation) or dispute resolution — both
+  // reverse the ledger and refund the buyer. A unilateral no-refund cancel would lose the
+  // buyer's money, so refuse it here regardless of what the state machine would allow.
+  if (order.status !== "PENDING_PAYMENT") {
+    throw Errors.conflict("Paid orders are cancelled through a cancellation request, not directly");
+  }
   await prisma.$transaction(async (tx) => {
-    // An unpaid order reserves referral credit at creation — hand it back on cancel.
-    // (Paid orders refund + restore credit via the mutual-cancellation / dispute paths.)
-    if (order.status === "PENDING_PAYMENT") {
-      await restoreOrderCredit(tx, { id: order.id, buyerId: order.buyerId, creditUsedUzs: order.creditUsedUzs });
-    }
-    await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
+    // Claim the transition atomically so a concurrent settlement/expiry can't collide.
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, status: "PENDING_PAYMENT" },
+      data: { status: "CANCELLED" },
+    });
+    if (claimed.count === 0) return; // settled/expired since we read it — nothing to do
+    // Hand back the referral credit reserved at checkout.
+    await restoreOrderCredit(tx, { id: order.id, buyerId: order.buyerId, creditUsedUzs: order.creditUsedUzs });
   });
   await audit({ actorId: user.id, action: "order.cancel", entity: "Order", entityId: orderId });
 }

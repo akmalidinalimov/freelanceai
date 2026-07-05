@@ -64,7 +64,9 @@ export function OrderActions({
   const isBuyer = role === "buyer" || role === "admin";
   const isAdmin = role === "admin";
   const active = status === "IN_PROGRESS" || status === "REVISION";
-  const cancelable = active || status === "PENDING_PAYMENT";
+  // Direct cancel is only for an unpaid order. Paid (active) orders cancel via the mutual
+  // cancellation request (CancellationBox), which reverses the ledger + refunds the buyer.
+  const cancelable = status === "PENDING_PAYMENT";
 
   return (
     <div className="space-y-3">
