@@ -232,6 +232,8 @@ export interface InboxRow {
   lastBody: string | null;
   lastAt: string | null;
   unread: number;
+  /** Order lifecycle status when the conversation is tied to an order, else null. */
+  orderStatus: string | null;
 }
 
 /** Conversations the user participates in (direct or via order), newest activity first. */
@@ -250,7 +252,7 @@ export async function listInbox(user: Pick<User, "id">): Promise<InboxRow[]> {
       seller: NAME_SELECT,
       gig: { select: { title: true } },
       order: {
-        select: { buyerId: true, sellerId: true, buyer: NAME_SELECT, seller: NAME_SELECT, gig: { select: { title: true } } },
+        select: { buyerId: true, sellerId: true, status: true, buyer: NAME_SELECT, seller: NAME_SELECT, gig: { select: { title: true } } },
       },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
       _count: { select: { messages: { where: { readAt: null, NOT: { senderId: user.id } } } } },
@@ -270,6 +272,7 @@ export async function listInbox(user: Pick<User, "id">): Promise<InboxRow[]> {
       lastBody: last?.body ?? null,
       lastAt: last ? last.createdAt.toISOString() : null,
       unread: c._count.messages,
+      orderStatus: c.order?.status ?? null,
     };
   });
 

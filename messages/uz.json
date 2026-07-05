@@ -531,7 +531,13 @@
     "reportPlaceholder": "Muammo nimada? (faqat moderatorlar koʻradi)",
     "reportSubmit": "Shikoyat yuborish",
     "cancel": "Bekor qilish",
-    "blockedNotice": "Siz bu foydalanuvchini bloklagansiz. Yozish uchun blokdan chiqaring."
+    "blockedNotice": "Siz bu foydalanuvchini bloklagansiz. Yozish uchun blokdan chiqaring.",
+    "selectConversation": "Suhbatni tanlab, yozishni boshlang.",
+    "escrowStrip": "Gigora himoyasida — toʻlov va nizolar faqat platformada kafolatlanadi.",
+    "filteredNote": "Aloqa maʼlumoti sizni himoya qilish uchun yashirildi.",
+    "filteredWhy": "Toʻlov va nizolar faqat Gigorada himoyalangan. Platformadan tashqarida aloqa almashish bu himoyadan mahrum qiladi.",
+    "today": "Bugun",
+    "yesterday": "Kecha"
   },
   "Admin": {
     "dashboard": "Admin paneli",

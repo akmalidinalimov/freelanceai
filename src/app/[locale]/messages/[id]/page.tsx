@@ -2,12 +2,13 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
-import { listConversationMessages, markConversationRead } from "@/server/services/message";
+import { listConversationMessages, markConversationRead, listInbox } from "@/server/services/message";
 import { hasBlockedCounterpart } from "@/server/services/moderation-user";
 import { listOffers } from "@/server/services/offer";
 import { prisma } from "@/lib/prisma";
 import { MessageThread } from "@/components/message-thread";
 import { CustomOffers } from "@/components/custom-offers";
+import { InboxSidebar } from "@/components/inbox-sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function ConversationPage({
   const initial = await listConversationMessages(convId, user).catch(() => null);
   if (initial === null) notFound();
   await markConversationRead(convId, user);
+  const rows = await listInbox(user);
 
   const msgs = initial.map((m) => ({
     id: m.id,
@@ -32,6 +34,7 @@ export default async function ConversationPage({
     senderId: m.senderId,
     sender: { firstName: m.sender.firstName, name: m.sender.name, username: m.sender.username },
     createdAt: m.createdAt.toISOString(),
+    readAt: m.readAt ? m.readAt.toISOString() : null,
   }));
 
   // Custom offers are available in direct (gig) conversations with a buyer↔seller pair.
@@ -73,24 +76,34 @@ export default async function ConversationPage({
     : [];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/messages" className="text-sm text-[hsl(var(--primary-ink))] hover:underline">
-        ← {t("inbox")}
-      </Link>
-      <div className="mt-3">
-        <MessageThread
-          conversationId={convId}
-          currentUserId={user.id}
-          initial={msgs}
-          counterpart={counterpart}
-          initiallyBlocked={blocked}
+    <div className="mx-auto max-w-6xl px-4 py-6">
+      <div className="grid overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-[var(--shadow-soft)] lg:grid-cols-[340px_1fr]">
+        <InboxSidebar
+          rows={rows}
+          activeId={convId}
+          className="hidden lg:flex lg:border-r lg:border-[hsl(var(--border))]"
         />
-      </div>
-      {isGigConvo && (
-        <div className="mt-4">
-          <CustomOffers conversationId={convId} role={offerRole} initial={offers} />
+        <div className="flex min-w-0 flex-col">
+          <Link
+            href="/messages"
+            className="border-b border-[hsl(var(--border))] px-4 py-3 text-sm text-[hsl(var(--primary-ink))] hover:underline lg:hidden"
+          >
+            ← {t("inbox")}
+          </Link>
+          <MessageThread
+            conversationId={convId}
+            currentUserId={user.id}
+            initial={msgs}
+            counterpart={counterpart}
+            initiallyBlocked={blocked}
+          />
+          {isGigConvo && (
+            <div className="border-t border-[hsl(var(--border))] p-4">
+              <CustomOffers conversationId={convId} role={offerRole} initial={offers} />
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

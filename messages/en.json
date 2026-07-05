@@ -531,7 +531,13 @@
     "reportPlaceholder": "What's the problem? (visible to moderators only)",
     "reportSubmit": "Send report",
     "cancel": "Cancel",
-    "blockedNotice": "You blocked this user. Unblock to message again."
+    "blockedNotice": "You blocked this user. Unblock to message again.",
+    "selectConversation": "Select a conversation to start messaging.",
+    "escrowStrip": "Protected by Gigora — payments & disputes are only covered on the platform.",
+    "filteredNote": "A contact detail was hidden to keep you protected.",
+    "filteredWhy": "Payments and disputes are only protected on Gigora. Sharing contact details off-platform removes that protection.",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "Admin": {
     "dashboard": "Admin dashboard",

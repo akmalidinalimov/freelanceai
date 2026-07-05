@@ -13,13 +13,17 @@ export interface Msg {
   senderId: string;
   sender: { firstName: string | null; name: string | null; username: string | null };
   createdAt: string;
+  /** When the counterpart read this message (for read ticks on my own messages). */
+  readAt?: string | null;
 }
 
 const isVideo = (u: string) => /\.(mp4|webm)$/i.test(u);
+const REDACTION = "[hidden]";
 
 function senderName(m: Msg) {
   return m.sender.firstName ?? m.sender.name ?? m.sender.username ?? "";
 }
+const dayKey = (iso: string) => new Date(iso).toDateString();
 
 export function MessageThread({
   conversationId,
@@ -97,6 +101,7 @@ export function MessageThread({
   const [sendError, setSendError] = useState<string | null>(null);
   const seen = useRef<Set<string>>(new Set(initial.map((m) => m.id)));
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function append(incoming: Msg[]) {
     const fresh = incoming.filter((m) => !seen.current.has(m.id));
@@ -169,48 +174,64 @@ export function MessageThread({
     }
   }
 
+  function dayLabel(iso: string) {
+    const k = dayKey(iso);
+    const now = new Date();
+    if (k === now.toDateString()) return t("today");
+    if (k === new Date(now.getTime() - 86_400_000).toDateString()) return t("yesterday");
+    return format.dateTime(new Date(iso), { day: "numeric", month: "short" });
+  }
+
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] p-4">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-medium">{counterpart?.name || t("title")}</p>
-        {counterpart && mounted && (
-          <span className="flex shrink-0 items-center gap-1.5 text-xs text-[hsl(var(--muted-foreground))]">
-            <span
-              aria-hidden
-              className={`h-2 w-2 rounded-full ${online ? "bg-emerald-600" : "bg-[hsl(var(--muted-foreground))]/40"}`}
-            />
-            {online
-              ? t("online")
-              : lastSeenMs
-                ? t("lastSeen", { time: format.relativeTime(new Date(lastSeenMs)) })
-                : t("offline")}
-          </span>
+    <div className="flex flex-col">
+      {/* Header — presence + T&S controls */}
+      <div className="flex items-center justify-between gap-2 border-b border-[hsl(var(--border))] px-4 py-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{counterpart?.name || t("title")}</p>
+          {counterpart && mounted && (
+            <span className="flex items-center gap-1.5 text-[11px] text-[hsl(var(--muted-foreground))]">
+              <span
+                aria-hidden
+                className={`h-2 w-2 rounded-full ${online ? "bg-emerald-600" : "bg-[hsl(var(--muted-foreground))]/40"}`}
+              />
+              {online
+                ? t("online")
+                : lastSeenMs
+                  ? t("lastSeen", { time: format.relativeTime(new Date(lastSeenMs)) })
+                  : t("offline")}
+            </span>
+          )}
+        </div>
+        {counterpart && (
+          <div className="flex shrink-0 items-center gap-3 text-xs">
+            <button
+              type="button"
+              onClick={() => setReporting((v) => !v)}
+              aria-expanded={reporting}
+              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:underline"
+            >
+              {reported ? t("reported") : t("report")}
+            </button>
+            <button
+              type="button"
+              onClick={toggleBlock}
+              disabled={tsBusy}
+              className="text-[hsl(var(--muted-foreground))] hover:text-red-700 hover:underline disabled:opacity-50"
+            >
+              {blocked ? t("unblock") : t("block")}
+            </button>
+          </div>
         )}
       </div>
 
-      {counterpart && (
-        <div className="mb-3 flex items-center gap-3 text-xs">
-          <button
-            type="button"
-            onClick={() => setReporting((v) => !v)}
-            aria-expanded={reporting}
-            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:underline"
-          >
-            {reported ? t("reported") : t("report")}
-          </button>
-          <button
-            type="button"
-            onClick={toggleBlock}
-            disabled={tsBusy}
-            className="text-[hsl(var(--muted-foreground))] hover:text-red-700 hover:underline disabled:opacity-50"
-          >
-            {blocked ? t("unblock") : t("block")}
-          </button>
-        </div>
-      )}
+      {/* Escrow / protection strip — loss-framed, not accusatory */}
+      <div className="flex items-center gap-2 border-b border-[hsl(var(--border))] bg-[hsl(var(--success-soft))]/50 px-4 py-2 text-[11.5px] font-medium text-[hsl(var(--success))]">
+        <span aria-hidden>🛡</span>
+        {t("escrowStrip")}
+      </div>
 
       {reporting && !reported && (
-        <div className="mb-3 space-y-2 rounded-lg border border-[hsl(var(--border))] p-3">
+        <div className="space-y-2 border-b border-[hsl(var(--border))] p-3">
           <textarea
             value={reportReason}
             onChange={(e) => setReportReason(e.target.value)}
@@ -231,42 +252,73 @@ export function MessageThread({
         </div>
       )}
 
-      <div className="mb-3 max-h-80 space-y-2 overflow-y-auto" aria-live="polite" aria-relevant="additions">
+      {/* Messages */}
+      <div
+        className="flex min-h-[320px] flex-col gap-0.5 overflow-y-auto bg-[hsl(var(--surface-2))]/30 px-4 py-3"
+        style={{ maxHeight: "min(60vh, 620px)" }}
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         {messages.length === 0 ? (
           <p className="py-6 text-center text-sm text-[hsl(var(--muted-foreground))]">{t("empty")}</p>
         ) : (
-          messages.map((m) => {
+          messages.map((m, i) => {
             const mine = m.senderId === currentUserId;
+            const prev = messages[i - 1];
+            const newDay = !prev || dayKey(prev.createdAt) !== dayKey(m.createdAt);
+            const grouped = !newDay && prev?.senderId === m.senderId;
+            const redacted = m.body?.includes(REDACTION);
             return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm ${
-                    mine
-                      ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                      : "bg-[hsl(var(--muted))]"
-                  }`}
-                >
-                  {!mine && <p className="mb-0.5 text-xs opacity-70">{senderName(m)}</p>}
-                  {m.body && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
-                  {m.fileUrls && m.fileUrls.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {m.fileUrls.map((u) => (
-                        <a key={u} href={u} target="_blank" rel="noreferrer" aria-label={t("attachment")}>
-                          {isVideo(u) ? (
-                            <span
-                              aria-hidden
-                              className="flex h-16 w-16 items-center justify-center rounded bg-black/20 text-lg"
-                            >
-                              ▶
-                            </span>
-                          ) : (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={u} alt={t("attachment")} loading="lazy" className="h-16 w-16 rounded object-cover" />
-                          )}
-                        </a>
-                      ))}
-                    </div>
-                  )}
+              <div key={m.id}>
+                {newDay && (
+                  <div className="my-2 flex justify-center">
+                    <span className="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-0.5 text-[11px] font-semibold text-[hsl(var(--muted-foreground))]">
+                      {dayLabel(m.createdAt)}
+                    </span>
+                  </div>
+                )}
+                <div className={`flex ${mine ? "justify-end" : "justify-start"} ${grouped ? "mt-0.5" : "mt-2"}`}>
+                  <div
+                    className={`max-w-[80%] px-3 py-2 text-sm ${
+                      mine
+                        ? "rounded-2xl rounded-br-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                        : "rounded-2xl rounded-bl-md border border-[hsl(var(--border))] bg-[hsl(var(--card))]"
+                    }`}
+                  >
+                    {!mine && !grouped && <p className="mb-0.5 text-xs opacity-70">{senderName(m)}</p>}
+                    {m.body && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
+                    {m.fileUrls && m.fileUrls.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {m.fileUrls.map((u) => (
+                          <a key={u} href={u} target="_blank" rel="noreferrer" aria-label={t("attachment")}>
+                            {isVideo(u) ? (
+                              <span
+                                aria-hidden
+                                className="flex h-16 w-16 items-center justify-center rounded bg-black/20 text-lg"
+                              >
+                                ▶
+                              </span>
+                            ) : (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={u} alt={t("attachment")} loading="lazy" className="h-16 w-16 rounded object-cover" />
+                            )}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {redacted && (
+                      <p
+                        className={`mt-1 text-[11px] ${mine ? "text-white/70" : "text-[hsl(var(--warning))]"}`}
+                        title={t("filteredWhy")}
+                      >
+                        🛈 {t("filteredNote")}
+                      </p>
+                    )}
+                    <p className={`mt-0.5 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-white/70" : "text-[hsl(var(--muted-foreground))]"}`}>
+                      {mounted && format.dateTime(new Date(m.createdAt), { hour: "2-digit", minute: "2-digit" })}
+                      {mine && <span aria-hidden>{m.readAt ? "✓✓" : "✓"}</span>}
+                    </p>
+                  </div>
                 </div>
               </div>
             );
@@ -275,28 +327,53 @@ export function MessageThread({
         <div ref={endRef} />
       </div>
 
-      <div className="mb-2">
-        <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
+      {/* Composer */}
+      <div className="border-t border-[hsl(var(--border))] px-3 pb-3 pt-2">
+        {quickReplies.length > 0 && (
+          <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+            {quickReplies.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => {
+                  setInput(q);
+                  inputRef.current?.focus();
+                }}
+                className="shrink-0 whitespace-nowrap rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--primary))]/[0.06] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--primary-ink))]"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="mb-2">
+          <GalleryUpload value={files} onChange={setFiles} prefix="messages" video label={t("attach")} />
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder={t("placeholder")}
+            aria-label={t("placeholder")}
+            className="h-10 flex-1 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm"
+          />
+          <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
+            {t("send")}
+          </Button>
+        </div>
+        {sendError && (
+          <p className="mt-2 text-sm text-[hsl(var(--danger))]" role="alert">
+            {sendError}
+          </p>
+        )}
       </div>
-      <div className="flex items-center gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-          placeholder={t("placeholder")}
-          aria-label={t("placeholder")}
-          className="h-10 flex-1 rounded-md border border-[hsl(var(--border))] bg-transparent px-3 text-sm"
-        />
-        <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
-          {t("send")}
-        </Button>
-      </div>
-      {sendError && <p className="mt-2 text-sm text-[hsl(var(--danger))]" role="alert">{sendError}</p>}
     </div>
   );
 }
