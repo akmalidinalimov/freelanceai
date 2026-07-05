@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { SPECIALIZATIONS, specLabel } from "@/lib/specializations";
+import { SPECIALIZATIONS, specLabel, specBySlug } from "@/lib/specializations";
 import { computeSpecEvidence } from "@/lib/niche-evidence";
 import { parseIntentWithClaude } from "@/server/services/intent-ai";
 import { embedQuery, semanticCandidates } from "@/server/services/embeddings";
@@ -296,4 +296,358 @@ export async function matchCreators(
 
   results.sort((a, b) => b.score - a.score);
   return { intent, results: results.slice(0, limit) };
+}
+
+// ── Gig-first matching ────────────────────────────────────────────────────────
+// Fiverr-style: a search / category tap returns GIGS, not creators. Each gig is
+// ranked by (gig relevance) × (seller's niche evidence for that gig's category) ×
+// (gig/seller quality), with the seller's trust embedded on the card. Price is NOT
+// exposed — we show a budget TIER (₮/₮₮/₮₮₮) so browsing stays about fit, and the
+// buyer discovers exact pricing inside the gig. Reuses parseIntent + the semantic
+// arm + computeSpecEvidence; matchCreators stays untouched (secondary "Creators" tab).
+
+/** Budget tier from a gig's "from" price (min package). Tuned for the UZ AI-creative
+ * market: ₮ entry, ₮₮ standard, ₮₮₮ premium. Thresholds are display-only, never shown. */
+const BUDGET_T2_UZS = 1_500_000;
+const BUDGET_T3_UZS = 3_500_000;
+export function budgetTierFor(fromUzs: number): 1 | 2 | 3 {
+  return fromUzs >= BUDGET_T3_UZS ? 3 : fromUzs >= BUDGET_T2_UZS ? 2 : 1;
+}
+
+export interface GigMatch {
+  gigId: string;
+  slug: string;
+  title: string;
+  coverUrl: string | null;
+  categorySlug: string | null;
+  seller: {
+    sellerId: string;
+    username: string | null;
+    name: string;
+    avatar: string | null;
+    verified: boolean;
+    level: string;
+    ratingAvg: number;
+    ratingCount: number;
+    completedOrders: number;
+  };
+  whyMatched: string[]; // localized spec labels this gig matched (may be empty for pure-lexical)
+  proof: { tier: "proven" | "supported" | "declared"; label: string; orders: number } | null;
+  band: "strong" | "good" | "broad"; // match confidence banner on the card
+  budgetTier: 1 | 2 | 3;
+  fromDeliveryDays: number; // delivery of the entry (min-price) package
+  score: number; // 0..100 display
+}
+
+/** Derive the spec keys a gig belongs to, from its category slug + tags (mirrors how
+ * niche-evidence attributes gigs to specs). Used to intersect with the query intent. */
+export function gigSpecKeys(categorySlug: string | null, tags: string[]): Set<string> {
+  const keys = new Set<string>();
+  if (categorySlug) {
+    const s = specBySlug(categorySlug);
+    if (s) keys.add(s.key);
+  }
+  if (tags.length) {
+    const norm = tags.map(normalize);
+    for (const s of SPECIALIZATIONS) {
+      const syn = [s.uz, s.ru, s.en, ...s.synonyms].map(normalize);
+      if (norm.some((t) => syn.includes(t) || t === s.key)) keys.add(s.key);
+    }
+  }
+  return keys;
+}
+
+/** Match GIGS to a natural-language query (gig-first discovery). Returns detected intent
+ * + ranked gigs, each carrying the seller's embedded trust + why-matched + niche proof. */
+export async function matchGigs(
+  query: string,
+  opts: { limit?: number; locale?: string; perSeller?: number } = {}
+): Promise<{ intent: Intent & { understood?: string; ai?: boolean }; results: GigMatch[] }> {
+  const locale = opts.locale ?? "uz";
+  const limit = opts.limit ?? 24;
+  const perSeller = opts.perSeller ?? 2;
+
+  // Same intent stack as matchCreators: deterministic lexical parse (precision floor)
+  // UNIONED with Claude parse (recall), plus a concurrent query embedding (fail-open).
+  const lexical = parseIntent(query, locale);
+  const [ai, queryVec] = await Promise.all([
+    parseIntentWithClaude(query, locale),
+    embedQuery(query).catch(() => null),
+  ]);
+  const specKeys = [...new Set([...lexical.specKeys, ...(ai?.specKeys ?? [])])];
+  const intent: Intent & { understood?: string; ai?: boolean } = {
+    terms: [...new Set([...lexical.terms, ...(ai?.terms ?? [])])],
+    specKeys,
+    specLabels: specKeys.map((k) => specLabel(k, locale)),
+    understood: ai?.understood,
+    ai: Boolean(ai),
+  };
+  const matchedSlugs = specKeys.map((k) => k.replace(/_/g, "-"));
+
+  // gig-grain relevance: 0..1
+  const gigRel = new Map<string, number>();
+
+  // 1) trigram / ILIKE over gig text (gig-grain, so a strong gig surfaces even if the
+  //    seller has weaker gigs elsewhere)
+  const like = `%${query.trim()}%`;
+  try {
+    const rows = await prisma.$queryRaw<{ gigId: string; rel: number }[]>(Prisma.sql`
+      SELECT g.id AS "gigId",
+             GREATEST(word_similarity(${query}, g.title), word_similarity(${query}, g.description))::float AS rel
+      FROM "Gig" g
+      WHERE g.status = 'ACTIVE' AND g."deletedAt" IS NULL
+        AND ( word_similarity(${query}, g.title) >= 0.2
+           OR word_similarity(${query}, g.description) >= 0.2
+           OR g.title ILIKE ${like}
+           OR g.description ILIKE ${like} )
+      ORDER BY rel DESC
+      LIMIT 120`);
+    for (const r of rows) gigRel.set(r.gigId, Math.max(gigRel.get(r.gigId) ?? 0, Math.min(1, r.rel)));
+  } catch {
+    const gigs = await prisma.gig.findMany({
+      where: {
+        status: "ACTIVE",
+        deletedAt: null,
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      select: { id: true },
+      take: 120,
+    });
+    for (const g of gigs) gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.45));
+  }
+
+  // 2) tag matches (expanded terms) → moderate relevance
+  if (intent.terms.length) {
+    const tagGigs = await prisma.gig.findMany({
+      where: { status: "ACTIVE", deletedAt: null, tags: { hasSome: intent.terms } },
+      select: { id: true },
+      take: 150,
+    });
+    for (const g of tagGigs) gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.4));
+  }
+
+  // 3) category-in-detected-spec → gigs in a matched skill/niche category (recovers
+  //    relevant gigs whose text didn't lexically hit the raw query)
+  if (matchedSlugs.length) {
+    const catGigs = await prisma.gig.findMany({
+      where: { status: "ACTIVE", deletedAt: null, category: { slug: { in: matchedSlugs } } },
+      select: { id: true },
+      take: 150,
+    });
+    for (const g of catGigs) gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.38));
+  }
+
+  // 4) S2 semantic arm: pgvector kNN over creator-doc embeddings → a set of semantically
+  //    relevant sellers. We (a) pull their spec-matched gigs in for recall, and (b) boost
+  //    already-candidate gigs whose seller landed in the set. (Gig-level embeddings are a
+  //    later upgrade; seller-level recall is the honest v1.)
+  let semanticSellers = new Set<string>();
+  if (queryVec) {
+    try {
+      const semantic = await semanticCandidates(queryVec, 40);
+      semanticSellers = new Set(semantic.keys());
+      if (semanticSellers.size > 0 && matchedSlugs.length) {
+        const semGigs = await prisma.gig.findMany({
+          where: {
+            sellerId: { in: [...semanticSellers] },
+            status: "ACTIVE",
+            deletedAt: null,
+            category: { slug: { in: matchedSlugs } },
+          },
+          select: { id: true },
+          take: 100,
+        });
+        for (const g of semGigs) gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.4));
+      }
+    } catch (err) {
+      console.error("gig semantic arm skipped", err);
+    }
+  }
+
+  const gigIds = [...gigRel.keys()];
+  if (gigIds.length === 0) return { intent, results: [] };
+
+  // fetch full candidate gigs with seller identity/profile + packages
+  const gigs = await prisma.gig.findMany({
+    where: { id: { in: gigIds }, status: "ACTIVE", deletedAt: null },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      coverUrl: true,
+      tags: true,
+      featured: true,
+      trendingScore: true,
+      sellerId: true,
+      category: { select: { slug: true } },
+      packages: { select: { priceUzs: true, deliveryDays: true } },
+      seller: {
+        select: {
+          id: true,
+          firstName: true,
+          name: true,
+          username: true,
+          image: true,
+          photoUrl: true,
+          kycStatus: true,
+          isSeller: true,
+          status: true,
+          sellerProfile: {
+            select: { specializations: true, ratingAvg: true, ratingCount: true, level: true },
+          },
+        },
+      },
+    },
+  });
+
+  // only sellable gigs from active sellers with at least one package (need a "from" price)
+  const usable = gigs.filter(
+    (g) => g.seller?.isSeller && g.seller.status === "ACTIVE" && g.packages.length > 0
+  );
+  if (usable.length === 0) return { intent, results: [] };
+
+  const sellerIds = [...new Set(usable.map((g) => g.sellerId))];
+
+  // proof: completed orders per seller
+  const completedRows = await prisma.order.groupBy({
+    by: ["sellerId"],
+    where: { sellerId: { in: sellerIds }, status: "COMPLETED" },
+    _count: true,
+  });
+  const completedBy = new Map(completedRows.map((r) => [r.sellerId, r._count]));
+
+  // niche evidence signals per seller (active gig tags/category + completed-order categories)
+  const [gigRows, orderCatRows] = await Promise.all([
+    prisma.gig.findMany({
+      where: { sellerId: { in: sellerIds }, status: "ACTIVE", deletedAt: null },
+      select: { sellerId: true, tags: true, category: { select: { slug: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 400,
+    }),
+    prisma.order.findMany({
+      where: { sellerId: { in: sellerIds }, status: "COMPLETED" },
+      select: { sellerId: true, gig: { select: { category: { select: { slug: true } } } } },
+      orderBy: { createdAt: "desc" },
+      take: 400,
+    }),
+  ]);
+  const gigTagsBy = new Map<string, string[]>();
+  const gigCatBy = new Map<string, string[]>();
+  for (const g of gigRows) {
+    if (g.tags.length) gigTagsBy.set(g.sellerId, [...(gigTagsBy.get(g.sellerId) ?? []), ...g.tags]);
+    if (g.category?.slug) gigCatBy.set(g.sellerId, [...(gigCatBy.get(g.sellerId) ?? []), g.category.slug]);
+  }
+  const orderCatBy = new Map<string, string[]>();
+  for (const o of orderCatRows) {
+    const slug = o.gig.category?.slug;
+    if (slug) orderCatBy.set(o.sellerId, [...(orderCatBy.get(o.sellerId) ?? []), slug]);
+  }
+
+  // evidence computed once per seller, then reused across that seller's candidate gigs
+  const evidenceBy = new Map<string, ReturnType<typeof computeSpecEvidence>>();
+  for (const sid of sellerIds) {
+    const seller = usable.find((g) => g.sellerId === sid)?.seller;
+    evidenceBy.set(
+      sid,
+      computeSpecEvidence({
+        declared: seller?.sellerProfile?.specializations ?? [],
+        gigTags: gigTagsBy.get(sid) ?? [],
+        gigCategorySlugs: gigCatBy.get(sid) ?? [],
+        orderCategorySlugs: orderCatBy.get(sid) ?? [],
+      })
+    );
+  }
+
+  const scored: GigMatch[] = usable.map((g) => {
+    const p = g.seller!.sellerProfile;
+    const evidence = evidenceBy.get(g.sellerId)!;
+    const specsOfGig = gigSpecKeys(g.category?.slug ?? null, g.tags);
+    // this gig's specs that the query asked for, ordered by the seller's evidence tier
+    const provenKeys = specKeys.filter((k) => specsOfGig.has(k) && evidence.get(k)?.proven);
+    const supportedKeys = specKeys.filter((k) => specsOfGig.has(k) && evidence.get(k)?.supported);
+    const declaredKeys = specKeys.filter((k) => {
+      const e = evidence.get(k);
+      return specsOfGig.has(k) && e?.declared && !e.proven && !e.supported;
+    });
+    const matchedKeys = [...provenKeys, ...supportedKeys, ...declaredKeys];
+
+    const completed = completedBy.get(g.sellerId) ?? 0;
+    const semanticBoost = semanticSellers.has(g.sellerId) ? 0.12 : 0;
+    const relevance = Math.min(
+      1.5,
+      (gigRel.get(g.id) ?? 0) +
+        semanticBoost +
+        provenKeys.length * 0.5 +
+        supportedKeys.length * 0.25 +
+        declaredKeys.length * 0.15
+    );
+    const proof = Math.min(1, Math.log10(1 + completed) / 2);
+    const quality =
+      ((p?.ratingAvg ?? 0) / 5) * 0.7 +
+      Math.min(1, (p?.ratingCount ?? 0) / 30) * 0.15 +
+      (LEVEL_RANK[p?.level ?? "NEW"] / 3) * 0.15;
+    let raw = 0.5 * relevance + 0.25 * proof + 0.25 * quality;
+    if (g.featured) raw += 0.02; // gentle promoted nudge, never a rank override
+    const display = raw >= 1 ? 0.9 + (Math.min(raw, 1.25) - 1) * 0.28 : raw * 0.9;
+    const score = Math.round(Math.max(0.05, Math.min(0.99, display)) * 100);
+    const band: GigMatch["band"] = score >= 82 ? "strong" : score >= 62 ? "good" : "broad";
+
+    // niche proof badge: strongest matched tier for this gig's niche
+    let proofBadge: GigMatch["proof"] = null;
+    const best = matchedKeys[0];
+    if (best) {
+      const e = evidence.get(best)!;
+      const tier = e.proven ? "proven" : e.supported ? "supported" : "declared";
+      proofBadge = { tier, label: specLabel(best, locale), orders: e.fromOrders };
+    }
+
+    // "from" package = cheapest tier → budget indicator + its delivery time
+    const entry = g.packages.reduce((a, b) => (b.priceUzs < a.priceUzs ? b : a));
+
+    return {
+      gigId: g.id,
+      slug: g.slug,
+      title: g.title,
+      coverUrl: g.coverUrl,
+      categorySlug: g.category?.slug ?? null,
+      seller: {
+        sellerId: g.seller!.id,
+        username: g.seller!.username,
+        name: g.seller!.firstName ?? g.seller!.name ?? g.seller!.username ?? "",
+        avatar: g.seller!.image ?? g.seller!.photoUrl ?? null,
+        verified: g.seller!.kycStatus === "VERIFIED",
+        level: p?.level ?? "NEW",
+        ratingAvg: p?.ratingAvg ?? 0,
+        ratingCount: p?.ratingCount ?? 0,
+        completedOrders: completed,
+      },
+      whyMatched: matchedKeys.map((k) => specLabel(k, locale)),
+      proof: proofBadge,
+      band,
+      budgetTier: budgetTierFor(entry.priceUzs),
+      fromDeliveryDays: entry.deliveryDays,
+      score,
+    };
+  });
+
+  // Deterministic order: score desc, then gigId as a stable tiebreak so equal-score gigs
+  // (score is a rounded 0..99 int → many ties) don't reorder run-to-run and the per-seller
+  // cap keeps the same gigs each call.
+  scored.sort((a, b) => b.score - a.score || a.gigId.localeCompare(b.gigId));
+
+  // per-seller cap so one prolific seller can't monopolise the grid
+  const perSellerCount = new Map<string, number>();
+  const results: GigMatch[] = [];
+  for (const m of scored) {
+    const n = perSellerCount.get(m.seller.sellerId) ?? 0;
+    if (n >= perSeller) continue;
+    perSellerCount.set(m.seller.sellerId, n + 1);
+    results.push(m);
+    if (results.length >= limit) break;
+  }
+
+  return { intent, results };
 }

@@ -2,20 +2,29 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Mic, ArrowRight } from "lucide-react";
+import { Mic, ArrowRight, Star, Clock, Sparkles, ShieldCheck } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { coverVariant } from "@/lib/cover-variant";
 
-interface MatchResult {
-  sellerId: string;
-  username: string | null;
-  name: string;
-  avatar: string | null;
-  verified: boolean;
-  level: string;
-  ratingAvg: number;
-  ratingCount: number;
-  completedOrders: number;
-  matchedSpecs: string[];
+interface GigMatch {
+  gigId: string;
+  slug: string;
+  title: string;
+  coverUrl: string | null;
+  seller: {
+    name: string;
+    avatar: string | null;
+    verified: boolean;
+    level: string;
+    ratingAvg: number;
+    ratingCount: number;
+    completedOrders: number;
+  };
+  whyMatched: string[];
+  proof: { tier: "proven" | "supported" | "declared"; label: string; orders: number } | null;
+  band: "strong" | "good" | "broad";
+  budgetTier: 1 | 2 | 3;
+  fromDeliveryDays: number;
   score: number;
 }
 
@@ -35,13 +44,12 @@ const gradFor = (s: string) =>
 export function HomeSearch() {
   const t = useTranslations("Home");
   const ts = useTranslations("Search");
-  const tp = useTranslations("Profile");
   const locale = useLocale();
 
   const [q, setQ] = useState("");
   const [ph, setPh] = useState(t("searchPlaceholder"));
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
-  const [results, setResults] = useState<MatchResult[]>([]);
+  const [results, setResults] = useState<GigMatch[]>([]);
   const [specLabels, setSpecLabels] = useState<string[]>([]);
   const [listening, setListening] = useState(false);
   const stopRef = useRef(false);
@@ -102,11 +110,11 @@ export function HomeSearch() {
       const r = await fetch("/api/search/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: text, locale, limit: 6 }),
+        body: JSON.stringify({ query: text, locale, limit: 6, mode: "gigs" }),
       });
       const j = await r.json();
       if (j.ok) {
-        setResults(j.data.results as MatchResult[]);
+        setResults(j.data.results as GigMatch[]);
         setSpecLabels((j.data.intent?.specLabels as string[]) ?? []);
       }
     } catch {
@@ -254,7 +262,7 @@ export function HomeSearch() {
               </div>
             </div>
           ) : results.length === 0 ? (
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">{ts("noResults")}</p>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">{ts("noResultsGigs")}</p>
           ) : (
             <>
               {specLabels.length > 0 && (
@@ -274,7 +282,7 @@ export function HomeSearch() {
               )}
               <div className="mb-3 flex items-baseline justify-between px-1">
                 <h2 className="font-display text-lg font-bold">
-                  {ts("resultsCount", { count: results.length })}
+                  {ts("resultsCountGigs", { count: results.length })}
                 </h2>
                 <span className="text-xs font-semibold text-[hsl(var(--muted-foreground))]">
                   {ts("match")}
@@ -282,60 +290,88 @@ export function HomeSearch() {
               </div>
               <div className="grid gap-3">
                 {results.map((r) => {
-                  const reason =
-                    r.matchedSpecs.length > 0
-                      ? ts("reasonSpecs", { specs: r.matchedSpecs.slice(0, 2).join(" + ") })
-                      : ts("reasonGeneric");
-                  const card = (
-                    <div className="flex items-center gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-colors hover:border-[hsl(var(--primary))]">
-                      <div
-                        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-bold text-white"
-                        style={{ background: r.avatar ? undefined : gradFor(r.name) }}
-                      >
-                        {r.avatar ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={r.avatar} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          r.name.slice(0, 1).toUpperCase()
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 font-bold">
-                          <span className="truncate">{r.name}</span>
-                          {r.verified && <span className="text-xs text-[hsl(var(--primary-ink))]">✓</span>}
-                        </div>
-                        <p className="mt-0.5 line-clamp-1 text-xs font-semibold text-[hsl(var(--muted-foreground))]">
-                          {reason}
-                        </p>
-                        <div className="mt-1 flex flex-wrap gap-2.5 text-[11px] font-semibold text-[hsl(var(--muted-foreground))]">
-                          {r.ratingCount > 0 && (
-                            <span>
-                              ★ <b className="text-[hsl(var(--foreground))]">{r.ratingAvg.toFixed(1)}</b>
-                            </span>
-                          )}
-                          <span>{tp(`level.${r.level}`)}</span>
-                          {r.completedOrders > 0 && <span>{ts("orders", { count: r.completedOrders })}</span>}
-                        </div>
-                      </div>
-                      <div
-                        className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full"
-                        style={{
-                          background: `conic-gradient(hsl(var(--primary)) ${r.score}%, hsl(var(--muted)) 0)`,
-                        }}
-                      >
-                        <div className="absolute inset-1 rounded-full bg-[hsl(var(--card))]" />
-                        <span className="relative text-xs font-extrabold text-[hsl(var(--primary-ink))]">
-                          {r.score}%
+                  const v = coverVariant(r.gigId);
+                  const proofText = r.proof
+                    ? r.proof.tier === "proven"
+                      ? ts("proofProven", { label: r.proof.label, count: r.proof.orders })
+                      : r.proof.tier === "supported"
+                        ? ts("proofSupported", { label: r.proof.label })
+                        : ts("proofDeclared", { label: r.proof.label })
+                    : null;
+                  return (
+                    <Link
+                      key={r.gigId}
+                      href={`/gigs/${r.slug}`}
+                      className="flex gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-colors hover:border-[hsl(var(--primary))]"
+                    >
+                      <div className="relative h-[76px] w-[76px] shrink-0 overflow-hidden rounded-xl">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={r.coverUrl ?? "/prism/pattern-sweep-v2.webp"}
+                          alt=""
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                          style={{
+                            objectPosition: v.pos,
+                            transform: v.flip ? "scaleX(-1)" : undefined,
+                            filter: r.coverUrl
+                              ? undefined
+                              : `saturate(1.06)${v.hue ? ` hue-rotate(${v.hue}deg)` : ""}`,
+                          }}
+                        />
+                        <span className="absolute left-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-[hsl(var(--foreground))]/75 text-[10px] font-extrabold tabular-nums text-white">
+                          {r.score}
                         </span>
                       </div>
-                    </div>
-                  );
-                  return r.username ? (
-                    <Link key={r.sellerId} href={`/creators/${r.username}`}>
-                      {card}
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-1 font-bold leading-snug">{r.title}</p>
+                        {r.whyMatched.length > 0 && (
+                          <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-[hsl(var(--primary-ink))]">
+                            <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} />
+                            <span className="truncate">{r.whyMatched.slice(0, 2).join(" · ")}</span>
+                          </p>
+                        )}
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-semibold text-[hsl(var(--muted-foreground))]">
+                          <span className="flex items-center gap-1">
+                            {r.seller.avatar ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={r.seller.avatar} alt="" className="h-4 w-4 rounded-full object-cover" />
+                            ) : (
+                              <span
+                                className="h-4 w-4 rounded-full"
+                                style={{ background: gradFor(r.seller.name) }}
+                              />
+                            )}
+                            <span className="truncate text-[hsl(var(--foreground))]">{r.seller.name}</span>
+                            {r.seller.verified && (
+                              <span className="text-[hsl(var(--primary-ink))]">✓</span>
+                            )}
+                          </span>
+                          {r.seller.ratingCount > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <Star className="h-3 w-3 fill-[hsl(var(--star))] text-[hsl(var(--star))]" />
+                              <b className="text-[hsl(var(--foreground))]">{r.seller.ratingAvg.toFixed(1)}</b>
+                            </span>
+                          )}
+                          <span className="flex items-center gap-0.5">
+                            <Clock className="h-3 w-3" strokeWidth={1.75} />
+                            {ts("inDays", { days: r.fromDeliveryDays })}
+                          </span>
+                        </div>
+                        {proofText && (
+                          <p
+                            className={`mt-1 flex items-center gap-1 text-[11px] font-medium ${
+                              r.proof!.tier === "proven"
+                                ? "text-[hsl(var(--success))]"
+                                : "text-[hsl(var(--muted-foreground))]"
+                            }`}
+                          >
+                            <ShieldCheck className="h-3 w-3 shrink-0" strokeWidth={2} />
+                            <span className="truncate">{proofText}</span>
+                          </p>
+                        )}
+                      </div>
                     </Link>
-                  ) : (
-                    <div key={r.sellerId}>{card}</div>
                   );
                 })}
               </div>
