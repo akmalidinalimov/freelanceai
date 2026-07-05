@@ -826,6 +826,32 @@ async function main() {
 
   const publicBase = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
   const coverFor = (cat) => (publicBase ? `${publicBase}/covers/${cat}.png` : null);
+
+  // Demo portfolio uploads so the profile showcase (Instagram zoom-grid) renders on a
+  // couple of demo creators. Real creators upload their own work via the profile editor;
+  // these use existing category cover art. Idempotent by fixed id.
+  const PORTFOLIO_DEMO = {
+    demo_s1: ["ai-video", "ai-product", "ai-image", "branding", "ai-ugc", "ai-avatar"],
+    demo_s11: ["ai-video", "branding", "ai-image", "ai-ads", "ai-ugc", "ai-product"],
+  };
+  if (publicBase) {
+    for (const [sellerId, cats] of Object.entries(PORTFOLIO_DEMO)) {
+      const prof = await prisma.sellerProfile.findUnique({ where: { userId: sellerId }, select: { id: true } });
+      if (!prof) continue;
+      for (let i = 0; i < cats.length; i++) {
+        const id = `demo_pf_${sellerId}_${i}`;
+        const create = {
+          id,
+          profileId: prof.id,
+          mediaUrl: `${publicBase}/covers/${cats[i]}.png`,
+          mediaType: "image",
+          source: "upload",
+          position: i,
+        };
+        await prisma.portfolioItem.upsert({ where: { id }, update: { mediaUrl: create.mediaUrl }, create });
+      }
+    }
+  }
   const TIER_NAMES = ["BASIC", "STANDARD", "PREMIUM"];
   const TIER_TITLES = ["Basic", "Standard", "Premium"];
   // Positioning tagline shown above each tier's checklist (non-✓ first line):

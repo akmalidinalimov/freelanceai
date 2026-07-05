@@ -53,3 +53,10 @@ yarn-error.log*
 
 # Local MCP config (contains the Hostinger API token — never commit)
 /.mcp.json
+
+# Local-only design mockups / labs (kept on disk to revisit, never committed —
+# the shipped design system lives in the code + DESIGN.md/PRODUCT.md)
+/design-*.html
+/design-pages/
+/design-assets/
+/.impeccable/
