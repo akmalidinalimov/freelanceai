@@ -7,7 +7,6 @@ import { Input, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type Category = { slug: string; name: string };
 type Values = { q?: string; category?: string; min?: string; max?: string; sort?: string };
 
 /**
@@ -17,12 +16,15 @@ type Values = { q?: string; category?: string; min?: string; max?: string; sort?
  * Controls are rendered ONCE (repositioned per breakpoint) to avoid duplicate
  * form fields.
  */
-export function GigFilters({ categories, values }: { categories: Category[]; values: Values }) {
+export function GigFilters({ values }: { values: Values }) {
   const tg = useTranslations("Gig");
   const [open, setOpen] = useState(false);
 
   return (
     <form method="get" className="mb-4">
+      {/* Category is chosen via the chip row above; carry it through so a price/sort
+          submit doesn't drop the active category. */}
+      {values.category ? <input type="hidden" name="category" value={values.category} /> : null}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search
@@ -87,19 +89,6 @@ export function GigFilters({ categories, values }: { categories: Category[]; val
           </button>
         </div>
 
-        <Select
-          name="category"
-          defaultValue={values.category ?? ""}
-          aria-label={tg("category")}
-          className="md:w-48"
-        >
-          <option value="">{tg("allCategories")}</option>
-          {categories.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
         <Input
           name="min"
           inputMode="numeric"

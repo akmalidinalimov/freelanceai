@@ -63,11 +63,9 @@ export default async function GigsPage({
 
   // Active-filter chips: each links to the same page with that filter dropped.
   const activeChips: { key: string; drop: string[]; label: string }[] = [];
+  // Category is represented by the highlighted browse chip (+ "All" to clear), so it's
+  // intentionally not repeated here; this row is for the search term + price range.
   if (sp.q) activeChips.push({ key: "q", drop: ["q"], label: `“${sp.q}”` });
-  if (sp.category) {
-    const c = categories.find((x) => x.slug === sp.category);
-    activeChips.push({ key: "category", drop: ["category"], label: c ? c[nameKey] : sp.category });
-  }
   if (sp.min || sp.max) {
     activeChips.push({ key: "price", drop: ["min", "max"], label: `${sp.min ?? "0"}–${sp.max ?? "∞"} so'm` });
   }
@@ -79,14 +77,41 @@ export default async function GigsPage({
     return { pathname: "/gigs" as const, query };
   };
 
+  // Quick-browse category chips preserve the current search/price/sort and just swap
+  // the category (a lighter, more scannable path than the dropdown).
+  const hrefWithCategory = (slug?: string) => {
+    const query: Record<string, string> = {};
+    for (const [k, v] of Object.entries({ q: sp.q, min: sp.min, max: sp.max, sort: sp.sort })) {
+      if (v) query[k] = v as string;
+    }
+    if (slug) query.category = slug;
+    return { pathname: "/gigs" as const, query };
+  };
+  const chipCls = (active: boolean) =>
+    `shrink-0 rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+      active
+        ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+        : "border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--muted-foreground))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--foreground))]"
+    }`;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="font-display mb-5 text-3xl font-extrabold">{tn("explore")}</h1>
+      <h1 className="font-display text-3xl font-extrabold">{tn("explore")}</h1>
+      <p className="mb-5 mt-1 text-sm text-[hsl(var(--muted-foreground))]">{tg("marketplaceSubtitle")}</p>
 
-      <GigFilters
-        categories={localizedCats}
-        values={{ q: sp.q, category: sp.category, min: sp.min, max: sp.max, sort }}
-      />
+      {/* Quick category chips — a scannable browse path (horizontal-scroll on mobile) */}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <Link href={hrefWithCategory()} className={chipCls(!sp.category)}>
+          {tg("allShort")}
+        </Link>
+        {localizedCats.map((c) => (
+          <Link key={c.slug} href={hrefWithCategory(c.slug)} className={chipCls(sp.category === c.slug)}>
+            {c.name}
+          </Link>
+        ))}
+      </div>
+
+      <GigFilters values={{ q: sp.q, category: sp.category, min: sp.min, max: sp.max, sort }} />
 
       {hasFilters && (
         <div className="mb-6 mt-3 flex flex-wrap items-center gap-2">
