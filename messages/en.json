@@ -690,5 +690,16 @@
     "accept": "Accept",
     "decline": "Decline",
     "learnMore": "Learn more"
+  },
+  "Telegram": {
+    "portfolio": "Telegram portfolio",
+    "editHint": "Add links to your Telegram channel posts — images and videos show here live.",
+    "channel": "Telegram channel",
+    "channelHint": "@channel or t.me/channel",
+    "posts": "Post links",
+    "postsHint": "One link per post. e.g. https://t.me/channel/123",
+    "removePost": "Remove link",
+    "followChannel": "Follow channel",
+    "postTitle": "Telegram post {n}"
   }
 }

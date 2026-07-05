@@ -48,6 +48,8 @@ export default async function EditProfilePage({
           aiTools: (profile?.aiTools ?? []).join(", "),
           specializations: profile?.specializations ?? [],
           instagramUsername: profile?.instagramUsername ?? "",
+          telegramChannel: profile?.telegramChannel ?? "",
+          telegramPosts: profile?.telegramPosts ?? [],
         }}
       />
       <div className="mt-8">

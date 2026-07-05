@@ -12,6 +12,8 @@ const schema = z
     aiTools: z.array(z.string().min(1).max(40)).max(20).optional(),
     specializations: z.array(z.string().min(1).max(40)).max(30).optional(),
     instagramUsername: z.string().max(40).optional(),
+    telegramChannel: z.string().max(120).optional(),
+    telegramPosts: z.array(z.string().max(200)).max(12).optional(),
   })
   .strict();
 

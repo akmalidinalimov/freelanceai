@@ -690,5 +690,16 @@
     "accept": "Qabul qilish",
     "decline": "Rad etish",
     "learnMore": "Batafsil"
+  },
+  "Telegram": {
+    "portfolio": "Telegram portfolio",
+    "editHint": "Telegram kanalingizdagi post havolalarini qoʻshing — rasm va videolar shu yerda jonli koʻrinadi.",
+    "channel": "Telegram kanal",
+    "channelHint": "@kanal yoki t.me/kanal",
+    "posts": "Post havolalari",
+    "postsHint": "Har bir post uchun alohida havola. Masalan: https://t.me/kanal/123",
+    "removePost": "Havolani oʻchirish",
+    "followChannel": "Kanalni kuzatish",
+    "postTitle": "Telegram post {n}"
   }
 }

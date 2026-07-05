@@ -133,6 +133,15 @@ const SELLER_PROFILES = {
     aiTools: ["Runway", "Kling", "Sora", "Midjourney"],
     specializations: ["ai_video", "fashion", "ecommerce"],
     instagramUsername: IG,
+    // Demo Telegram-channel portfolio: real, stable public posts from Telegram's
+    // own official channel so the embedded-post showcase renders live media out of
+    // the box. Real creators replace these with their own channel + post links.
+    telegramChannel: "telegram",
+    telegramPosts: [
+      "https://t.me/telegram/357",
+      "https://t.me/telegram/353",
+      "https://t.me/telegram/346",
+    ],
   },
 };
 
@@ -798,6 +807,8 @@ async function main() {
         aiTools: prof.aiTools,
         specializations: prof.specializations,
         instagramUsername: prof.instagramUsername,
+        ...(prof.telegramChannel !== undefined ? { telegramChannel: prof.telegramChannel } : {}),
+        ...(prof.telegramPosts !== undefined ? { telegramPosts: prof.telegramPosts } : {}),
       };
       await prisma.sellerProfile.upsert({
         where: { userId: s.id },

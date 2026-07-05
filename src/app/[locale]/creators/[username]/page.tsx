@@ -10,6 +10,7 @@ import { FollowButton } from "@/components/follow-button";
 import { ShareButton } from "@/components/share-button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { InstagramShowcase } from "@/components/instagram-showcase";
+import { TelegramShowcase } from "@/components/telegram-showcase";
 import { specLabel } from "@/lib/specializations";
 import { badgeDef, badgeLabel } from "@/lib/badges";
 import { getUserBadges } from "@/server/services/gamification";
@@ -163,6 +164,9 @@ export default async function CreatorProfilePage({
         items={showcaseItems}
         handle={igItems.length ? (profile?.instagramUsername ?? null) : null}
       />
+
+      {/* Telegram-channel portfolio — live embedded posts (image/video/album) */}
+      <TelegramShowcase posts={profile?.telegramPosts ?? []} channel={profile?.telegramChannel ?? null} />
 
       {(profile?.specializations?.length ?? 0) > 0 && (
         <div className="mb-8">

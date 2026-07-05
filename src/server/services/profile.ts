@@ -6,6 +6,7 @@ import { stripContactInfo } from "@/lib/sanitize";
 import { computeSellerLevel } from "@/lib/seller-level";
 import { sanitizeSpecKeys } from "@/lib/specializations";
 import { provenSpecKeys } from "@/lib/niche-evidence";
+import { normalizeTelegramChannel, normalizeTelegramPost } from "@/lib/telegram-link";
 
 const PORTFOLIO_MAX = 12;
 
@@ -152,6 +153,8 @@ export interface ProfileInput {
   aiTools?: string[];
   specializations?: string[];
   instagramUsername?: string;
+  telegramChannel?: string;
+  telegramPosts?: string[];
 }
 
 /** Update the caller's own seller profile (level/rating excluded — job-set only). Bio/headline sanitized. */
@@ -168,6 +171,17 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
       ? {
           instagramUsername:
             input.instagramUsername.replace(/[^A-Za-z0-9._]/g, "").slice(0, 30) || null,
+        }
+      : {}),
+    ...(input.telegramChannel !== undefined
+      ? { telegramChannel: input.telegramChannel.trim() ? normalizeTelegramChannel(input.telegramChannel) : null }
+      : {}),
+    ...(input.telegramPosts !== undefined
+      ? {
+          // Keep only valid, de-duplicated public post links; cap at PORTFOLIO_MAX.
+          telegramPosts: Array.from(
+            new Set(input.telegramPosts.map(normalizeTelegramPost).filter((x): x is string => x !== null))
+          ).slice(0, PORTFOLIO_MAX),
         }
       : {}),
   };

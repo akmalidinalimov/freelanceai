@@ -304,6 +304,11 @@ model SellerProfile {
   aiTools         String[]    @default([])
   specializations String[]    @default([])
   instagramUsername String?
+  // Telegram-channel portfolio: an optional channel handle (for a "follow" link)
+  // plus a list of public post links (t.me/<channel>/<id>) embedded on the profile
+  // as live Telegram posts — the common "my Telegram channel is my portfolio" case.
+  telegramChannel String?
+  telegramPosts   String[] @default([])
   // Instagram sync (Business Login). Token stored encrypted (pii-crypto).
   instagramUserId        String?
   instagramTokenEnc      String?

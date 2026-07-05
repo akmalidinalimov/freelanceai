@@ -690,5 +690,16 @@
     "accept": "Принять",
     "decline": "Отклонить",
     "learnMore": "Подробнее"
+  },
+  "Telegram": {
+    "portfolio": "Telegram-портфолио",
+    "editHint": "Добавьте ссылки на посты вашего Telegram-канала — фото и видео покажутся здесь вживую.",
+    "channel": "Telegram-канал",
+    "channelHint": "@канал или t.me/канал",
+    "posts": "Ссылки на посты",
+    "postsHint": "Отдельная ссылка на каждый пост. Например: https://t.me/kanal/123",
+    "removePost": "Удалить ссылку",
+    "followChannel": "Подписаться на канал",
+    "postTitle": "Пост Telegram {n}"
   }
 }
