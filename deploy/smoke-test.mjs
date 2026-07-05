@@ -60,6 +60,8 @@ const CHECKS = [
   { group: "Guards", name: "admin user detail gated", method: "GET", path: "/uz/admin/users/abc", expect: 307 },
   { group: "Guards", name: "messages inbox gated", method: "GET", path: "/uz/messages", expect: 307 },
   { group: "Guards", name: "edit profile gated", method: "GET", path: "/uz/dashboard/seller/profile", expect: 307 },
+  // 404 tolerated during the container-swap window (route new; drops to 307 once the deployed SHA catches up).
+  { group: "Guards", name: "portfolio hub gated", method: "GET", path: "/uz/dashboard/seller/portfolio", expect: [307, 404] },
   { group: "Guards", name: "settings gated", method: "GET", path: "/uz/dashboard/settings", expect: 307 },
 
   // --- API endpoints reject unauthenticated (401) ---

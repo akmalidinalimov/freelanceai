@@ -49,6 +49,11 @@ export default async function SellerDashboardPage({
   // Onboarding checklist (computed from existing data; hidden once complete).
   const checklist = [
     { key: "profile", done: Boolean(profile?.headline || profile?.bio), href: "/dashboard/seller/profile" },
+    {
+      key: "portfolio",
+      done: Boolean((profile?.portfolio?.length ?? 0) > 0 || profile?.telegramChannel || profile?.instagramUserId),
+      href: "/dashboard/seller/portfolio",
+    },
     { key: "gig", done: gigs.length > 0, href: "/dashboard/seller/gigs/new" },
     { key: "active", done: gigs.some((g) => g.status === "ACTIVE"), href: "/dashboard/seller" },
     { key: "sale", done: stats.completed > 0, href: "/dashboard/seller" },
@@ -78,6 +83,9 @@ export default async function SellerDashboardPage({
           </Link>
           <Link href="/dashboard/seller/profile">
             <Button variant="ghost">{tp("editTitle")}</Button>
+          </Link>
+          <Link href="/dashboard/seller/portfolio">
+            <Button variant="ghost">{tp("portfolio")}</Button>
           </Link>
           <Link href="/dashboard">
             <Button variant="ghost">{t("buyerView")}</Button>

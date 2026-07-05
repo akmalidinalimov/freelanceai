@@ -259,6 +259,7 @@
     "statConversion": "Konversiya",
     "checklistTitle": "Ishni boshlash",
     "ck_profile": "Profilingizni toʻldiring",
+    "ck_portfolio": "Portfolioni qoʻshing",
     "ck_gig": "Birinchi xizmatingizni yarating",
     "ck_active": "Xizmat tasdiqlansin (faol)",
     "ck_sale": "Birinchi sotuvni amalga oshiring",
@@ -602,7 +603,15 @@
     "bannerRemove": "Oʻchirish",
     "bannerType": "Faqat rasm (JPG/PNG/WebP) yoki video (MP4/WebM)",
     "bannerSize": "Fayl juda katta (rasm ≤8MB, video ≤40MB)",
-    "bannerError": "Yuklashda xatolik. Qayta urinib koʻring."
+    "bannerError": "Yuklashda xatolik. Qayta urinib koʻring.",
+    "portfolioEmptyTitle": "Portfoliongiz hozircha boʻsh",
+    "portfolioEmptyHint": "Ishlaringizni koʻrsating — Instagram’ni ulang, Telegram kanalingizni qoʻshing yoki rasm/video yuklang.",
+    "portfolioManage": "Portfolioni boshqarish",
+    "portfolioHubTitle": "Portfolio",
+    "portfolioHubIntro": "Ishlaringizni bir joyda boshqaring. Istalgan manbani tanlang — hech biri majburiy emas.",
+    "portfolioUploadTitle": "Rasm va videolar",
+    "portfolioHint": "Eng yaxshi ishlaringizni toʻgʻridan-toʻgʻri yuklang — 12 tagacha rasm.",
+    "portfolioBack": "Panelga qaytish"
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",

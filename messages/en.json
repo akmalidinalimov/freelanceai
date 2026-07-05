@@ -259,6 +259,7 @@
     "statConversion": "Conversion",
     "checklistTitle": "Getting started",
     "ck_profile": "Complete your profile",
+    "ck_portfolio": "Add your portfolio",
     "ck_gig": "Create your first gig",
     "ck_active": "Get a gig approved (active)",
     "ck_sale": "Make your first sale",
@@ -602,7 +603,15 @@
     "bannerRemove": "Remove",
     "bannerType": "Image (JPG/PNG/WebP) or video (MP4/WebM) only",
     "bannerSize": "File too large (image ≤8MB, video ≤40MB)",
-    "bannerError": "Upload failed. Please try again."
+    "bannerError": "Upload failed. Please try again.",
+    "portfolioEmptyTitle": "Your portfolio is empty",
+    "portfolioEmptyHint": "Show your work — connect Instagram, add your Telegram channel, or upload images/videos.",
+    "portfolioManage": "Manage portfolio",
+    "portfolioHubTitle": "Portfolio",
+    "portfolioHubIntro": "Manage your work in one place. Pick any source — none are required.",
+    "portfolioUploadTitle": "Images & videos",
+    "portfolioHint": "Upload your best work directly — up to 12 images.",
+    "portfolioBack": "Back to dashboard"
   },
   "Instagram": {
     "connect": "Connect Instagram",

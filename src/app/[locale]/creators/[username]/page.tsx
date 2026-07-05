@@ -10,7 +10,7 @@ import { ContactSellerButton } from "@/components/contact-seller-button";
 import { FollowButton } from "@/components/follow-button";
 import { ShareButton } from "@/components/share-button";
 import { VerifiedBadge } from "@/components/verified-badge";
-import { InstagramShowcase } from "@/components/instagram-showcase";
+import { PortfolioShowcase } from "@/components/portfolio-showcase";
 import { TelegramShowcase } from "@/components/telegram-showcase";
 import { ProfileBanner } from "@/components/profile-banner";
 import { coverVariant } from "@/lib/cover-variant";
@@ -47,7 +47,6 @@ export default async function CreatorProfilePage({
   setRequestLocale(locale);
   const t = await getTranslations("Profile");
   const tg = await getTranslations("Gig");
-  const ti = await getTranslations("Instagram");
 
   const data = await getPublicProfile(username);
   if (!data) notFound();
@@ -66,15 +65,16 @@ export default async function CreatorProfilePage({
   // IG media, their manual uploads flow through the same showcase so every
   // profile leads with a living film strip — it upgrades to real Instagram
   // automatically once the sync goes live.
-  const igItems = (profile?.portfolio ?? [])
-    .filter((p) => p.source === "instagram")
-    .map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, permalink: p.permalink, caption: p.caption }));
-  const uploads = (profile?.portfolio ?? []).filter((p) => p.source !== "instagram");
-  const showcaseItems = igItems.length
-    ? igItems
-    : uploads.map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, permalink: null, caption: p.caption }));
-  // Uploads promoted into the showcase don't repeat in the gallery below.
-  const uploadItems = igItems.length ? uploads : [];
+  // Unified Portfolio: merge the creator's manual uploads + synced Instagram into ONE
+  // grid (each tile keeps its source for the badge). Telegram posts render separately.
+  const allPortfolio = profile?.portfolio ?? [];
+  const igItems = allPortfolio.filter((p) => p.source === "instagram");
+  const uploads = allPortfolio.filter((p) => p.source !== "instagram");
+  const portfolioItems = [
+    ...uploads.map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, permalink: p.permalink, caption: p.caption, source: "upload" })),
+    ...igItems.map((p) => ({ id: p.id, mediaUrl: p.mediaUrl, mediaType: p.mediaType, permalink: p.permalink, caption: p.caption, source: "instagram" })),
+  ];
+  const igHandle = igItems.length ? (profile?.instagramUsername ?? null) : null;
 
   // Telegram portfolio (Masonry): manually-pinned post links show first, then the
   // channel's latest posts auto-fetched from its public preview (deduped). Enter a
@@ -190,14 +190,25 @@ export default async function CreatorProfilePage({
           )}
       </div>
 
-      {/* Instagram showcase — zoom-grid beneath the identity */}
-      <InstagramShowcase
-        items={showcaseItems}
-        handle={igItems.length ? (profile?.instagramUsername ?? null) : null}
-      />
+      {/* Portfolio — merged uploads + Instagram in one zoom-grid */}
+      <PortfolioShowcase items={portfolioItems} igHandle={igHandle} />
 
       {/* Telegram-channel portfolio — Masonry of live embedded posts (pinned + auto-fetched) */}
       <TelegramShowcase posts={tgPosts} channel={profile?.telegramChannel ?? null} />
+
+      {/* Owner empty-state: nudge the creator to add their work (any source) if empty. */}
+      {viewer === "owner" && portfolioItems.length === 0 && tgPosts.length === 0 && (
+        <div className="mb-8 rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--surface-2))]/40 p-6 text-center">
+          <p className="font-semibold">{t("portfolioEmptyTitle")}</p>
+          <p className="mx-auto mt-1 max-w-md text-sm text-[hsl(var(--muted-foreground))]">{t("portfolioEmptyHint")}</p>
+          <Link
+            href="/dashboard/seller/portfolio"
+            className="mt-3 inline-flex items-center rounded-full bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))]"
+          >
+            {t("portfolioManage")}
+          </Link>
+        </div>
+      )}
 
       {(profile?.specializations?.length ?? 0) > 0 && (
         <div className="mb-8">
@@ -271,64 +282,6 @@ export default async function CreatorProfilePage({
         </div>
       )}
 
-      {/* Portfolio — manual uploads only (Instagram-synced items are in the showcase above) */}
-      {uploadItems.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold">{t("portfolio")}</h2>
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
-            {uploadItems.map((p) => {
-              const fromIg = p.source === "instagram";
-              const isVideo = p.mediaType === "video";
-              const media = (
-                <span className="relative block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.mediaUrl}
-                    alt={p.caption ?? ""}
-                    loading="lazy"
-                    className="aspect-square w-full object-cover"
-                  />
-                  {isVideo && (
-                    <span
-                      aria-hidden
-                      className="absolute inset-0 flex items-center justify-center"
-                    >
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 pl-0.5 text-lg text-white backdrop-blur-sm">
-                        ▶
-                      </span>
-                    </span>
-                  )}
-                </span>
-              );
-              return (
-                <figure
-                  key={p.id}
-                  className="w-40 shrink-0 snap-start overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] sm:w-48"
-                >
-                  {/* Video: the image is the poster; the permalink is the playable source. */}
-                  {isVideo && p.permalink ? (
-                    <a href={p.permalink} target="_blank" rel="noopener noreferrer">
-                      {media}
-                    </a>
-                  ) : (
-                    media
-                  )}
-                  {fromIg && p.permalink && (
-                    <a
-                      href={p.permalink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block truncate px-2 py-1.5 text-[11px] font-medium text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      ↗ {ti("viewOnInstagram")}
-                    </a>
-                  )}
-                </figure>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Their gigs */}
       <h2 className="mb-4 text-xl font-semibold">{t("services")}</h2>

@@ -259,6 +259,7 @@
     "statConversion": "Конверсия",
     "checklistTitle": "Начало работы",
     "ck_profile": "Заполните профиль",
+    "ck_portfolio": "Добавьте портфолио",
     "ck_gig": "Создайте первую услугу",
     "ck_active": "Услуга одобрена (активна)",
     "ck_sale": "Совершите первую продажу",
@@ -602,7 +603,15 @@
     "bannerRemove": "Удалить",
     "bannerType": "Только изображение (JPG/PNG/WebP) или видео (MP4/WebM)",
     "bannerSize": "Файл слишком большой (изобр. ≤8МБ, видео ≤40МБ)",
-    "bannerError": "Ошибка загрузки. Попробуйте ещё раз."
+    "bannerError": "Ошибка загрузки. Попробуйте ещё раз.",
+    "portfolioEmptyTitle": "Ваше портфолио пока пустое",
+    "portfolioEmptyHint": "Покажите свои работы — подключите Instagram, добавьте Telegram-канал или загрузите фото/видео.",
+    "portfolioManage": "Управлять портфолио",
+    "portfolioHubTitle": "Портфолио",
+    "portfolioHubIntro": "Управляйте своими работами в одном месте. Выберите любой источник — ни один не обязателен.",
+    "portfolioUploadTitle": "Фото и видео",
+    "portfolioHint": "Загрузите лучшие работы напрямую — до 12 изображений.",
+    "portfolioBack": "Назад в панель"
   },
   "Instagram": {
     "connect": "Подключить Instagram",
