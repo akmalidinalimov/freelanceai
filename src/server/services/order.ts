@@ -152,7 +152,11 @@ export function listBuyerOrders(buyerId: string) {
   return prisma.order.findMany({
     where: { buyerId },
     orderBy: { createdAt: "desc" },
-    include: { gig: { select: { title: true, slug: true } } },
+    include: {
+      gig: { select: { title: true, slug: true } },
+      seller: { select: { firstName: true, name: true, username: true } },
+      review: { select: { id: true } },
+    },
   });
 }
 
@@ -160,7 +164,10 @@ export function listSellerOrders(sellerId: string) {
   return prisma.order.findMany({
     where: { sellerId },
     orderBy: { createdAt: "desc" },
-    include: { gig: { select: { title: true, slug: true } } },
+    include: {
+      gig: { select: { title: true, slug: true } },
+      buyer: { select: { firstName: true, name: true, username: true } },
+    },
   });
 }
 

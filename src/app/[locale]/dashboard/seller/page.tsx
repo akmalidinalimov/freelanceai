@@ -12,10 +12,11 @@ import { GamificationStrip } from "@/components/gamification-strip";
 import { myWeeklyRank } from "@/server/services/engagement";
 import { getOwnProfile } from "@/server/services/profile";
 import { formatUzs } from "@/lib/utils";
+import { xpLevel } from "@/lib/badges";
 import { PayoutRequestButton } from "@/components/payout-request-button";
-import { StatTile } from "@/components/stat-tile";
-import { StatusChip } from "@/components/status-chip";
-import { cardClass } from "@/components/ui/card";
+import { PriorityStrip, type PriorityItem } from "@/components/priority-strip";
+import { FocusOrderRow } from "@/components/focus-order-row";
+import { orderDueMeta, displayName, initialOf } from "@/lib/order-due";
 
 export default async function SellerDashboardPage({
   params,
@@ -46,6 +47,9 @@ export default async function SellerDashboardPage({
   const stats = await getSellerStats(user.id);
   const profile = await getOwnProfile(user.id);
 
+  const firstName = user.firstName || user.name || "";
+  const level = xpLevel(user.xp, locale);
+
   // Onboarding checklist (computed from existing data; hidden once complete).
   const checklist = [
     { key: "profile", done: Boolean(profile?.headline || profile?.bio), href: "/dashboard/seller/profile" },
@@ -60,11 +64,66 @@ export default async function SellerDashboardPage({
   ];
   const onboardingComplete = checklist.every((c) => c.done);
 
+  // --- Focus: what needs the seller right now ---
+  const needDelivery = orders.filter((o) => o.status === "IN_PROGRESS" || o.status === "REVISION");
+  const inReview = orders.filter((o) => o.status === "DELIVERED");
+  const activeOrders = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
+
+  const priorities: PriorityItem[] = [];
+  if (needDelivery.length) {
+    const soonest = [...needDelivery].sort(
+      (a, b) => (a.dueAt ? +new Date(a.dueAt) : Infinity) - (b.dueAt ? +new Date(b.dueAt) : Infinity),
+    )[0];
+    const due = orderDueMeta(soonest.status, soonest.dueAt, "seller", t);
+    priorities.push({
+      tone: "warn",
+      tag: t("prioDeliverTag"),
+      title: t("prioDeliverTitle", { n: needDelivery.length }),
+      detail: [due?.text, soonest.gig.title].filter(Boolean).join(" · "),
+      href: "/dashboard/seller#orders",
+      cta: t("prioGoOrders"),
+      ctaTone: "primary",
+    });
+  }
+  if (earnings.availableUzs > 0) {
+    priorities.push({
+      tone: "money",
+      tag: t("prioWithdrawTag"),
+      title: `${formatUzs(earnings.availableUzs)} so'm`,
+      detail: t("prioWithdrawDetail"),
+      href: "/dashboard/seller#earnings",
+      cta: t("prioWithdraw"),
+      ctaTone: "coral",
+    });
+  }
+  if (inReview.length) {
+    priorities.push({
+      tone: "info",
+      tag: t("prioReviewTag"),
+      title: t("prioInReview", { n: inReview.length }),
+      detail: [inReview[0].gig.title, displayName(inReview[0].buyer, t("client"))].join(" · "),
+      href: "/dashboard/seller#orders",
+      cta: t("prioOpen"),
+      ctaTone: "outline",
+    });
+  }
+
+  const quickLink =
+    "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--surface-2))]";
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">{t("creator")}</h1>
-        <div className="flex gap-2">
+        <div>
+          <h1 className="text-3xl font-bold">{firstName ? t("helloName", { name: firstName }) : t("creator")}</h1>
+          <p className="mt-1 flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]">
+            <span>{t("creatorSub")}</span>
+            <span className="rounded-full bg-[hsl(var(--primary))]/12 px-2 py-0.5 text-xs font-semibold text-[hsl(var(--primary-ink))]">
+              {level.label}
+            </span>
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
           {user.role === "ADMIN" && (
             <>
               <Link href="/admin/settlements">
@@ -93,17 +152,8 @@ export default async function SellerDashboardPage({
         </div>
       </div>
 
-      <GamificationStrip
-        locale={locale}
-        xp={user.xp}
-        streakDays={user.streakDays}
-        badges={sellerBadges}
-        completeness={completeness}
-        weeklyRank={weeklyRank}
-      />
-
       {!onboardingComplete && (
-        <div className="mb-4 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">
+        <div className="mb-5 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">
           <h2 className="mb-3 font-semibold">{t("checklistTitle")}</h2>
           <ul className="space-y-2">
             {checklist.map((c) => (
@@ -130,44 +180,95 @@ export default async function SellerDashboardPage({
         </div>
       )}
 
-      {/* Earnings — available balance is the hero; held/lifetime secondary */}
-      <div className="mb-4 grid gap-4 sm:grid-cols-3">
-        <div className={cardClass(false, "p-5 ring-1 ring-inset ring-[hsl(var(--accent))]/30")}>
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("available")}</p>
-          <p className="mt-1 text-3xl font-extrabold tabular-nums">
-            {formatUzs(earnings.availableUzs)}{" "}
-            <span className="text-base font-normal text-[hsl(var(--muted-foreground))]">so&apos;m</span>
-          </p>
-        </div>
-        <StatTile
-          label={t("held")}
-          value={
-            <>
-              {formatUzs(earnings.heldUzs)}{" "}
-              <span className="text-sm font-normal text-[hsl(var(--muted-foreground))]">so&apos;m</span>
-            </>
-          }
-        />
-        <StatTile
-          label={t("lifetime")}
-          value={
-            <>
-              {formatUzs(earnings.lifetimeUzs)}{" "}
-              <span className="text-sm font-normal text-[hsl(var(--muted-foreground))]">so&apos;m</span>
-            </>
-          }
-        />
-      </div>
+      <PriorityStrip items={priorities} />
 
-      {/* Withdraw available balance */}
-      <div className="mb-4">
-        <PayoutRequestButton availableUzs={earnings.availableUzs} />
+      {/* Work + money */}
+      <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+        <div
+          id="orders"
+          className="scroll-mt-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+              {t("ordersToFulfill")}
+            </h2>
+          </div>
+          {activeOrders.length === 0 ? (
+            <p className="py-6 text-center text-sm text-[hsl(var(--muted-foreground))]">{to("noSellerOrders")}</p>
+          ) : (
+            <ul>
+              {activeOrders.slice(0, 8).map((o, i) => (
+                <FocusOrderRow
+                  key={o.id}
+                  href={`/orders/${o.id}`}
+                  title={o.gig.title}
+                  status={o.status}
+                  statusLabel={to(`status.${o.status}`)}
+                  due={orderDueMeta(o.status, o.dueAt, "seller", t)}
+                  counterpart={displayName(o.buyer, t("client"))}
+                  initial={initialOf(displayName(o.buyer, t("client")))}
+                  amountUzs={o.amountUzs}
+                  variant={i}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="grid content-start gap-4">
+          <div
+            id="earnings"
+            className="scroll-mt-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5"
+          >
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+              {t("available")}
+            </h2>
+            <p className="text-3xl font-extrabold tabular-nums">
+              {formatUzs(earnings.availableUzs)}{" "}
+              <span className="text-base font-normal text-[hsl(var(--muted-foreground))]">so&apos;m</span>
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-[hsl(var(--surface-2))] px-3 py-2.5">
+                <p className="text-lg font-bold tabular-nums">{formatUzs(earnings.heldUzs)}</p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">{t("held")}</p>
+              </div>
+              <div className="rounded-xl bg-[hsl(var(--surface-2))] px-3 py-2.5">
+                <p className="text-lg font-bold tabular-nums">{formatUzs(earnings.lifetimeUzs)}</p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">{t("lifetime")}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <PayoutRequestButton availableUzs={earnings.availableUzs} />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3">
+            <h2 className="px-2 pb-1 pt-1 text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+              {t("quickActions")}
+            </h2>
+            <Link href="/dashboard/seller/gigs/new" className={quickLink}>
+              <span>{tg("createGig")}</span>
+              <span aria-hidden>→</span>
+            </Link>
+            <Link href="/dashboard/seller/portfolio" className={quickLink}>
+              <span>{tp("portfolio")}</span>
+              <span aria-hidden>→</span>
+            </Link>
+            <Link href="#analytics" className={quickLink}>
+              <span>{t("analytics")}</span>
+              <span aria-hidden>↓</span>
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Gigs */}
-      <div id="gigs" className="mb-4 scroll-mt-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+      <div
+        id="gigs"
+        className="mt-4 scroll-mt-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5"
+      >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold">{t("gigs")}</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">{t("gigs")}</h2>
           <Link href="/dashboard/seller/gigs/new">
             <Button size="sm">{tg("createGig")}</Button>
           </Link>
@@ -184,9 +285,7 @@ export default async function SellerDashboardPage({
                     {g.title}
                   </Link>
                   <span className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
-                    <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">
-                      {g.status}
-                    </span>
+                    <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">{g.status}</span>
                     <span
                       className="hidden tabular-nums text-xs sm:inline"
                       title={`${g.views} ${tg("views")} · ${g._count.orders} ${t("statOrders")}`}
@@ -205,31 +304,14 @@ export default async function SellerDashboardPage({
         )}
       </div>
 
-      {/* Orders to fulfill */}
-      <div id="orders" className="mb-4 scroll-mt-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
-        <h2 className="mb-3 font-semibold">{t("orders")}</h2>
-        {orders.length === 0 ? (
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">{to("noSellerOrders")}</p>
-        ) : (
-          <ul className="divide-y divide-[hsl(var(--border))]">
-            {orders.map((o) => (
-              <li key={o.id} className="flex items-center justify-between py-3">
-                <Link href={`/orders/${o.id}`} className="font-medium hover:underline">
-                  {o.gig.title}
-                </Link>
-                <span className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
-                  <StatusChip status={o.status} label={to(`status.${o.status}`)} />
-                  <span className="tabular-nums">{formatUzs(o.amountUzs)} so&apos;m</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
       {/* Analytics */}
-      <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
-        <h2 className="mb-3 font-semibold">{t("analytics")}</h2>
+      <div
+        id="analytics"
+        className="mt-4 scroll-mt-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5"
+      >
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+          {t("analytics")}
+        </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {[
             { label: t("statViews"), value: stats.views.toLocaleString() },
@@ -249,6 +331,18 @@ export default async function SellerDashboardPage({
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Rewards — the reward you scroll to, not the first thing you see */}
+      <div className="mt-4">
+        <GamificationStrip
+          locale={locale}
+          xp={user.xp}
+          streakDays={user.streakDays}
+          badges={sellerBadges}
+          completeness={completeness}
+          weeklyRank={weeklyRank}
+        />
       </div>
     </div>
   );
