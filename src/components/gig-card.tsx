@@ -71,7 +71,11 @@ export async function GigCard({
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                style={{ objectPosition: v.pos, transform: v.flip ? "scaleX(-1)" : undefined }}
+                style={{
+                  // Creator-chosen focal point wins; else the per-gig de-dupe crop/flip.
+                  objectPosition: gig.coverFocal ?? v.pos,
+                  transform: gig.coverFocal ? undefined : v.flip ? "scaleX(-1)" : undefined,
+                }}
               />
             );
           })()

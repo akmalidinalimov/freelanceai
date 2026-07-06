@@ -64,7 +64,10 @@ export async function SearchGigCard({ match: m }: { match: GigMatch }) {
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            style={{ objectPosition: v.pos, transform: v.flip ? "scaleX(-1)" : undefined }}
+            style={{
+              objectPosition: m.coverFocal ?? v.pos,
+              transform: m.coverFocal ? undefined : v.flip ? "scaleX(-1)" : undefined,
+            }}
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element

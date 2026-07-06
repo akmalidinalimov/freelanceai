@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { listFeaturedCreators, countActiveCreators, listRecentActivity } from "@/server/services/browse";
-import { listFeaturedGigs } from "@/server/services/gig";
+import { listFeaturedGigs, listPublicGigs } from "@/server/services/gig";
 import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { FeaturedGigLoop } from "@/components/featured-gig-loop";
@@ -43,19 +43,33 @@ export default async function HomePage({
   const creatorCount = await countActiveCreators().catch(() => 0);
   const activity = await listRecentActivity().catch(() => []);
   // Featured-gig loop replaces the vanity stat counters — real work on landing.
-  // Quality gate: only featured gigs that actually have a cover image.
+  // Quality gate: only gigs that actually have a cover image. Featured first; if too few
+  // are featured, backfill with the newest covered gigs so the loop is never empty.
+  type GigWithSeller = {
+    slug: string; title: string; coverUrl: string | null; coverFocal: string | null;
+    seller: { firstName: string | null; name: string | null; username: string | null; image: string | null; photoUrl: string | null; sellerProfile: { ratingAvg: number; ratingCount: number } | null };
+  };
+  const toFeatured = (g: GigWithSeller) => ({
+    slug: g.slug,
+    title: g.title,
+    coverUrl: g.coverUrl,
+    coverFocal: g.coverFocal ?? null,
+    sellerName: g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "",
+    sellerAvatar: g.seller.image ?? g.seller.photoUrl ?? null,
+    ratingAvg: g.seller.sellerProfile?.ratingAvg ?? 0,
+    ratingCount: g.seller.sellerProfile?.ratingCount ?? 0,
+  });
   const featuredGigs = (await listFeaturedGigs(8).catch(() => []))
     .filter((g) => g.coverUrl)
-    .map((g) => ({
-      slug: g.slug,
-      title: g.title,
-      coverUrl: g.coverUrl,
-      coverFocal: g.coverFocal ?? null,
-      sellerName: g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "",
-      sellerAvatar: g.seller.image ?? g.seller.photoUrl ?? null,
-      ratingAvg: g.seller.sellerProfile?.ratingAvg ?? 0,
-      ratingCount: g.seller.sellerProfile?.ratingCount ?? 0,
-    }));
+    .map(toFeatured);
+  if (featuredGigs.length < 6) {
+    const seen = new Set(featuredGigs.map((g) => g.slug));
+    const backfill = (await listPublicGigs({ take: 12 }).catch(() => []))
+      .filter((g) => g.coverUrl && !seen.has(g.slug))
+      .map(toFeatured);
+    featuredGigs.push(...backfill);
+  }
+  const showcaseGigs = featuredGigs.slice(0, 8);
   const tickerItems = activity.map((e) =>
     e.type === "delivered"
       ? t("tickerDelivered", { name: e.name, title: e.extra })
@@ -102,7 +116,7 @@ export default async function HomePage({
         </section>
 
         {/* Featured-gig loop — real work rotating (replaces vanity stat counters) */}
-        <FeaturedGigLoop gigs={featuredGigs} />
+        <FeaturedGigLoop gigs={showcaseGigs} />
 
         {/* Categories */}
         <section className="py-6">

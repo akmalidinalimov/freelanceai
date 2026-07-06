@@ -432,6 +432,8 @@
     "uploading": "Yuklanmoqda...",
     "mediaType": "Faqat rasm (jpg, png, webp).",
     "mediaSize": "Rasm 8MB dan kichik boʻlsin.",
+    "mediaTooSmall": "Rasm juda kichik. Kamida {min}px boʻlsin.",
+    "coverSizeHint": "Kamida 800px, aniq rasm",
     "mediaError": "Yuklashda xatolik.",
     "searchPh": "Xizmat qidirish...",
     "allCategories": "Barcha yoʻnalishlar",

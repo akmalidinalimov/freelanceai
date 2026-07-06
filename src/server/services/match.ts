@@ -319,6 +319,7 @@ export interface GigMatch {
   slug: string;
   title: string;
   coverUrl: string | null;
+  coverFocal: string | null;
   categorySlug: string | null;
   seller: {
     sellerId: string;
@@ -478,6 +479,7 @@ export async function matchGigs(
       slug: true,
       title: true,
       coverUrl: true,
+      coverFocal: true,
       tags: true,
       featured: true,
       sellerId: true,
@@ -613,6 +615,7 @@ export async function matchGigs(
       slug: g.slug,
       title: g.title,
       coverUrl: g.coverUrl,
+      coverFocal: g.coverFocal ?? null,
       categorySlug: g.category?.slug ?? null,
       seller: {
         sellerId: g.seller!.id,

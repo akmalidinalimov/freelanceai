@@ -432,6 +432,8 @@
     "uploading": "Загрузка...",
     "mediaType": "Только изображения (jpg, png, webp).",
     "mediaSize": "Файл должен быть меньше 8 МБ.",
+    "mediaTooSmall": "Изображение слишком маленькое. Минимум {min}px.",
+    "coverSizeHint": "Минимум 800px, чёткое фото",
     "mediaError": "Ошибка загрузки.",
     "searchPh": "Поиск услуг...",
     "allCategories": "Все категории",

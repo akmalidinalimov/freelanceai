@@ -4,7 +4,25 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 const MAX_IMAGE = 8 * 1024 * 1024;
+const MIN_EDGE = 800; // reject covers too small to look crisp in cards / featured loop
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
+
+/** Read an image's natural dimensions client-side (0×0 on failure). */
+function imageDims(file: File): Promise<{ w: number; h: number }> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      resolve({ w: img.naturalWidth, h: img.naturalHeight });
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      resolve({ w: 0, h: 0 });
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
 
 /** Single-image uploader: presign → PUT to R2 → returns the public URL. */
 export function MediaUpload({
@@ -27,6 +45,11 @@ export function MediaUpload({
     }
     if (file.size > MAX_IMAGE) {
       setError(t("mediaSize"));
+      return;
+    }
+    const { w, h } = await imageDims(file);
+    if (w && h && Math.min(w, h) < MIN_EDGE) {
+      setError(t("mediaTooSmall", { min: MIN_EDGE }));
       return;
     }
     setBusy(true);
@@ -62,7 +85,10 @@ export function MediaUpload({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">{t("cover")}</span>
+      <span className="flex items-center justify-between text-sm font-medium">
+        {t("cover")}
+        <span className="text-xs font-normal text-[hsl(var(--muted-foreground))]">{t("coverSizeHint")}</span>
+      </span>
       <div
         role="button"
         tabIndex={0}

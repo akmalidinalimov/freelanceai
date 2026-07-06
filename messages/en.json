@@ -432,6 +432,8 @@
     "uploading": "Uploading...",
     "mediaType": "Images only (jpg, png, webp).",
     "mediaSize": "Image must be under 8 MB.",
+    "mediaTooSmall": "Image is too small. At least {min}px on each side.",
+    "coverSizeHint": "Min 800px, sharp image",
     "mediaError": "Upload failed.",
     "searchPh": "Search services...",
     "allCategories": "All categories",
