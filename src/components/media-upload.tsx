@@ -24,13 +24,15 @@ function imageDims(file: File): Promise<{ w: number; h: number }> {
   });
 }
 
-/** Single-image uploader: presign → PUT to R2 → returns the public URL. */
+/** Single-image uploader: presign → PUT to R2 → returns the public URL.
+ * Also reports the cover's native pixel dimensions so surfaces can render it at its
+ * true aspect ratio (no forced crop). `dims` is undefined when the cover is cleared. */
 export function MediaUpload({
   value,
   onChange,
 }: {
   value?: string;
-  onChange: (url: string | undefined) => void;
+  onChange: (url: string | undefined, dims?: { w: number; h: number }) => void;
 }) {
   const t = useTranslations("Gig");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +54,7 @@ export function MediaUpload({
       setError(t("mediaTooSmall", { min: MIN_EDGE }));
       return;
     }
+    const dims = w && h ? { w, h } : undefined;
     setBusy(true);
     try {
       const r = await fetch("/api/media/presign", {
@@ -75,7 +78,7 @@ export function MediaUpload({
         setBusy(false);
         return;
       }
-      onChange(j.data.publicUrl);
+      onChange(j.data.publicUrl, dims);
     } catch {
       setError(t("mediaError"));
     } finally {
@@ -125,7 +128,7 @@ export function MediaUpload({
       {value && (
         <button
           type="button"
-          onClick={() => onChange(undefined)}
+          onClick={() => onChange(undefined, undefined)}
           className="self-start text-xs text-[hsl(var(--danger))] underline"
         >
           {t("removeCover")}

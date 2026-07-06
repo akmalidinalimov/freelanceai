@@ -384,6 +384,11 @@ model Gig {
   // Focal point as a CSS object-position ("x% y%") so any frame (4:5 featured, 16:9 card)
   // crops the cover sensibly around what the creator chose. Null = center.
   coverFocal  String?
+  // Native cover pixel dimensions, captured at upload. Let cards/hero render the cover at
+  // its true aspect ratio (no forced crop) with zero layout shift. Null = legacy/unknown →
+  // surfaces fall back to a fixed frame + focal.
+  coverW      Int?
+  coverH      Int?
   galleryUrls String[]  @default([])
   faq         Json?     // [{ q, a }] seller-managed FAQ
   requirementPrompts Json? // ["question", ...] structured requirement questions

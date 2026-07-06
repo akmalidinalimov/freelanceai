@@ -46,6 +46,8 @@ export interface CreateGigInput {
   description: string;
   coverUrl?: string;
   coverFocal?: string;
+  coverW?: number;
+  coverH?: number;
   galleryUrls?: string[];
   categoryId?: string;
   tags?: string[];
@@ -75,6 +77,13 @@ function normalizeFocal(focal?: string): string | null {
   return `${x}% ${y}%`;
 }
 
+/** Cover pixel dimension: a sane positive integer, else null (unknown → fixed-frame fallback). */
+function normalizeDim(n?: number): number | null {
+  if (typeof n !== "number" || !Number.isFinite(n)) return null;
+  const v = Math.round(n);
+  return v > 0 && v <= 30000 ? v : null;
+}
+
 /** Lowercase + de-dupe tags so they match the (lowercased) search/evidence term set. */
 function normalizeTags(tags?: string[]): string[] {
   return [...new Set((tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
@@ -98,6 +107,8 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       description,
       coverUrl: input.coverUrl || null,
       coverFocal: normalizeFocal(input.coverFocal),
+      coverW: input.coverUrl ? normalizeDim(input.coverW) : null,
+      coverH: input.coverUrl ? normalizeDim(input.coverH) : null,
       galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
       faq: faq.length ? faq : undefined,
       requirementPrompts: cleanPrompts(input.requirementPrompts),
@@ -170,6 +181,8 @@ export async function updateGig(gigId: string, user: GigActor, input: CreateGigI
         description,
         coverUrl: input.coverUrl || null,
         coverFocal: normalizeFocal(input.coverFocal),
+        coverW: input.coverUrl ? normalizeDim(input.coverW) : null,
+        coverH: input.coverUrl ? normalizeDim(input.coverH) : null,
         galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
         categoryId: input.categoryId || null,
         tags: normalizeTags(input.tags),

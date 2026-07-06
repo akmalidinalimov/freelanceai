@@ -170,10 +170,11 @@ export default async function GigsPage({
           {...(hasFilters ? { ctaLabel: tg("clearAll"), ctaHref: "/gigs" } : {})}
         />
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        // Masonry: covers keep their native shape (9:16 / 16:9 / …) — packed, never cropped.
+        <ul className="columns-1 gap-4 [column-fill:_balance] sm:columns-2 lg:columns-3">
           {gigs.map((g) => (
-            <li key={g.id}>
-              <GigCard gig={g} locale={locale} saved={savedSet.has(g.id)} isGuest={!me} />
+            <li key={g.id} className="mb-4 break-inside-avoid">
+              <GigCard gig={g} locale={locale} saved={savedSet.has(g.id)} isGuest={!me} adaptive />
             </li>
           ))}
         </ul>

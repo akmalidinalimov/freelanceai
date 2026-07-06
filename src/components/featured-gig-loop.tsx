@@ -10,6 +10,8 @@ export interface FeaturedGigItem {
   title: string;
   coverUrl: string | null;
   coverFocal: string | null;
+  coverW: number | null;
+  coverH: number | null;
   sellerName: string;
   sellerAvatar: string | null;
   ratingAvg: number;
@@ -18,8 +20,10 @@ export interface FeaturedGigItem {
 
 /**
  * Rotating featured-gig spotlight — replaces the vanity stat counters on the home hero.
- * A 4:5 card cross-fades through real featured gigs so visitors see actual work on landing.
- * The stored focal point frames each cover; auto-advance pauses under reduced-motion.
+ * A 9:16 vertical "phone-reel" card cross-fades through real featured gigs — the format
+ * people actually see in Telegram / Reels here. Vertical & square covers fill the frame;
+ * a landscape (16:9) cover is shown whole over a blurred fill so nothing is cropped.
+ * The stored focal point frames each fill; auto-advance pauses under reduced-motion.
  */
 export function FeaturedGigLoop({ gigs }: { gigs: FeaturedGigItem[] }) {
   const t = useTranslations("Home");
@@ -45,8 +49,13 @@ export function FeaturedGigLoop({ gigs }: { gigs: FeaturedGigItem[] }) {
         {t("featuredTitle")}
       </div>
 
-      <div className="relative mx-auto aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--muted))] shadow-[var(--shadow-hover)]">
-        {gigs.map((g, i) => (
+      <div className="relative mx-auto aspect-[9/16] w-full max-w-[300px] overflow-hidden rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--muted))] shadow-[var(--shadow-hover)]">
+        {gigs.map((g, i) => {
+          const src = g.coverUrl ?? "/prism/pattern-sweep-v2.webp";
+          // A clearly-landscape cover would be butchered by a 9:16 crop → show it whole
+          // over a blurred copy of itself (no crop). Vertical/square/unknown fill the frame.
+          const landscape = !!g.coverW && !!g.coverH && g.coverW > g.coverH * 1.1;
+          return (
           <Link
             key={g.slug}
             href={`/gigs/${g.slug}`}
@@ -56,15 +65,30 @@ export function FeaturedGigLoop({ gigs }: { gigs: FeaturedGigItem[] }) {
               i === active ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={g.coverUrl ?? "/prism/pattern-sweep-v2.webp"}
-              alt={g.title}
-              className="h-full w-full object-cover"
-              style={{ objectPosition: g.coverFocal ?? "center" }}
-              loading={i === 0 ? "eager" : "lazy"}
-              decoding="async"
-            />
+            {landscape ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-125 object-cover blur-2xl brightness-75" decoding="async" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={g.title}
+                  className="absolute left-0 right-0 top-1/2 -translate-y-1/2 w-full object-contain"
+                  loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+              </>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={src}
+                alt={g.title}
+                className="h-full w-full object-cover"
+                style={{ objectPosition: g.coverFocal ?? "center" }}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            )}
             <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pt-10">
               {g.sellerAvatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -92,7 +116,8 @@ export function FeaturedGigLoop({ gigs }: { gigs: FeaturedGigItem[] }) {
               </span>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
 
       {gigs.length > 1 && (

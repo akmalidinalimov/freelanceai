@@ -20,6 +20,8 @@ const schema = z
     description: z.string().min(20).max(5000),
     coverUrl: z.string().url().optional(),
     coverFocal: z.string().max(16).optional(),
+    coverW: z.number().int().positive().max(30000).optional(),
+    coverH: z.number().int().positive().max(30000).optional(),
     galleryUrls: z.array(z.string().url()).max(8).optional(),
     categoryId: z.string().optional(),
     tags: z.array(z.string().min(1).max(30)).max(8).optional(),

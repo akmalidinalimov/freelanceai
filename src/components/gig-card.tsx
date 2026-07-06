@@ -15,11 +15,15 @@ export async function GigCard({
   locale,
   saved = false,
   isGuest = true,
+  adaptive = false,
 }: {
   gig: GigItem;
   locale: string;
   saved?: boolean;
   isGuest?: boolean;
+  /** In a masonry grid: render the cover at its native aspect ratio (no crop) when the
+   *  stored dimensions are known. Falls back to the fixed 16:9 frame otherwise. */
+  adaptive?: boolean;
 }) {
   const tg = await getTranslations("Gig");
   const pkg = gig.packages[0];
@@ -29,6 +33,8 @@ export async function GigCard({
   const avatar = gig.seller.photoUrl ?? gig.seller.image;
   const rating = gig.seller.sellerProfile?.ratingAvg ?? 0;
   const ratingCount = gig.seller.sellerProfile?.ratingCount ?? 0;
+  // Masonry mode: honor the cover's true ratio (no crop) when we know it.
+  const nativeCover = adaptive && !!gig.coverUrl && !!gig.coverW && !!gig.coverH;
 
   return (
     <Link
@@ -50,8 +56,11 @@ export async function GigCard({
         </span>
       </div>
 
-      {/* Viewport (the "page") */}
-      <div className="relative flex aspect-video items-center justify-center overflow-hidden">
+      {/* Viewport (the "page") — native ratio in masonry, else a fixed 16:9 frame */}
+      <div
+        className={`relative overflow-hidden ${nativeCover ? "" : "flex aspect-video items-center justify-center"}`}
+        style={nativeCover ? { aspectRatio: `${gig.coverW} / ${gig.coverH}` } : undefined}
+      >
         <SaveHeart gigId={gig.id} locale={locale} initialSaved={saved} isGuest={isGuest} />
         {gig.featured && (
           <span className="absolute left-2 top-2 z-10 rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--primary-foreground))] shadow-sm">

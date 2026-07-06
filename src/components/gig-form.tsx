@@ -28,6 +28,8 @@ export interface GigInitial {
   tags: string;
   coverUrl?: string;
   coverFocal?: string;
+  coverW?: number;
+  coverH?: number;
   galleryUrls: string[];
   faq: { q: string; a: string }[];
   extras: { title: string; priceUzs: string; deliveryDays: string }[];
@@ -83,6 +85,9 @@ export function GigForm({
   const [tags, setTags] = useState(initial?.tags ?? "");
   const [coverUrl, setCoverUrl] = useState<string | undefined>(initial?.coverUrl);
   const [coverFocal, setCoverFocal] = useState<string | undefined>(initial?.coverFocal);
+  const [coverDims, setCoverDims] = useState<{ w: number; h: number } | undefined>(
+    initial?.coverW && initial?.coverH ? { w: initial.coverW, h: initial.coverH } : undefined
+  );
   const [galleryUrls, setGalleryUrls] = useState<string[]>(initial?.galleryUrls ?? []);
   const [faq, setFaq] = useState<{ q: string; a: string }[]>(initial?.faq ?? []);
   const [extras, setExtras] = useState<{ title: string; priceUzs: string; deliveryDays: string }[]>(
@@ -130,6 +135,8 @@ export function GigForm({
           description: description.trim(),
           coverUrl,
           coverFocal: coverUrl ? coverFocal : undefined,
+          coverW: coverUrl ? coverDims?.w : undefined,
+          coverH: coverUrl ? coverDims?.h : undefined,
           galleryUrls,
           categoryId: categoryId || undefined,
           tags: tags
@@ -242,7 +249,14 @@ export function GigForm({
       {/* 2 — Media: the first visual impression */}
       <Section title={t("secMedia")} desc={t("mediaHint")}>
         <div className="flex flex-col gap-4">
-          <MediaUpload value={coverUrl} onChange={setCoverUrl} />
+          <MediaUpload
+            value={coverUrl}
+            onChange={(url, dims) => {
+              setCoverUrl(url);
+              setCoverDims(dims);
+              if (!url) setCoverFocal(undefined); // clearing the cover resets its framing
+            }}
+          />
           {coverUrl && <FocalPicker src={coverUrl} value={coverFocal} onChange={setCoverFocal} />}
           <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
         </div>
