@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { MediaUpload } from "@/components/media-upload";
 import { GalleryUpload } from "@/components/gallery-upload";
+import { FocalPicker } from "@/components/focal-picker";
 
 interface Category {
   id: string;
@@ -26,6 +27,7 @@ export interface GigInitial {
   categoryId: string;
   tags: string;
   coverUrl?: string;
+  coverFocal?: string;
   galleryUrls: string[];
   faq: { q: string; a: string }[];
   extras: { title: string; priceUzs: string; deliveryDays: string }[];
@@ -80,6 +82,7 @@ export function GigForm({
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
   const [tags, setTags] = useState(initial?.tags ?? "");
   const [coverUrl, setCoverUrl] = useState<string | undefined>(initial?.coverUrl);
+  const [coverFocal, setCoverFocal] = useState<string | undefined>(initial?.coverFocal);
   const [galleryUrls, setGalleryUrls] = useState<string[]>(initial?.galleryUrls ?? []);
   const [faq, setFaq] = useState<{ q: string; a: string }[]>(initial?.faq ?? []);
   const [extras, setExtras] = useState<{ title: string; priceUzs: string; deliveryDays: string }[]>(
@@ -126,6 +129,7 @@ export function GigForm({
           title: title.trim(),
           description: description.trim(),
           coverUrl,
+          coverFocal: coverUrl ? coverFocal : undefined,
           galleryUrls,
           categoryId: categoryId || undefined,
           tags: tags
@@ -239,6 +243,7 @@ export function GigForm({
       <Section title={t("secMedia")} desc={t("mediaHint")}>
         <div className="flex flex-col gap-4">
           <MediaUpload value={coverUrl} onChange={setCoverUrl} />
+          {coverUrl && <FocalPicker src={coverUrl} value={coverFocal} onChange={setCoverFocal} />}
           <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
         </div>
       </Section>

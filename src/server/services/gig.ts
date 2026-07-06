@@ -45,6 +45,7 @@ export interface CreateGigInput {
   title: string;
   description: string;
   coverUrl?: string;
+  coverFocal?: string;
   galleryUrls?: string[];
   categoryId?: string;
   tags?: string[];
@@ -62,6 +63,16 @@ function cleanPrompts(prompts: string[] | undefined): string[] {
     .slice(0, 8)
     .map((p) => stripContactInfo(p).text.slice(0, 200).trim())
     .filter(Boolean);
+}
+
+/** Validate a cover focal point as a CSS object-position "x% y%" (0–100 each); else null. */
+function normalizeFocal(focal?: string): string | null {
+  const m = (focal ?? "").trim().match(/^(\d{1,3}(?:\.\d)?)%\s+(\d{1,3}(?:\.\d)?)%$/);
+  if (!m) return null;
+  const x = Number(m[1]);
+  const y = Number(m[2]);
+  if (x < 0 || x > 100 || y < 0 || y > 100) return null;
+  return `${x}% ${y}%`;
 }
 
 /** Lowercase + de-dupe tags so they match the (lowercased) search/evidence term set. */
@@ -86,6 +97,7 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       slug: uniqueSlug(title),
       description,
       coverUrl: input.coverUrl || null,
+      coverFocal: normalizeFocal(input.coverFocal),
       galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
       faq: faq.length ? faq : undefined,
       requirementPrompts: cleanPrompts(input.requirementPrompts),
@@ -157,6 +169,7 @@ export async function updateGig(gigId: string, user: GigActor, input: CreateGigI
         title,
         description,
         coverUrl: input.coverUrl || null,
+        coverFocal: normalizeFocal(input.coverFocal),
         galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
         categoryId: input.categoryId || null,
         tags: normalizeTags(input.tags),
@@ -371,7 +384,17 @@ function listFeaturedGigsUncached(take = 8) {
     take,
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },
-      seller: { select: { firstName: true, username: true, name: true } },
+      seller: {
+        select: {
+          firstName: true,
+          username: true,
+          name: true,
+          image: true,
+          photoUrl: true,
+          sellerProfile: { select: { ratingAvg: true, ratingCount: true } },
+        },
+      },
+      category: { select: { slug: true } },
     },
   });
 }

@@ -381,6 +381,9 @@ model Gig {
   description String
   tags        String[]  @default([])
   coverUrl    String?
+  // Focal point as a CSS object-position ("x% y%") so any frame (4:5 featured, 16:9 card)
+  // crops the cover sensibly around what the creator chose. Null = center.
+  coverFocal  String?
   galleryUrls String[]  @default([])
   faq         Json?     // [{ q, a }] seller-managed FAQ
   requirementPrompts Json? // ["question", ...] structured requirement questions

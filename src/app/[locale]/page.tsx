@@ -1,8 +1,10 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listFeaturedCreators, countActiveCreators, getHomeStats, listRecentActivity } from "@/server/services/browse";
+import { listFeaturedCreators, countActiveCreators, listRecentActivity } from "@/server/services/browse";
+import { listFeaturedGigs } from "@/server/services/gig";
 import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
+import { FeaturedGigLoop } from "@/components/featured-gig-loop";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
 import { PrismCategoryCard } from "@/components/prism-category-card";
@@ -39,14 +41,21 @@ export default async function HomePage({
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
   const creatorCount = await countActiveCreators().catch(() => 0);
-  const stats = await getHomeStats().catch(() => ({ gigs: 0, creators: 0, orders: 0 }));
   const activity = await listRecentActivity().catch(() => []);
-  // Show each stat only when it has a real, non-trivial number — never a sad "0" pre-launch.
-  const statTiles = [
-    { key: "statGigs", value: stats.gigs },
-    { key: "statCreators", value: stats.creators },
-    { key: "statOrders", value: stats.orders },
-  ].filter((s) => s.value > 0);
+  // Featured-gig loop replaces the vanity stat counters — real work on landing.
+  // Quality gate: only featured gigs that actually have a cover image.
+  const featuredGigs = (await listFeaturedGigs(8).catch(() => []))
+    .filter((g) => g.coverUrl)
+    .map((g) => ({
+      slug: g.slug,
+      title: g.title,
+      coverUrl: g.coverUrl,
+      coverFocal: g.coverFocal ?? null,
+      sellerName: g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "",
+      sellerAvatar: g.seller.image ?? g.seller.photoUrl ?? null,
+      ratingAvg: g.seller.sellerProfile?.ratingAvg ?? 0,
+      ratingCount: g.seller.sellerProfile?.ratingCount ?? 0,
+    }));
   const tickerItems = activity.map((e) =>
     e.type === "delivered"
       ? t("tickerDelivered", { name: e.name, title: e.extra })
@@ -92,24 +101,8 @@ export default async function HomePage({
           </div>
         </section>
 
-        {/* Platform stats — real counts, each shown only when non-zero */}
-        {statTiles.length > 0 && (
-          <section className="grid grid-cols-1 gap-3 pb-6 sm:grid-cols-3">
-            {statTiles.map((s) => (
-              <div
-                key={s.key}
-                className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-4 text-center"
-              >
-                <p className="font-display text-2xl font-extrabold tabular-nums sm:text-3xl">
-                  {s.value.toLocaleString()}
-                </p>
-                <p className="mt-0.5 text-xs font-medium text-[hsl(var(--muted-foreground))] sm:text-sm">
-                  {t(s.key)}
-                </p>
-              </div>
-            ))}
-          </section>
-        )}
+        {/* Featured-gig loop — real work rotating (replaces vanity stat counters) */}
+        <FeaturedGigLoop gigs={featuredGigs} />
 
         {/* Categories */}
         <section className="py-6">

@@ -40,6 +40,7 @@ export default async function EditGigPage({ params }: { params: Promise<{ locale
     categoryId: gig.categoryId ?? "",
     tags: gig.tags.join(", "),
     coverUrl: gig.coverUrl ?? undefined,
+    coverFocal: gig.coverFocal ?? undefined,
     galleryUrls: gig.galleryUrls,
     faq: faqArr,
     extras: gig.extras.map((e) => ({
