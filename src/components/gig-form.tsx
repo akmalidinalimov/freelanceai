@@ -33,6 +33,36 @@ export interface GigInitial {
   packages: Partial<Record<Tier, PkgState>>;
 }
 
+/** A titled form section card — turns the long gig form into digestible, labelled chunks. */
+function Section({
+  title,
+  desc,
+  optional,
+  children,
+}: {
+  title: string;
+  desc?: string;
+  optional?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)]">
+      <div className="mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="font-display font-bold">{title}</h2>
+          {optional && (
+            <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-[11px] font-medium text-[hsl(var(--muted-foreground))]">
+              {optional}
+            </span>
+          )}
+        </div>
+        {desc && <p className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">{desc}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export function GigForm({
   locale,
   categories,
@@ -144,103 +174,122 @@ export function GigForm({
   };
 
   return (
-    <form onSubmit={(e) => submit(e, false)} className="flex flex-col gap-5">
-      <MediaUpload value={coverUrl} onChange={setCoverUrl} />
-      <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
+    <form onSubmit={(e) => submit(e, false)} className="flex flex-col gap-5 pb-24">
+      {/* 1 — Overview: the essentials a buyer reads first */}
+      <Section title={t("secOverview")}>
+        <div className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1">
+            <span className="flex items-center justify-between text-sm font-medium">
+              {t("titleLabel")}
+              <span className="tabular-nums text-xs font-normal text-[hsl(var(--muted-foreground))]">
+                {title.length}/80
+              </span>
+            </span>
+            <input
+              className={field}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={t("titlePh")}
+              minLength={5}
+              maxLength={80}
+              required
+            />
+            <span className="text-xs text-[hsl(var(--muted-foreground))]">{t("titleHint")}</span>
+          </label>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">{t("titleLabel")}</span>
-        <input
-          className={field}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={t("titlePh")}
-          minLength={5}
-          maxLength={80}
-          required
-        />
-      </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium">{t("category")}</span>
+              <select className={field} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                <option value="">—</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium">{t("tags")}</span>
+              <input
+                className={field}
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder={t("tagsPh")}
+              />
+            </label>
+          </div>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">{t("descLabel")}</span>
-        <textarea
-          className={`${field} min-h-32`}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t("descPh")}
-          minLength={20}
-          required
-        />
-      </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium">{t("descLabel")}</span>
+            <textarea
+              className={`${field} min-h-32`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t("descPh")}
+              minLength={20}
+              required
+            />
+            <span className="text-xs text-[hsl(var(--muted-foreground))]">{t("descHint")}</span>
+          </label>
+        </div>
+      </Section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">{t("category")}</span>
-          <select className={field} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-            <option value="">—</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">{t("tags")}</span>
-          <input
-            className={field}
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder={t("tagsPh")}
-          />
-        </label>
-      </div>
+      {/* 2 — Media: the first visual impression */}
+      <Section title={t("secMedia")} desc={t("mediaHint")}>
+        <div className="flex flex-col gap-4">
+          <MediaUpload value={coverUrl} onChange={setCoverUrl} />
+          <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
+        </div>
+      </Section>
 
-      <div>
-        <p className="mb-2 text-sm font-medium">{t("faq")}</p>
-        <div className="flex flex-col gap-2">
-          {faq.map((f, i) => (
-            <div key={i} className="flex flex-col gap-1 rounded-lg border border-[hsl(var(--border))] p-2">
-              <div className="flex gap-2">
+      {/* 3 — Packages: the money (required) */}
+      <Section title={t("packages")} desc={t("packagesDesc")}>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {tiers.map((tier) => (
+            <div key={tier} className="rounded-xl border border-[hsl(var(--border))] p-4">
+              <p className="mb-2 font-semibold">{tierLabel[tier]}</p>
+              <div className="flex flex-col gap-2">
                 <input
                   className={field}
-                  placeholder={t("faqQ")}
-                  aria-label={t("faqQ")}
-                  value={f.q}
-                  onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, q: e.target.value } : x)))}
+                  placeholder={t("pkgTitle")}
+                  aria-label={`${tierLabel[tier]} — ${t("pkgTitle")}`}
+                  value={pkgs[tier].title}
+                  onChange={(e) => setPkg(tier, "title", e.target.value)}
                 />
-                <button
-                  type="button"
-                  aria-label={t("faqRemove")}
-                  onClick={() => setFaq((arr) => arr.filter((_, j) => j !== i))}
-                  className="shrink-0 rounded-md border border-[hsl(var(--border))] px-2 text-sm"
-                >
-                  ×
-                </button>
+                <input
+                  className={field}
+                  inputMode="numeric"
+                  placeholder={`${t("price")} (so'm)`}
+                  aria-label={`${tierLabel[tier]} — ${t("price")} (so'm)`}
+                  value={pkgs[tier].priceUzs}
+                  onChange={(e) => setPkg(tier, "priceUzs", e.target.value.replace(/\D/g, ""))}
+                />
+                <input
+                  className={field}
+                  inputMode="numeric"
+                  placeholder={t("deliveryDays")}
+                  aria-label={`${tierLabel[tier]} — ${t("deliveryDays")}`}
+                  value={pkgs[tier].deliveryDays}
+                  onChange={(e) => setPkg(tier, "deliveryDays", e.target.value.replace(/\D/g, ""))}
+                />
+                <input
+                  className={field}
+                  inputMode="numeric"
+                  placeholder={t("revisions")}
+                  aria-label={`${tierLabel[tier]} — ${t("revisions")}`}
+                  value={pkgs[tier].revisions}
+                  onChange={(e) => setPkg(tier, "revisions", e.target.value.replace(/\D/g, ""))}
+                />
               </div>
-              <textarea
-                className={`${field} min-h-16`}
-                placeholder={t("faqA")}
-                aria-label={t("faqA")}
-                value={f.a}
-                onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, a: e.target.value } : x)))}
-              />
             </div>
           ))}
-          {faq.length < 10 && (
-            <button
-              type="button"
-              onClick={() => setFaq((arr) => [...arr, { q: "", a: "" }])}
-              className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
-            >
-              + {t("faqAdd")}
-            </button>
-          )}
         </div>
-      </div>
+        <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">{t("packagesHint")}</p>
+      </Section>
 
-      <div>
-        <p className="mb-2 text-sm font-medium">{t("extras")}</p>
+      {/* 4 — Extras (optional) */}
+      <Section title={t("extras")} desc={t("extrasDesc")} optional={t("optional")}>
         <div className="flex flex-col gap-2">
           {extras.map((e, i) => (
             <div key={i} className="flex flex-wrap gap-2 rounded-lg border border-[hsl(var(--border))] p-2">
@@ -287,10 +336,10 @@ export function GigForm({
             </button>
           )}
         </div>
-      </div>
+      </Section>
 
-      <div>
-        <p className="mb-2 text-sm font-medium">{t("requirements")}</p>
+      {/* 5 — Requirements (optional) */}
+      <Section title={t("requirements")} desc={t("requirementsDesc")} optional={t("optional")}>
         <div className="flex flex-col gap-2">
           {reqPrompts.map((p, i) => (
             <div key={i} className="flex gap-2">
@@ -321,56 +370,55 @@ export function GigForm({
             </button>
           )}
         </div>
-      </div>
+      </Section>
 
-      <div>
-        <p className="mb-2 text-sm font-medium">{t("packages")}</p>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {tiers.map((tier) => (
-            <div key={tier} className="rounded-xl border border-[hsl(var(--border))] p-4">
-              <p className="mb-2 font-semibold">{tierLabel[tier]}</p>
-              <div className="flex flex-col gap-2">
+      {/* 6 — FAQ (optional) */}
+      <Section title={t("faq")} desc={t("faqDesc")} optional={t("optional")}>
+        <div className="flex flex-col gap-2">
+          {faq.map((f, i) => (
+            <div key={i} className="flex flex-col gap-1 rounded-lg border border-[hsl(var(--border))] p-2">
+              <div className="flex gap-2">
                 <input
                   className={field}
-                  placeholder={t("pkgTitle")}
-                  aria-label={`${tierLabel[tier]} — ${t("pkgTitle")}`}
-                  value={pkgs[tier].title}
-                  onChange={(e) => setPkg(tier, "title", e.target.value)}
+                  placeholder={t("faqQ")}
+                  aria-label={t("faqQ")}
+                  value={f.q}
+                  onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, q: e.target.value } : x)))}
                 />
-                <input
-                  className={field}
-                  inputMode="numeric"
-                  placeholder={`${t("price")} (so'm)`}
-                  aria-label={`${tierLabel[tier]} — ${t("price")} (so'm)`}
-                  value={pkgs[tier].priceUzs}
-                  onChange={(e) => setPkg(tier, "priceUzs", e.target.value.replace(/\D/g, ""))}
-                />
-                <input
-                  className={field}
-                  inputMode="numeric"
-                  placeholder={t("deliveryDays")}
-                  aria-label={`${tierLabel[tier]} — ${t("deliveryDays")}`}
-                  value={pkgs[tier].deliveryDays}
-                  onChange={(e) => setPkg(tier, "deliveryDays", e.target.value.replace(/\D/g, ""))}
-                />
-                <input
-                  className={field}
-                  inputMode="numeric"
-                  placeholder={t("revisions")}
-                  aria-label={`${tierLabel[tier]} — ${t("revisions")}`}
-                  value={pkgs[tier].revisions}
-                  onChange={(e) => setPkg(tier, "revisions", e.target.value.replace(/\D/g, ""))}
-                />
+                <button
+                  type="button"
+                  aria-label={t("faqRemove")}
+                  onClick={() => setFaq((arr) => arr.filter((_, j) => j !== i))}
+                  className="shrink-0 rounded-md border border-[hsl(var(--border))] px-2 text-sm"
+                >
+                  ×
+                </button>
               </div>
+              <textarea
+                className={`${field} min-h-16`}
+                placeholder={t("faqA")}
+                aria-label={t("faqA")}
+                value={f.a}
+                onChange={(e) => setFaq((arr) => arr.map((x, j) => (j === i ? { ...x, a: e.target.value } : x)))}
+              />
             </div>
           ))}
+          {faq.length < 10 && (
+            <button
+              type="button"
+              onClick={() => setFaq((arr) => [...arr, { q: "", a: "" }])}
+              className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
+            >
+              + {t("faqAdd")}
+            </button>
+          )}
         </div>
-        <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{t("packagesHint")}</p>
-      </div>
+      </Section>
 
       {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
 
-      <div className="flex gap-2">
+      {/* Sticky action bar — the submit/draft CTAs stay reachable in this long form */}
+      <div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/75">
         <Button type="submit" size="lg" disabled={busy}>
           {busy ? t("publishing") : gigId ? t("saveChanges") : t("publish")}
         </Button>
