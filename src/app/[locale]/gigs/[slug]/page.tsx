@@ -370,7 +370,7 @@ export default async function GigDetailPage({
                   })()}
                   <p className="line-clamp-2 text-xs font-medium">{g.title}</p>
                   <p className="mt-auto pt-1 text-xs font-semibold tabular-nums">
-                    {t("from")} {formatUzs(g.packages[0]?.priceUzs ?? 0)} so&apos;m
+                    {t("startingFrom")} {formatUzs(g.packages[0]?.priceUzs ?? 0)} so&apos;m
                   </p>
                 </Link>
               ))}

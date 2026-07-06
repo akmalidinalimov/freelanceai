@@ -37,7 +37,7 @@ export async function RecentlyViewed({ excludeId }: { excludeId?: string }) {
               </div>
               <p className="line-clamp-2 text-xs font-medium">{g.title}</p>
               <p className="mt-auto pt-1 text-xs font-semibold tabular-nums">
-                {t("from")} {formatUzs(from)}
+                {t("startingFrom")} {formatUzs(from)} so&apos;m
               </p>
             </Link>
           );

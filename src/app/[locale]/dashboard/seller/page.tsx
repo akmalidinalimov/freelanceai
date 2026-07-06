@@ -295,7 +295,7 @@ export default async function SellerDashboardPage({
                       👁 {g.views.toLocaleString()} · 🛒 {g._count.orders}
                     </span>
                     <span className="tabular-nums">
-                      {tg("from")} {formatUzs(from)} so&apos;m
+                      {tg("startingFrom")} {formatUzs(from)} so&apos;m
                     </span>
                     <GigRowActions gigId={g.id} status={g.status} />
                   </span>

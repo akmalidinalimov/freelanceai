@@ -72,7 +72,7 @@ export default async function SavedPage({
                   </div>
                   <p className="line-clamp-2 text-sm font-medium">{g.title}</p>
                   <p className="pt-1 text-sm font-semibold tabular-nums">
-                    {tg("from")} {formatUzs(from)} so&apos;m
+                    {tg("startingFrom")} {formatUzs(from)} so&apos;m
                   </p>
                 </Link>
                 {collOptions.length > 0 && (

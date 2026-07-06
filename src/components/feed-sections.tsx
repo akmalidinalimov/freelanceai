@@ -28,7 +28,7 @@ async function Rail({ title, gigs }: { title: string; gigs: FeedGig[] }) {
             <p className="line-clamp-2 text-xs font-medium">{g.title}</p>
             <p className="mt-auto pt-1 text-xs text-[hsl(var(--muted-foreground))]">{g.sellerName}</p>
             <p className="text-xs font-semibold tabular-nums">
-              {t("from")} {formatUzs(g.fromUzs)} so&apos;m
+              {t("startingFrom")} {formatUzs(g.fromUzs)} so&apos;m
             </p>
           </Link>
         ))}
