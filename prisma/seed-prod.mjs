@@ -8,6 +8,7 @@
 // renders them as feature lists). The gig upsert also UPDATES description/title
 // and upserts packages per tier, so re-running the seed upgrades live content.
 import { PrismaClient } from "@prisma/client";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const prisma = new PrismaClient();
 
@@ -862,9 +863,48 @@ async function main() {
     "Jiddiy natija uchun toʻliq quvvat",
   ];
 
+  // --- Showcase covers: give a handful of demo gigs genuinely VERTICAL / portrait covers
+  // so the no-crop masonry grid + 9:16 featured hero visibly demonstrate mixed aspect ratios
+  // (the stock category covers are all 1344x768 landscape). Real creators upload their own.
+  // These are one-off AI covers hosted on the generator CDN; we copy them into our own R2
+  // once (HEAD-guarded) so they live under gigora's bucket. Falls back to the category cover
+  // if S3 isn't configured or the copy fails — the seed never breaks on this.
+  const CF = "https://d8j0ntlcm91z4.cloudfront.net/user_2zJUonmh6cW6tDKlBEl4CIohbsI/";
+  const SHOWCASE = {
+    "moda-brendi-uchun-ai-video-lookbook": { file: "hf_20260706_214152_5deaa2d9-7f2e-46a2-b0fd-35538a194a65.png", name: "fashion-lookbook", w: 768, h: 1376 },
+    "ai-ugc-talking-head-reklama": { file: "hf_20260706_214200_41659d9d-36a8-410a-b895-60f3aa878994.png", name: "ugc-lifestyle", w: 768, h: 1376 },
+    "ai-mahsulot-fotosurati-ecommerce": { file: "hf_20260706_214204_2f7f7d87-1abc-49d2-871d-52843406803c.png", name: "product-shot", w: 768, h: 1376 },
+    "ozbekcha-ruscha-ovoz-dublyaji": { file: "hf_20260706_214207_c9caa0ad-f00a-47cf-8cce-b27c12568c7f.png", name: "voiceover-studio", w: 768, h: 1376 },
+    "3d-oyin-personaji-game-ready": { file: "hf_20260706_213709_c9f9c08c-ce87-4f2d-86c4-66dc776c2345.png", name: "game-character", w: 768, h: 1376 },
+    "ai-avatar-raqamli-model": { file: "hf_20260706_213712_f929c7d7-4959-46d4-a737-4b0d265f58ae.png", name: "avatar-headshot", w: 1536, h: 2048 },
+  };
+  const s3 = process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY_ID
+    ? new S3Client({ region: "auto", endpoint: process.env.S3_ENDPOINT, credentials: { accessKeyId: process.env.S3_ACCESS_KEY_ID, secretAccessKey: process.env.S3_SECRET_ACCESS_KEY } })
+    : null;
+  const showcase = {};
+  if (publicBase && s3) {
+    for (const [slug, s] of Object.entries(SHOWCASE)) {
+      const key = `covers/showcase/${s.name}.png`;
+      const url = `${publicBase}/${key}`;
+      try {
+        const head = await fetch(url, { method: "HEAD" });
+        if (head.ok) { showcase[slug] = { url, w: s.w, h: s.h }; continue; } // already copied
+        const src = await fetch(CF + s.file);
+        if (!src.ok) { console.warn(`showcase ${s.name}: source ${src.status}`); continue; }
+        await s3.send(new PutObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key, ContentType: "image/png", Body: Buffer.from(await src.arrayBuffer()) }));
+        showcase[slug] = { url, w: s.w, h: s.h };
+        console.log(`showcase cover ready: ${s.name}`);
+      } catch (e) { console.warn(`showcase ${s.name} failed:`, e.message); }
+    }
+  }
+
   for (const g of GIGS) {
     const cat = await prisma.category.findUnique({ where: { slug: g.cat } });
-    const coverUrl = coverFor(g.cat);
+    const sc = showcase[g.slug];
+    const coverUrl = sc ? sc.url : coverFor(g.cat);
+    // Native cover dimensions → no-crop masonry + featured hero. Stock category covers are 1344x768.
+    const coverW = sc ? sc.w : coverUrl ? 1344 : null;
+    const coverH = sc ? sc.h : coverUrl ? 768 : null;
     const gigId = `demo_gig_${g.slug}`;
     await prisma.gig.upsert({
       where: { id: gigId },
@@ -874,6 +914,8 @@ async function main() {
         categoryId: cat?.id ?? null,
         tags: g.tags,
         coverUrl,
+        coverW,
+        coverH,
         title: g.title,
         description: g.description,
       },
@@ -886,6 +928,8 @@ async function main() {
         description: g.description,
         tags: g.tags,
         coverUrl,
+        coverW,
+        coverH,
         status: "ACTIVE",
         locale: "uz",
       },
