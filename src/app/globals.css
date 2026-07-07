@@ -150,6 +150,7 @@
   --gradient-a: 212 70% 32%; --gradient-b: 200 60% 26%; --gradient-c: 224 55% 26%;
 
   color: hsl(var(--foreground));
+  color-scheme: dark; /* native controls (scrollbars, form widgets, autofill) render dark */
 }
 
 /* Travelling accent beam for the D02 background. */

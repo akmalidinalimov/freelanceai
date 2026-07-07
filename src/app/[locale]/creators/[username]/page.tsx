@@ -17,6 +17,8 @@ import { coverVariant } from "@/lib/cover-variant";
 import { specLabel } from "@/lib/specializations";
 import { badgeDef, badgeLabel } from "@/lib/badges";
 import { getUserBadges } from "@/server/services/gamification";
+import { DotGridBackground } from "@/components/living-background/dot-grid";
+import { ApplyThemeClass } from "@/components/apply-theme-class";
 
 export async function generateMetadata({
   params,
@@ -94,7 +96,10 @@ export default async function CreatorProfilePage({
   const following = me && viewer === "buyer" ? await isFollowing(me.id, user.id) : false;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <>
+      <DotGridBackground />
+      <ApplyThemeClass name="theme-d02" />
+      <div className="theme-d02 mx-auto max-w-5xl px-4 py-10">
       {/* Hero-first (variant 2): the banner leads and the identity is overlaid on it —
           "work speaks first". EVERY profile gets the hero: an uploaded banner, or a
           branded prism hero (varied per creator) as the fallback so it's always consistent. */}
@@ -315,6 +320,7 @@ export default async function CreatorProfilePage({
           })}
         </ul>
       )}
-    </div>
+      </div>
+    </>
   );
 }

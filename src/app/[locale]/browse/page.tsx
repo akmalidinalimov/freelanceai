@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SKILLS, NICHES, specLabel, specSlug } from "@/lib/specializations";
+import { DotGridBackground } from "@/components/living-background/dot-grid";
+import { ApplyThemeClass } from "@/components/apply-theme-class";
 
 export const dynamic = "force-dynamic";
 
@@ -42,13 +44,17 @@ export default async function BrowseIndexPage({
   );
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-display text-3xl font-extrabold">{t("indexTitle")}</h1>
-      <p className="mt-1 text-[hsl(var(--muted-foreground))]">{t("indexSub")}</p>
-      <div className="mt-8">
-        {group(t("skillsGroup"), SKILLS)}
-        {group(t("nichesGroup"), NICHES)}
+    <>
+      <DotGridBackground />
+      <ApplyThemeClass name="theme-d02" />
+      <div className="theme-d02 mx-auto max-w-4xl px-4 py-10">
+        <h1 className="font-display text-3xl font-extrabold">{t("indexTitle")}</h1>
+        <p className="mt-1 text-[hsl(var(--muted-foreground))]">{t("indexSub")}</p>
+        <div className="mt-8">
+          {group(t("skillsGroup"), SKILLS)}
+          {group(t("nichesGroup"), NICHES)}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

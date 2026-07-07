@@ -6,6 +6,8 @@ import { specBySlug, specLabel, specSlug, SPECIALIZATIONS } from "@/lib/speciali
 import { listCreatorsBySpecialization } from "@/server/services/browse";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { Stars } from "@/components/stars";
+import { DotGridBackground } from "@/components/living-background/dot-grid";
+import { ApplyThemeClass } from "@/components/apply-theme-class";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +47,10 @@ export default async function BrowseSpecPage({
   const related = SPECIALIZATIONS.filter((x) => x.kind === s.kind && x.key !== s.key).slice(0, 8);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <>
+      <DotGridBackground />
+      <ApplyThemeClass name="theme-d02" />
+      <div className="theme-d02 mx-auto max-w-5xl px-4 py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href="/browse" className="text-sm font-medium text-[hsl(var(--primary-ink))] hover:underline">
         ← {t("allSpecs")}
@@ -120,6 +125,7 @@ export default async function BrowseSpecPage({
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
