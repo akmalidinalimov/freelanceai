@@ -6,6 +6,12 @@ import { Link } from "@/i18n/navigation";
  * photograph, varied per tile by crop / mirror / hue so eight tiles read as a
  * family, not clones. The zipper word is a brand graphic (same across locales);
  * the accessible name and the bottom pill carry the localized text.
+ *
+ * DARK variant (D02 homepage): the same diagonal prism-refraction art, but the
+ * spectrum glows against a near-black ground so the tiles belong to the dark
+ * blueprint world instead of reading as a leftover cream block. This uses its
+ * own versioned dark asset — the cream `pattern-sweep-v2.webp` stays the
+ * universal light-surface cover fallback elsewhere and is untouched.
  */
 
 /** Per-tile art variation: [objectPosition, flip, hueRotate(deg)] */
@@ -45,12 +51,12 @@ export function PrismCategoryCard({
     <Link
       href={href}
       aria-label={label}
-      className="prism-tile group relative isolate block aspect-[3/4] overflow-hidden rounded-2xl bg-[#d9d2c8] shadow-[0_2px_6px_hsl(25_40%_35%/.1),0_16px_40px_-16px_hsl(20_50%_30%/.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))]"
+      className="prism-tile group relative isolate block aspect-[3/4] overflow-hidden rounded-2xl bg-[#0a0c12] shadow-[0_2px_6px_rgba(0,0,0,.5),0_16px_44px_-16px_rgba(0,0,0,.7)] ring-1 ring-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))]"
       style={{ ["--tile-flip" as string]: flip ? "scaleX(-1)" : "scaleX(1)" }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- decorative art, single shared asset */}
       <img
-        src="/prism/pattern-sweep-v2.webp"
+        src="/prism/pattern-sweep-dark-v1.webp"
         alt=""
         loading="lazy"
         decoding="async"
@@ -58,14 +64,14 @@ export function PrismCategoryCard({
         style={{
           objectPosition: pos,
           transform: flip ? "scaleX(-1)" : undefined,
-          filter: `brightness(1.02) contrast(1.06) saturate(1.06)${hue ? ` hue-rotate(${hue}deg)` : ""}`,
+          filter: `brightness(1.04) contrast(1.08) saturate(1.12)${hue ? ` hue-rotate(${hue}deg)` : ""}`,
         }}
       />
       {/* readability scrim under the word only */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-[30%] z-[2] h-[42%]"
-        style={{ background: "radial-gradient(70% 100% at 50% 50%, hsl(25 20% 12% / .2), transparent 75%)" }}
+        className="pointer-events-none absolute inset-x-0 top-[28%] z-[2] h-[46%]"
+        style={{ background: "radial-gradient(72% 100% at 50% 50%, rgba(5,7,12,.5), transparent 76%)" }}
       />
       {/* the zipper word */}
       <span
