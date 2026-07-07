@@ -8,7 +8,9 @@ import { FeaturedGigLoop } from "@/components/featured-gig-loop";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
 import { PrismCategoryCard } from "@/components/prism-category-card";
-import { LivingBackground, normalizeBg, BG_CONCEPTS } from "@/components/living-background";
+import { normalizeBg, BG_CONCEPTS } from "@/components/living-background";
+import { D02Background } from "@/components/living-background/d02";
+import { ApplyThemeClass } from "@/components/apply-theme-class";
 import { cardClass } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -83,12 +85,14 @@ export default async function HomePage({
 
   return (
     <>
-      {/* Amber Classic now ships from the locale layout on every page; the lab
-          variants (?bg=2|3|4) still render here for comparison only. */}
-      {bgVariant !== "1" && <LivingBackground variant={bgVariant} />}
+      {/* D02 "Blueprint Grid" — the chosen DARK premium homepage world. Opaque, so it covers
+          the global Amber Classic here; ApplyThemeClass extends the dark palette to the shared
+          header/footer chrome (which lives outside this page's wrapper). */}
+      <D02Background />
+      <ApplyThemeClass name="theme-d02" />
       <ActivityTicker items={tickerItems} />
-      {/* dot texture now lives in the AmberClassic background layer */}
-      <div className="mx-auto max-w-5xl px-4">
+      {/* theme-d02 re-themes all token-based homepage sections to dark, server-side (no flash). */}
+      <div className="theme-d02 mx-auto max-w-5xl px-4">
         {/* Hero — AI concierge search over the living background */}
         <section className="relative isolate -mx-4 px-4">
           {bg && (

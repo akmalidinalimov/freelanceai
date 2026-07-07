@@ -113,6 +113,52 @@
   }
 }
 
+/* ---- D02 "Blueprint Grid" — dark premium homepage theme (founder pick). A flat token
+   override applied on the homepage (page wrapper + <html> via ApplyThemeClass). Cool
+   charcoal canvas, blueprint-blue hairlines, teal primary, blue accent to match the
+   travelling beam. Every token here mirrors :root so nothing on the page falls back to
+   the light palette. Scoped — the rest of the site stays light. ---------------------- */
+.theme-d02 {
+  --background: 224 26% 6%;
+  --foreground: 214 24% 92%;
+  --card: 222 22% 10.5%;
+  --card-foreground: 214 24% 92%;
+  --surface-2: 221 20% 14%;
+  --muted: 221 18% 15%;
+  --muted-foreground: 214 15% 64%;
+  --border: 216 22% 20%;
+  --input-border: 214 18% 44%;
+
+  --primary: 173 68% 46%;
+  --primary-foreground: 173 45% 8%;
+  --primary-ink: 190 82% 66%;
+  --accent: 12 82% 62%;
+  --accent-foreground: 15 40% 10%;
+
+  --success: 152 52% 50%; --success-foreground: 152 45% 8%; --success-soft: 152 40% 16%;
+  --danger: 0 70% 62%; --danger-foreground: 0 40% 10%; --danger-soft: 0 45% 18%;
+  --warning: 36 88% 56%; --warning-foreground: 40 60% 10%; --warning-soft: 36 55% 18%;
+  --info: 212 90% 62%; --info-foreground: 212 45% 10%; --info-soft: 212 55% 20%;
+  --violet: 262 70% 72%; --violet-soft: 262 40% 24%;
+  --star: 40 92% 58%;
+
+  --ring: 190 82% 60%;
+  --shadow-soft: 0 1px 2px hsl(220 60% 2% / 0.5), 0 6px 18px -8px hsl(220 60% 2% / 0.6);
+  --shadow-hover: 0 4px 14px -4px hsl(220 60% 2% / 0.55), 0 16px 38px -12px hsl(220 60% 2% / 0.65);
+  --shadow-overlay: 0 14px 32px -8px hsl(220 60% 2% / 0.6), 0 32px 64px -24px hsl(220 60% 2% / 0.7);
+
+  --gradient-a: 212 70% 32%; --gradient-b: 200 60% 26%; --gradient-c: 224 55% 26%;
+
+  color: hsl(var(--foreground));
+}
+
+/* Travelling accent beam for the D02 background. */
+@keyframes d02-beam-sweep {
+  0% { transform: translate(-6%, -4%); }
+  50% { transform: translate(70%, 32%); }
+  100% { transform: translate(-6%, -4%); }
+}
+
 /* Register tokens as Tailwind color utilities (bg-success, text-danger, …). */
 @theme inline {
   --color-background: hsl(var(--background));
