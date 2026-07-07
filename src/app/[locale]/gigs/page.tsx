@@ -10,8 +10,6 @@ import { RecentlyViewed } from "@/components/recently-viewed";
 import { listSavedSearches, searchLink } from "@/server/services/saved-search";
 import { SaveSearchButton, DeleteSavedSearch } from "@/components/saved-search-controls";
 import { EmptyState } from "@/components/empty-state";
-import { DotGridBackground } from "@/components/living-background/dot-grid";
-import { ApplyThemeClass } from "@/components/apply-theme-class";
 import { X, SearchX } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 
@@ -97,13 +95,7 @@ export default async function GigsPage({
     }`;
 
   return (
-    <>
-      {/* Dark world on the marketplace: quiet dot-grid ground (content-forward) +
-          theme-d02 tokens re-themed server-side (no flash); ApplyThemeClass extends
-          the palette to the shared header/footer chrome while on this page. */}
-      <DotGridBackground />
-      <ApplyThemeClass name="theme-d02" />
-      <div className="theme-d02 mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-display text-3xl font-extrabold">{tn("explore")}</h1>
       <p className="mb-5 mt-1 text-sm text-[hsl(var(--muted-foreground))]">{tg("marketplaceSubtitle")}</p>
 
@@ -186,7 +178,6 @@ export default async function GigsPage({
           ))}
         </ul>
       )}
-      </div>
-    </>
+    </div>
   );
 }

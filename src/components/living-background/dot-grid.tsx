@@ -8,11 +8,11 @@
  * behind card grids far better than lines, which fight the rectangular layout),
  * and one soft top glow for depth. No animation — nothing competes with content.
  *
- * Like AmberClassic / D02Background it MUST mount at the page root (not inside a
- * positioned / isolated ancestor) so the fixed layer fills the viewport. It paints
- * an opaque canvas, so it sits above the global light AmberClassic on these pages.
- * Pair it with <ApplyThemeClass name="theme-d02" /> (re-themes the shared chrome)
- * and a `theme-d02` class on the page's content wrapper (SSR dark, no flash).
+ * Like D02Background it MUST mount at the page root (not inside a positioned /
+ * isolated ancestor) so the fixed layer fills the viewport. It is the global ground,
+ * rendered once in the locale layout; the dark token palette comes from `theme-d02`
+ * on <html> (also set in the layout), so every token-based page themes dark. The
+ * homepage layers its own opaque D02Background (grid + beam) on top of this.
  */
 export function DotGridBackground() {
   return (

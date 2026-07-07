@@ -7,11 +7,10 @@ import { Link } from "@/i18n/navigation";
  * family, not clones. The zipper word is a brand graphic (same across locales);
  * the accessible name and the bottom pill carry the localized text.
  *
- * DARK variant (D02 homepage): the same diagonal prism-refraction art, but the
- * spectrum glows against a near-black ground so the tiles belong to the dark
- * blueprint world instead of reading as a leftover cream block. This uses its
- * own versioned dark asset — the cream `pattern-sweep-v2.webp` stays the
- * universal light-surface cover fallback elsewhere and is untouched.
+ * DARK variant: the same diagonal prism-refraction art, but the spectrum glows
+ * against a near-black ground so the tiles belong to the dark world instead of
+ * reading as a leftover cream block. Portrait (3:4) tile art; the landscape cover
+ * fallback uses the wide sibling `pattern-sweep-dark-wide-v1.webp`.
  */
 
 /** Per-tile art variation: [objectPosition, flip, hueRotate(deg)] */

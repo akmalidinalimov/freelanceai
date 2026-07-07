@@ -64,7 +64,7 @@ export function FeaturedGigLoop({ gigs }: { gigs: FeaturedGigItem[] }) {
       <div className="relative mx-auto aspect-video w-full max-w-[640px] overflow-hidden rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--muted))] shadow-[var(--shadow-hover)]">
         {gigs.map((g, i) => {
           const isVideo = g.coverType === "video" && !!g.coverUrl;
-          const src = g.coverUrl ?? "/prism/pattern-sweep-v2.webp";
+          const src = g.coverUrl ?? "/prism/pattern-sweep-dark-wide-v1.webp";
           return (
             <Link
               key={g.slug}

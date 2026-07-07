@@ -307,7 +307,7 @@ export function HomeSearch() {
                       <div className="relative h-[76px] w-[76px] shrink-0 overflow-hidden rounded-xl">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={r.coverUrl ?? "/prism/pattern-sweep-v2.webp"}
+                          src={r.coverUrl ?? "/prism/pattern-sweep-dark-wide-v1.webp"}
                           alt=""
                           loading="lazy"
                           className="h-full w-full object-cover"

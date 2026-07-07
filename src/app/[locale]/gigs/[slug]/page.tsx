@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getGigBySlug, incrementGigViews, listRelatedGigs } from "@/server/services/gig";
 import { VerifiedBadge } from "@/components/verified-badge";
-import { DotGridBackground } from "@/components/living-background/dot-grid";
-import { ApplyThemeClass } from "@/components/apply-theme-class";
 
 export async function generateMetadata({
   params,
@@ -91,11 +89,8 @@ export default async function GigDetailPage({
   };
 
   return (
-    <>
-      <DotGridBackground />
-      <ApplyThemeClass name="theme-d02" />
-    {/* pb-28: room for the sticky mobile order bar so it never covers page-end content */}
-    <div className="theme-d02 mx-auto grid max-w-6xl gap-8 px-4 py-10 pb-28 lg:grid-cols-[1fr_360px] lg:pb-10">
+    // pb-28: room for the sticky mobile order bar so it never covers page-end content
+    <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 pb-28 lg:grid-cols-[1fr_360px] lg:pb-10">
       <script
         type="application/ld+json"
         // Structured data for search engines (Product + offers + rating).
@@ -362,7 +357,7 @@ export default async function GigDetailPage({
                       <div className="relative mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={thumb ?? "/prism/pattern-sweep-v2.webp"}
+                          src={thumb ?? "/prism/pattern-sweep-dark-wide-v1.webp"}
                           alt=""
                           loading="lazy"
                           decoding="async"
@@ -485,6 +480,5 @@ export default async function GigDetailPage({
         <MobileOrderBar fromPriceUzs={packages[0].priceUzs} targetId="order-panel" />
       )}
     </div>
-    </>
   );
 }

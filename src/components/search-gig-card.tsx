@@ -75,7 +75,7 @@ export async function SearchGigCard({ match: m }: { match: GigMatch }) {
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src="/prism/pattern-sweep-v2.webp"
+            src="/prism/pattern-sweep-dark-wide-v1.webp"
             alt=""
             loading="lazy"
             decoding="async"

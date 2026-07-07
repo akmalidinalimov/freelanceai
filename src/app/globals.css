@@ -113,11 +113,11 @@
   }
 }
 
-/* ---- D02 "Blueprint Grid" — dark premium homepage theme (founder pick). A flat token
-   override applied on the homepage (page wrapper + <html> via ApplyThemeClass). Cool
-   charcoal canvas, blueprint-blue hairlines, teal primary, blue accent to match the
-   travelling beam. Every token here mirrors :root so nothing on the page falls back to
-   the light palette. Scoped — the rest of the site stays light. ---------------------- */
+/* ---- D02 "Blueprint Grid" — the dark theme, now applied SITE-WIDE (founder direction
+   2026-07-07). A flat token override set on <html> in the locale layout. Cool charcoal
+   canvas, blueprint-blue hairlines, teal primary, blue accent to match the homepage
+   beam. Every token here mirrors :root so nothing falls back to the light palette; the
+   :root/light values are the legacy baseline kept for reference. ------------------- */
 .theme-d02 {
   --background: 224 26% 6%;
   --foreground: 214 24% 92%;

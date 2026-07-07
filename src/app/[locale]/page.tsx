@@ -10,7 +10,6 @@ import { CreatorCard } from "@/components/creator-card";
 import { PrismCategoryCard } from "@/components/prism-category-card";
 import { normalizeBg, BG_CONCEPTS } from "@/components/living-background";
 import { D02Background } from "@/components/living-background/d02";
-import { ApplyThemeClass } from "@/components/apply-theme-class";
 import { cardClass } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -85,11 +84,10 @@ export default async function HomePage({
 
   return (
     <>
-      {/* D02 "Blueprint Grid" — the chosen DARK premium homepage world. Opaque, so it covers
-          the global Amber Classic here; ApplyThemeClass extends the dark palette to the shared
-          header/footer chrome (which lives outside this page's wrapper). */}
+      {/* D02 "Blueprint Grid" — the homepage's signature dark world. Opaque, so it layers
+          over the global dot-grid ground with its grid + travelling beam. The dark token
+          palette now comes from `theme-d02` on <html> (layout), site-wide. */}
       <D02Background />
-      <ApplyThemeClass name="theme-d02" />
       <ActivityTicker items={tickerItems} />
       {/* theme-d02 re-themes all token-based homepage sections to dark, server-side (no flash). */}
       <div className="theme-d02 mx-auto max-w-5xl px-4">

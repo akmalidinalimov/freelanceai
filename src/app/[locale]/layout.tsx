@@ -12,7 +12,7 @@ import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
 import { UIProviders } from "@/components/ui-providers";
-import { AmberClassic } from "@/components/living-background/amber-classic";
+import { DotGridBackground } from "@/components/living-background/dot-grid";
 import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
 import { ReferralCapture } from "@/components/referral-capture";
 import { Suspense } from "react";
@@ -79,11 +79,13 @@ export default async function LocaleLayout({
     ] ?? "Skip to content";
 
   return (
-    <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
+    <html lang={locale} className={`${manrope.variable} ${unbounded.variable} theme-d02`}>
       <body className="flex min-h-screen flex-col">
-        {/* The chosen world lives on EVERY page, not just home (founder review
-            2026-07-04: /sell, /login etc. felt like a different, plain site). */}
-        <AmberClassic />
+        {/* Dark world site-wide (founder direction 2026-07-07): the dot-grid ground is
+            the default on every page. theme-d02 on <html> supplies the dark token
+            palette + color-scheme so all token-based UI themes dark automatically.
+            The homepage layers its own opaque D02Background (grid + beam) on top. */}
+        <DotGridBackground />
         <NextIntlClientProvider messages={messages}>
           <UIProviders>
           <a
