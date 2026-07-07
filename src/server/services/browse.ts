@@ -93,7 +93,8 @@ async function getHomeStatsUncached(): Promise<HomeStats> {
   const [gigs, creators, orders] = await Promise.all([
     prisma.gig.count({ where: { status: "ACTIVE", deletedAt: null } }),
     prisma.sellerProfile.count({ where: { user: { isSeller: true, status: "ACTIVE" } } }),
-    prisma.order.count({ where: { status: "COMPLETED" } }),
+    // Free test orders are not real marketplace activity — keep the public counter honest.
+    prisma.order.count({ where: { status: "COMPLETED", isTest: false } }),
   ]);
   return { gigs, creators, orders };
 }
@@ -129,7 +130,8 @@ async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
 
   const [delivered, reviews, joined] = await Promise.all([
     prisma.order.findMany({
-      where: { status: "COMPLETED", seller: { status: "ACTIVE" } },
+      // Test orders are not real social proof — exclude from the public activity ticker.
+      where: { status: "COMPLETED", isTest: false, seller: { status: "ACTIVE" } },
       orderBy: { updatedAt: "desc" },
       take: 5,
       select: {
@@ -138,7 +140,7 @@ async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
       },
     }),
     prisma.review.findMany({
-      where: { rating: { gte: 4 }, gig: { seller: { status: "ACTIVE" } } },
+      where: { rating: { gte: 4 }, order: { isTest: false }, gig: { seller: { status: "ACTIVE" } } },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: {

@@ -31,6 +31,7 @@ export function OrderPanel({
   packages,
   extras = [],
   requirementPrompts = [],
+  freeMode = false,
 }: {
   gigId: string;
   locale: string;
@@ -38,6 +39,8 @@ export function OrderPanel({
   packages: Pkg[];
   extras?: Extra[];
   requirementPrompts?: string[];
+  /** Test mode: orders settle free (no payment). Shows a note so testers know it's intentional. */
+  freeMode?: boolean;
 }) {
   const t = useTranslations("Gig");
   const to = useTranslations("Order");
@@ -264,7 +267,9 @@ export function OrderPanel({
           <Button className="w-full" size="lg" onClick={placeOrder} disabled={busy}>
             {busy ? to("placing") : to("placeOrder")}
           </Button>
-          <p className="text-center text-xs text-[hsl(var(--muted-foreground))]">{to("noPaymentYet")}</p>
+          <p className="text-center text-xs text-[hsl(var(--muted-foreground))]">
+            {freeMode ? `🧪 ${to("freeTestNote")}` : to("noPaymentYet")}
+          </p>
         </>
       )}
     </div>

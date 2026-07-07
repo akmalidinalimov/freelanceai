@@ -11,6 +11,8 @@ import { recomputeSellerStats } from "@/server/services/profile";
 import { notifyAndPush } from "@/server/services/notification";
 import { findValidCoupon } from "@/server/services/coupon";
 import { issueReferralReward, consumeCreditForOrder, restoreOrderCredit } from "@/server/services/affiliate";
+import { autoSettleFreeOrderIfEnabled, freeOrdersEnabled } from "@/server/services/payments";
+import { logger } from "@/lib/logger";
 
 function commissionPct(): number {
   const n = Number(process.env.PLATFORM_COMMISSION_PCT ?? "20");
@@ -47,11 +49,15 @@ export async function createOrder(
     commissionPct()
   );
 
+  // A free test-mode order must not touch any real economic state (no coupon budget, no
+  // referral credit, excluded from payouts/stats downstream). See qa review C1/C2.
+  const testMode = freeOrdersEnabled();
+
   // Apply a promo code if one is valid (platform-funded; capped so the platform keeps ≥0).
   let discountUzs = 0;
   let appliedCode: string | null = null;
   let couponId: string | null = null;
-  if (couponCode?.trim()) {
+  if (!testMode && couponCode?.trim()) {
     const coupon = await findValidCoupon(couponCode);
     if (coupon) {
       discountUzs = couponDiscount(coupon, amountUzs, commissionUzs);
@@ -87,26 +93,36 @@ export async function createOrder(
         requirementFileUrls: requirementFileUrls.slice(0, 10),
         // Awaiting (manual) payment confirmation before work begins.
         status: "PENDING_PAYMENT",
+        isTest: testMode,
         dueAt: new Date(Date.now() + (pkg.deliveryDays + extraDays) * 24 * 60 * 60 * 1000),
       },
     });
     // Reserve the buyer's referral credit NOW so it lowers the amount they pay at checkout
     // (the PSP is charged amountUzs − discountUzs). Capped at the platform commission, so the
     // seller's net is untouched. Restored if the order is cancelled or expires unpaid
-    // (see cancelOrder / respondCancellation / expireStalePendingOrders).
-    const credit = await consumeCreditForOrder(tx, buyerId, commissionUzs, discountUzs);
-    if (credit > 0) {
-      await tx.order.update({
-        where: { id: created.id },
-        data: { discountUzs: discountUzs + credit, creditUsedUzs: credit },
-      });
-      created.discountUzs = discountUzs + credit;
-      created.creditUsedUzs = credit;
+    // (see cancelOrder / respondCancellation / expireStalePendingOrders). Skipped for test
+    // orders — they must never spend real referral credit.
+    if (!testMode) {
+      const credit = await consumeCreditForOrder(tx, buyerId, commissionUzs, discountUzs);
+      if (credit > 0) {
+        await tx.order.update({
+          where: { id: created.id },
+          data: { discountUzs: discountUzs + credit, creditUsedUzs: credit },
+        });
+        created.discountUzs = discountUzs + credit;
+        created.creditUsedUzs = credit;
+      }
     }
     return created;
   });
   await audit({ actorId: buyerId, action: "order.create", entity: "Order", entityId: order.id });
   void trackEvent("order_created", { userId: buyerId, entityId: order.id, meta: { gigId: gig.id } });
+  // Test mode (FREE_ORDERS, no live PSP): settle immediately so the full flow works without
+  // payment. Best-effort — a settle failure leaves the order PENDING_PAYMENT (never throws),
+  // but we log it so a dead-ended test order is diagnosable (qa review I2).
+  await autoSettleFreeOrderIfEnabled(order.id).catch((e) =>
+    logger.warn("free_order_autosettle_failed", { orderId: order.id, error: String(e) })
+  );
   return order;
 }
 
@@ -128,6 +144,7 @@ export async function createOrderFromOffer(offer: {
   if (gig.sellerId !== offer.sellerId) throw Errors.forbidden("Offer is no longer valid");
   if (offer.buyerId === offer.sellerId) throw Errors.forbidden("You cannot order your own gig");
 
+  const testMode = freeOrdersEnabled();
   const { amountUzs, commissionUzs, sellerNetUzs } = orderTotals(offer.priceUzs, [], commissionPct());
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
@@ -141,19 +158,26 @@ export async function createOrderFromOffer(offer: {
         commissionUzs,
         sellerNetUzs,
         status: "PENDING_PAYMENT",
+        isTest: testMode,
         dueAt: new Date(Date.now() + offer.deliveryDays * 24 * 60 * 60 * 1000),
       },
     });
     // Reserve referral credit at checkout, same as a normal order (no coupon on offers).
-    const credit = await consumeCreditForOrder(tx, offer.buyerId, commissionUzs, 0);
-    if (credit > 0) {
-      await tx.order.update({ where: { id: created.id }, data: { discountUzs: credit, creditUsedUzs: credit } });
-      created.discountUzs = credit;
-      created.creditUsedUzs = credit;
+    // Skipped for test orders — they must never spend real referral credit.
+    if (!testMode) {
+      const credit = await consumeCreditForOrder(tx, offer.buyerId, commissionUzs, 0);
+      if (credit > 0) {
+        await tx.order.update({ where: { id: created.id }, data: { discountUzs: credit, creditUsedUzs: credit } });
+        created.discountUzs = credit;
+        created.creditUsedUzs = credit;
+      }
     }
     return created;
   });
   await audit({ actorId: offer.buyerId, action: "order.create.offer", entity: "Order", entityId: order.id });
+  await autoSettleFreeOrderIfEnabled(order.id).catch((e) =>
+    logger.warn("free_order_autosettle_failed", { orderId: order.id, error: String(e) })
+  );
   return order;
 }
 
@@ -245,7 +269,10 @@ export async function acceptOrder(orderId: string, buyer: User) {
   await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED", completedAt: new Date() } });
   await recomputeSellerStats(order.sellerId);
   // Reward the buyer's referrer on their first completed order (idempotent, best-effort).
-  await issueReferralReward({ id: order.id, buyerId: order.buyerId, commissionUzs: order.commissionUzs });
+  // Never for test orders — they must not mint real referral credit (qa review C2).
+  if (!order.isTest) {
+    await issueReferralReward({ id: order.id, buyerId: order.buyerId, commissionUzs: order.commissionUzs });
+  }
   await audit({ actorId: buyer.id, action: "order.complete", entity: "Order", entityId: orderId });
   await notifyAndPush(order.sellerId, "order.completed", "Buyurtma yakunlandi", {
     body: "Buyurtmachi ishni qabul qildi. Mablagʻ hisobingizga oʻtkazildi.",
@@ -273,7 +300,7 @@ export async function autoCompleteDeliveredOrders(days = 3): Promise<number> {
   // Fetch the due orders first (bounded) so we can issue referral rewards per completion.
   const due = await prisma.order.findMany({
     where: { status: "DELIVERED", deliveredAt: { lt: cutoff } },
-    select: { id: true, buyerId: true, commissionUzs: true },
+    select: { id: true, buyerId: true, commissionUzs: true, isTest: true },
     take: 500,
   });
   if (due.length === 0) return 0;
@@ -281,8 +308,9 @@ export async function autoCompleteDeliveredOrders(days = 3): Promise<number> {
     where: { id: { in: due.map((o) => o.id) }, status: "DELIVERED" },
     data: { status: "COMPLETED", completedAt: new Date() },
   });
-  // First-completed-order referral reward (idempotent per referee, best-effort).
-  for (const o of due) await issueReferralReward(o);
+  // First-completed-order referral reward (idempotent per referee, best-effort). Never for
+  // test orders — they must not mint real referral credit (qa review C2).
+  for (const o of due) if (!o.isTest) await issueReferralReward(o);
   return res.count;
 }
 

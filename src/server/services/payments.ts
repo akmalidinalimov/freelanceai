@@ -7,6 +7,7 @@ import { trackEvent } from "@/server/services/activity";
 import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 import { onOrderPaid } from "@/server/services/gamification";
+import { paymentsEnabled } from "@/lib/payments";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
 
@@ -147,10 +148,49 @@ export async function settleOrderByProvider(
   }
 }
 
+/**
+ * TEST MODE — free ordering. When enabled, a newly-placed order is auto-settled with no PSP
+ * so the full order → chat → delivery → review flow can be exercised end to end without any
+ * payment. Enabled only when FREE_ORDERS is set AND no real payment provider is live.
+ *
+ * GO-LIVE: the primary off-switch is removing FREE_ORDERS (or setting it "0") — do that FIRST.
+ * The `!paymentsEnabled()` guard is defense-in-depth only: it trips for a FULLY configured PSP
+ * (PAYMENT_PROVIDER set AND all its creds present), but a HALF-configured provider still counts
+ * as "not enabled", so free ordering would stay on. Never rely on the guard alone at go-live.
+ */
+export function freeOrdersEnabled(): boolean {
+  const on = process.env.FREE_ORDERS === "1" || process.env.FREE_ORDERS === "true";
+  return on && !paymentsEnabled();
+}
+
+/**
+ * Auto-settle a just-created order for free (test mode). Routes through the SAME idempotent,
+ * balanced path as a real payment (provider MANUAL, ref "FREE_TEST"), so the ledger stays
+ * balanced and the order moves PENDING_PAYMENT → IN_PROGRESS exactly like a paid one. No-op
+ * when free mode is off or the order is no longer awaiting payment. Best-effort: a failure
+ * here never breaks order placement (the order simply stays PENDING_PAYMENT).
+ */
+export async function autoSettleFreeOrderIfEnabled(orderId: string): Promise<void> {
+  if (!freeOrdersEnabled()) return;
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || order.status !== "PENDING_PAYMENT") return;
+  let posted = false;
+  await prisma.$transaction(async (tx) => {
+    posted = await postOrderPaymentTx(tx, order, "MANUAL", "FREE_TEST");
+  });
+  if (posted) {
+    await audit({ actorId: order.buyerId, action: "order.payment.free", entity: "Order", entityId: orderId });
+    void trackEvent("order_paid", { userId: order.buyerId, entityId: orderId, meta: { provider: "FREE_TEST" } });
+    onOrderPaid(order.buyerId);
+    await notifySellerPaid(orderId, order.sellerId);
+  }
+}
+
 /** Total successful tips received by a seller (across all their orders). */
 async function sellerTipsTotal(sellerId: string, db: Prisma.TransactionClient = prisma): Promise<number> {
   const tips = await db.transaction.findMany({
-    where: { type: "TIP", status: "SUCCEEDED", order: { sellerId } },
+    // Tips on test orders never contribute withdrawable balance (qa review C1 — tip channel).
+    where: { type: "TIP", status: "SUCCEEDED", order: { sellerId, isTest: false } },
     select: { amountUzs: true },
   });
   return tips.reduce((a, t) => a + t.amountUzs, 0);
@@ -165,6 +205,9 @@ export async function tipOrder(orderId: string, buyer: User, amountUzs: number, 
   if (!order) throw Errors.notFound("Order not found");
   if (order.buyerId !== buyer.id) throw Errors.forbidden();
   if (order.status !== "COMPLETED") throw Errors.conflict("You can tip only after completion");
+  // No tips on free test orders — they must never write a TIP row or seed a real balance
+  // (qa review C1 — tip channel; belt-and-suspenders with the sellerTipsTotal filter).
+  if (order.isTest) throw Errors.conflict("Tips are disabled for test orders");
 
   // Idempotency: a retried / double-submitted tip (same client key) must not double-credit
   // the seller. The key is unique on Transaction, so the second write is a no-op.
@@ -212,7 +255,8 @@ export async function sellerAvailableUzs(
   db: Prisma.TransactionClient = prisma
 ): Promise<number> {
   const [completed, payouts, tips] = await Promise.all([
-    db.order.aggregate({ where: { sellerId, status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
+    // isTest orders never contribute withdrawable balance (qa review C1).
+    db.order.aggregate({ where: { sellerId, status: "COMPLETED", isTest: false }, _sum: { sellerNetUzs: true } }),
     db.payoutRequest.aggregate({ where: { sellerId, status: "PAID" }, _sum: { amountUzs: true } }),
     sellerTipsTotal(sellerId, db),
   ]);
@@ -228,7 +272,8 @@ export interface SellerEarnings {
 /** Seller earnings derived from order status + payouts (ledger is the audit record). */
 export async function getSellerEarnings(sellerId: string): Promise<SellerEarnings> {
   const orders = await prisma.order.findMany({
-    where: { sellerId },
+    // Exclude test orders from both held and lifetime earnings (qa review C1).
+    where: { sellerId, isTest: false },
     select: { status: true, sellerNetUzs: true },
   });
 
@@ -285,10 +330,11 @@ export interface SellerBalanceRow {
 /** Sellers with a positive withdrawable balance (completed earnings minus payouts). */
 export async function listSellerBalances(): Promise<SellerBalanceRow[]> {
   const [completed, payouts, tipTxns] = await Promise.all([
-    prisma.order.groupBy({ by: ["sellerId"], where: { status: "COMPLETED" }, _sum: { sellerNetUzs: true } }),
+    prisma.order.groupBy({ by: ["sellerId"], where: { status: "COMPLETED", isTest: false }, _sum: { sellerNetUzs: true } }),
     prisma.payoutRequest.groupBy({ by: ["sellerId"], where: { status: "PAID" }, _sum: { amountUzs: true } }),
     prisma.transaction.findMany({
-      where: { type: "TIP", status: "SUCCEEDED" },
+      // Exclude test-order tips from the admin payout console's balances (qa review C1).
+      where: { type: "TIP", status: "SUCCEEDED", order: { isTest: false } },
       select: { amountUzs: true, order: { select: { sellerId: true } } },
     }),
   ]);

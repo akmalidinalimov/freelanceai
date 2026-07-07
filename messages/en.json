@@ -486,6 +486,7 @@
     "receipt": "Receipt",
     "ownGig": "This is your own gig.",
     "requirementsPh": "Describe what you need (optional)...",
+    "freeTestNote": "Test mode — orders are free, no payment needed.",
     "noPaymentYet": "Every order is checked by our team — your money is protected.",
     "awaitingPayment": "Awaiting payment confirmation — once our team confirms it, work begins.",
     "reviewPay": "Review & pay",

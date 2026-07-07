@@ -29,6 +29,7 @@ import { getCurrentUser } from "@/lib/session";
 import { isGigSaved } from "@/server/services/saved";
 import { formatUzs } from "@/lib/utils";
 import { OrderPanel } from "@/components/order-panel";
+import { freeOrdersEnabled } from "@/server/services/payments";
 import { GigGallery } from "@/components/gig-gallery";
 import { Stars } from "@/components/stars";
 import { ChevronDown } from "lucide-react";
@@ -456,6 +457,7 @@ export default async function GigDetailPage({
             deliveryDays: e.deliveryDays,
           }))}
           requirementPrompts={Array.isArray(gig.requirementPrompts) ? (gig.requirementPrompts as string[]) : []}
+          freeMode={freeOrdersEnabled()}
         />
         {/* Secondary action lives where the buyer's eye already is. */}
         <div className="mt-3">

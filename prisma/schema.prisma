@@ -533,6 +533,10 @@ model Order {
   requirementAnswers Json?    // [{ q, a }] answers to the gig's requirement prompts
   requirementFileUrls String[] @default([])
   status       OrderStatus @default(PENDING_PAYMENT)
+  // Free "test mode" order (placed while FREE_ORDERS is on, no real payment). Excluded from
+  // ALL economic aggregation — seller payout balances, referral rewards, and public stats —
+  // so test traffic can never mint real money/credit or inflate a real seller's numbers.
+  isTest       Boolean     @default(false)
   dueAt        DateTime?
   deliveredAt  DateTime?
   completedAt  DateTime?

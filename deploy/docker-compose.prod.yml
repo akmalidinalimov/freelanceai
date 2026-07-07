@@ -116,6 +116,10 @@ services:
       INSTAGRAM_APP_ID: ${INSTAGRAM_APP_ID:-}
       INSTAGRAM_APP_SECRET: ${INSTAGRAM_APP_SECRET:-}
       PLATFORM_COMMISSION_PCT: "20"
+      # TEST MODE: orders settle for free (no payment) so the full order→chat→delivery→review
+      # flow can be exercised while payments aren't wired. Auto-neutralized once a real PSP is
+      # configured (PAYMENT_PROVIDER=payme|click). REMOVE / set "0" before real payments go live.
+      FREE_ORDERS: "1"
     expose:
       - "3000"
 

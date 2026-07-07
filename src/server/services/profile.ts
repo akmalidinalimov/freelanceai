@@ -14,8 +14,9 @@ const PORTFOLIO_MAX = 12;
 /** Recompute a seller's rating aggregate + level from completed orders and reviews. */
 export async function recomputeSellerStats(sellerId: string) {
   const [completed, agg] = await Promise.all([
-    prisma.order.count({ where: { sellerId, status: "COMPLETED" } }),
-    prisma.review.aggregate({ where: { gig: { sellerId } }, _avg: { rating: true }, _count: true }),
+    // Test orders (and their reviews) never inflate a real seller's public numbers (qa review C3).
+    prisma.order.count({ where: { sellerId, status: "COMPLETED", isTest: false } }),
+    prisma.review.aggregate({ where: { gig: { sellerId }, order: { isTest: false } }, _avg: { rating: true }, _count: true }),
   ]);
   const ratingAvg = agg._avg.rating ?? 0;
   const ratingCount = agg._count;

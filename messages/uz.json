@@ -486,6 +486,7 @@
     "receipt": "Kvitansiya",
     "ownGig": "Bu sizning xizmatingiz.",
     "requirementsPh": "Nima kerakligini yozing (ixtiyoriy)...",
+    "freeTestNote": "Test rejimi — buyurtmalar bepul, toʻlov shart emas.",
     "noPaymentYet": "Har bir buyurtma jamoamiz tomonidan tekshiriladi — pulingiz himoyada.",
     "awaitingPayment": "Toʻlov tasdiqlanishi kutilmoqda — tasdiqlangach, ish boshlanadi.",
     "reviewPay": "Koʻrib chiqing va toʻlang",
