@@ -16,7 +16,7 @@
  */
 export function DotGridBackground() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: "#0a0c12" }}>
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: "#141826" }}>
       {/* faint dot lattice, fading toward the edges with a radial mask */}
       <div
         className="absolute inset-0"

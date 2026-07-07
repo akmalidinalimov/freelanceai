@@ -4,12 +4,11 @@ import { listFeaturedCreators, countActiveCreators, listRecentActivity } from "@
 import { listFeaturedGigs, listPublicGigs } from "@/server/services/gig";
 import { specLabel, specSlug } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
-import { FeaturedGigLoop } from "@/components/featured-gig-loop";
+import { FloatingGigHero } from "@/components/floating-gig-hero";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
 import { PrismCategoryCard } from "@/components/prism-category-card";
-import { normalizeBg, BG_CONCEPTS } from "@/components/living-background";
-import { D02Background } from "@/components/living-background/d02";
+import { BreathingDots } from "@/components/living-background/breathing-dots";
 import { cardClass } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -29,16 +28,11 @@ const CATS = [
 
 export default async function HomePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ bg?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  // Temporary living-background lab: ?bg=1|2|3 picks a concept (default 1).
-  const { bg } = await searchParams;
-  const bgVariant = normalizeBg(bg);
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
   const creatorCount = await countActiveCreators().catch(() => 0);
@@ -49,6 +43,7 @@ export default async function HomePage({
   type GigWithSeller = {
     slug: string; title: string; coverUrl: string | null; coverFocal: string | null;
     coverType: string | null; coverPosterUrl: string | null;
+    packages?: { priceUzs: number }[];
     seller: { firstName: string | null; name: string | null; username: string | null; image: string | null; photoUrl: string | null; sellerProfile: { ratingAvg: number; ratingCount: number } | null };
   };
   const toFeatured = (g: GigWithSeller) => ({
@@ -58,6 +53,7 @@ export default async function HomePage({
     coverFocal: g.coverFocal ?? null,
     coverType: g.coverType ?? null,
     coverPosterUrl: g.coverPosterUrl ?? null,
+    priceUzs: g.packages?.[0]?.priceUzs ?? null,
     sellerName: g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "",
     sellerAvatar: g.seller.image ?? g.seller.photoUrl ?? null,
     ratingAvg: g.seller.sellerProfile?.ratingAvg ?? 0,
@@ -84,21 +80,15 @@ export default async function HomePage({
 
   return (
     <>
-      {/* D02 "Blueprint Grid" — the homepage's signature dark world. Opaque, so it layers
-          over the global dot-grid ground with its grid + travelling beam. The dark token
-          palette now comes from `theme-d02` on <html> (layout), site-wide. */}
-      <D02Background />
+      {/* Soft-indigo animated ground: a breathing / waving dot field (founder pick 2026-07-08).
+          Opaque, so it layers over the global dot-grid on the homepage. */}
+      <BreathingDots />
       <ActivityTicker items={tickerItems} />
-      {/* theme-d02 re-themes all token-based homepage sections to dark, server-side (no flash). */}
-      <div className="theme-d02 mx-auto max-w-5xl px-4">
-        {/* Hero — AI concierge search over the living background */}
-        <section className="relative isolate -mx-4 px-4">
-          {bg && (
-            <span className="pointer-events-none absolute bottom-2 right-2 z-20 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))]/80 px-2.5 py-1 text-[10px] font-semibold text-[hsl(var(--muted-foreground))] backdrop-blur">
-              bg {bgVariant} · {BG_CONCEPTS[bgVariant].name}
-            </span>
-          )}
-          <div className="relative z-10 flex flex-col items-center gap-4 py-12 text-center sm:py-20">
+      <div className="theme-d02 mx-auto max-w-6xl px-4">
+        {/* Hero — split: AI concierge search + editorial serif headline on the left;
+            the featured gig floats and rotates on the right (Laocoön-inspired). */}
+        <section className="grid items-center gap-8 py-10 sm:py-14 lg:grid-cols-2 lg:gap-10 lg:py-20">
+          <div className="flex flex-col items-start gap-5 text-left">
             <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary))]">
               ✦ {t("eyebrowAI")}
               {creatorCount > 0 && (
@@ -109,19 +99,19 @@ export default async function HomePage({
                 </>
               )}
             </span>
-            <h1 className="font-display max-w-[16ch] text-3xl font-extrabold leading-[1.08] text-balance sm:text-5xl">
+            <h1 className="font-serif-display max-w-[15ch] text-4xl font-semibold leading-[1.03] text-balance sm:text-6xl">
               {t("searchHeadline")}{" "}
-              <span className="text-[hsl(var(--primary))]">{t("searchHeadline2")}</span>
+              <span className="italic text-[hsl(var(--primary-ink))]">{t("searchHeadline2")}</span>
             </h1>
-            <p className="max-w-[42ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
+            <p className="max-w-[44ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
               {t("searchSub")}
             </p>
             <HomeSearch />
           </div>
-        </section>
 
-        {/* Featured-gig loop — real work rotating (replaces vanity stat counters) */}
-        <FeaturedGigLoop gigs={showcaseGigs} />
+          {/* The featured gig, redesigned as a floating rotating spotlight */}
+          <FloatingGigHero gigs={showcaseGigs} />
+        </section>
 
         {/* Categories */}
         <section className="py-6">

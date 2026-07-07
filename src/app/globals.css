@@ -119,15 +119,18 @@
    beam. Every token here mirrors :root so nothing falls back to the light palette; the
    :root/light values are the legacy baseline kept for reference. ------------------- */
 .theme-d02 {
-  --background: 224 26% 6%;
+  /* Soft-dark INDIGO (founder pick 2026-07-08): a deep blue-violet ground lifted off
+     pure black — premium + trustworthy + futuristic, and the teal covers/accents pop
+     against it. Same lightness deltas as the old charcoal so the WCAG-AA contract holds. */
+  --background: 226 30% 11%;
   --foreground: 214 24% 92%;
-  --card: 222 22% 10.5%;
+  --card: 226 26% 15%;
   --card-foreground: 214 24% 92%;
-  --surface-2: 221 20% 14%;
-  --muted: 221 18% 15%;
-  --muted-foreground: 214 15% 64%;
-  --border: 216 22% 20%;
-  --input-border: 214 18% 44%;
+  --surface-2: 225 24% 19%;
+  --muted: 225 22% 20%;
+  --muted-foreground: 220 18% 68%;
+  --border: 224 22% 26%;
+  --input-border: 222 22% 48%;
 
   --primary: 173 68% 46%;
   --primary-foreground: 173 45% 8%;
@@ -159,6 +162,13 @@
   50% { transform: translate(70%, 32%); }
   100% { transform: translate(-6%, -4%); }
 }
+
+/* Floating gig hero — the card gently bobs, its glow breathes. */
+@keyframes float-bob { 0%, 100% { transform: translateY(-8px); } 50% { transform: translateY(8px); } }
+@keyframes glow-pulse { 0%, 100% { transform: scale(.94); opacity: .78; } 50% { transform: scale(1.06); opacity: 1; } }
+.anim-bob { animation: float-bob 7s ease-in-out infinite; }
+.anim-glow { animation: glow-pulse 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .anim-bob, .anim-glow { animation: none; } }
 
 /* Register tokens as Tailwind color utilities (bg-success, text-danger, …). */
 @theme inline {
@@ -214,6 +224,12 @@ body {
 .font-display {
   font-family: var(--font-unbounded), var(--font-manrope), sans-serif;
   letter-spacing: -0.02em;
+}
+
+/* Editorial high-contrast serif for the homepage hero headline (Playfair Display). */
+.font-serif-display {
+  font-family: var(--font-playfair), "Georgia", "Times New Roman", serif;
+  letter-spacing: -0.01em;
 }
 
 /* ===== Amber Classic living background (founder-chosen, 2026-07-04) ===== */
