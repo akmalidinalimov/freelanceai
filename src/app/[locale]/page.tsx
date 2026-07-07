@@ -15,16 +15,17 @@ export const dynamic = "force-dynamic";
 
 /* Prism category tiles (founder-chosen): the zipper `word` is a brand graphic
    kept identical across locales; the localized name/desc live in aria + pill. */
-const CATS = [
+const CATS: { word: string; desc: string; spec?: string; href?: string }[] = [
   { spec: "ai_video", word: "AI VIDEO", desc: "catVideo" },
   { spec: "ai_image", word: "AI RASM", desc: "catImage" },
   { spec: "ai_avatar", word: "AVATAR", desc: "catAvatar" },
-  { spec: "product_photo", word: "FOTO", desc: "catPhoto" },
+  // Founder-added service categories (no browse-taxonomy slug yet → link to a gig search).
+  { word: "AI AGENTS", desc: "catAgents", href: "/gigs?q=AI%20agent" },
   { spec: "voiceover", word: "OVOZ", desc: "catVoice" },
   { spec: "branding", word: "BREND", desc: "catBranding" },
   { spec: "motion", word: "MOTION", desc: "catMotion" },
-  { spec: "image_edit", word: "RETUSH", desc: "catEdit" },
-] as const;
+  { word: "AVTOMATLASHTIRISH", desc: "catAutomation", href: "/gigs?q=avtomatlashtirish" },
+];
 
 export default async function HomePage({
   params,
@@ -84,7 +85,9 @@ export default async function HomePage({
           Opaque, so it layers over the global dot-grid on the homepage. */}
       <BreathingDots />
       <ActivityTicker items={tickerItems} />
-      <div className="theme-d02 mx-auto max-w-6xl px-4">
+      {/* overflow-x-clip: the floating-gig glow blur can bleed past a phone viewport and
+          trigger horizontal scroll / zoom-out; clip it so mobile stays pinned. */}
+      <div className="theme-d02 mx-auto max-w-6xl overflow-x-clip px-4">
         {/* Hero — split: AI concierge search + editorial serif headline on the left;
             the featured gig floats and rotates on the right (Laocoön-inspired). */}
         <section className="grid items-center gap-8 py-10 sm:py-14 lg:grid-cols-2 lg:gap-10 lg:py-20">
@@ -99,7 +102,7 @@ export default async function HomePage({
                 </>
               )}
             </span>
-            <h1 className="font-serif-display max-w-[15ch] text-4xl font-semibold leading-[1.03] text-balance sm:text-6xl">
+            <h1 className="font-serif-display max-w-[17ch] text-[clamp(2rem,5.4vw,3.9rem)] font-bold leading-[1.06] text-balance [text-wrap:balance]">
               {t("searchHeadline")}{" "}
               <span className="italic text-[hsl(var(--primary-ink))]">{t("searchHeadline2")}</span>
             </h1>
@@ -123,11 +126,11 @@ export default async function HomePage({
           </div>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {CATS.map((c, i) => (
-              <li key={c.spec}>
+              <li key={c.word}>
                 <PrismCategoryCard
-                  href={`/browse/${specSlug(c.spec)}`}
+                  href={c.href ?? `/browse/${specSlug(c.spec!)}`}
                   word={c.word}
-                  label={specLabel(c.spec, locale)}
+                  label={c.spec ? specLabel(c.spec, locale) : t(c.desc)}
                   sub={t(c.desc)}
                   index={i}
                 />

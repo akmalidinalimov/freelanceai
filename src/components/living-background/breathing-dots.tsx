@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 
 /**
  * BreathingDots — the homepage's signature animated ground (founder direction 2026-07-08).
- * A soft-indigo canvas with a dot field that slowly WAVES (a travelling sine ripple),
- * BREATHES (a global pulse), and brightens toward a drifting light-centre tinted with the
- * brand teal — so the page is alive the moment you land. Pure Canvas 2D, capped at 2× DPR.
+ * A soft-peach canvas with a dot field that slowly WAVES (a travelling sine ripple),
+ * BREATHES (a global pulse), and brightens toward a drifting warm light-centre — so the
+ * page is alive the moment you land. Pure Canvas 2D, capped at 2× DPR.
  *
  * Opaque, mounted at the page root (like the other backgrounds) so its fixed layer covers
  * the global dot-grid on the homepage. Honours prefers-reduced-motion: renders one calm
@@ -39,9 +39,9 @@ export function BreathingDots() {
       rows = Math.ceil(H / GAP) + 2;
     };
 
-    // indigo-grey base dot → teal near the light centre
-    const FAR = [110, 122, 168];
-    const NEAR = [90, 226, 208];
+    // warm peach-grey base dot → coral near the light centre (light theme)
+    const FAR = [198, 156, 132];
+    const NEAR = [226, 118, 66];
 
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
@@ -65,7 +65,7 @@ export function BreathingDots() {
           const g = Math.round(FAR[1] + (NEAR[1] - FAR[1]) * near);
           const b = Math.round(FAR[2] + (NEAR[2] - FAR[2]) * near);
           ctx.beginPath();
-          ctx.fillStyle = `rgba(${r},${g},${b},${0.09 + 0.5 * pulse * near + 0.06 * breath})`;
+          ctx.fillStyle = `rgba(${r},${g},${b},${0.1 + 0.42 * pulse * near + 0.05 * breath})`;
           ctx.arc(x, y, rad, 0, 6.2832);
           ctx.fill();
         }
@@ -94,22 +94,21 @@ export function BreathingDots() {
     <div
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-      style={{ background: "linear-gradient(165deg, #171b30 0%, #10121f 100%)" }}
+      style={{ background: "linear-gradient(165deg, #fdf2ec 0%, #f7e0d2 100%)" }}
     >
       <canvas ref={ref} className="absolute inset-0 h-full w-full" />
-      {/* teal accent glow, top-right, matching the drifting light-centre */}
+      {/* soft coral glow, top-right, matching the drifting light-centre */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(46% 42% at 76% 10%, hsl(173 70% 40% / .16), transparent 66%)",
-          mixBlendMode: "screen",
+            "radial-gradient(46% 42% at 76% 10%, hsl(18 88% 62% / .14), transparent 66%)",
         }}
       />
-      {/* corner vignette sinks the edges */}
+      {/* soft warm edge settles the corners */}
       <div
         className="absolute inset-0"
-        style={{ background: "radial-gradient(122% 90% at 50% 38%, transparent 50%, rgba(7,9,18,.8) 100%)" }}
+        style={{ background: "radial-gradient(122% 90% at 50% 38%, transparent 62%, hsl(24 42% 58% / .12) 100%)" }}
       />
     </div>
   );
