@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Unbounded, Playfair_Display } from "next/font/google";
+import { Manrope, Unbounded } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale, getTranslations, getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -30,14 +30,6 @@ const unbounded = Unbounded({
   subsets: ["latin", "latin-ext", "cyrillic"],
   weight: ["600", "700", "800"],
   variable: "--font-unbounded",
-  display: "swap",
-});
-// Editorial high-contrast serif for the homepage hero headline (Laocoön direction).
-const playfair = Playfair_Display({
-  subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-playfair",
   display: "swap",
 });
 
@@ -87,7 +79,7 @@ export default async function LocaleLayout({
     ] ?? "Skip to content";
 
   return (
-    <html lang={locale} className={`${manrope.variable} ${unbounded.variable} ${playfair.variable} theme-d02`}>
+    <html lang={locale} className={`${manrope.variable} ${unbounded.variable} theme-d02`}>
       <body className="flex min-h-screen flex-col">
         {/* Dark world site-wide (founder direction 2026-07-07): the dot-grid ground is
             the default on every page. theme-d02 on <html> supplies the dark token

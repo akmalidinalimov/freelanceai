@@ -119,42 +119,38 @@
    beam. Every token here mirrors :root so nothing falls back to the light palette; the
    :root/light values are the legacy baseline kept for reference. ------------------- */
 .theme-d02 {
-  /* Light PEACH theme (founder pick 2026-07-08, applied SITE-WIDE). Warm peach canvas,
-     near-white cards, dark warm ink; teal primary + coral accent kept. Lightness mirrors
-     the canonical :root light palette so the WCAG-AA token contract holds. (Class name is
-     historical — it now carries the light theme.) */
-  --background: 22 66% 95%;
-  --foreground: 222 24% 14%;
-  --card: 30 60% 99.5%;
-  --card-foreground: 222 24% 14%;
-  --surface-2: 26 45% 93.5%;
-  --muted: 26 40% 92%;
-  --muted-foreground: 220 12% 40%;
-  --border: 26 34% 87%;
-  --input-border: 214 20% 66%;
+  --background: 224 26% 6%;
+  --foreground: 214 24% 92%;
+  --card: 222 22% 10.5%;
+  --card-foreground: 214 24% 92%;
+  --surface-2: 221 20% 14%;
+  --muted: 221 18% 15%;
+  --muted-foreground: 214 15% 64%;
+  --border: 216 22% 20%;
+  --input-border: 214 18% 44%;
 
-  --primary: 173 80% 34%;
-  --primary-foreground: 0 0% 100%;
-  --primary-ink: 173 84% 21%;
-  --accent: 11 86% 58%;
-  --accent-foreground: 0 0% 100%;
+  --primary: 173 68% 46%;
+  --primary-foreground: 173 45% 8%;
+  --primary-ink: 190 82% 66%;
+  --accent: 12 82% 62%;
+  --accent-foreground: 15 40% 10%;
 
-  --success: 152 60% 27%; --success-foreground: 0 0% 100%; --success-soft: 152 52% 93%;
-  --danger: 0 72% 47%; --danger-foreground: 0 0% 100%; --danger-soft: 0 80% 96%;
-  --warning: 33 95% 33%; --warning-foreground: 40 60% 12%; --warning-soft: 40 90% 92%;
-  --info: 218 80% 50%; --info-foreground: 0 0% 100%; --info-soft: 218 88% 95%;
-  --violet: 262 68% 52%; --violet-soft: 262 72% 95%;
-  --star: 40 92% 50%;
+  --success: 152 52% 50%; --success-foreground: 152 45% 8%; --success-soft: 152 40% 16%;
+  --danger: 0 70% 62%; --danger-foreground: 0 40% 10%; --danger-soft: 0 45% 18%;
+  --warning: 36 88% 56%; --warning-foreground: 40 60% 10%; --warning-soft: 36 55% 18%;
+  --info: 212 90% 62%; --info-foreground: 212 45% 10%; --info-soft: 212 55% 20%;
+  --violet: 262 70% 72%; --violet-soft: 262 40% 24%;
+  --star: 40 92% 58%;
 
-  --ring: 173 80% 34%;
-  --shadow-soft: 0 1px 2px hsl(24 40% 40% / 0.06), 0 4px 14px -6px hsl(24 40% 34% / 0.12);
-  --shadow-hover: 0 4px 12px -3px hsl(24 40% 30% / 0.14), 0 14px 34px -10px hsl(24 40% 26% / 0.18);
-  --shadow-overlay: 0 12px 28px -6px hsl(24 40% 22% / 0.2), 0 30px 60px -20px hsl(24 40% 20% / 0.26);
+  --ring: 190 82% 60%;
+  --shadow-soft: 0 1px 2px hsl(220 60% 2% / 0.5), 0 6px 18px -8px hsl(220 60% 2% / 0.6);
+  --shadow-hover: 0 4px 14px -4px hsl(220 60% 2% / 0.55), 0 16px 38px -12px hsl(220 60% 2% / 0.65);
+  --shadow-overlay: 0 14px 32px -8px hsl(220 60% 2% / 0.6), 0 32px 64px -24px hsl(220 60% 2% / 0.7);
 
-  --gradient-a: 12 90% 70%; --gradient-b: 32 95% 66%; --gradient-c: 348 85% 74%;
+  --gradient-a: 212 70% 32%; --gradient-b: 200 60% 26%; --gradient-c: 224 55% 26%;
 
   color: hsl(var(--foreground));
-  color-scheme: light;
+  color-scheme: dark; /* native controls (scrollbars, form widgets, autofill) render dark */
 }
 
 /* Travelling accent beam for the D02 background. */
@@ -163,13 +159,6 @@
   50% { transform: translate(70%, 32%); }
   100% { transform: translate(-6%, -4%); }
 }
-
-/* Floating gig hero — the card gently bobs, its glow breathes. */
-@keyframes float-bob { 0%, 100% { transform: translateY(-8px); } 50% { transform: translateY(8px); } }
-@keyframes glow-pulse { 0%, 100% { transform: scale(.94); opacity: .78; } 50% { transform: scale(1.06); opacity: 1; } }
-.anim-bob { animation: float-bob 7s ease-in-out infinite; }
-.anim-glow { animation: glow-pulse 6s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .anim-bob, .anim-glow { animation: none; } }
 
 /* Register tokens as Tailwind color utilities (bg-success, text-danger, …). */
 @theme inline {
@@ -225,12 +214,6 @@ body {
 .font-display {
   font-family: var(--font-unbounded), var(--font-manrope), sans-serif;
   letter-spacing: -0.02em;
-}
-
-/* Editorial high-contrast serif for the homepage hero headline (Playfair Display). */
-.font-serif-display {
-  font-family: var(--font-playfair), "Georgia", "Times New Roman", serif;
-  letter-spacing: -0.01em;
 }
 
 /* ===== Amber Classic living background (founder-chosen, 2026-07-04) ===== */
