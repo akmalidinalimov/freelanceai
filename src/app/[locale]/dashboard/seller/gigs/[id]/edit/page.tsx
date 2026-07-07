@@ -41,6 +41,8 @@ export default async function EditGigPage({ params }: { params: Promise<{ locale
     tags: gig.tags.join(", "),
     coverUrl: gig.coverUrl ?? undefined,
     coverFocal: gig.coverFocal ?? undefined,
+    coverType: gig.coverType ?? undefined,
+    coverPosterUrl: gig.coverPosterUrl ?? undefined,
     coverW: gig.coverW ?? undefined,
     coverH: gig.coverH ?? undefined,
     galleryUrls: gig.galleryUrls,

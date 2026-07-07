@@ -5,6 +5,7 @@ import { formatUzs } from "@/lib/utils";
 import { coverVariant } from "@/lib/cover-variant";
 import { approxPrice } from "@/lib/currency";
 import { SaveHeart } from "@/components/save-heart";
+import { GigCoverVideo } from "@/components/gig-cover-video";
 import { listPublicGigs } from "@/server/services/gig";
 
 type GigItem = Awaited<ReturnType<typeof listPublicGigs>>[number];
@@ -15,15 +16,11 @@ export async function GigCard({
   locale,
   saved = false,
   isGuest = true,
-  adaptive = false,
 }: {
   gig: GigItem;
   locale: string;
   saved?: boolean;
   isGuest?: boolean;
-  /** In a masonry grid: render the cover at its native aspect ratio (no crop) when the
-   *  stored dimensions are known. Falls back to the fixed 16:9 frame otherwise. */
-  adaptive?: boolean;
 }) {
   const tg = await getTranslations("Gig");
   const pkg = gig.packages[0];
@@ -33,8 +30,6 @@ export async function GigCard({
   const avatar = gig.seller.photoUrl ?? gig.seller.image;
   const rating = gig.seller.sellerProfile?.ratingAvg ?? 0;
   const ratingCount = gig.seller.sellerProfile?.ratingCount ?? 0;
-  // Masonry mode: honor the cover's true ratio (no crop) when we know it.
-  const nativeCover = adaptive && !!gig.coverUrl && !!gig.coverW && !!gig.coverH;
 
   return (
     <Link
@@ -56,18 +51,17 @@ export async function GigCard({
         </span>
       </div>
 
-      {/* Viewport (the "page") — native ratio in masonry, else a fixed 16:9 frame */}
-      <div
-        className={`relative overflow-hidden ${nativeCover ? "" : "flex aspect-video items-center justify-center"}`}
-        style={nativeCover ? { aspectRatio: `${gig.coverW} / ${gig.coverH}` } : undefined}
-      >
+      {/* Viewport (the "page") — uniform 16:9 banner (image or video) */}
+      <div className="relative flex aspect-video items-center justify-center overflow-hidden">
         <SaveHeart gigId={gig.id} locale={locale} initialSaved={saved} isGuest={isGuest} />
         {gig.featured && (
           <span className="absolute left-2 top-2 z-10 rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-[10px] font-bold text-[hsl(var(--primary-foreground))] shadow-sm">
             ★ {tg("featured")}
           </span>
         )}
-        {gig.coverUrl ? (
+        {gig.coverUrl && gig.coverType === "video" ? (
+          <GigCoverVideo url={gig.coverUrl} poster={gig.coverPosterUrl} focal={gig.coverFocal} />
+        ) : gig.coverUrl ? (
           (() => {
             // Covers are per-category, so same-category gigs share one photo.
             // Crop + mirror per gig id so a grid / related rail isn't 4 clones.

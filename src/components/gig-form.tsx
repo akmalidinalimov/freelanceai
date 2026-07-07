@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { MediaUpload } from "@/components/media-upload";
+import { CoverUpload } from "@/components/cover-upload";
 import { GalleryUpload } from "@/components/gallery-upload";
 import { FocalPicker } from "@/components/focal-picker";
 
@@ -28,6 +28,8 @@ export interface GigInitial {
   tags: string;
   coverUrl?: string;
   coverFocal?: string;
+  coverType?: string;
+  coverPosterUrl?: string;
   coverW?: number;
   coverH?: number;
   galleryUrls: string[];
@@ -85,6 +87,10 @@ export function GigForm({
   const [tags, setTags] = useState(initial?.tags ?? "");
   const [coverUrl, setCoverUrl] = useState<string | undefined>(initial?.coverUrl);
   const [coverFocal, setCoverFocal] = useState<string | undefined>(initial?.coverFocal);
+  const [coverType, setCoverType] = useState<"image" | "video" | undefined>(
+    initial?.coverType === "video" ? "video" : initial?.coverUrl ? "image" : undefined
+  );
+  const [coverPoster, setCoverPoster] = useState<string | undefined>(initial?.coverPosterUrl);
   const [coverDims, setCoverDims] = useState<{ w: number; h: number } | undefined>(
     initial?.coverW && initial?.coverH ? { w: initial.coverW, h: initial.coverH } : undefined
   );
@@ -134,7 +140,9 @@ export function GigForm({
           title: title.trim(),
           description: description.trim(),
           coverUrl,
-          coverFocal: coverUrl ? coverFocal : undefined,
+          coverType: coverUrl ? coverType ?? "image" : undefined,
+          coverPosterUrl: coverUrl && coverType === "video" ? coverPoster : undefined,
+          coverFocal: coverUrl && coverType !== "video" ? coverFocal : undefined,
           coverW: coverUrl ? coverDims?.w : undefined,
           coverH: coverUrl ? coverDims?.h : undefined,
           galleryUrls,
@@ -249,15 +257,24 @@ export function GigForm({
       {/* 2 — Media: the first visual impression */}
       <Section title={t("secMedia")} desc={t("mediaHint")}>
         <div className="flex flex-col gap-4">
-          <MediaUpload
-            value={coverUrl}
-            onChange={(url, dims) => {
-              setCoverUrl(url);
-              setCoverDims(dims);
-              if (!url) setCoverFocal(undefined); // clearing the cover resets its framing
+          <CoverUpload
+            value={
+              coverUrl
+                ? { url: coverUrl, type: coverType ?? "image", poster: coverPoster, w: coverDims?.w, h: coverDims?.h }
+                : undefined
+            }
+            onChange={(v) => {
+              setCoverUrl(v?.url);
+              setCoverType(v?.type);
+              setCoverPoster(v?.poster);
+              setCoverDims(v?.w && v?.h ? { w: v.w, h: v.h } : undefined);
+              if (!v) setCoverFocal(undefined); // clearing the cover resets its framing
             }}
           />
-          {coverUrl && <FocalPicker src={coverUrl} value={coverFocal} onChange={setCoverFocal} />}
+          {/* Focal point only matters for image covers cropped into the 16:9 frame. */}
+          {coverUrl && coverType !== "video" && (
+            <FocalPicker src={coverUrl} value={coverFocal} onChange={setCoverFocal} />
+          )}
           <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
         </div>
       </Section>

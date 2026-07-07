@@ -3,6 +3,7 @@ import { Star, Clock, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { coverVariant } from "@/lib/cover-variant";
 import { VerifiedBadge } from "@/components/verified-badge";
+import { GigCoverVideo } from "@/components/gig-cover-video";
 import type { GigMatch } from "@/server/services/match";
 
 const BAND_STYLE: Record<GigMatch["band"], string> = {
@@ -56,7 +57,9 @@ export async function SearchGigCard({ match: m }: { match: GigMatch }) {
     >
       {/* Cover with match band + budget meter */}
       <div className="relative aspect-video overflow-hidden">
-        {m.coverUrl ? (
+        {m.coverUrl && m.coverType === "video" ? (
+          <GigCoverVideo url={m.coverUrl} poster={m.coverPosterUrl} focal={m.coverFocal} />
+        ) : m.coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={m.coverUrl}

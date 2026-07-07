@@ -320,6 +320,8 @@ export interface GigMatch {
   title: string;
   coverUrl: string | null;
   coverFocal: string | null;
+  coverType: string | null;
+  coverPosterUrl: string | null;
   categorySlug: string | null;
   seller: {
     sellerId: string;
@@ -480,6 +482,8 @@ export async function matchGigs(
       title: true,
       coverUrl: true,
       coverFocal: true,
+      coverType: true,
+      coverPosterUrl: true,
       tags: true,
       featured: true,
       sellerId: true,
@@ -616,6 +620,8 @@ export async function matchGigs(
       title: g.title,
       coverUrl: g.coverUrl,
       coverFocal: g.coverFocal ?? null,
+      coverType: g.coverType ?? null,
+      coverPosterUrl: g.coverPosterUrl ?? null,
       categorySlug: g.category?.slug ?? null,
       seller: {
         sellerId: g.seller!.id,

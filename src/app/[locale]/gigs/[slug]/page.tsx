@@ -120,7 +120,17 @@ export default async function GigDetailPage({
             fallback (critique P1: a shared category photo fronting every gig is the
             biggest remaining "AI made this" tell on a trust-first money page). */}
         <GigGallery
-          images={[...gig.galleryUrls, ...(gig.coverUrl ? [gig.coverUrl] : [])]}
+          images={[
+            ...gig.galleryUrls,
+            // The gallery is images only — for a video cover, contribute its poster frame.
+            ...(gig.coverUrl
+              ? gig.coverType === "video"
+                ? gig.coverPosterUrl
+                  ? [gig.coverPosterUrl]
+                  : []
+                : [gig.coverUrl]
+              : []),
+          ]}
           title={gig.title}
         />
         <div className="flex flex-wrap items-center gap-2">
@@ -340,11 +350,13 @@ export default async function GigDetailPage({
                     // crop/mirror per gig, and use the branded prism fallback (not a
                     // near-invisible gradient) when a gig has no cover at all.
                     const v = coverVariant(g.id);
+                    // Video covers show their poster frame in this small static thumbnail.
+                    const thumb = g.coverType === "video" ? g.coverPosterUrl : g.coverUrl;
                     return (
                       <div className="relative mb-2 flex aspect-video items-center justify-center overflow-hidden rounded-lg">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={g.coverUrl ?? "/prism/pattern-sweep-v2.webp"}
+                          src={thumb ?? "/prism/pattern-sweep-v2.webp"}
                           alt=""
                           loading="lazy"
                           decoding="async"
@@ -352,12 +364,12 @@ export default async function GigDetailPage({
                           style={{
                             objectPosition: v.pos,
                             transform: v.flip ? "scaleX(-1)" : undefined,
-                            filter: g.coverUrl
+                            filter: thumb
                               ? undefined
                               : `brightness(1.02) contrast(1.06) saturate(1.06)${v.hue ? ` hue-rotate(${v.hue}deg)` : ""}`,
                           }}
                         />
-                        {!g.coverUrl && (
+                        {!thumb && (
                           <span
                             className="font-display absolute select-none text-2xl font-black tracking-tight text-white/90"
                             style={{ textShadow: "0 2px 16px hsl(20 20% 10% / .35)" }}

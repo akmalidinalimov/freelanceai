@@ -46,6 +46,8 @@ export interface CreateGigInput {
   description: string;
   coverUrl?: string;
   coverFocal?: string;
+  coverType?: string;
+  coverPosterUrl?: string;
   coverW?: number;
   coverH?: number;
   galleryUrls?: string[];
@@ -84,6 +86,11 @@ function normalizeDim(n?: number): number | null {
   return v > 0 && v <= 30000 ? v : null;
 }
 
+/** Cover banner kind — only "video" is special; everything else is an image. */
+function normalizeCoverType(type?: string): "image" | "video" {
+  return type === "video" ? "video" : "image";
+}
+
 /** Lowercase + de-dupe tags so they match the (lowercased) search/evidence term set. */
 function normalizeTags(tags?: string[]): string[] {
   return [...new Set((tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
@@ -107,6 +114,8 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       description,
       coverUrl: input.coverUrl || null,
       coverFocal: normalizeFocal(input.coverFocal),
+      coverType: input.coverUrl ? normalizeCoverType(input.coverType) : "image",
+      coverPosterUrl: input.coverUrl && input.coverType === "video" ? input.coverPosterUrl || null : null,
       coverW: input.coverUrl ? normalizeDim(input.coverW) : null,
       coverH: input.coverUrl ? normalizeDim(input.coverH) : null,
       galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
@@ -181,6 +190,8 @@ export async function updateGig(gigId: string, user: GigActor, input: CreateGigI
         description,
         coverUrl: input.coverUrl || null,
         coverFocal: normalizeFocal(input.coverFocal),
+        coverType: input.coverUrl ? normalizeCoverType(input.coverType) : "image",
+        coverPosterUrl: input.coverUrl && input.coverType === "video" ? input.coverPosterUrl || null : null,
         coverW: input.coverUrl ? normalizeDim(input.coverW) : null,
         coverH: input.coverUrl ? normalizeDim(input.coverH) : null,
         galleryUrls: (input.galleryUrls ?? []).slice(0, 8),

@@ -47,7 +47,7 @@ export default async function HomePage({
   // are featured, backfill with the newest covered gigs so the loop is never empty.
   type GigWithSeller = {
     slug: string; title: string; coverUrl: string | null; coverFocal: string | null;
-    coverW: number | null; coverH: number | null;
+    coverType: string | null; coverPosterUrl: string | null;
     seller: { firstName: string | null; name: string | null; username: string | null; image: string | null; photoUrl: string | null; sellerProfile: { ratingAvg: number; ratingCount: number } | null };
   };
   const toFeatured = (g: GigWithSeller) => ({
@@ -55,8 +55,8 @@ export default async function HomePage({
     title: g.title,
     coverUrl: g.coverUrl,
     coverFocal: g.coverFocal ?? null,
-    coverW: g.coverW ?? null,
-    coverH: g.coverH ?? null,
+    coverType: g.coverType ?? null,
+    coverPosterUrl: g.coverPosterUrl ?? null,
     sellerName: g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "",
     sellerAvatar: g.seller.image ?? g.seller.photoUrl ?? null,
     ratingAvg: g.seller.sellerProfile?.ratingAvg ?? 0,
