@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listFeaturedCreators, getHomeStats, listRecentActivity } from "@/server/services/browse";
+import { listFeaturedCreators, listRecentActivity } from "@/server/services/browse";
 import { listFeaturedGigs, listPublicGigs } from "@/server/services/gig";
 import { specLabel, specSlug } from "@/lib/specializations";
 import { FeaturedGigLoop } from "@/components/featured-gig-loop";
@@ -35,7 +35,6 @@ export default async function HomePage({
   setRequestLocale(locale);
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
-  const stats = await getHomeStats().catch(() => ({ gigs: 0, creators: 0, orders: 0 }));
   const activity = await listRecentActivity().catch(() => []);
   // Featured-gig loop replaces the vanity stat counters — real work on landing.
   // Quality gate: only gigs that actually have a cover image. Featured first; if too few
@@ -80,9 +79,9 @@ export default async function HomePage({
     <>
       <ActivityTicker items={tickerItems} />
       {/* Marketplace hero — full-bleed dark surface (particle net + ghost wordmark +
-          buyer/creator toggle + real AI search + floating gig/creator cards). Owns its
+          buyer/creator toggle + real AI search), search-first and centered. Owns its
           own background, so no D02Background here; sections below sit on the global dot-grid. */}
-      <MarketHero stats={stats} gigs={showcaseGigs} creators={creators} />
+      <MarketHero />
       {/* theme-d02 re-themes all token-based homepage sections to dark, server-side (no flash). */}
       <div className="theme-d02 mx-auto max-w-5xl px-4">
         {/* Featured-gig loop — real work rotating (replaces vanity stat counters) */}
