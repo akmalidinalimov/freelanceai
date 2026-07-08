@@ -151,6 +151,7 @@
     "viewAll": "View all",
     "featuredCreators": "Featured creators",
     "categoriesTitle": "Popular categories",
+    "workWall": "Work on Gigora",
     "eyebrowAI": "AI assistant",
     "creatorsCount": "{count, plural, one {# creator} other {# creators}}",
     "searchHeadline": "What do you want to create?",

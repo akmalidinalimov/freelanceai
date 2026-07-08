@@ -153,6 +153,13 @@
   color-scheme: dark; /* native controls (scrollbars, form widgets, autofill) render dark */
 }
 
+/* Work-wall marquee (bottom-of-home living gallery) — two rows, opposite directions. */
+@keyframes workwall-l { to { transform: translateX(-50%); } }
+@keyframes workwall-r { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+.workwall-l { animation: workwall-l 55s linear infinite; }
+.workwall-r { animation: workwall-r 66s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .workwall-l, .workwall-r { animation: none; } }
+
 /* Travelling accent beam for the D02 background. */
 @keyframes d02-beam-sweep {
   0% { transform: translate(-6%, -4%); }

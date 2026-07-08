@@ -8,6 +8,7 @@ import { FeaturedGigLoop } from "@/components/featured-gig-loop";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
 import { PrismCategoryCard } from "@/components/prism-category-card";
+import { WorkWall } from "@/components/work-wall";
 import { normalizeBg, BG_CONCEPTS } from "@/components/living-background";
 import { D02Background } from "@/components/living-background/d02";
 import { cardClass } from "@/components/ui/card";
@@ -188,6 +189,9 @@ export default async function HomePage({
             </div>
           </section>
         )}
+
+        {/* Work-wall — bottom-of-home living gallery of real gig covers (two scrolling rows) */}
+        <WorkWall gigs={showcaseGigs} title={t("workWall")} />
 
         {/* Trust strip — one quiet row of small badges */}
         <section className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-10 text-xs font-medium text-[hsl(var(--muted-foreground))]">

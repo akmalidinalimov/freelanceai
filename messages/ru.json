@@ -151,6 +151,7 @@
     "viewAll": "Смотреть все",
     "featuredCreators": "Избранные креаторы",
     "categoriesTitle": "Популярные категории",
+    "workWall": "Работы на площадке",
     "eyebrowAI": "AI-помощник",
     "creatorsCount": "{count, plural, one {# креатор} few {# креатора} many {# креаторов} other {# креаторов}}",
     "searchHeadline": "Что хотите создать?",
