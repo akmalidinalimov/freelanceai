@@ -1,16 +1,14 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listFeaturedCreators, countActiveCreators, listRecentActivity } from "@/server/services/browse";
+import { listFeaturedCreators, getHomeStats, listRecentActivity } from "@/server/services/browse";
 import { listFeaturedGigs, listPublicGigs } from "@/server/services/gig";
 import { specLabel, specSlug } from "@/lib/specializations";
-import { HomeSearch } from "@/components/home-search";
 import { FeaturedGigLoop } from "@/components/featured-gig-loop";
 import { ActivityTicker } from "@/components/activity-ticker";
 import { CreatorCard } from "@/components/creator-card";
 import { PrismCategoryCard } from "@/components/prism-category-card";
 import { WorkWall } from "@/components/work-wall";
-import { normalizeBg, BG_CONCEPTS } from "@/components/living-background";
-import { D02Background } from "@/components/living-background/d02";
+import { MarketHero } from "@/components/market-hero";
 import { cardClass } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
@@ -30,19 +28,14 @@ const CATS = [
 
 export default async function HomePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ bg?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  // Temporary living-background lab: ?bg=1|2|3 picks a concept (default 1).
-  const { bg } = await searchParams;
-  const bgVariant = normalizeBg(bg);
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
-  const creatorCount = await countActiveCreators().catch(() => 0);
+  const stats = await getHomeStats().catch(() => ({ gigs: 0, creators: 0, orders: 0 }));
   const activity = await listRecentActivity().catch(() => []);
   // Featured-gig loop replaces the vanity stat counters — real work on landing.
   // Quality gate: only gigs that actually have a cover image. Featured first; if too few
@@ -85,42 +78,13 @@ export default async function HomePage({
 
   return (
     <>
-      {/* D02 "Blueprint Grid" — the homepage's signature dark world. Opaque, so it layers
-          over the global dot-grid ground with its grid + travelling beam. The dark token
-          palette now comes from `theme-d02` on <html> (layout), site-wide. */}
-      <D02Background />
       <ActivityTicker items={tickerItems} />
+      {/* Marketplace hero — full-bleed dark surface (particle net + ghost wordmark +
+          buyer/creator toggle + real AI search + floating gig/creator cards). Owns its
+          own background, so no D02Background here; sections below sit on the global dot-grid. */}
+      <MarketHero stats={stats} gigs={showcaseGigs} creators={creators} />
       {/* theme-d02 re-themes all token-based homepage sections to dark, server-side (no flash). */}
       <div className="theme-d02 mx-auto max-w-5xl px-4">
-        {/* Hero — AI concierge search over the living background */}
-        <section className="relative isolate -mx-4 px-4">
-          {bg && (
-            <span className="pointer-events-none absolute bottom-2 right-2 z-20 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))]/80 px-2.5 py-1 text-[10px] font-semibold text-[hsl(var(--muted-foreground))] backdrop-blur">
-              bg {bgVariant} · {BG_CONCEPTS[bgVariant].name}
-            </span>
-          )}
-          <div className="relative z-10 flex flex-col items-center gap-4 py-12 text-center sm:py-20">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))]/10 px-4 py-1.5 text-xs font-bold text-[hsl(var(--primary))]">
-              ✦ {t("eyebrowAI")}
-              {creatorCount > 0 && (
-                <>
-                  <span aria-hidden>·</span>
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-[hsl(var(--primary))]" />
-                  {t("creatorsCount", { count: creatorCount })}
-                </>
-              )}
-            </span>
-            <h1 className="font-display max-w-[16ch] text-3xl font-extrabold leading-[1.08] text-balance sm:text-5xl">
-              {t("searchHeadline")}{" "}
-              <span className="text-[hsl(var(--primary))]">{t("searchHeadline2")}</span>
-            </h1>
-            <p className="max-w-[42ch] text-base text-[hsl(var(--muted-foreground))] sm:text-lg">
-              {t("searchSub")}
-            </p>
-            <HomeSearch />
-          </div>
-        </section>
-
         {/* Featured-gig loop — real work rotating (replaces vanity stat counters) */}
         <FeaturedGigLoop gigs={showcaseGigs} />
 
