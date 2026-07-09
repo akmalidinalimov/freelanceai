@@ -321,6 +321,15 @@ model SellerProfile {
   instagramTokenExpiresAt DateTime?
   instagramSyncedAt      DateTime?
   instagramSyncStatus    String?
+  // Seller approval gate (2026-07-09): a new seller is INCOMPLETE until they fill
+  // their profile + create ≥1 gig and submit; an admin then APPROVES/REJECTS. Only
+  // APPROVED sellers (and their gigs) are visible on any public surface. Existing
+  // sellers are grandfathered to APPROVED in the migration.
+  approvalStatus  SellerApprovalStatus @default(INCOMPLETE)
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  reviewedById    String?
+  rejectionReason String?
   level         SellerLevel @default(NEW)
   ratingAvg     Float       @default(0)
   ratingCount   Int         @default(0)
@@ -329,6 +338,8 @@ model SellerProfile {
   updatedAt     DateTime    @updatedAt
 
   portfolio PortfolioItem[]
+
+  @@index([approvalStatus])
 }
 
 model PortfolioItem {
@@ -360,6 +371,13 @@ model Category {
   nameRu String
   nameEn String
   gigs   Gig[]
+}
+
+enum SellerApprovalStatus {
+  INCOMPLETE // signed up as seller, hasn't submitted for review yet
+  PENDING    // submitted, waiting on admin
+  APPROVED   // live/public
+  REJECTED   // admin declined (rejectionReason set); seller can fix + resubmit
 }
 
 enum GigStatus {

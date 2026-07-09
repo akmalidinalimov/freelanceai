@@ -12,6 +12,8 @@ import { getUserBadges, computeCompleteness } from "@/server/services/gamificati
 import { GamificationStrip } from "@/components/gamification-strip";
 import { myWeeklyRank } from "@/server/services/engagement";
 import { getOwnProfile } from "@/server/services/profile";
+import { getApprovalState } from "@/server/services/seller-approval";
+import { SellerApprovalBanner } from "@/components/seller-approval-banner";
 import { formatUzs } from "@/lib/utils";
 import { xpLevel } from "@/lib/badges";
 import { PayoutRequestButton } from "@/components/payout-request-button";
@@ -48,6 +50,7 @@ export default async function SellerDashboardPage({
   const stats = await getSellerStats(user.id);
   const revenue = await getSellerRevenueSeries(user.id);
   const profile = await getOwnProfile(user.id);
+  const approval = await getApprovalState(user.id);
 
   const firstName = user.firstName || user.name || "";
   const level = xpLevel(user.xp, locale);
@@ -134,6 +137,9 @@ export default async function SellerDashboardPage({
               <Link href="/admin/moderation">
                 <Button variant="outline">{ta("moderation")}</Button>
               </Link>
+              <Link href="/admin/sellers">
+                <Button variant="outline">{ta("sellersTitle")}</Button>
+              </Link>
               <Link href="/admin/disputes">
                 <Button variant="outline">{td("adminTitle")}</Button>
               </Link>
@@ -153,6 +159,8 @@ export default async function SellerDashboardPage({
           </Link>
         </div>
       </div>
+
+      <SellerApprovalBanner state={approval} />
 
       {!onboardingComplete && (
         <div className="mb-5 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">

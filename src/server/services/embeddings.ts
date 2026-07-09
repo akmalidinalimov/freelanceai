@@ -109,7 +109,9 @@ function buildDoc(seller: {
 export async function rebuildSellerEmbeddings(): Promise<{ sellers: number; embedded: number }> {
   if (!configured()) return { sellers: 0, embedded: 0 };
   const sellers = await prisma.user.findMany({
-    where: { isSeller: true, status: "ACTIVE" },
+    // Only APPROVED sellers are publicly searchable — don't embed (or keep vectors for)
+    // unapproved/rejected sellers; the semantic arm must never surface them.
+    where: { isSeller: true, status: "ACTIVE", sellerProfile: { is: { approvalStatus: "APPROVED" } } },
     select: {
       id: true,
       firstName: true,

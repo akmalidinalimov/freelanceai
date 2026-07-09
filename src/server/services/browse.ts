@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { PUBLIC_SELLER_USER, PUBLIC_SELLER_PROFILE, PUBLIC_GIG_SELLER } from "@/server/services/seller-visibility";
 
 export interface BrowseCreator {
   username: string | null;
@@ -52,7 +53,7 @@ function toCreator(p: SellerRow): BrowseCreator {
 /** Active sellers who declared a given specialization key, best first. */
 async function listCreatorsBySpecializationUncached(key: string): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
-    where: { specializations: { has: key }, user: { isSeller: true, status: "ACTIVE" } },
+    where: { specializations: { has: key }, ...PUBLIC_SELLER_PROFILE },
     select: sellerSelect,
     orderBy: [{ ratingAvg: "desc" }, { ratingCount: "desc" }],
     take: 48,
@@ -64,6 +65,7 @@ async function listCreatorsBySpecializationUncached(key: string): Promise<Browse
 async function listFeaturedCreatorsUncached(limit = 8): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
     where: {
+      approvalStatus: "APPROVED",
       user: {
         isSeller: true,
         status: "ACTIVE",
@@ -79,7 +81,7 @@ async function listFeaturedCreatorsUncached(limit = 8): Promise<BrowseCreator[]>
 
 /** Count of active seller accounts (for the hero's live-creator eyebrow). */
 function countActiveCreatorsUncached(): Promise<number> {
-  return prisma.sellerProfile.count({ where: { user: { isSeller: true, status: "ACTIVE" } } });
+  return prisma.sellerProfile.count({ where: PUBLIC_SELLER_PROFILE });
 }
 
 export interface HomeStats {
@@ -91,8 +93,8 @@ export interface HomeStats {
 /** Public platform totals for the homepage counter (active gigs, creators, completed orders). */
 async function getHomeStatsUncached(): Promise<HomeStats> {
   const [gigs, creators, orders] = await Promise.all([
-    prisma.gig.count({ where: { status: "ACTIVE", deletedAt: null } }),
-    prisma.sellerProfile.count({ where: { user: { isSeller: true, status: "ACTIVE" } } }),
+    prisma.gig.count({ where: { status: "ACTIVE", deletedAt: null, ...PUBLIC_GIG_SELLER } }),
+    prisma.sellerProfile.count({ where: PUBLIC_SELLER_PROFILE }),
     // Free test orders are not real marketplace activity — keep the public counter honest.
     prisma.order.count({ where: { status: "COMPLETED", isTest: false } }),
   ]);
@@ -102,7 +104,7 @@ async function getHomeStatsUncached(): Promise<HomeStats> {
 /** All active sellers for the /creators index, best-rated first. */
 async function listAllCreatorsUncached(take = 60): Promise<BrowseCreator[]> {
   const rows = await prisma.sellerProfile.findMany({
-    where: { user: { isSeller: true, status: "ACTIVE" } },
+    where: PUBLIC_SELLER_PROFILE,
     select: sellerSelect,
     orderBy: [{ ratingAvg: "desc" }, { ratingCount: "desc" }],
     take,
@@ -131,7 +133,7 @@ async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
   const [delivered, reviews, joined] = await Promise.all([
     prisma.order.findMany({
       // Test orders are not real social proof — exclude from the public activity ticker.
-      where: { status: "COMPLETED", isTest: false, seller: { status: "ACTIVE" } },
+      where: { status: "COMPLETED", isTest: false, seller: PUBLIC_SELLER_USER },
       orderBy: { updatedAt: "desc" },
       take: 5,
       select: {
@@ -140,7 +142,7 @@ async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
       },
     }),
     prisma.review.findMany({
-      where: { rating: { gte: 4 }, order: { isTest: false }, gig: { seller: { status: "ACTIVE" } } },
+      where: { rating: { gte: 4 }, order: { isTest: false }, gig: { seller: PUBLIC_SELLER_USER } },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: {
@@ -149,7 +151,7 @@ async function listRecentActivityUncached(): Promise<ActivityEvent[]> {
       },
     }),
     prisma.user.findMany({
-      where: { isSeller: true, status: "ACTIVE" },
+      where: PUBLIC_SELLER_USER,
       orderBy: { createdAt: "desc" },
       take: 3,
       select: { firstName: true, name: true, username: true },

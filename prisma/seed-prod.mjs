@@ -805,6 +805,10 @@ async function main() {
       // Review rows (platform honesty rule; same reason the ticker uses real events).
       // Cards handle the empty state ("New") instead of showing fake counts.
       const data = {
+        // Demo sellers are pre-approved so they're publicly visible (the seller-approval
+        // gate hides INCOMPLETE sellers; real sellers go through the normal review flow).
+        approvalStatus: "APPROVED",
+        approvedAt: new Date(),
         headline: prof.headline,
         bio: prof.bio,
         skills: prof.skills,

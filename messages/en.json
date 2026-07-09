@@ -644,7 +644,33 @@
     "approve": "Approve",
     "reject": "Reject",
     "noPendingGigs": "No gigs awaiting review.",
+    "cancel": "Cancel",
+    "sellersTitle": "Seller approval",
+    "noPendingSellers": "No sellers awaiting approval.",
+    "sellerGigCount": "{n} gigs",
+    "sellerRejectReasonPh": "Reason for rejection",
     "error": "Something went wrong."
+  },
+  "SellerApproval": {
+    "incompleteTitle": "Finish setting up to go live",
+    "incompleteBody": "Complete the steps below, then submit your profile for review. Your profile and gigs stay hidden until an admin approves them.",
+    "pendingTitle": "Under review",
+    "pendingBody": "Your profile has been submitted. We'll review it shortly and let you know once you're live.",
+    "liveTitle": "You're live",
+    "liveBody": "Your profile and gigs are visible to everyone.",
+    "rejectedTitle": "Changes needed",
+    "rejectedBody": "Your profile wasn't approved yet. Please address the note below and resubmit.",
+    "reasonLabel": "Reason",
+    "submit": "Submit for approval",
+    "resubmit": "Resubmit for approval",
+    "submitted": "Submitted for review.",
+    "error": "Something went wrong.",
+    "missing": {
+      "headline": "Add a headline",
+      "bio": "Add a bio",
+      "specialization": "Choose at least one specialization",
+      "gig": "Create at least one gig"
+    }
   },
   "Creators": {
     "title": "AI creators",

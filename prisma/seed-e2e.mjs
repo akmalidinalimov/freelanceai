@@ -26,6 +26,21 @@ async function main() {
     },
   });
 
+  // Approved seller profile so the seller-approval gate keeps e2e_seller (and its gig)
+  // publicly visible — the gate hides sellers without an APPROVED SellerProfile.
+  await prisma.sellerProfile.upsert({
+    where: { userId: "e2e_seller" },
+    update: { approvalStatus: "APPROVED" },
+    create: {
+      userId: "e2e_seller",
+      headline: "AI promo videos for small businesses",
+      bio: "Seeded seller profile used by the automated end-to-end test suite.",
+      specializations: ["ai_video"],
+      approvalStatus: "APPROVED",
+      approvedAt: new Date(),
+    },
+  });
+
   await prisma.user.upsert({
     where: { id: "e2e_buyer" },
     update: { status: "ACTIVE" },

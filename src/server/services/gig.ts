@@ -10,6 +10,7 @@ import { gigEditWhereForUser } from "@/lib/authz";
 import { notifyFollowersOfNewGig } from "@/server/services/follow";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 import { adminGigReviewButtons } from "@/lib/telegram-bot";
+import { PUBLIC_GIG_SELLER } from "@/server/services/seller-visibility";
 
 export type GigSort = "newest" | "price_asc" | "price_desc" | "popular";
 export interface GigFilters {
@@ -384,7 +385,7 @@ export function listRelatedGigs(gigId: string, categoryId: string | null, take =
     where: {
       status: "ACTIVE",
       deletedAt: null,
-      seller: { status: "ACTIVE" },
+      ...PUBLIC_GIG_SELLER,
       id: { not: gigId },
       ...(categoryId ? { categoryId } : {}),
     },
@@ -400,7 +401,7 @@ function listFeaturedGigsUncached(take = 8) {
     where: {
       status: "ACTIVE",
       deletedAt: null,
-      seller: { status: "ACTIVE" },
+      ...PUBLIC_GIG_SELLER,
       featured: true,
       OR: [{ featuredUntil: null }, { featuredUntil: { gt: new Date() } }],
     },
@@ -435,12 +436,14 @@ async function fuzzyTextWhere(q: string): Promise<Prisma.GigWhereInput> {
   try {
     const like = `%${q}%`;
     const rows = await prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM "Gig"
-      WHERE status = 'ACTIVE' AND "deletedAt" IS NULL
-        AND (word_similarity(${q}, title) >= 0.3 OR word_similarity(${q}, description) >= 0.3
-             OR title ILIKE ${like} OR description ILIKE ${like}
-             OR ${q.toLowerCase()} = ANY(tags))
-      ORDER BY GREATEST(word_similarity(${q}, title), word_similarity(${q}, description)) DESC
+      SELECT g.id FROM "Gig" g
+      JOIN "User" u ON u.id = g."sellerId" AND u."isSeller" = true AND u.status = 'ACTIVE'
+      JOIN "SellerProfile" sp ON sp."userId" = g."sellerId" AND sp."approvalStatus" = 'APPROVED'
+      WHERE g.status = 'ACTIVE' AND g."deletedAt" IS NULL
+        AND (word_similarity(${q}, g.title) >= 0.3 OR word_similarity(${q}, g.description) >= 0.3
+             OR g.title ILIKE ${like} OR g.description ILIKE ${like}
+             OR ${q.toLowerCase()} = ANY(g.tags))
+      ORDER BY GREATEST(word_similarity(${q}, g.title), word_similarity(${q}, g.description)) DESC
       LIMIT 200`;
     return { id: { in: rows.map((r) => r.id) } };
   } catch {
@@ -454,7 +457,7 @@ async function listPublicGigsUncached(opts: GigFilters = {}) {
   const where: Prisma.GigWhereInput = {
     status: "ACTIVE",
     deletedAt: null,
-    seller: { status: "ACTIVE" },
+    ...PUBLIC_GIG_SELLER,
     ...(opts.categorySlug ? { category: { slug: opts.categorySlug } } : {}),
     ...textWhere,
     ...(opts.minUzs != null || opts.maxUzs != null
@@ -531,7 +534,7 @@ export const listFeaturedGigs = unstable_cache(listFeaturedGigsUncached, ["featu
 
 export function getGigBySlug(slug: string) {
   return prisma.gig.findFirst({
-    where: { slug, status: "ACTIVE", deletedAt: null, seller: { status: "ACTIVE" } },
+    where: { slug, status: "ACTIVE", deletedAt: null, ...PUBLIC_GIG_SELLER },
     include: {
       packages: { orderBy: { priceUzs: "asc" } },
       extras: { orderBy: { position: "asc" } },
@@ -561,7 +564,7 @@ export async function incrementGigViews(gigId: string) {
 export async function getGigsByIds(ids: string[]) {
   if (ids.length === 0) return [];
   const gigs = await prisma.gig.findMany({
-    where: { id: { in: ids.slice(0, 12) }, status: "ACTIVE", deletedAt: null, seller: { status: "ACTIVE" } },
+    where: { id: { in: ids.slice(0, 12) }, status: "ACTIVE", deletedAt: null, ...PUBLIC_GIG_SELLER },
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },
       seller: { select: { firstName: true, username: true, name: true } },

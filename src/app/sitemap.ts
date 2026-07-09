@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SPECIALIZATIONS, specSlug } from "@/lib/specializations";
+import { PUBLIC_SELLER_USER, PUBLIC_GIG_SELLER } from "@/server/services/seller-visibility";
 
 // Render at request time: the image is built in CI with a dummy DATABASE_URL, so a
 // build-time (static) sitemap would bake in zero gigs/categories/creators forever.
@@ -14,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Active gigs (best-effort — empty if the DB is unreachable at build time).
   const gigs = await prisma.gig
     .findMany({
-      where: { status: "ACTIVE", deletedAt: null },
+      where: { status: "ACTIVE", deletedAt: null, ...PUBLIC_GIG_SELLER },
       select: { slug: true, updatedAt: true },
       take: 1000,
     })
@@ -27,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Creators with a public username and at least one active gig.
   const creators = await prisma.user
     .findMany({
-      where: { username: { not: null }, gigs: { some: { status: "ACTIVE", deletedAt: null } } },
+      where: { username: { not: null }, gigs: { some: { status: "ACTIVE", deletedAt: null } }, ...PUBLIC_SELLER_USER },
       select: { username: true, updatedAt: true },
       take: 1000,
     })

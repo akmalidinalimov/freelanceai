@@ -644,7 +644,33 @@
     "approve": "Tasdiqlash",
     "reject": "Rad etish",
     "noPendingGigs": "Tekshiruvdagi xizmatlar yoʻq.",
+    "cancel": "Bekor qilish",
+    "sellersTitle": "Sotuvchilarni tasdiqlash",
+    "noPendingSellers": "Tasdiqlash kutayotgan sotuvchilar yoʻq.",
+    "sellerGigCount": "{n} ta xizmat",
+    "sellerRejectReasonPh": "Rad etish sababi",
     "error": "Xatolik yuz berdi."
+  },
+  "SellerApproval": {
+    "incompleteTitle": "Koʻrinadigan boʻlish uchun sozlashni yakunlang",
+    "incompleteBody": "Quyidagi bosqichlarni bajaring va profilingizni tekshiruvga yuboring. Administrator tasdiqlamaguncha profilingiz va xizmatlaringiz koʻrinmaydi.",
+    "pendingTitle": "Tekshiruvda",
+    "pendingBody": "Profilingiz yuborildi. Tez orada koʻrib chiqamiz va faollashganingizda xabar beramiz.",
+    "liveTitle": "Siz faolsiz",
+    "liveBody": "Profilingiz va xizmatlaringiz hammaga koʻrinadi.",
+    "rejectedTitle": "Oʻzgartirish kerak",
+    "rejectedBody": "Profilingiz hali tasdiqlanmadi. Quyidagi izohni hisobga olib, qayta yuboring.",
+    "reasonLabel": "Sabab",
+    "submit": "Tasdiqlashga yuborish",
+    "resubmit": "Qayta yuborish",
+    "submitted": "Tekshiruvga yuborildi.",
+    "error": "Xatolik yuz berdi.",
+    "missing": {
+      "headline": "Sarlavha qoʻshing",
+      "bio": "Oʻzingiz haqingizda yozing",
+      "specialization": "Kamida bitta mutaxassislik tanlang",
+      "gig": "Kamida bitta xizmat yarating"
+    }
   },
   "Creators": {
     "title": "AI ijodkorlar",

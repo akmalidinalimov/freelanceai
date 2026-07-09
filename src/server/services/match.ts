@@ -5,6 +5,7 @@ import { SPECIALIZATIONS, specLabel, specBySlug } from "@/lib/specializations";
 import { computeSpecEvidence } from "@/lib/niche-evidence";
 import { parseIntentWithClaude } from "@/server/services/intent-ai";
 import { embedQuery, semanticCandidates } from "@/server/services/embeddings";
+import { PUBLIC_SELLER_USER, PUBLIC_GIG_SELLER } from "@/server/services/seller-visibility";
 
 /**
  * S1 creator matching — "describe your job → best-matched creators".
@@ -186,7 +187,7 @@ export async function matchCreators(
 
   // fetch active seller identities + profiles
   const users = await prisma.user.findMany({
-    where: { id: { in: ids }, isSeller: true, status: "ACTIVE" },
+    where: { id: { in: ids }, ...PUBLIC_SELLER_USER },
     select: {
       id: true,
       firstName: true,
@@ -475,7 +476,7 @@ export async function matchGigs(
 
   // fetch full candidate gigs with seller identity/profile + packages
   const gigs = await prisma.gig.findMany({
-    where: { id: { in: gigIds }, status: "ACTIVE", deletedAt: null },
+    where: { id: { in: gigIds }, status: "ACTIVE", deletedAt: null, ...PUBLIC_GIG_SELLER },
     select: {
       id: true,
       slug: true,

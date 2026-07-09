@@ -8,6 +8,7 @@ import { sanitizeSpecKeys } from "@/lib/specializations";
 import { provenSpecKeys } from "@/lib/niche-evidence";
 import { normalizeTelegramChannel, normalizeTelegramPost } from "@/lib/telegram-link";
 import { keyFromPublicUrl } from "@/lib/media";
+import { PUBLIC_SELLER_USER } from "@/server/services/seller-visibility";
 
 const PORTFOLIO_MAX = 12;
 
@@ -34,7 +35,7 @@ export async function recomputeSellerStats(sellerId: string) {
  */
 async function getPublicProfileUncached(username: string) {
   const user = await prisma.user.findFirst({
-    where: { username, isSeller: true, status: "ACTIVE" },
+    where: { username, ...PUBLIC_SELLER_USER },
     select: {
       id: true,
       firstName: true,
