@@ -8,59 +8,66 @@
  * themes stay in lockstep forever.
  * ======================================================================== */
 
-/* ---- LIGHT (canonical): warm near-white, ink text, teal primary + coral --- */
+/* ---- LIGHT (canonical): Sandstone + clay + orange — the "clay meets Apple"
+   system (founder-approved 2026-07-09). Warm-stone page, pure-white cards that
+   lift, single orange accent, soft neutral shadows. Clay depth is reserved for
+   signature controls (search, chips) via the --shadow-clay-* tokens below. ---- */
 :root {
-  /* Surfaces: a barely-warm white canvas; cards sit a touch brighter to lift. */
-  --background: 40 33% 98%;
-  --foreground: 222 24% 14%;
-  --card: 40 45% 99.5%;
-  --card-foreground: 222 24% 14%;
-  --surface-2: 38 28% 95.5%; /* subtle raised / inset panels */
-  --muted: 38 26% 94%;
-  --muted-foreground: 220 12% 40%;
-  --border: 36 20% 88%;
-  /* Darker, cooler border for form controls (WCAG 1.4.11 non-text contrast) —
-     the warm --border is too faint on inputs. Referenced widely; keep defined. */
-  --input-border: 214 20% 69%;
+  /* Surfaces: warm Sandstone page; pure-white cards float above it. */
+  --background: 40 24% 94%;   /* Sandstone Weave #f3f1ec */
+  --foreground: 30 4% 12%;    /* near-black ink #1d1d1f */
+  --card: 0 0% 100%;          /* pure white cards lift off the stone */
+  --card-foreground: 30 4% 12%;
+  --surface-2: 40 16% 90%;    /* recessed / inset panels #eae7df */
+  --muted: 40 16% 91%;
+  --muted-foreground: 30 4% 42%;
+  --border: 40 16% 86%;
+  /* Darker border for form controls (WCAG 1.4.11 non-text contrast). */
+  --input-border: 36 12% 58%;
 
-  /* Brand: teal primary (AI + trust), coral accent (B3 identity). */
-  --primary: 173 80% 34%;
+  /* Brand: single orange accent (no yellow, no teal). */
+  --primary: 21 90% 48%;      /* orange #EA580C */
   --primary-foreground: 0 0% 100%;
-  /* Text-safe deep teal for links/labels on light surfaces (≈7:1). Referenced
-     widely as hsl(var(--primary-ink)); must stay defined or those links lose color. */
-  --primary-ink: 173 84% 21%;
-  --accent: 11 86% 58%;
+  /* Text-safe deep orange for links/labels on white (≈5:1). Referenced widely. */
+  --primary-ink: 18 88% 38%;  /* #C2410C */
+  --accent: 24 88% 52%;
   --accent-foreground: 0 0% 100%;
 
-  /* Semantic status — soft tint + readable ink, one home for both themes. */
+  /* Semantic status — kept for order/money states (soft tint + readable ink). */
   --success: 152 60% 27%;
   --success-foreground: 0 0% 100%;
-  --success-soft: 152 52% 93%;
+  --success-soft: 152 42% 92%;
   --danger: 0 72% 47%;
   --danger-foreground: 0 0% 100%;
   --danger-soft: 0 80% 96%;
-  --warning: 33 95% 33%;
+  --warning: 28 90% 40%;
   --warning-foreground: 40 60% 12%;
-  --warning-soft: 40 90% 92%;
-  --info: 218 80% 50%;
+  --warning-soft: 32 90% 92%;
+  --info: 218 70% 48%;
   --info-foreground: 0 0% 100%;
-  --info-soft: 218 88% 95%;
-  --violet: 262 68% 52%;
-  --violet-soft: 262 72% 95%;
-  --star: 40 92% 50%;
+  --info-soft: 218 80% 95%;
+  --violet: 262 60% 52%;
+  --violet-soft: 262 60% 95%;
+  --star: 28 90% 48%;         /* warm-orange stars (no yellow) */
 
-  /* Focus ring + soft warm shadows (three elevation levels: page/card/overlay). */
-  --ring: 173 80% 34%;
-  --shadow-soft: 0 1px 2px hsl(30 30% 30% / 0.05), 0 4px 14px -6px hsl(30 30% 28% / 0.1);
-  --shadow-hover: 0 4px 12px -3px hsl(30 30% 26% / 0.12), 0 14px 34px -10px hsl(30 30% 24% / 0.16);
-  --shadow-overlay: 0 12px 28px -6px hsl(30 30% 20% / 0.18), 0 30px 60px -20px hsl(30 30% 18% / 0.24);
+  /* Focus ring + Apple-clean neutral shadows (page/card/overlay). */
+  --ring: 21 90% 48%;
+  --shadow-soft: 0 1px 2px hsl(30 20% 20% / 0.05), 0 8px 24px -12px hsl(30 20% 18% / 0.12);
+  --shadow-hover: 0 2px 6px hsl(30 20% 18% / 0.07), 0 24px 48px -18px hsl(30 20% 16% / 0.2);
+  --shadow-overlay: 0 12px 28px -6px hsl(30 20% 14% / 0.16), 0 30px 60px -20px hsl(30 20% 12% / 0.24);
 
-  /* Living-background stops (warm sunrise) — used by the hero background layer. */
-  --gradient-a: 12 90% 70%;
-  --gradient-b: 32 95% 66%;
-  --gradient-c: 348 85% 74%;
+  /* Clay depth — reserved for signature controls (search well, chips, toggles).
+     Neumorphic double shadow tuned for the Sandstone/white surfaces. */
+  --clay: 40 30% 96%;
+  --shadow-clay-in: inset 4px 4px 9px hsl(36 16% 70% / 0.5), inset -4px -4px 9px hsl(0 0% 100% / 0.9);
+  --shadow-clay-out: 8px 8px 20px hsl(36 16% 70% / 0.4), -7px -7px 18px hsl(0 0% 100% / 0.9);
 
-  --radius: 1rem;
+  /* Living-background stops (warm orange) — used by the hero background layer. */
+  --gradient-a: 24 90% 62%;
+  --gradient-b: 32 90% 60%;
+  --gradient-c: 16 85% 60%;
+
+  --radius: 1.15rem;
 }
 
 /* ---- DARK — DISABLED by founder decision (2026-07-04): light is pinned as
@@ -237,6 +244,7 @@
   --color-violet: hsl(var(--violet));
   --color-violet-soft: hsl(var(--violet-soft));
   --color-star: hsl(var(--star));
+  --color-clay: hsl(var(--clay));
   --color-ring: hsl(var(--ring));
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 4px);
@@ -255,6 +263,19 @@ body {
   font-family:
     var(--font-manrope), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, Arial, sans-serif;
+}
+
+/* Sandstone Weave — a whisper-fine woven texture over the page so white cards
+   read as lifted, not floating in a void. Fixed, behind everything, non-blocking. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='none' stroke='%23a89a80' stroke-opacity='0.14' stroke-width='1'%3E%3Cpath d='M0 15h60M0 30h60M0 45h60M15 0v60M30 0v60M45 0v60'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 30px 30px;
 }
 
 /* Display face for hero/section headings (Unbounded). Falls back gracefully. */

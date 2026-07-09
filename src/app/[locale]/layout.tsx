@@ -12,7 +12,6 @@ import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
 import { UIProviders } from "@/components/ui-providers";
-import { DotGridBackground } from "@/components/living-background/dot-grid";
 import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
 import { ReferralCapture } from "@/components/referral-capture";
 import { Suspense } from "react";
@@ -79,13 +78,12 @@ export default async function LocaleLayout({
     ] ?? "Skip to content";
 
   return (
-    <html lang={locale} className={`${manrope.variable} ${unbounded.variable} theme-d02`}>
+    <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="flex min-h-screen flex-col">
-        {/* Dark world site-wide (founder direction 2026-07-07): the dot-grid ground is
-            the default on every page. theme-d02 on <html> supplies the dark token
-            palette + color-scheme so all token-based UI themes dark automatically.
-            The homepage layers its own opaque D02Background (grid + beam) on top. */}
-        <DotGridBackground />
+        {/* Light "clay meets Apple" world site-wide (2026-07-09): the Sandstone page
+            + fine woven texture come from :root tokens + body::before in globals.css,
+            so every token-based page themes light automatically. The homepage still
+            layers its own dark market hero on top until its redesign lands. */}
         <NextIntlClientProvider messages={messages}>
           <UIProviders>
           <a
