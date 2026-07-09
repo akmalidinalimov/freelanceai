@@ -10,7 +10,8 @@ test.describe("public pages render in all locales", () => {
   for (const locale of ["uz", "ru", "en"]) {
     test(`home (${locale})`, async ({ page }) => {
       await page.goto(`/${locale}`);
-      await expect(page.getByText("FreelanceAI").first()).toBeVisible();
+      // Brand mark in the header — stable across locales and the redesign.
+      await expect(page.getByText("Gigora").first()).toBeVisible();
     });
   }
 });
