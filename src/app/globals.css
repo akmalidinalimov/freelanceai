@@ -383,6 +383,70 @@ body::before {
   opacity: 1;
 }
 
+/* ===== Homepage (clay meets Apple) — featured marquee + abstract bento ===== */
+.home-marquee {
+  position: relative; margin: 0 -1rem; overflow: hidden; padding: 0.5rem 0;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.home-marquee-track {
+  display: flex; gap: 1rem; width: max-content; padding: 2px 1rem;
+  animation: home-scrollx 48s linear infinite;
+}
+.home-marquee:hover .home-marquee-track,
+.home-marquee:focus-within .home-marquee-track,
+.home-marquee.paused .home-marquee-track { animation-play-state: paused; }
+@keyframes home-scrollx { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.home-mcard { flex: 0 0 300px; max-width: 300px; transform-style: preserve-3d; will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .home-marquee { overflow-x: auto; -webkit-mask: none; mask: none; }
+  .home-marquee-track { animation: none; }
+  .home-mcard { transform: none !important; }
+}
+
+.home-bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; grid-auto-rows: 130px; }
+@media (min-width: 760px) { .home-bento { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 150px; } }
+.home-cat {
+  position: relative; overflow: hidden; border-radius: 1.25rem; display: block;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s;
+}
+.home-cat.big { grid-column: span 2; grid-row: span 2; }
+.home-cat:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+.home-cat-field { position: absolute; inset: 0; }
+.home-cat-ic {
+  position: absolute; top: 14px; left: 14px; width: 34px; height: 34px;
+  color: rgba(255, 255, 255, 0.92); filter: drop-shadow(0 2px 5px rgba(90, 35, 5, 0.4));
+}
+.home-cat.big .home-cat-ic { width: 52px; height: 52px; }
+.home-cat-ic svg { width: 100%; height: 100%; }
+.home-cat-name {
+  position: absolute; left: 14px; right: 14px; bottom: 13px; color: #fff;
+  font-family: var(--font-unbounded), var(--font-manrope), sans-serif;
+  font-weight: 700; font-size: 1rem; line-height: 1.12; text-shadow: 0 1px 8px rgba(60, 25, 5, 0.5);
+}
+.home-cat.big .home-cat-name { font-size: 1.4rem; }
+.home-cat-sub { display: block; font-size: 0.72rem; font-weight: 600; color: rgba(255, 255, 255, 0.82); margin-top: 2px; text-shadow: 0 1px 6px rgba(60, 25, 5, 0.5); }
+/* per-tile warm abstract fields (orange refraction on charcoal) */
+.home-cat.c1 .home-cat-field { background: radial-gradient(90% 90% at 25% 20%, #7a2f08, transparent 60%), radial-gradient(80% 80% at 85% 80%, #ea580c, transparent 55%), #1c1613; }
+.home-cat.c2 .home-cat-field { background: radial-gradient(90% 90% at 80% 15%, #8a3a10, transparent 60%), radial-gradient(70% 70% at 15% 85%, #c2410c, transparent 55%), #1a1512; }
+.home-cat.c3 .home-cat-field { background: conic-gradient(from 140deg at 60% 40%, #3a201a, #b4470c, #2a1c16, #3a201a), #241812; }
+.home-cat.c4 .home-cat-field { background: radial-gradient(90% 90% at 30% 80%, #7a2f08, transparent 60%), radial-gradient(70% 70% at 80% 20%, #f2620e, transparent 55%), #1c1512; }
+.home-cat.c5 .home-cat-field { background: radial-gradient(100% 90% at 50% 10%, #8a3a12, transparent 60%), #1e1613; }
+.home-cat.c6 .home-cat-field { background: conic-gradient(from 300deg at 40% 60%, #2a1a14, #de5209, #3a2018, #2a1a14), #201712; }
+/* flagship tile — one living refraction, everything else static */
+.home-cat.big .home-cat-field::after {
+  content: ""; position: absolute; inset: -35%; border-radius: 50%;
+  background: radial-gradient(closest-side, #f2620e, rgba(242, 98, 14, 0) 70%);
+  opacity: 0.5; filter: blur(26px);
+  animation: home-abdrift 15s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate; will-change: transform;
+}
+@keyframes home-abdrift { 0% { transform: translate(-8%, -5%) scale(1); } 100% { transform: translate(10%, 7%) scale(1.18); } }
+@media (prefers-reduced-motion: reduce) { .home-cat.big .home-cat-field::after { animation: none; } }
+
+/* clay-well container for the hero search (signature control) */
+.home-search-well { background: hsl(var(--clay)); border-radius: 1.5rem; box-shadow: var(--shadow-clay-in); padding: 0.75rem; }
+
 /* Printing (receipts): drop the site chrome for a clean page. */
 @media print {
   header,

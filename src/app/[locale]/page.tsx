@@ -1,55 +1,46 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { listFeaturedCreators, listRecentActivity } from "@/server/services/browse";
+import { listFeaturedCreators } from "@/server/services/browse";
 import { listFeaturedGigs, listPublicGigs } from "@/server/services/gig";
-import { specLabel, specSlug } from "@/lib/specializations";
-import { FeaturedGigLoop } from "@/components/featured-gig-loop";
-import { ActivityTicker } from "@/components/activity-ticker";
+import { specSlug, specLabel } from "@/lib/specializations";
+import { HomeSearch } from "@/components/home-search";
+import { FeaturedMarquee, type MarqueeGig } from "@/components/home/featured-marquee";
+import { AbstractCategories, type HomeCategory } from "@/components/home/abstract-categories";
 import { CreatorCard } from "@/components/creator-card";
-import { PrismCategoryCard } from "@/components/prism-category-card";
-import { WorkWall } from "@/components/work-wall";
-import { MarketHero } from "@/components/market-hero";
 import { cardClass } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
-/* Prism category tiles (founder-chosen): the zipper `word` is a brand graphic
-   kept identical across locales; the localized name/desc live in aria + pill. */
+// Bento categories (flagship first) → each links to the gigs for that specialization.
 const CATS = [
-  { spec: "ai_video", word: "AI VIDEO", desc: "catVideo" },
-  { spec: "ai_image", word: "AI RASM", desc: "catImage" },
-  { spec: "ai_avatar", word: "AVATAR", desc: "catAvatar" },
-  { spec: "product_photo", word: "FOTO", desc: "catPhoto" },
-  { spec: "voiceover", word: "OVOZ", desc: "catVoice" },
-  { spec: "branding", word: "BREND", desc: "catBranding" },
-  { spec: "motion", word: "MOTION", desc: "catMotion" },
-  { spec: "image_edit", word: "RETUSH", desc: "catEdit" },
+  { spec: "ai_video", desc: "catVideo" },
+  { spec: "product_photo", desc: "catPhoto" },
+  { spec: "branding", desc: "catBranding" },
+  { spec: "ai_avatar", desc: "catAvatar" },
+  { spec: "voiceover", desc: "catVoice" },
+  { spec: "motion", desc: "catMotion" },
 ] as const;
 
-export default async function HomePage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+type GigWithSeller = {
+  slug: string; title: string; coverUrl: string | null; coverPosterUrl: string | null;
+  seller: {
+    firstName: string | null; name: string | null; username: string | null;
+    image: string | null; photoUrl: string | null;
+    sellerProfile: { ratingAvg: number; ratingCount: number } | null;
+  };
+};
+
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);
-  const activity = await listRecentActivity().catch(() => []);
-  // Featured-gig loop replaces the vanity stat counters — real work on landing.
-  // Quality gate: only gigs that actually have a cover image. Featured first; if too few
-  // are featured, backfill with the newest covered gigs so the loop is never empty.
-  type GigWithSeller = {
-    slug: string; title: string; coverUrl: string | null; coverFocal: string | null;
-    coverType: string | null; coverPosterUrl: string | null;
-    seller: { firstName: string | null; name: string | null; username: string | null; image: string | null; photoUrl: string | null; sellerProfile: { ratingAvg: number; ratingCount: number } | null };
-  };
-  const toFeatured = (g: GigWithSeller) => ({
+
+  // Featured gigs with a cover; backfill with newest covered gigs so the strip is never thin.
+  const toGig = (g: GigWithSeller): MarqueeGig => ({
     slug: g.slug,
     title: g.title,
     coverUrl: g.coverUrl,
-    coverFocal: g.coverFocal ?? null,
-    coverType: g.coverType ?? null,
     coverPosterUrl: g.coverPosterUrl ?? null,
     sellerName: g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "",
     sellerAvatar: g.seller.image ?? g.seller.photoUrl ?? null,
@@ -58,114 +49,115 @@ export default async function HomePage({
   });
   const featuredGigs = (await listFeaturedGigs(8).catch(() => []))
     .filter((g) => g.coverUrl)
-    .map(toFeatured);
+    .map(toGig);
   if (featuredGigs.length < 6) {
     const seen = new Set(featuredGigs.map((g) => g.slug));
     const backfill = (await listPublicGigs({ take: 12 }).catch(() => []))
       .filter((g) => g.coverUrl && !seen.has(g.slug))
-      .map(toFeatured);
+      .map(toGig);
     featuredGigs.push(...backfill);
   }
   const showcaseGigs = featuredGigs.slice(0, 8);
-  const tickerItems = activity.map((e) =>
-    e.type === "delivered"
-      ? t("tickerDelivered", { name: e.name, title: e.extra })
-      : e.type === "review"
-        ? t("tickerReview", { name: e.name, rating: e.extra })
-        : t("tickerJoined", { name: e.name })
-  );
+
+  const cats: HomeCategory[] = CATS.map((c) => ({
+    href: `/browse/${specSlug(c.spec)}`,
+    name: specLabel(c.spec, locale),
+    sub: t(c.desc),
+  }));
 
   return (
-    <>
-      <ActivityTicker items={tickerItems} />
-      {/* Marketplace hero — full-bleed dark surface (particle net + ghost wordmark +
-          buyer/creator toggle + real AI search), search-first and centered. Owns its
-          own background, so no D02Background here; sections below sit on the global dot-grid. */}
-      <MarketHero />
-      {/* theme-d02 re-themes all token-based homepage sections to dark, server-side (no flash). */}
-      <div className="theme-d02 mx-auto max-w-5xl px-4">
-        {/* Featured-gig loop — real work rotating (replaces vanity stat counters) */}
-        <FeaturedGigLoop gigs={showcaseGigs} />
+    <div className="mx-auto max-w-6xl px-4">
+      {/* HERO — copy + the real AI concierge search (typewriter + inline results) */}
+      <section className="pt-10 pb-8 sm:pt-14">
+        <div className="mx-auto max-w-3xl text-center sm:text-left">
+          <h1 className="font-display text-[clamp(2.2rem,5.6vw,4rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+            {t("heroTitle")}
+          </h1>
+          <p className="mx-auto mt-4 max-w-[52ch] text-lg text-[hsl(var(--muted-foreground))] sm:mx-0">
+            {t("heroSubtitle")}
+          </p>
+        </div>
+        <div className="mt-7">
+          <HomeSearch />
+        </div>
+      </section>
 
-        {/* Categories */}
-        <section className="py-6">
+      {/* FEATURED — auto-moving, rotating, tap-to-pause strip of real gigs */}
+      {showcaseGigs.length > 0 && (
+        <section className="py-8">
           <div className="mb-4 flex items-baseline justify-between px-1">
-            <h2 className="font-display text-xl font-bold sm:text-2xl">{t("categoriesTitle")}</h2>
-            <Link href="/browse" className="text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline">
+            <h2 className="font-display text-xl font-bold sm:text-2xl">{t("workWall")}</h2>
+            <Link href="/gigs" className="text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline">
               {t("viewAll")}
             </Link>
           </div>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {CATS.map((c, i) => (
-              <li key={c.spec}>
-                <PrismCategoryCard
-                  href={`/browse/${specSlug(c.spec)}`}
-                  word={c.word}
-                  label={specLabel(c.spec, locale)}
-                  sub={t(c.desc)}
-                  index={i}
-                />
-              </li>
-            ))}
-          </ul>
+          <FeaturedMarquee gigs={showcaseGigs} />
         </section>
+      )}
 
-        {/* How it works */}
+      {/* CATEGORIES — abstract bento, each tile → gigs for that specialization */}
+      <section className="py-8">
+        <div className="mb-4 flex items-baseline justify-between px-1">
+          <h2 className="font-display text-xl font-bold sm:text-2xl">{t("categoriesTitle")}</h2>
+          <Link href="/browse" className="text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline">
+            {t("viewAll")}
+          </Link>
+        </div>
+        <AbstractCategories cats={cats} />
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="py-8">
+        <h2 className="font-display mb-4 text-xl font-bold sm:text-2xl">{t("howItWorksTitle")}</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[1, 2, 3].map((step) => (
+            <div key={step} className={cardClass(false, "flex items-start gap-3 p-5")}>
+              <div className="font-display flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))] font-bold text-[hsl(var(--primary-foreground))]">
+                {step}
+              </div>
+              <div>
+                <h3 className="font-bold">{t(`step${step}Title`)}</h3>
+                <p className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">{t(`step${step}Body`)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FEATURED CREATORS — horizontal rail */}
+      {creators.length > 0 && (
         <section className="py-8">
-          <h2 className="font-display mb-4 text-xl font-bold sm:text-2xl">{t("howItWorksTitle")}</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[1, 2, 3].map((step) => (
-              <div key={step} className={cardClass(false, "flex items-start gap-3 p-4")}>
-                <div className="font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent))] font-bold text-[hsl(var(--accent-foreground))]">
-                  {step}
-                </div>
-                <div>
-                  <h3 className="font-bold">{t(`step${step}Title`)}</h3>
-                  <p className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">{t(`step${step}Body`)}</p>
-                </div>
+          <div className="mb-4 flex items-baseline justify-between px-1">
+            <h2 className="font-display text-xl font-bold sm:text-2xl">{t("featuredCreators")}</h2>
+            <Link href="/creators" className="text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline">
+              {t("viewAll")}
+            </Link>
+          </div>
+          <div
+            className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{
+              maskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
+              WebkitMaskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
+            }}
+          >
+            {creators.map((c, i) => (
+              <div key={c.username ?? i} className="w-[280px] shrink-0 snap-start">
+                <CreatorCard creator={c} />
               </div>
             ))}
           </div>
         </section>
+      )}
 
-        {/* Featured creators — horizontal rail */}
-        {creators.length > 0 && (
-          <section className="py-8">
-            <div className="mb-4 flex items-baseline justify-between px-1">
-              <h2 className="font-display text-xl font-bold sm:text-2xl">{t("featuredCreators")}</h2>
-              <Link href="/creators" className="text-sm font-semibold text-[hsl(var(--primary-ink))] hover:underline">
-                {t("viewAll")}
-              </Link>
-            </div>
-            <div
-              className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              style={{
-                maskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
-                WebkitMaskImage: "linear-gradient(90deg, transparent, #000 3%, #000 92%, transparent)",
-              }}
-            >
-              {creators.map((c, i) => (
-                <div key={c.username ?? i} className="w-[280px] shrink-0 snap-start">
-                  <CreatorCard creator={c} />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Work-wall — bottom-of-home living gallery of real gig covers (two scrolling rows) */}
-        <WorkWall gigs={showcaseGigs} title={t("workWall")} />
-
-        {/* Trust strip — one quiet row of small badges */}
-        <section className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-10 text-xs font-medium text-[hsl(var(--muted-foreground))]">
-          {[t("trustSecure"), t("trustPayment"), t("trustVerified"), t("trustLangs")].map((item) => (
-            <span key={item} className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-[hsl(var(--accent))]" aria-hidden />
-              {item}
-            </span>
-          ))}
-        </section>
-      </div>
-    </>
+      {/* TRUST strip */}
+      <section className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-12 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+        {[t("trustSecure"), t("trustPayment"), t("trustVerified"), t("trustLangs")].map((item) => (
+          <span key={item} className="inline-flex items-center gap-1.5">
+            <span className="h-1 w-1 rounded-full bg-[hsl(var(--primary))]" aria-hidden />
+            {item}
+          </span>
+        ))}
+      </section>
+    </div>
   );
 }
