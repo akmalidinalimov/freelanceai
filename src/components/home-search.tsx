@@ -178,13 +178,13 @@ export function HomeSearch() {
           e.preventDefault();
           run(q);
         }}
-        className="rounded-[calc(var(--radius-lg)+0.5rem)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 text-left shadow-[var(--shadow-hover)] transition-[box-shadow,border-color] duration-200 focus-within:border-[hsl(var(--primary))] focus-within:ring-4 focus-within:ring-[hsl(var(--ring))]/20 sm:p-4"
+        className="rounded-[calc(var(--radius-lg)+0.5rem)] bg-[hsl(var(--clay))] p-3.5 text-left shadow-[var(--shadow-clay-in)] transition-shadow duration-200 sm:p-4"
       >
         <div className="flex items-center gap-2 px-2 pt-1 text-xs font-bold text-[hsl(var(--primary-ink))]">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--primary))]" />
           {t("searchAssistant")}
         </div>
-        <div className="mt-1 flex items-end gap-2">
+        <div className="mt-2 flex items-end gap-2 rounded-2xl bg-[hsl(var(--card))] p-1.5 pl-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ring-1 ring-[hsl(var(--border))] transition-shadow focus-within:ring-2 focus-within:ring-[hsl(var(--primary))]">
           <textarea
             ref={taRef}
             value={q}
@@ -235,7 +235,7 @@ export function HomeSearch() {
               key={ex}
               type="button"
               onClick={() => pickExample(ex)}
-              className="shrink-0 rounded-full border border-[hsl(var(--border))] px-3 py-1.5 text-xs font-medium text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))]"
+              className="shrink-0 rounded-full bg-[hsl(var(--card))] px-3.5 py-2 text-xs font-medium text-[hsl(var(--muted-foreground))] shadow-[var(--shadow-soft)] ring-1 ring-[hsl(var(--border))] transition-colors hover:text-[hsl(var(--primary-ink))]"
             >
               {ex}
             </button>
