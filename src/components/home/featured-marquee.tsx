@@ -46,14 +46,20 @@ export function FeaturedMarquee({ gigs }: { gigs: MarqueeGig[] }) {
     let paused = reduce; // reduced-motion: no auto-advance (manual swipe still works)
     let idleTimer: ReturnType<typeof setTimeout>;
     let raf = 0;
-    const SPEED = 0.4; // px/frame ≈ a gentle drift
+    const SPEED = 0.5; // px/frame ≈ a gentle drift
+    // Browsers round scrollLeft to an integer on read, so `scrollLeft += 0.5` never
+    // accumulates. Keep a float accumulator and WRITE scrollLeft from it each frame.
+    let acc = root.scrollLeft;
 
     const step = () => {
-      if (!paused) {
-        root.scrollLeft += SPEED;
+      if (paused) {
+        acc = root.scrollLeft; // user is dragging — track their position so resume is seamless
+      } else {
+        acc += SPEED;
         // content is duplicated ([...gigs, ...gigs]); loop by one copy width, seamlessly
         const half = root.scrollWidth / 2;
-        if (half > 0 && root.scrollLeft >= half) root.scrollLeft -= half;
+        if (half > 0 && acc >= half) acc -= half;
+        root.scrollLeft = acc;
       }
       raf = requestAnimationFrame(step);
     };
