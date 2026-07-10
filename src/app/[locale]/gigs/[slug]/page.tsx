@@ -134,6 +134,7 @@ export default async function GigDetailPage({
           ]}
           title={gig.title}
         />
+        <div className="mt-6 rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)] sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
           {gig.featured && (
             <span className="rounded-full bg-[hsl(var(--primary))] px-2 py-0.5 text-xs font-bold text-[hsl(var(--primary-foreground))]">
@@ -201,16 +202,18 @@ export default async function GigDetailPage({
             ))}
           </div>
         )}
+        </div>
 
         {packages.length > 1 && (
-          <div className="mt-8 overflow-x-auto">
-            <h2 className="mb-3 text-xl font-semibold">{t("comparePackages")}</h2>
+          <div className="mt-6 rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)] sm:p-6">
+            <h2 className="mb-4 text-xl font-semibold">{t("comparePackages")}</h2>
+            <div className="overflow-x-auto">
             <table className="w-full min-w-[460px] border-collapse text-sm">
               {/* label column sticks during horizontal scroll at 390px so Basic vs
                   Premium comparison never becomes a memory task */}
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3" />
+                  <th className="sticky left-0 z-[1] bg-[hsl(var(--card))] p-3" />
                   {packages.map((p) => (
                     <th key={p.tier} className="border-b border-[hsl(var(--border))] p-3 text-left font-semibold">
                       {tierLabel[p.tier]}
@@ -220,7 +223,7 @@ export default async function GigDetailPage({
               </thead>
               <tbody>
                 <tr>
-                  <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("price")}</td>
+                  <td className="sticky left-0 z-[1] bg-[hsl(var(--card))] p-3 text-[hsl(var(--muted-foreground))]">{t("price")}</td>
                   {packages.map((p) => (
                     <td key={p.tier} className="p-3 font-semibold tabular-nums">
                       {formatUzs(p.priceUzs)} so&apos;m
@@ -228,7 +231,7 @@ export default async function GigDetailPage({
                   ))}
                 </tr>
                 <tr>
-                  <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("daysDelivery")}</td>
+                  <td className="sticky left-0 z-[1] bg-[hsl(var(--card))] p-3 text-[hsl(var(--muted-foreground))]">{t("daysDelivery")}</td>
                   {packages.map((p) => (
                     <td key={p.tier} className="p-3 tabular-nums">
                       {p.deliveryDays}
@@ -236,7 +239,7 @@ export default async function GigDetailPage({
                   ))}
                 </tr>
                 <tr>
-                  <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("revisionsLabel")}</td>
+                  <td className="sticky left-0 z-[1] bg-[hsl(var(--card))] p-3 text-[hsl(var(--muted-foreground))]">{t("revisionsLabel")}</td>
                   {packages.map((p) => (
                     <td key={p.tier} className="p-3 tabular-nums">
                       {p.revisions}
@@ -246,7 +249,7 @@ export default async function GigDetailPage({
                 {/* Included features per tier — "✓ "-lines from package.description */}
                 {packages.some((p) => p.description?.includes("✓")) && (
                   <tr className="align-top">
-                    <td className="sticky left-0 z-[1] bg-[hsl(var(--background))] p-3 text-[hsl(var(--muted-foreground))]">{t("included")}</td>
+                    <td className="sticky left-0 z-[1] bg-[hsl(var(--card))] p-3 text-[hsl(var(--muted-foreground))]">{t("included")}</td>
                     {packages.map((p) => (
                       <td key={p.tier} className="p-3">
                         <ul className="space-y-1.5">
@@ -268,6 +271,7 @@ export default async function GigDetailPage({
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 

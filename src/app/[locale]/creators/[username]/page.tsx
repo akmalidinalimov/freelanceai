@@ -211,7 +211,7 @@ export default async function CreatorProfilePage({
       )}
 
       {(profile?.specializations?.length ?? 0) > 0 && (
-        <div className="mb-8">
+        <div className="mb-8 rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)] sm:p-6">
           <h2 className="mb-2 font-semibold">{t("specializations")}</h2>
           <div className="flex flex-wrap gap-2">
             {profile!.specializations.map((k) => {
@@ -240,7 +240,7 @@ export default async function CreatorProfilePage({
         (profile?.aiTools?.length ?? 0) > 0) && (
         <div className="mb-8 grid gap-6 sm:grid-cols-3">
           {profile?.bio && (
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)] sm:p-6">
               <h2 className="mb-2 font-semibold">{t("about")}</h2>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-[hsl(var(--muted-foreground))]">
                 {profile.bio}
@@ -249,7 +249,7 @@ export default async function CreatorProfilePage({
           )}
           <div className="space-y-5">
             {(profile?.skills?.length ?? 0) > 0 && (
-              <div>
+              <div className="rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)] sm:p-6">
                 <h2 className="mb-2 font-semibold">{t("skills")}</h2>
                 <div className="flex flex-wrap gap-2">
                   {profile!.skills.map((s) => (
@@ -264,7 +264,7 @@ export default async function CreatorProfilePage({
               </div>
             )}
             {(profile?.aiTools?.length ?? 0) > 0 && (
-              <div>
+              <div className="rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)] sm:p-6">
                 <h2 className="mb-2 font-semibold">{t("tools")}</h2>
                 <div className="flex flex-wrap gap-2">
                   {profile!.aiTools.map((s) => (

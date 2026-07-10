@@ -225,29 +225,31 @@ export function OrderPanel({
         <>
           {viewer === "buyer" && (
             <>
-              {requirementPrompts.map((q, i) => (
-                <label key={i} className="flex flex-col gap-1">
-                  <span className="text-sm font-medium">{q}</span>
-                  <textarea
-                    value={answers[i] ?? ""}
-                    onChange={(e) => setAnswers((a) => ({ ...a, [i]: e.target.value }))}
-                    className="min-h-16 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
-                  />
-                </label>
-              ))}
-              <textarea
-                value={requirements}
-                onChange={(e) => setRequirements(e.target.value)}
-                placeholder={to("requirementsPh")}
-                aria-label={to("requirementsPh")}
-                className="min-h-24 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
-              />
-              <GalleryUpload
-                value={reqFiles}
-                onChange={setReqFiles}
-                prefix="requirements"
-                label={to("requirementFiles")}
-              />
+              <div className="space-y-3 rounded-[var(--radius-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)] sm:p-6">
+                {requirementPrompts.map((q, i) => (
+                  <label key={i} className="flex flex-col gap-1">
+                    <span className="text-sm font-medium">{q}</span>
+                    <textarea
+                      value={answers[i] ?? ""}
+                      onChange={(e) => setAnswers((a) => ({ ...a, [i]: e.target.value }))}
+                      className="min-h-16 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
+                    />
+                  </label>
+                ))}
+                <textarea
+                  value={requirements}
+                  onChange={(e) => setRequirements(e.target.value)}
+                  placeholder={to("requirementsPh")}
+                  aria-label={to("requirementsPh")}
+                  className="min-h-24 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
+                />
+                <GalleryUpload
+                  value={reqFiles}
+                  onChange={setReqFiles}
+                  prefix="requirements"
+                  label={to("requirementFiles")}
+                />
+              </div>
               <input
                 value={coupon}
                 onChange={(e) => setCoupon(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
