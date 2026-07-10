@@ -34,7 +34,7 @@ export async function GigCard({
   const avatar = gig.seller.photoUrl ?? gig.seller.image;
   const rating = gig.seller.sellerProfile?.ratingAvg ?? 0;
   const ratingCount = gig.seller.sellerProfile?.ratingCount ?? 0;
-  const orders = gig._count?.orders ?? 0;
+  const orders = Math.max(gig.salesCount ?? 0, gig._count?.orders ?? 0);
 
   return (
     <Link

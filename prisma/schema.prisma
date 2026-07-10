@@ -416,6 +416,10 @@ model Gig {
   faq         Json?     // [{ q, a }] seller-managed FAQ
   requirementPrompts Json? // ["question", ...] structured requirement questions
   views       Int       @default(0)
+  // Display order-count for pre-launch DEMO gigs (the card shows max(salesCount,
+  // real orders)). Fabricated by seed-demo-stats so demo tiles look alive; real gigs
+  // keep 0 and show their true order count. DEMO-ONLY — reset before real launch.
+  salesCount  Int       @default(0)
   // Decayed 7d popularity (orders/saves/reviews + views tiebreak), recomputed nightly
   // by the engagement cron — powers "Trending" ordering. 0 = cold.
   trendingScore Float   @default(0)

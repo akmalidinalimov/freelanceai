@@ -24,6 +24,7 @@ const CATS = [
 type GigWithSeller = {
   slug: string; title: string; coverUrl: string | null; coverPosterUrl: string | null;
   featured: boolean;
+  salesCount: number;
   packages: { priceUzs: number }[];
   _count: { orders: number };
   seller: {
@@ -51,7 +52,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     verified: Boolean(g.seller.username && g.seller.sellerProfile),
     featured: g.featured,
     priceUzs: g.packages[0]?.priceUzs ?? 0,
-    orders: g._count.orders,
+    orders: Math.max(g.salesCount, g._count.orders),
     ratingAvg: g.seller.sellerProfile?.ratingAvg ?? 0,
     ratingCount: g.seller.sellerProfile?.ratingCount ?? 0,
   });
