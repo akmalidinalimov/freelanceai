@@ -134,7 +134,7 @@ export function OrderPanel({
       </div>
 
       {selected && (
-        <div className="rounded-xl border border-[hsl(var(--border))] p-5">
+        <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)]">
           <div className="flex items-center justify-between">
             <span className="font-semibold">{selected.title}</span>
             <span className="text-right">
@@ -194,7 +194,7 @@ export function OrderPanel({
       )}
 
       {extras.length > 0 && viewer !== "owner" && (
-        <div className="rounded-xl border border-[hsl(var(--border))] p-4">
+        <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-[var(--shadow-soft)]">
           <p className="mb-2 text-sm font-medium">{to("extras")}</p>
           <div role="group" aria-label={to("extras")} className="space-y-2">
             {extras.map((e) => (
