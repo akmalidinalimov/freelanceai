@@ -46,7 +46,7 @@ export async function GigCard({
         <SaveHeart gigId={gig.id} locale={locale} initialSaved={saved} isGuest={isGuest} />
         {gig.featured && (
           <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[0.72rem] font-bold text-[hsl(var(--primary-ink))] shadow-[0_2px_8px_rgba(0,0,0,0.14)] backdrop-blur-sm">
-            ★ {tg("featured")}
+            ⚡ {tg("topCreator")}
           </span>
         )}
         {orders > 0 && (

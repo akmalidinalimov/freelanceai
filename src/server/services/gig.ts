@@ -409,6 +409,7 @@ function listFeaturedGigsUncached(take = 8) {
     take,
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },
+      _count: { select: { orders: true } },
       seller: {
         select: {
           firstName: true,

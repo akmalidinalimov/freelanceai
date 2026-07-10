@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { coverVariant } from "@/lib/cover-variant";
+import { formatUzs } from "@/lib/utils";
 
 export interface MarqueeGig {
   slug: string;
   title: string;
   coverUrl: string | null;
   coverPosterUrl: string | null;
+  username: string | null;
   sellerName: string;
   sellerAvatar: string | null;
+  verified: boolean;
+  featured: boolean;
+  priceUzs: number;
+  orders: number;
   ratingAvg: number;
   ratingCount: number;
 }
@@ -24,6 +31,7 @@ const FALLBACK = "/prism/pattern-sweep-dark-wide-v1.webp";
  * a moving card is easy to tap. Reduced-motion → a plain swipe rail (see globals.css).
  */
 export function FeaturedMarquee({ gigs }: { gigs: MarqueeGig[] }) {
+  const t = useTranslations("Gig");
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,24 +105,50 @@ export function FeaturedMarquee({ gigs }: { gigs: MarqueeGig[] }) {
                   className="h-full w-full object-cover"
                   style={{ objectPosition: v.pos, transform: v.flip ? "scaleX(-1)" : undefined }}
                 />
-                {g.ratingCount > 0 && (
-                  <span className="absolute bottom-2.5 right-2.5 rounded-full bg-[hsl(var(--foreground))]/72 px-2.5 py-1 text-[0.72rem] font-bold text-white backdrop-blur-sm">
-                    ★ {g.ratingAvg.toFixed(1)} · {g.ratingCount}
+                {g.featured && (
+                  <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[0.72rem] font-bold text-[hsl(var(--primary-ink))] shadow-[0_2px_8px_rgba(0,0,0,0.14)] backdrop-blur-sm">
+                    ⚡ {t("topCreator")}
+                  </span>
+                )}
+                {g.orders > 0 && (
+                  <span className="absolute bottom-2.5 right-2.5 rounded-full bg-black/70 px-2.5 py-1 text-[0.72rem] font-bold text-white backdrop-blur-sm">
+                    {t("ordersCount", { count: g.orders })}
                   </span>
                 )}
               </div>
-              <div className="flex flex-1 flex-col gap-2 p-4">
-                <h3 className="line-clamp-2 font-bold leading-snug tracking-[-0.01em]">{g.title}</h3>
-                <div className="mt-auto flex items-center gap-2 border-t border-[hsl(var(--border))] pt-3 text-sm font-semibold text-[hsl(var(--muted-foreground))]">
+              <div className="flex flex-1 flex-col gap-2.5 p-4">
+                <h3 className="line-clamp-2 font-display font-bold leading-snug tracking-[-0.01em]">{g.title}</h3>
+                <div className="flex items-center gap-2 text-sm font-semibold text-[hsl(var(--muted-foreground))]">
                   {g.sellerAvatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={g.sellerAvatar} alt="" className="h-6 w-6 rounded-full object-cover" />
+                    <img src={g.sellerAvatar} alt="" className="h-7 w-7 shrink-0 rounded-[9px] object-cover" />
                   ) : (
-                    <span className="grid h-6 w-6 place-items-center rounded-full bg-[hsl(var(--primary))] text-[0.65rem] font-bold text-white">
-                      {g.sellerName.slice(0, 1).toUpperCase()}
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-[9px] bg-[hsl(var(--primary))]/15 text-[0.7rem] font-bold text-[hsl(var(--primary-ink))]">
+                      {(g.username ?? g.sellerName).slice(0, 2).toUpperCase()}
                     </span>
                   )}
-                  <span className="truncate text-[hsl(var(--foreground))]">{g.sellerName}</span>
+                  <span className="truncate text-[hsl(var(--foreground))]">
+                    {g.username ? `@${g.username}` : g.sellerName}
+                  </span>
+                  {g.verified && (
+                    <span className="grid h-[15px] w-[15px] shrink-0 place-items-center rounded-full bg-[hsl(var(--primary))] text-[0.6rem] text-white">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <div className="mt-auto flex items-center justify-between gap-2 border-t border-[hsl(var(--border))] pt-3">
+                  {g.ratingCount > 0 ? (
+                    <span className="flex items-center gap-1 text-sm font-bold text-[hsl(var(--foreground))]">
+                      <span className="text-[hsl(var(--star))]">★</span>
+                      {g.ratingAvg.toFixed(1)}
+                      <span className="text-xs font-semibold text-[hsl(var(--muted-foreground))]">({g.ratingCount})</span>
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-[hsl(var(--muted-foreground))]">{t("newSeller")}</span>
+                  )}
+                  <span className="font-display rounded-[11px] border border-[hsl(var(--primary))]/20 bg-[hsl(var(--primary))]/10 px-2.5 py-1 text-[0.95rem] font-bold tabular-nums text-[hsl(var(--primary-ink))]">
+                    {formatUzs(g.priceUzs)} <span className="text-[0.72em] font-semibold opacity-80">{t("sum")}</span>
+                  </span>
                 </div>
               </div>
             </Link>

@@ -23,6 +23,9 @@ const CATS = [
 
 type GigWithSeller = {
   slug: string; title: string; coverUrl: string | null; coverPosterUrl: string | null;
+  featured: boolean;
+  packages: { priceUzs: number }[];
+  _count: { orders: number };
   seller: {
     firstName: string | null; name: string | null; username: string | null;
     image: string | null; photoUrl: string | null;
@@ -42,8 +45,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     title: g.title,
     coverUrl: g.coverUrl,
     coverPosterUrl: g.coverPosterUrl ?? null,
+    username: g.seller.username,
     sellerName: g.seller.firstName ?? g.seller.name ?? g.seller.username ?? "",
     sellerAvatar: g.seller.image ?? g.seller.photoUrl ?? null,
+    verified: Boolean(g.seller.username && g.seller.sellerProfile),
+    featured: g.featured,
+    priceUzs: g.packages[0]?.priceUzs ?? 0,
+    orders: g._count.orders,
     ratingAvg: g.seller.sellerProfile?.ratingAvg ?? 0,
     ratingCount: g.seller.sellerProfile?.ratingCount ?? 0,
   });
