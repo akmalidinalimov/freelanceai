@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { listFeaturedCreators } from "@/server/services/browse";
 import { listFeaturedGigs, listPublicGigs } from "@/server/services/gig";
-import { specSlug, specLabel } from "@/lib/specializations";
+import { specLabel } from "@/lib/specializations";
 import { HomeSearch } from "@/components/home-search";
 import { FeaturedMarquee, type MarqueeGig } from "@/components/home/featured-marquee";
 import { AbstractCategories, type HomeCategory } from "@/components/home/abstract-categories";
@@ -12,13 +12,15 @@ import { cardClass } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 // Bento categories (flagship first) → each links to the gigs for that specialization.
+// `cat` is the gig Category slug the tile links to (marketplace filtered → GIGS,
+// not creators). `spec` still drives the label. Motion gigs live under ai-video.
 const CATS = [
-  { spec: "ai_video", desc: "catVideo" },
-  { spec: "product_photo", desc: "catPhoto" },
-  { spec: "branding", desc: "catBranding" },
-  { spec: "ai_avatar", desc: "catAvatar" },
-  { spec: "voiceover", desc: "catVoice" },
-  { spec: "motion", desc: "catMotion" },
+  { spec: "ai_video", cat: "ai-video", desc: "catVideo" },
+  { spec: "product_photo", cat: "ai-product", desc: "catPhoto" },
+  { spec: "branding", cat: "branding", desc: "catBranding" },
+  { spec: "ai_avatar", cat: "ai-avatar", desc: "catAvatar" },
+  { spec: "voiceover", cat: "voiceover", desc: "catVoice" },
+  { spec: "motion", cat: "ai-video", desc: "catMotion" },
 ] as const;
 
 type GigWithSeller = {
@@ -69,7 +71,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const showcaseGigs = featuredGigs.slice(0, 8);
 
   const cats: HomeCategory[] = CATS.map((c) => ({
-    href: `/browse/${specSlug(c.spec)}`,
+    href: `/gigs?category=${c.cat}`,
     name: specLabel(c.spec, locale),
     sub: t(c.desc),
   }));
