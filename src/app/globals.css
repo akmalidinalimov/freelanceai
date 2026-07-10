@@ -316,24 +316,22 @@ body::before {
 }
 
 /* ===== Homepage (clay meets Apple) — featured marquee + abstract bento ===== */
+/* Native horizontal scroll rail: real finger-swiping (with momentum) works; the
+   idle auto-advance is driven by JS nudging scrollLeft (see featured-marquee.tsx). */
 .home-marquee {
-  position: relative; margin: 0 -1rem; overflow: hidden; padding: 0.5rem 0;
-  -webkit-mask: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
-  mask: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  position: relative; margin: 0 -1rem; padding: 0.5rem 0;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
-.home-marquee-track {
-  display: flex; gap: 1rem; width: max-content; padding: 2px 1rem;
-  animation: home-scrollx 48s linear infinite;
-}
-.home-marquee:hover .home-marquee-track,
-.home-marquee:focus-within .home-marquee-track,
-.home-marquee.paused .home-marquee-track { animation-play-state: paused; }
-@keyframes home-scrollx { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.home-mcard { flex: 0 0 300px; max-width: 300px; transform-style: preserve-3d; will-change: transform; }
+.home-marquee::-webkit-scrollbar { display: none; }
+.home-marquee-track { display: flex; gap: 1rem; width: max-content; padding: 2px 1rem; }
+.home-mcard { flex: 0 0 300px; max-width: 300px; }
 @media (prefers-reduced-motion: reduce) {
-  .home-marquee { overflow-x: auto; -webkit-mask: none; mask: none; }
-  .home-marquee-track { animation: none; }
-  .home-mcard { transform: none !important; }
+  .home-marquee { -webkit-mask: none; mask: none; }
 }
 
 .home-bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; grid-auto-rows: 130px; }

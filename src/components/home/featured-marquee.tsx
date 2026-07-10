@@ -39,41 +39,62 @@ export function FeaturedMarquee({ gigs }: { gigs: MarqueeGig[] }) {
     if (!root) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // pause on touch, resume shortly after the finger lifts
-    let resumeTimer: ReturnType<typeof setTimeout>;
-    const onTouchStart = () => {
-      root.classList.add("paused");
-      clearTimeout(resumeTimer);
-    };
-    const onTouchEnd = () => {
-      clearTimeout(resumeTimer);
-      resumeTimer = setTimeout(() => root.classList.remove("paused"), 2200);
-    };
-    root.addEventListener("touchstart", onTouchStart, { passive: true });
-    root.addEventListener("touchend", onTouchEnd, { passive: true });
-
-    // rotate cards by horizontal position for a subtle carousel feel
+    // The rail is a native horizontal scroller, so the browser handles finger-swiping
+    // (with momentum) for free. We only drive a calm idle auto-advance by nudging
+    // scrollLeft each frame; it pauses the moment the user touches/drags/hovers and
+    // resumes shortly after they let go — so an accidental touch no longer "kills" it.
+    let paused = reduce; // reduced-motion: no auto-advance (manual swipe still works)
+    let idleTimer: ReturnType<typeof setTimeout>;
     let raf = 0;
-    const cards = Array.from(root.querySelectorAll<HTMLElement>(".home-mcard"));
-    const spin = () => {
-      const vw = window.innerWidth;
-      for (const el of cards) {
-        const r = el.getBoundingClientRect();
-        if (r.right < 0 || r.left > vw) continue;
-        const cx = r.left + r.width / 2;
-        const d = (cx - vw / 2) / vw;
-        const ry = Math.max(-13, Math.min(13, -d * 17));
-        el.style.transform = `perspective(1200px) rotateY(${ry.toFixed(2)}deg)`;
+    const SPEED = 0.4; // px/frame ≈ a gentle drift
+
+    const step = () => {
+      if (!paused) {
+        root.scrollLeft += SPEED;
+        // content is duplicated ([...gigs, ...gigs]); loop by one copy width, seamlessly
+        const half = root.scrollWidth / 2;
+        if (half > 0 && root.scrollLeft >= half) root.scrollLeft -= half;
       }
-      raf = requestAnimationFrame(spin);
+      raf = requestAnimationFrame(step);
     };
-    if (!reduce && cards.length) raf = requestAnimationFrame(spin);
+    raf = requestAnimationFrame(step);
+
+    const pause = () => {
+      paused = true;
+      clearTimeout(idleTimer);
+    };
+    const resumeSoon = () => {
+      if (reduce) return;
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        paused = false;
+      }, 1800);
+    };
+    const onWheel = () => {
+      pause();
+      resumeSoon();
+    };
+
+    root.addEventListener("pointerdown", pause);
+    root.addEventListener("pointerup", resumeSoon);
+    root.addEventListener("pointercancel", resumeSoon);
+    root.addEventListener("touchstart", pause, { passive: true });
+    root.addEventListener("touchend", resumeSoon, { passive: true });
+    root.addEventListener("wheel", onWheel, { passive: true });
+    root.addEventListener("mouseenter", pause);
+    root.addEventListener("mouseleave", resumeSoon);
 
     return () => {
       cancelAnimationFrame(raf);
-      clearTimeout(resumeTimer);
-      root.removeEventListener("touchstart", onTouchStart);
-      root.removeEventListener("touchend", onTouchEnd);
+      clearTimeout(idleTimer);
+      root.removeEventListener("pointerdown", pause);
+      root.removeEventListener("pointerup", resumeSoon);
+      root.removeEventListener("pointercancel", resumeSoon);
+      root.removeEventListener("touchstart", pause);
+      root.removeEventListener("touchend", resumeSoon);
+      root.removeEventListener("wheel", onWheel);
+      root.removeEventListener("mouseenter", pause);
+      root.removeEventListener("mouseleave", resumeSoon);
     };
   }, [gigs]);
 
