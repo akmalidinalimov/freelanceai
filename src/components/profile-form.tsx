@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { TagInput } from "@/components/ui/tag-input";
 import { SKILLS, NICHES, specLabel } from "@/lib/specializations";
+
+// Common AI tools as suggestions for the free-form "tools" chips (not a controlled vocabulary).
+const AI_TOOL_SUGGESTIONS = [
+  "Midjourney", "ChatGPT", "Runway", "Kling", "Sora", "ElevenLabs", "Higgsfield",
+  "Stable Diffusion", "DALL·E", "CapCut", "Photoshop", "After Effects", "Suno",
+];
 
 const field =
   "w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm";
@@ -24,15 +31,17 @@ export function ProfileForm({
   const locale = useLocale();
   const [headline, setHeadline] = useState(initial.headline);
   const [bio, setBio] = useState(initial.bio);
-  const [skills, setSkills] = useState(initial.skills);
-  const [aiTools, setAiTools] = useState(initial.aiTools);
+  const [skills, setSkills] = useState<string[]>(
+    initial.skills.split(",").map((s) => s.trim()).filter(Boolean)
+  );
+  const [aiTools, setAiTools] = useState<string[]>(
+    initial.aiTools.split(",").map((s) => s.trim()).filter(Boolean)
+  );
+  const skillSuggestions = SKILLS.map((s) => specLabel(s.key, locale));
   const [instagram, setInstagram] = useState(initial.instagramUsername);
   const [specs, setSpecs] = useState<string[]>(initial.specializations);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  const toArr = (s: string) =>
-    s.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 20);
 
   const toggleSpec = (key: string) =>
     setSpecs((prev) =>
@@ -48,8 +57,8 @@ export function ProfileForm({
       body: JSON.stringify({
         headline: headline.trim(),
         bio: bio.trim(),
-        skills: toArr(skills),
-        aiTools: toArr(aiTools),
+        skills: skills.slice(0, 20),
+        aiTools: aiTools.slice(0, 20),
         specializations: specs,
         instagramUsername: instagram.trim().replace(/^@/, ""),
       }),
@@ -88,14 +97,14 @@ export function ProfileForm({
         <span className="text-sm font-medium">{t("about")}</span>
         <textarea value={bio} onChange={(e) => setBio(e.target.value)} className={`${field} min-h-28`} maxLength={600} />
       </label>
-      <label className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("skills")}</span>
-        <input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder={t("commaHint")} className={field} />
-      </label>
-      <label className="flex flex-col gap-1">
+        <TagInput value={skills} onChange={setSkills} suggestions={skillSuggestions} placeholder={t("commaHint")} ariaLabel={t("skills")} max={20} />
+      </div>
+      <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("tools")}</span>
-        <input value={aiTools} onChange={(e) => setAiTools(e.target.value)} placeholder={t("commaHint")} className={field} />
-      </label>
+        <TagInput value={aiTools} onChange={setAiTools} suggestions={AI_TOOL_SUGGESTIONS} placeholder={t("commaHint")} ariaLabel={t("tools")} max={20} />
+      </div>
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("instagram")}</span>
         <input

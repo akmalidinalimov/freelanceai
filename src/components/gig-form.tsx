@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { CoverUpload } from "@/components/cover-upload";
 import { GalleryUpload } from "@/components/gallery-upload";
 import { FocalPicker } from "@/components/focal-picker";
+import { TagInput } from "@/components/ui/tag-input";
+import { SPECIALIZATIONS } from "@/lib/specializations";
 
 interface Category {
   id: string;
@@ -84,7 +86,14 @@ export function GigForm({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
-  const [tags, setTags] = useState(initial?.tags ?? "");
+  const [tags, setTags] = useState<string[]>(
+    initial?.tags
+      ? initial.tags.split(",").map((s) => s.trim()).filter(Boolean)
+      : []
+  );
+  // Localized taxonomy labels as tag suggestions (skills + niches), so sellers pick real,
+  // searchable terms instead of guessing — better discoverability + easier low-literacy input.
+  const tagSuggestions = SPECIALIZATIONS.map((s) => (locale === "ru" ? s.ru : locale === "en" ? s.en : s.uz));
   const [coverUrl, setCoverUrl] = useState<string | undefined>(initial?.coverUrl);
   const [coverFocal, setCoverFocal] = useState<string | undefined>(initial?.coverFocal);
   const [coverType, setCoverType] = useState<"image" | "video" | undefined>(
@@ -147,11 +156,7 @@ export function GigForm({
           coverH: coverUrl ? coverDims?.h : undefined,
           galleryUrls,
           categoryId: categoryId || undefined,
-          tags: tags
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-            .slice(0, 8),
+          tags: tags.slice(0, 8),
           faq:
             faq
               .map((f) => ({ q: f.q.trim(), a: f.a.trim() }))
@@ -228,15 +233,17 @@ export function GigForm({
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               <span className="text-sm font-medium">{t("tags")}</span>
-              <input
-                className={field}
+              <TagInput
                 value={tags}
-                onChange={(e) => setTags(e.target.value)}
+                onChange={setTags}
+                suggestions={tagSuggestions}
                 placeholder={t("tagsPh")}
+                ariaLabel={t("tags")}
+                max={8}
               />
-            </label>
+            </div>
           </div>
 
           <label className="flex flex-col gap-1">
