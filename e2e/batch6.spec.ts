@@ -129,12 +129,13 @@ test("admin categories: create then delete a category", async ({ browser }) => {
   await admin.goto("/uz/admin/categories");
   await expect(admin.getByText(slug, { exact: true })).toBeVisible();
 
-  // …and can be deleted from the UI (0 gigs → delete is enabled; confirm() is auto-accepted).
-  admin.on("dialog", (d) => d.accept());
+  // …and can be deleted from the UI (0 gigs → delete is enabled). Delete confirmation is a
+  // custom in-app dialog (useConfirm), not window.confirm — accept it by clicking "OK".
   await admin
     .locator("tr", { hasText: slug })
     .getByRole("button", { name: "Delete" })
     .click();
+  await admin.getByRole("dialog").getByRole("button", { name: "OK" }).click();
   await expect(admin.getByText(slug, { exact: true })).toHaveCount(0);
 
   await ctx.close();

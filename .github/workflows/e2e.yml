@@ -37,6 +37,9 @@ jobs:
       TELEGRAM_BOT_TOKEN: "000000:e2e-dummy-bot-token"
       TELEGRAM_BOT_USERNAME: e2e_bot
       TELEGRAM_WEBHOOK_SECRET: e2e-webhook-secret-0123456789
+      # Throwaway PII key (base64 32 bytes). `next start` forces NODE_ENV=production, so
+      # encryptPII fails CLOSED (500) without a key — the KYC phone-submit test needs one.
+      PII_ENCRYPTION_KEY: 6hIzHd6alWKMAJZXnRTDBJeH8Xhlu6+f0RmC/oQwBLQ=
       E2E_TEST_AUTH: "1"
       # Test R2 public base so message-attachment URL validation (keyFromPublicUrl) can pass.
       S3_PUBLIC_BASE_URL: https://r2-test.example.com

@@ -77,6 +77,10 @@ test("messaging: buyer sends, seller sees it on the order", async ({ browser }) 
   await buyer.waitForURL(/\/uz\/orders\/.+/);
   const orderUrl = buyer.url();
 
+  // Review-first checkout: an unpaid order shows the checkout-review page (no inline chat),
+  // which links to the order's conversation via "message the seller". Send from there.
+  await buyer.getByRole("link", { name: "Sotuvchiga yozish" }).click();
+  await buyer.waitForURL(/\/uz\/messages\/.+/);
   await buyer.getByPlaceholder("Xabar yozing...").fill("Hello from the buyer");
   await buyer.getByRole("button", { name: "Yuborish" }).click();
   await expect(buyer.getByText("Hello from the buyer")).toBeVisible();
