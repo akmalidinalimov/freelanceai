@@ -125,11 +125,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    // Test-only login for automated E2E. Present ONLY in a non-production build with
-    // E2E_TEST_AUTH=1. The NODE_ENV guard is the hard backstop: even if E2E_TEST_AUTH
-    // leaked into a prod deploy, this passwordless impersonation provider still cannot
-    // register. Lets Playwright sign in as a seeded user by id.
-    ...(process.env.E2E_TEST_AUTH === "1" && process.env.NODE_ENV !== "production"
+    // Test-only login for automated E2E. Present ONLY when E2E_TEST_AUTH=1 AND the app is
+    // serving a LOCALHOST origin. The origin check is the hard backstop: even if
+    // E2E_TEST_AUTH leaked into a prod deploy, this passwordless impersonation provider
+    // still can't register because prod pins AUTH_URL=https://gigora.ai. (A NODE_ENV guard
+    // can't be used here: Playwright runs against `next start`, which forces
+    // NODE_ENV=production, so it would disable the provider in CI too.) Lets Playwright
+    // sign in as a seeded user by id.
+    ...(process.env.E2E_TEST_AUTH === "1" &&
+    /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|\/|$)/.test(
+      process.env.AUTH_URL ?? process.env.APP_ORIGIN ?? ""
+    )
       ? [
           Credentials({
             id: "e2e",
