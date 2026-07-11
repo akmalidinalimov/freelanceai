@@ -293,12 +293,15 @@ export function GigForm({
                   value={pkgs[tier].title}
                   onChange={(e) => setPkg(tier, "title", e.target.value)}
                 />
+                {/* Numeric inputs select their content on focus so a prefilled value
+                    (e.g. revisions "1") is REPLACED by typing, never appended ("11"). */}
                 <input
                   className={field}
                   inputMode="numeric"
                   placeholder={`${t("price")} (so'm)`}
                   aria-label={`${tierLabel[tier]} — ${t("price")} (so'm)`}
                   value={pkgs[tier].priceUzs}
+                  onFocus={(e) => e.currentTarget.select()}
                   onChange={(e) => setPkg(tier, "priceUzs", e.target.value.replace(/\D/g, ""))}
                 />
                 <input
@@ -307,6 +310,7 @@ export function GigForm({
                   placeholder={t("deliveryDays")}
                   aria-label={`${tierLabel[tier]} — ${t("deliveryDays")}`}
                   value={pkgs[tier].deliveryDays}
+                  onFocus={(e) => e.currentTarget.select()}
                   onChange={(e) => setPkg(tier, "deliveryDays", e.target.value.replace(/\D/g, ""))}
                 />
                 <input
@@ -315,6 +319,7 @@ export function GigForm({
                   placeholder={t("revisions")}
                   aria-label={`${tierLabel[tier]} — ${t("revisions")}`}
                   value={pkgs[tier].revisions}
+                  onFocus={(e) => e.currentTarget.select()}
                   onChange={(e) => setPkg(tier, "revisions", e.target.value.replace(/\D/g, ""))}
                 />
               </div>

@@ -161,7 +161,7 @@
     "heroBuyCta": "Найти услугу",
     "heroSellCta": "Стать исполнителем",
     "heroViewWork": "Смотреть работы",
-    "statCreators": "исполнителей",
+    "statCreators": "авторов",
     "statServices": "услуг",
     "statSupport": "поддержка",
     "statLangs": "языка",
@@ -194,7 +194,6 @@
     "trustVerified": "✓ Проверенные креаторы",
     "trustLangs": "oʻzbek · рус · english",
     "statGigs": "услуг",
-    "statCreators": "авторов",
     "featuredTitle": "Рекомендуемые работы",
     "featuredView": "Подробнее",
     "statOrders": "заказов выполнено",
@@ -866,7 +865,16 @@
     "nextLevel": "до след. уровня: +{xp} XP",
     "streak": "серия {days} дн.",
     "profileScore": "Профиль заполнен на {score}% — дозаполните!",
-    "weeklyRank": "#{rank} на этой неделе"
+    "weeklyRank": "#{rank} на этой неделе",
+    "missingHint": "Не хватает:",
+    "missing_headline": "Заголовок (мин. 10 символов)",
+    "missing_bio": "Био (мин. 80 символов)",
+    "missing_specializations": "Выберите специализацию",
+    "missing_portfolio": "Портфолио (мин. 1 работа)",
+    "missing_activeGig": "Создайте активную услугу",
+    "missing_payout": "Карта для выплат",
+    "missing_kyc": "Верификация (KYC)",
+    "missing_phone": "Номер телефона"
   },
   "Feed": {
     "fromFollowed": "Новое от ваших авторов",
@@ -889,6 +897,10 @@
     "postsHint": "Отдельная ссылка на каждый пост. Например: https://t.me/kanal/123",
     "removePost": "Удалить ссылку",
     "followChannel": "Подписаться на канал",
-    "postTitle": "Пост Telegram {n}"
+    "postTitle": "Пост Telegram {n}",
+    "savedDetail": "Сохранено — посты появятся в вашем публичном профиле.",
+    "savedNoPosts": "Канал сохранён. Для надёжного показа добавьте ссылки на конкретные посты (t.me/kanal/123) — автозагрузка постов работает не для всех каналов.",
+    "viewProfile": "Открыть публичный профиль →",
+    "saveError": "Ошибка сохранения — попробуйте ещё раз."
   }
 }

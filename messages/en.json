@@ -194,7 +194,6 @@
     "trustVerified": "✓ Verified creators",
     "trustLangs": "oʻzbek · рус · english",
     "statGigs": "services",
-    "statCreators": "creators",
     "featuredTitle": "Featured work",
     "featuredView": "View",
     "statOrders": "orders delivered",
@@ -866,7 +865,16 @@
     "nextLevel": "next level: +{xp} XP",
     "streak": "{days}-day streak",
     "profileScore": "Profile {score}% complete — finish it!",
-    "weeklyRank": "#{rank} this week"
+    "weeklyRank": "#{rank} this week",
+    "missingHint": "Missing:",
+    "missing_headline": "Headline (min. 10 chars)",
+    "missing_bio": "Bio (min. 80 chars)",
+    "missing_specializations": "Pick a specialization",
+    "missing_portfolio": "Portfolio (min. 1 item)",
+    "missing_activeGig": "Create an active service",
+    "missing_payout": "Payout card",
+    "missing_kyc": "Identity verification (KYC)",
+    "missing_phone": "Phone number"
   },
   "Feed": {
     "fromFollowed": "New from creators you follow",
@@ -889,6 +897,10 @@
     "postsHint": "One link per post. e.g. https://t.me/channel/123",
     "removePost": "Remove link",
     "followChannel": "Follow channel",
-    "postTitle": "Telegram post {n}"
+    "postTitle": "Telegram post {n}",
+    "savedDetail": "Saved — posts will appear on your public profile.",
+    "savedNoPosts": "Channel saved. For a guaranteed showcase add specific post links (t.me/channel/123) — auto-loading posts does not work for every channel.",
+    "viewProfile": "View public profile →",
+    "saveError": "Save failed — please try again."
   }
 }

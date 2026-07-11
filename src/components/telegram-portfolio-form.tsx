@@ -11,13 +11,21 @@ const field = "w-full rounded-md border border-[hsl(var(--input-border))] bg-tra
  * channel's latest posts) + optional pinned post links. Saves on its own to
  * PATCH /api/me/profile — one of the three portfolio sources on the hub.
  */
-export function TelegramPortfolioForm({ initial }: { initial: { channel: string; posts: string[] } }) {
+export function TelegramPortfolioForm({
+  initial,
+  username,
+}: {
+  initial: { channel: string; posts: string[] };
+  username?: string | null;
+}) {
   const tt = useTranslations("Telegram");
   const t = useTranslations("Profile");
   const [channel, setChannel] = useState(initial.channel);
   const [posts, setPosts] = useState<string[]>(initial.posts.length ? [...initial.posts, ""] : [""]);
   const [busy, setBusy] = useState(false);
-  const [saved, setSaved] = useState(false);
+  // QA fix: "saved but nothing shows up, no feedback either way" — the result state now
+  // spells out what happened and what will (or won't) display on the public profile.
+  const [result, setResult] = useState<"idle" | "saved" | "savedNoPosts" | "error">("idle");
 
   const setPost = (i: number, v: string) =>
     setPosts((prev) => {
@@ -34,17 +42,20 @@ export function TelegramPortfolioForm({ initial }: { initial: { channel: string;
 
   async function save() {
     setBusy(true);
-    setSaved(false);
-    const r = await fetch("/api/me/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        telegramChannel: channel.trim(),
-        telegramPosts: posts.map((p) => p.trim()).filter(Boolean),
-      }),
-    });
+    setResult("idle");
+    const cleanPosts = posts.map((p) => p.trim()).filter(Boolean);
+    try {
+      const r = await fetch("/api/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramChannel: channel.trim(), telegramPosts: cleanPosts }),
+      });
+      const ok = (await r.json()).ok;
+      setResult(ok ? (cleanPosts.length > 0 ? "saved" : "savedNoPosts") : "error");
+    } catch {
+      setResult("error");
+    }
     setBusy(false);
-    if ((await r.json()).ok) setSaved(true);
   }
 
   return (
@@ -90,8 +101,32 @@ export function TelegramPortfolioForm({ initial }: { initial: { channel: string;
         <Button size="sm" onClick={save} disabled={busy}>
           {busy ? "…" : t("save")}
         </Button>
-        {saved && <span className="text-sm text-[hsl(var(--success))]">{t("saved")}</span>}
       </div>
+      {result === "saved" && (
+        <div className="rounded-lg border border-[hsl(var(--success))]/40 bg-[hsl(var(--success-soft))] px-3 py-2 text-sm text-[hsl(var(--success))]">
+          ✓ {tt("savedDetail")}{" "}
+          {username && (
+            <a href={`/creators/${username}`} target="_blank" rel="noreferrer" className="font-semibold underline">
+              {tt("viewProfile")}
+            </a>
+          )}
+        </div>
+      )}
+      {result === "savedNoPosts" && (
+        <div className="rounded-lg border border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning-soft))] px-3 py-2 text-sm text-[hsl(var(--warning-foreground))]">
+          {tt("savedNoPosts")}{" "}
+          {username && (
+            <a href={`/creators/${username}`} target="_blank" rel="noreferrer" className="font-semibold underline">
+              {tt("viewProfile")}
+            </a>
+          )}
+        </div>
+      )}
+      {result === "error" && (
+        <div className="rounded-lg border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger-soft))] px-3 py-2 text-sm text-[hsl(var(--danger))]">
+          {tt("saveError")}
+        </div>
+      )}
     </div>
   );
 }

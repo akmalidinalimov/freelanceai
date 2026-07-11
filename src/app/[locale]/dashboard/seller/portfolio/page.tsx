@@ -94,6 +94,7 @@ export default async function PortfolioHubPage({
               channel: profile?.telegramChannel ?? "",
               posts: profile?.telegramPosts ?? [],
             }}
+            username={user.username}
           />
         </Card>
       </div>

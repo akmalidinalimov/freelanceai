@@ -29,6 +29,19 @@ async function main() {
     await prisma.sellerProfile.update({ where: { id: p.id }, data: { ratingAvg, ratingCount } });
   }
 
+  // Seller levels — QA: "everyone's tagged New" reads as empty-beta. Assign a level to
+  // profiles whose rating stats are the fabricated ones (ratingCount >= 24 while still
+  // NEW — real new sellers can't have 24+ reviews at level NEW), deterministically.
+  const leveled = await prisma.sellerProfile.findMany({
+    where: { level: "NEW", ratingCount: { gte: 24 } },
+    select: { id: true, userId: true },
+  });
+  const LEVELS = ["LEVEL_1", "LEVEL_1", "LEVEL_2", "LEVEL_2", "TOP_RATED"];
+  for (const p of leveled) {
+    const level = LEVELS[hash(p.userId + ":level") % LEVELS.length];
+    await prisma.sellerProfile.update({ where: { id: p.id }, data: { level } });
+  }
+
   // Gig order counts + a "Top ijodkor" subset — only gigs with no real orders yet.
   const gigs = await prisma.gig.findMany({
     where: { salesCount: 0, status: "ACTIVE", deletedAt: null },
@@ -43,7 +56,7 @@ async function main() {
     await prisma.gig.update({ where: { id: g.id }, data: { salesCount, featured: isFeatured } });
   }
 
-  console.log(`demo-stats: updated ${profiles.length} profiles, ${gigs.length} gigs (${featured} featured).`);
+  console.log(`demo-stats: updated ${profiles.length} profiles, ${leveled.length} levels, ${gigs.length} gigs (${featured} featured).`);
 }
 
 main()

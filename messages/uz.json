@@ -194,7 +194,6 @@
     "trustVerified": "✓ Tasdiqlangan ijodkorlar",
     "trustLangs": "oʻzbek · рус · english",
     "statGigs": "xizmat",
-    "statCreators": "ijodkor",
     "featuredTitle": "Tavsiya etilgan ishlar",
     "featuredView": "Batafsil",
     "statOrders": "buyurtma bajarildi",
@@ -866,7 +865,16 @@
     "nextLevel": "keyingi daraja: +{xp} XP",
     "streak": "{days} kunlik seriya",
     "profileScore": "Profil {score}% toʻliq — toʻldiring!",
-    "weeklyRank": "Bu hafta #{rank}-oʻrin"
+    "weeklyRank": "Bu hafta #{rank}-oʻrin",
+    "missingHint": "Yetishmayapti:",
+    "missing_headline": "Sarlavha (kamida 10 belgi)",
+    "missing_bio": "Bio (kamida 80 belgi)",
+    "missing_specializations": "Yoʻnalish tanlang",
+    "missing_portfolio": "Portfolio (kamida 1 ish)",
+    "missing_activeGig": "Faol xizmat yarating",
+    "missing_payout": "Toʻlov kartasi",
+    "missing_kyc": "Shaxsni tasdiqlash (KYC)",
+    "missing_phone": "Telefon raqami"
   },
   "Feed": {
     "fromFollowed": "Kuzatayotgan ijodkorlaringizdan yangi",
@@ -889,6 +897,10 @@
     "postsHint": "Har bir post uchun alohida havola. Masalan: https://t.me/kanal/123",
     "removePost": "Havolani oʻchirish",
     "followChannel": "Kanalni kuzatish",
-    "postTitle": "Telegram post {n}"
+    "postTitle": "Telegram post {n}",
+    "savedDetail": "Saqlandi — postlar ochiq profilingizda koʻrinadi.",
+    "savedNoPosts": "Kanal saqlandi. Ishonchli koʻrinish uchun aniq post havolalarini qoʻshing (t.me/kanal/123) — ayrim kanallardan postlar avtomatik yuklanmasligi mumkin.",
+    "viewProfile": "Ochiq profilni koʻrish →",
+    "saveError": "Saqlashda xatolik — qayta urinib koʻring."
   }
 }

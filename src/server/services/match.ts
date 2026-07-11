@@ -434,37 +434,44 @@ export async function matchGigs(
   }
 
   // 3) category-in-detected-spec → gigs in a matched skill/niche category (recovers
-  //    relevant gigs whose text didn't lexically hit the raw query)
+  //    relevant gigs whose text didn't lexically hit the raw query). Deliberately the
+  //    WEAKEST tier: category-only membership must score visibly below text/tag/semantic
+  //    matches, or every same-category gig collapses to one identical "match %" (QA).
   if (matchedSlugs.length) {
     const catGigs = await prisma.gig.findMany({
       where: { status: "ACTIVE", deletedAt: null, category: { slug: { in: matchedSlugs } } },
       select: { id: true },
       take: 150,
     });
-    for (const g of catGigs) gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.38));
+    for (const g of catGigs) gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.26));
   }
 
   // 4) S2 semantic arm: pgvector kNN over creator-doc embeddings → a set of semantically
   //    relevant sellers. We (a) pull their spec-matched gigs in for recall, and (b) boost
   //    already-candidate gigs whose seller landed in the set. (Gig-level embeddings are a
   //    later upgrade; seller-level recall is the honest v1.)
-  let semanticSellers = new Set<string>();
+  // Keep the seller→similarity map (not just membership): grading relevance by the
+  // actual cosine similarity is what SPREADS scores instead of a flat one-size boost (QA:
+  // "all results 35%").
+  let semanticSim = new Map<string, number>();
   if (queryVec) {
     try {
-      const semantic = await semanticCandidates(queryVec, 40);
-      semanticSellers = new Set(semantic.keys());
-      if (semanticSellers.size > 0 && matchedSlugs.length) {
+      semanticSim = await semanticCandidates(queryVec, 40);
+      if (semanticSim.size > 0 && matchedSlugs.length) {
         const semGigs = await prisma.gig.findMany({
           where: {
-            sellerId: { in: [...semanticSellers] },
+            sellerId: { in: [...semanticSim.keys()] },
             status: "ACTIVE",
             deletedAt: null,
             category: { slug: { in: matchedSlugs } },
           },
-          select: { id: true },
+          select: { id: true, sellerId: true },
           take: 100,
         });
-        for (const g of semGigs) gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.4));
+        for (const g of semGigs) {
+          const sim = semanticSim.get(g.sellerId) ?? 0;
+          gigRel.set(g.id, Math.max(gigRel.get(g.id) ?? 0, 0.2 + sim * 0.35));
+        }
       }
     } catch (err) {
       console.error("gig semantic arm skipped", err);
@@ -581,7 +588,8 @@ export async function matchGigs(
     const matchedKeys = [...provenKeys, ...supportedKeys, ...declaredKeys];
 
     const completed = completedBy.get(g.sellerId) ?? 0;
-    const semanticBoost = semanticSellers.has(g.sellerId) ? 0.12 : 0;
+    // Graded by real cosine similarity (0.55-floor → ~0.08, strong ~0.9 → ~0.16)
+    const semanticBoost = (semanticSim.get(g.sellerId) ?? 0) * 0.18;
     const relevance = Math.min(
       1.5,
       (gigRel.get(g.id) ?? 0) +
