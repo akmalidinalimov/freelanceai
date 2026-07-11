@@ -4,9 +4,10 @@ import type { User, $Enums, Prisma } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { trackEvent } from "@/server/services/activity";
-import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings } from "@/lib/commission";
+import { paymentPostings, payoutPostings, tipPostings, discountedPaymentPostings, reversalPostings } from "@/lib/commission";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 import { onOrderPaid } from "@/server/services/gamification";
+import { restoreOrderCredit } from "@/server/services/affiliate";
 import { paymentsEnabled } from "@/lib/payments";
 
 const NAME_SELECT = { select: { firstName: true, name: true, username: true } } as const;
@@ -146,6 +147,104 @@ export async function settleOrderByProvider(
     onOrderPaid(order.buyerId);
     await notifySellerPaid(orderId, order.sellerId);
   }
+}
+
+/**
+ * Reverse a PSP settlement when the provider CANCELS a payment it had already performed
+ * (e.g. Payme CancelTransaction on a state-2 transaction — the buyer's charge was undone).
+ * Without this the seller stays credited for money the buyer got back: a real leak.
+ *
+ * Idempotent + atomic + conservative:
+ *  - Auto-reverses ONLY from a pre-delivery active state (IN_PROGRESS/REVISION): claims the
+ *    order → CANCELLED, posts a discount-aware REFUND that claws back the seller credit, and
+ *    restores any referral credit — the same balanced reversal a cancellation uses.
+ *  - If the order has advanced (DELIVERED/COMPLETED/DISPUTED — the seller may already be
+ *    delivering or paid out), it does NOT silently claw back a balance; it flags admins to
+ *    resolve via dispute. The webhook still records the provider transaction as CANCELLED.
+ * Returns whether the settlement was reversed and whether it needs admin review.
+ */
+export async function reverseSettlementByProvider(
+  orderId: string,
+  provider: $Enums.PaymentProvider,
+  externalRef?: string
+): Promise<{ reversed: boolean; needsReview: boolean }> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return { reversed: false, needsReview: false };
+
+  const idem = `order:${orderId}:${provider.toLowerCase()}-cancel-refund`;
+  const already = await prisma.transaction.findUnique({ where: { idempotencyKey: idem } });
+  if (already) return { reversed: true, needsReview: false }; // already reversed — idempotent
+
+  const REVERSIBLE: $Enums.OrderStatus[] = ["IN_PROGRESS", "REVISION"];
+  if (!REVERSIBLE.includes(order.status)) {
+    // Nothing safe to auto-reverse. If money was actually taken and the order isn't already
+    // closed, a human must decide (refund vs let the delivery stand) — don't touch balances.
+    const paid = await prisma.transaction.findFirst({
+      where: { orderId, type: "PAYMENT_IN", status: "SUCCEEDED" },
+    });
+    if (paid && order.status !== "CANCELLED") {
+      await notifyAdmins("admin.payment.cancel_review", "⚠️ Toʻlov bekor qilindi — tekshirish kerak", {
+        body: `Buyurtma #${orderId.slice(-6)} uchun toʻlov provayder tomonidan bekor qilindi, ammo buyurtma allaqachon ilgarilagan (${order.status}).`,
+        link: `/admin/orders`,
+      });
+      return { reversed: false, needsReview: true };
+    }
+    return { reversed: false, needsReview: false };
+  }
+
+  let reversed = false;
+  await prisma.$transaction(async (tx) => {
+    // Claim the order atomically — serializes against accept/deliver/dispute on the same order.
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, status: { in: REVERSIBLE } },
+      data: { status: "CANCELLED" },
+    });
+    if (claimed.count === 0) return; // raced past a reversible state — bail, no refund posted
+    const paid = await tx.transaction.findFirst({
+      where: { orderId, type: "PAYMENT_IN", status: "SUCCEEDED" },
+    });
+    const dup = await tx.transaction.findUnique({ where: { idempotencyKey: idem } });
+    if (paid && !dup) {
+      await tx.transaction.create({
+        data: {
+          orderId,
+          provider,
+          type: "REFUND",
+          status: "SUCCEEDED",
+          amountUzs: order.amountUzs - order.discountUzs,
+          idempotencyKey: idem,
+          rawPayload: externalRef ? { externalRef } : undefined,
+        },
+      });
+      await tx.ledgerEntry.createMany({
+        data: reversalPostings(order.amountUzs, order.commissionUzs, order.discountUzs).map((p) => ({
+          orderId,
+          account: p.account,
+          amountUzs: p.amountUzs,
+          userId: p.account === "SELLER_PAYABLE" ? order.sellerId : null,
+          memo: `${provider} payment cancelled — reversal for order ${orderId}`,
+        })),
+      });
+    }
+    // Return any referral credit reserved on this order. Idempotent, can't double-credit.
+    await restoreOrderCredit(tx, order);
+    reversed = true;
+  });
+
+  if (reversed) {
+    await audit({
+      actorId: order.sellerId,
+      action: "order.payment.cancel",
+      entity: "Order",
+      entityId: orderId,
+      metadata: { provider, externalRef: externalRef ?? null },
+    });
+    await notifyAndPush(order.buyerId, "order.cancelled", "Buyurtma bekor qilindi", {
+      body: "Toʻlov bekor qilindi — buyurtma yopildi.",
+      link: `/orders/${orderId}`,
+    });
+  }
+  return { reversed, needsReview: false };
 }
 
 /**

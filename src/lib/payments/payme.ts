@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { settleOrderByProvider } from "@/server/services/payments";
+import { settleOrderByProvider, reverseSettlementByProvider } from "@/server/services/payments";
 import type { CheckoutOrder, PaymentProvider } from "./index";
 
 /**
@@ -74,6 +74,18 @@ export async function handlePaymeRpc(rpc: Rpc): Promise<RpcResult> {
       const order = await prisma.order.findUnique({ where: { id: orderId } });
       if (!order || order.status !== "PENDING_PAYMENT") return err(PaymeErr.ORDER_NOT_FOUND);
       if (Number(p.amount) !== (order.amountUzs - order.discountUzs) * 100) return err(PaymeErr.INVALID_AMOUNT);
+      // Reject a SECOND Payme transaction for an order that already has an active (pending or
+      // paid) one under a different id — otherwise the buyer could be charged twice. Payme
+      // treats CANT_PERFORM here as "order already in process".
+      const otherActive = await prisma.transaction.findFirst({
+        where: {
+          orderId,
+          provider: "PAYME",
+          providerTxnId: { not: paymeId },
+          status: { in: ["PENDING", "SUCCEEDED"] },
+        },
+      });
+      if (otherActive) return err(PaymeErr.CANT_PERFORM);
       const createTime = Number(p.time) || undefined;
       const txn = await prisma.transaction.create({
         data: {
@@ -110,7 +122,15 @@ export async function handlePaymeRpc(rpc: Rpc): Promise<RpcResult> {
       if (!txn) return err(PaymeErr.TXN_NOT_FOUND);
       const raw = (txn.rawPayload as Record<string, unknown>) ?? {};
       const cancelTime = (raw.cancel_time as number) ?? Date.now();
-      const state = txn.status === "SUCCEEDED" ? -2 : -1;
+      // state -2 = a PERFORMED payment being reversed; -1 = a not-yet-performed one cancelled.
+      const wasPerformed = txn.status === "SUCCEEDED" || Boolean(raw.perform_time);
+      const state = wasPerformed ? -2 : -1;
+      // Reverse the settlement BEFORE flipping the txn to CANCELLED, and only for a performed
+      // payment — this claws back the seller credit + refunds the buyer ledger (or flags admins
+      // if the order already advanced). Idempotent, so a Payme retry is safe.
+      if (wasPerformed && txn.orderId) {
+        await reverseSettlementByProvider(txn.orderId, "PAYME", paymeId);
+      }
       if (txn.status !== "CANCELLED") {
         await prisma.transaction.update({
           where: { id: txn.id },
