@@ -12,12 +12,14 @@ import {
 } from "@/server/services/order";
 import { confirmOrderPayment } from "@/server/services/payments";
 import { openDispute } from "@/server/services/dispute";
+import { isOwnUpload } from "@/lib/media";
 
 const schema = z
   .object({
     action: z.enum(["deliver", "accept", "revision", "cancel", "confirm_payment", "dispute", "reorder"]),
     message: z.string().max(2000).optional(),
-    fileUrls: z.array(z.string().url()).max(10).optional(),
+    // Delivery files live in the private bucket → a ref, not a URL; enforce "our upload" below.
+    fileUrls: z.array(z.string().min(1).max(500)).max(10).optional(),
     reason: z.string().max(1000).optional(),
   })
   .strict();
@@ -34,6 +36,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const { id } = await params;
     const body = parseInput(schema, await request.json().catch(() => ({})));
+    // Attachments must be our own R2 uploads (public URL or private ref), never arbitrary URLs.
+    if (body.fileUrls?.some((u) => !isOwnUpload(u))) {
+      throw Errors.validation({ fileUrls: "Only uploaded files are allowed" });
+    }
 
     switch (body.action) {
       case "deliver":

@@ -298,21 +298,26 @@ export function MessageThread({
                     {m.body && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
                     {m.fileUrls && m.fileUrls.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {m.fileUrls.map((u) => (
-                          <a key={u} href={u} target="_blank" rel="noreferrer" aria-label={t("attachment")}>
-                            {isVideo(u) ? (
-                              <span
-                                aria-hidden
-                                className="flex h-16 w-16 items-center justify-center rounded bg-black/20 text-lg"
-                              >
-                                ▶
-                              </span>
-                            ) : (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={u} alt={t("attachment")} loading="lazy" className="h-16 w-16 rounded object-cover" />
-                            )}
-                          </a>
-                        ))}
+                        {m.fileUrls.map((u) => {
+                          // Chat files live in the private bucket — always fetch through the
+                          // access-controlled proxy (also resolves legacy public-URL messages).
+                          const src = `/api/conversations/${conversationId}/file?u=${encodeURIComponent(u)}`;
+                          return (
+                            <a key={u} href={src} target="_blank" rel="noreferrer" aria-label={t("attachment")}>
+                              {isVideo(u) ? (
+                                <span
+                                  aria-hidden
+                                  className="flex h-16 w-16 items-center justify-center rounded bg-black/20 text-lg"
+                                >
+                                  ▶
+                                </span>
+                              ) : (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={src} alt={t("attachment")} loading="lazy" className="h-16 w-16 rounded object-cover" />
+                              )}
+                            </a>
+                          );
+                        })}
                       </div>
                     )}
                     {redacted && (

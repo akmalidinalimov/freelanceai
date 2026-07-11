@@ -3,7 +3,7 @@ import { ok, errorResponse, parseInput, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
 import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
-import { keyFromPublicUrl } from "@/lib/media";
+import { isOwnUpload } from "@/lib/media";
 import { listConversationMessages, postConversationMessage } from "@/server/services/message";
 
 /** Poll messages in a conversation (optionally only those after ?after=<ISO>). */
@@ -23,7 +23,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 const schema = z
   .object({
     body: z.string().max(2000).optional(),
-    fileUrls: z.array(z.string().url()).max(5).optional(),
+    // A private-bucket ref (r2-private:<key>) isn't a URL, so accept any non-empty string here
+    // and enforce "must be one of our own uploads" below (public URL or private ref).
+    fileUrls: z.array(z.string().min(1).max(500)).max(5).optional(),
   })
   .strict()
   .refine((d) => (d.body && d.body.trim()) || (d.fileUrls && d.fileUrls.length > 0), {
@@ -39,9 +41,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     enforceRateLimit(`msg:${clientIp(request)}`, 30, 60_000);
     const { id } = await params;
     const input = parseInput(schema, await request.json().catch(() => ({})));
-    // Only accept attachments that are our own R2 uploads — never arbitrary external URLs
-    // (which would be a stored phishing / IP-tracking / SSRF vector when rendered).
-    if (input.fileUrls?.some((u) => keyFromPublicUrl(u) === null)) {
+    // Only accept attachments that are our own R2 uploads — a public URL from our bucket or a
+    // private-bucket ref. Never arbitrary external URLs (a stored phishing / IP-tracking / SSRF
+    // vector when rendered).
+    if (input.fileUrls?.some((u) => !isOwnUpload(u))) {
       throw Errors.validation({ fileUrls: "Only uploaded files are allowed" });
     }
     const message = await postConversationMessage(id, user, input.body ?? "", input.fileUrls ?? []);

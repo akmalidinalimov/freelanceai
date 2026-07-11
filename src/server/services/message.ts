@@ -56,6 +56,15 @@ export async function canAccessConversation(conversationId: string, user: Pick<U
   }
 }
 
+/** True if `url` is attached to any message in this conversation (authorizes the file proxy). */
+export async function conversationHasFile(conversationId: string, url: string): Promise<boolean> {
+  const m = await prisma.message.findFirst({
+    where: { conversationId, fileUrls: { has: url } },
+    select: { id: true },
+  });
+  return Boolean(m);
+}
+
 /** Upsert the conversation tied to an order; returns its id. */
 export async function getOrderConversationId(orderId: string) {
   const convo = await prisma.conversation.upsert({

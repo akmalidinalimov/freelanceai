@@ -52,9 +52,13 @@ export interface PresignResult {
 
 const PRIVATE_REF = "r2-private:";
 
-/** Delivery files go to the private bucket (no public URL) when one is configured. */
+// Prefixes whose contents are private by nature and must never sit at a public, un-authed URL:
+// order deliverables, the buyer's requirement brief/files, and chat attachments. They go to the
+// private bucket (served only via an access-controlled proxy) when one is configured; without
+// S3_PRIVATE_BUCKET they fall back to the public bucket (unchanged behavior).
+const PRIVATE_PREFIXES = new Set(["deliveries", "requirements", "messages"]);
 function privateBucketFor(prefix: string): string | undefined {
-  return prefix === "deliveries" ? process.env.S3_PRIVATE_BUCKET || undefined : undefined;
+  return PRIVATE_PREFIXES.has(prefix) ? process.env.S3_PRIVATE_BUCKET || undefined : undefined;
 }
 
 /**
@@ -78,7 +82,10 @@ export async function presignUpload(
   const privateBucket = privateBucketFor(prefix);
   const bucket = privateBucket ?? process.env.S3_BUCKET;
   const key = `${prefix}/${crypto.randomBytes(16).toString("hex")}.${EXT[contentType]}`;
-  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
+  // Bind the declared size into the signature: ContentLength becomes a signed header, so the
+  // browser's PUT must send exactly this Content-Length. Without it the size check is advisory —
+  // a client could declare 1 KB to pass validation, then upload gigabytes to the presigned URL.
+  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType, ContentLength: size });
   const uploadUrl = await getSignedUrl(r2(), command, { expiresIn: 300 });
   const publicUrl = privateBucket
     ? `${PRIVATE_REF}${key}`
@@ -145,6 +152,17 @@ export function keyFromPublicUrl(url: string): string | null {
 /** Is this a private-bucket reference (vs a public URL)? */
 export function isPrivateRef(stored: string): boolean {
   return stored.startsWith(PRIVATE_REF);
+}
+
+/**
+ * True if a stored file value is one of OUR uploads — a public-bucket URL or a private-bucket
+ * ref. The single gate for accepting attachment references from clients (order requirements,
+ * deliveries, chat): rejects arbitrary external URLs (stored phishing / IP-tracking / SSRF
+ * when rendered) AND accepts private refs (which aren't URLs, so a bare z.string().url() drops
+ * them once a private bucket is configured).
+ */
+export function isOwnUpload(stored: string): boolean {
+  return keyFromPublicUrl(stored) !== null || isPrivateRef(stored);
 }
 
 /** Resolve a stored file value (public URL or `r2-private:` ref) to its bucket + key. */
