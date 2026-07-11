@@ -11,7 +11,11 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        # pgvector image: the schema has a vector column (SellerEmbedding.embedding), so a
+        # plain postgres:16 fails `prisma db push` with 'type "vector" does not exist'. A
+        # fresh CI DB each run, so the alpine/libc concern that pins the PROD image doesn't
+        # apply here.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -52,7 +56,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
+      # Extensions must exist before db push creates the vector column + before the
+      # trigram fuzzy-search paths run (mirrors the prod migrate step).
+      - name: Create Postgres extensions
+        run: printf 'CREATE EXTENSION IF NOT EXISTS vector;\nCREATE EXTENSION IF NOT EXISTS pg_trgm;\n' | npx prisma db execute --stdin --schema=prisma/schema.prisma
       - run: npx prisma db push --skip-generate
+      # Integration suite (money invariants, payout/tip/affiliate races, order authz) runs
+      # against this real Postgres — previously it ran NOWHERE in CI.
+      - name: Integration tests
+        run: npm run test:integration
       - run: node prisma/seed-e2e.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run build
