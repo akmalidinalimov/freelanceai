@@ -39,7 +39,7 @@ export function addXp(userId: string, amount: number): void {
 }
 
 /** Tashkent-day (UTC+5) truncated to a stable Date key (midnight UTC of that day). */
-function tashkentDay(now = new Date()): Date {
+export function tashkentDay(now = new Date()): Date {
   const shifted = new Date(now.getTime() + 5 * 60 * 60 * 1000);
   return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
 }
@@ -74,8 +74,8 @@ export async function touchStreak(userId: string): Promise<void> {
         xp: { increment: XP.dailyActive },
       },
     });
-    if (streakDays >= 30) void awardBadge(userId, "streak_30");
-    else if (streakDays >= 7) void awardBadge(userId, "streak_7");
+    if (streakDays >= 30) void awardBadge(userId, "streak_30").catch(() => {});
+    else if (streakDays >= 7) void awardBadge(userId, "streak_7").catch(() => {});
   } catch {
     // cosmetic — never surfaces
   }
@@ -84,7 +84,7 @@ export async function touchStreak(userId: string): Promise<void> {
 /** Hook: buyer's order reached payment. */
 export function onOrderPaid(buyerId: string): void {
   addXp(buyerId, XP.orderPaid);
-  void awardBadge(buyerId, "buyer_first_order");
+  void awardBadge(buyerId, "buyer_first_order").catch(() => {});
 }
 
 /** Hook: buyer wrote a review. */
@@ -149,9 +149,11 @@ export async function computeCompleteness(sellerId: string): Promise<Completenes
   const score = Math.round((done.length / COMPLETENESS_ITEMS.length) * 100);
 
   if (score === 100) {
-    void awardBadge(sellerId, "seller_profile_complete").then((fresh) => {
-      if (fresh) addXp(sellerId, XP.profileComplete);
-    });
+    void awardBadge(sellerId, "seller_profile_complete")
+      .then((fresh) => {
+        if (fresh) addXp(sellerId, XP.profileComplete);
+      })
+      .catch(() => {}); // fire-and-forget cosmetic reward must never raise an unhandled rejection
   }
   return { score, missing: [...missing] };
 }

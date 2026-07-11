@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { notifyAndPush } from "@/server/services/notification";
+import { tashkentDay } from "@/server/services/gamification";
 
 /**
  * Order deadline reminders + post-delivery review nudges (nightly/hourly cron).
@@ -133,8 +134,10 @@ export async function sendOrderReminders(): Promise<{ deadlines: number; reviewN
 
   // 3) Streak-at-risk nudge — users who kept a ≥3-day streak, were active yesterday but
   //    NOT today, get one reminder per day to come back before it breaks.
-  const todayStart = new Date();
-  todayStart.setUTCHours(0, 0, 0, 0);
+  // Use the SAME Tashkent-day key that lastActiveDay is written with (gamification.ts).
+  // A plain UTC-day window disagrees with it between 00:00–05:00 Tashkent (UTC+5), so
+  // "active yesterday" was misclassified and nudges fired a day early / were skipped.
+  const todayStart = tashkentDay();
   const yesterday = new Date(todayStart);
   yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   const todayKey = todayStart.toISOString().slice(0, 10);
