@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { randomBytes } from "crypto";
-import { logger } from "./logger";
+import { reportError } from "./logger";
 
 /**
  * Uniform API result envelope + error model. Pure (no server-only / DB imports) so it
@@ -96,7 +96,9 @@ export function errorResponse(err: unknown): NextResponse {
   // Unhandled: log with a correlation id (full detail server-side) and return it to the
   // client so support can trace the exact event — the user-facing message stays generic.
   const correlationId = randomBytes(6).toString("hex");
-  logger.error("unhandled_error", {
+  // reportError = log + throttled external alert (ERROR_ALERT_WEBHOOK) — an unexpected 500 is
+  // the highest-signal thing to page on. No-op alerting until the webhook env is set.
+  reportError("unhandled_error", {
     correlationId,
     error: err instanceof Error ? err.message : String(err),
     stack: err instanceof Error ? err.stack : undefined,
