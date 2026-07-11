@@ -12,7 +12,12 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // Heavy flows (payout: 6 sequential logins + navigations + server actions across buyer/
+  // admin/seller contexts) legitimately need more than the 30s default under parallel CI
+  // load; the first order placement also pays a cold-server/DB-pool cost. 60s budget + an
+  // extra retry (warm server on re-run) absorbs both without masking real regressions.
+  timeout: 60_000,
+  retries: process.env.CI ? 2 : 0,
   reporter: "list",
   use: {
     baseURL,
