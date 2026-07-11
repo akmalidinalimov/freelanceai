@@ -154,15 +154,22 @@ export function isPrivateRef(stored: string): boolean {
   return stored.startsWith(PRIVATE_REF);
 }
 
+// Exact shape of a key we mint: "<prefix>/<32 hex>.<ext>" (crypto.randomBytes(16) + known ext).
+// Validating it means a client can't smuggle an arbitrary/cross-prefix key inside an
+// `r2-private:` ref (defense-in-depth on top of the 128-bit key entropy).
+const OWN_KEY_SHAPE = /^(gigs|portfolio|deliveries|requirements|messages)\/[0-9a-f]{32}\.(jpg|png|webp|avif|mp4|webm)$/;
+
 /**
  * True if a stored file value is one of OUR uploads — a public-bucket URL or a private-bucket
- * ref. The single gate for accepting attachment references from clients (order requirements,
- * deliveries, chat): rejects arbitrary external URLs (stored phishing / IP-tracking / SSRF
- * when rendered) AND accepts private refs (which aren't URLs, so a bare z.string().url() drops
- * them once a private bucket is configured).
+ * ref — AND its key matches the shape we mint. The single gate for accepting attachment
+ * references from clients (order requirements, deliveries, chat): rejects arbitrary external
+ * URLs (stored phishing / IP-tracking / SSRF when rendered) AND accepts well-formed private
+ * refs (which aren't URLs, so a bare z.string().url() drops them once a private bucket exists).
  */
 export function isOwnUpload(stored: string): boolean {
-  return keyFromPublicUrl(stored) !== null || isPrivateRef(stored);
+  if (isPrivateRef(stored)) return OWN_KEY_SHAPE.test(stored.slice(PRIVATE_REF.length));
+  const key = keyFromPublicUrl(stored);
+  return key !== null && OWN_KEY_SHAPE.test(key);
 }
 
 /** Resolve a stored file value (public URL or `r2-private:` ref) to its bucket + key. */

@@ -177,19 +177,42 @@ export async function reverseSettlementByProvider(
 
   const REVERSIBLE: $Enums.OrderStatus[] = ["IN_PROGRESS", "REVISION"];
   if (!REVERSIBLE.includes(order.status)) {
-    // Nothing safe to auto-reverse. If money was actually taken and the order isn't already
-    // closed, a human must decide (refund vs let the delivery stand) — don't touch balances.
+    // Nothing safe to AUTO-reverse (seller may be mid-delivery / already paid out), but we must
+    // still stop the clawed-back money from being released. If a payment was actually taken and
+    // the order isn't already closed, a human decides refund-vs-release.
     const paid = await prisma.transaction.findFirst({
       where: { orderId, type: "PAYMENT_IN", status: "SUCCEEDED" },
     });
-    if (paid && order.status !== "CANCELLED") {
-      await notifyAdmins("admin.payment.cancel_review", "⚠️ Toʻlov bekor qilindi — tekshirish kerak", {
-        body: `Buyurtma #${orderId.slice(-6)} uchun toʻlov provayder tomonidan bekor qilindi, ammo buyurtma allaqachon ilgarilagan (${order.status}).`,
-        link: `/admin/orders`,
+    if (!paid || order.status === "CANCELLED") return { reversed: false, needsReview: false };
+
+    // Freeze a DELIVERED order by moving it to DISPUTED (atomic claim + a system-opened dispute).
+    // Critical: otherwise the 3-day autoCompleteDeliveredOrders cron would COMPLETE it and make
+    // the seller's balance withdrawable BEFORE an admin acts — releasing money the buyer got
+    // back. DISPUTED is skipped by both auto-complete (selects DELIVERED only) and payout
+    // (counts COMPLETED only), and routes to the existing admin refund/release flow.
+    let frozen = false;
+    if (order.status === "DELIVERED") {
+      await prisma.$transaction(async (tx) => {
+        const claimed = await tx.order.updateMany({
+          where: { id: orderId, status: "DELIVERED" },
+          data: { status: "DISPUTED" },
+        });
+        if (claimed.count === 0) return; // raced to COMPLETED/CANCELLED — fall through to notify
+        await tx.dispute.create({
+          data: {
+            orderId,
+            openedById: order.buyerId,
+            reason: `${provider} payment reversed by provider — auto-frozen for admin review`,
+          },
+        });
+        frozen = true;
       });
-      return { reversed: false, needsReview: true };
     }
-    return { reversed: false, needsReview: false };
+    await notifyAdmins("admin.payment.cancel_review", "⚠️ Toʻlov bekor qilindi — tekshirish kerak", {
+      body: `Buyurtma #${orderId.slice(-6)} uchun toʻlov provayder tomonidan bekor qilindi (holat: ${order.status}${frozen ? " → nizo ochildi/muzlatildi" : ""}).`,
+      link: frozen ? "/admin/disputes" : "/admin/orders",
+    });
+    return { reversed: false, needsReview: true };
   }
 
   let reversed = false;

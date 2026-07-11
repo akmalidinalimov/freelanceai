@@ -95,9 +95,10 @@ test("message attachments: a file-only message is accepted and rendered", async 
   const convId = buyer.url().split("/messages/")[1];
   const origin = new URL(buyer.url()).origin;
 
-  // Body is optional when at least one attachment is present (Batch 6-6).
-  // Must be under S3_PUBLIC_BASE_URL (set in the e2e workflow) — attachments are R2-origin only.
-  const fileUrl = "https://r2-test.example.com/messages/e2e-attachment.jpg";
+  // Body is optional when at least one attachment is present (Batch 6-6). Must be under
+  // S3_PUBLIC_BASE_URL (set in the e2e workflow) AND match a real minted key shape
+  // (<prefix>/<32 hex>.<ext>) — isOwnUpload rejects anything else.
+  const fileUrl = "https://r2-test.example.com/messages/00112233445566778899aabbccddeeff.jpg";
   const sent = await buyer.request.post(`/api/conversations/${convId}/messages`, {
     headers: { Origin: origin },
     data: { fileUrls: [fileUrl] },

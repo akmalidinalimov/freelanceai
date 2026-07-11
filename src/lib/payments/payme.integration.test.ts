@@ -10,9 +10,11 @@
  *       transaction is rejected — the buyer can't be charged twice.
  */
 import { describe, it, expect, afterAll } from "vitest";
+import type { User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { handlePaymeRpc } from "@/lib/payments/payme";
-import { getSellerEarnings } from "@/server/services/payments";
+import { getSellerEarnings, sellerAvailableUzs } from "@/server/services/payments";
+import { deliverOrder } from "@/server/services/order";
 
 /** Net SELLER_PAYABLE ledger movement for an order — must be 0 once a payment is reversed. */
 async function sellerPayableLedger(orderId: string): Promise<number> {
@@ -48,6 +50,8 @@ async function seedPending(amountUzs = 100_000, commissionUzs = 20_000) {
 }
 
 afterAll(async () => {
+  await prisma.dispute.deleteMany({ where: { order: { sellerId: { in: ids } } } }).catch(() => {});
+  await prisma.orderDelivery.deleteMany({ where: { order: { sellerId: { in: ids } } } }).catch(() => {});
   await prisma.ledgerEntry.deleteMany({ where: { order: { sellerId: { in: ids } } } }).catch(() => {});
   await prisma.transaction.deleteMany({ where: { order: { sellerId: { in: ids } } } }).catch(() => {});
   await prisma.order.deleteMany({ where: { sellerId: { in: ids } } }).catch(() => {});
@@ -93,6 +97,30 @@ describe("Payme adapter money paths (T5)", () => {
     await handlePaymeRpc({ id: 4, method: "CancelTransaction", params: { id: paymeId, reason: 5 } });
     expect(await prisma.transaction.count({ where: { orderId: s.orderId, type: "REFUND", status: "SUCCEEDED" } })).toBe(1);
     expect(await sellerPayableLedger(s.orderId)).toBe(0);
+  });
+
+  it("P0-freeze: cancelling an already-DELIVERED order freezes it (DISPUTED) instead of leaking", async () => {
+    const s = await seedPending();
+    const paymeId = `pmtxn_dlv_${s.orderId}`;
+    const amount = s.amountUzs * 100;
+    await handlePaymeRpc({ id: 1, method: "CreateTransaction", params: { id: paymeId, time: Date.now(), amount, account: { order_id: s.orderId } } });
+    await handlePaymeRpc({ id: 2, method: "PerformTransaction", params: { id: paymeId } });
+    // Advance the order past the auto-reversible window: seller delivers → DELIVERED.
+    const seller = (await prisma.user.findUniqueOrThrow({ where: { id: s.sellerId } })) as User;
+    await deliverOrder(s.orderId, seller, "done");
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: s.orderId } })).status).toBe("DELIVERED");
+
+    // Cancel now: NOT auto-reversed (seller may be owed the delivery), but must be FROZEN so the
+    // 3-day auto-complete cron can't release the clawed-back money before an admin decides.
+    await handlePaymeRpc({ id: 3, method: "CancelTransaction", params: { id: paymeId, reason: 5 } });
+
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: s.orderId } });
+    expect(order.status).toBe("DISPUTED"); // frozen — auto-complete selects DELIVERED only, skips this
+    const dispute = await prisma.dispute.findFirst({ where: { orderId: s.orderId } });
+    expect(dispute?.status).toBe("OPEN"); // routes to the admin refund/release flow
+    const refunds = await prisma.transaction.count({ where: { orderId: s.orderId, type: "REFUND", status: "SUCCEEDED" } });
+    expect(refunds).toBe(0); // NOT auto-refunded — admin decides
+    expect(await sellerAvailableUzs(s.sellerId)).toBe(0); // never became withdrawable
   });
 
   it("P1: a second CreateTransaction for an already-active order is rejected (no double charge)", async () => {

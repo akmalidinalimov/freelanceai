@@ -3,7 +3,7 @@ import { HeaderSkeleton, StatTilesSkeleton, Skeleton } from "@/components/skelet
 // Cascades to all /dashboard/* pages (buyer + seller) that lack their own loading state.
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 py-10">
       <HeaderSkeleton />
       <StatTilesSkeleton count={4} />
       <div className="mt-6 space-y-3">
