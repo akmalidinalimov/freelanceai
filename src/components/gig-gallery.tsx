@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { MediaLightbox } from "@/components/media-lightbox";
+import { CoverFallback } from "@/components/ui/cover-fallback";
 
 /**
  * Gig gallery: large cover + thumbnail row; any click opens the lightbox at that
@@ -30,7 +31,7 @@ export function GigGallery({ images, title }: { images: string[]; title: string 
             className="h-full w-full object-cover transition-transform duration-500 group-enabled:group-hover:scale-105"
           />
         ) : (
-          title.slice(0, 1).toUpperCase()
+          <CoverFallback seed={title} label={title} />
         )}
       </button>
 

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { formatUzs } from "@/lib/utils";
+import { CoverFallback } from "@/components/ui/cover-fallback";
 import type { FeedSections as Sections, FeedGig } from "@/server/services/engagement";
 
 /** Recommendation modules (followed / for-you / trending) — dashboard surface. */
@@ -22,7 +23,7 @@ async function Rail({ title, gigs }: { title: string; gigs: FeedGig[] }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={g.coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
-                g.title.slice(0, 1).toUpperCase()
+                <CoverFallback seed={g.slug ?? g.title} label={g.title} />
               )}
             </div>
             <p className="line-clamp-2 text-xs font-medium">{g.title}</p>

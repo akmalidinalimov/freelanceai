@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { CoverFallback } from "@/components/ui/cover-fallback";
 import { getGigsByIds } from "@/server/services/gig";
 import { formatUzs } from "@/lib/utils";
 
@@ -32,7 +33,7 @@ export async function RecentlyViewed({ excludeId }: { excludeId?: string }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={g.coverUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  g.title.slice(0, 1).toUpperCase()
+                  <CoverFallback seed={g.slug ?? g.title} label={g.title} />
                 )}
               </div>
               <p className="line-clamp-2 text-xs font-medium">{g.title}</p>
