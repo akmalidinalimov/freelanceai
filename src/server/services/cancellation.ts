@@ -55,6 +55,13 @@ export async function respondCancellation(orderId: string, user: User, approve: 
   if (!canTransition(order.status, "CANCELLED")) throw Errors.conflict("This order can't be cancelled now");
   const idem = `order:${orderId}:cancel-refund`;
   await prisma.$transaction(async (tx) => {
+    // Claim the order atomically FIRST — if a concurrent accept/dispute already moved it,
+    // bail before posting any refund (prevents refund + seller-credit both landing).
+    const claimedOrder = await tx.order.updateMany({
+      where: { id: orderId, status: order.status },
+      data: { status: "CANCELLED" },
+    });
+    if (claimedOrder.count === 0) throw Errors.conflict("Order status changed — please refresh");
     // Reverse the confirmed payment (discount-aware), idempotently.
     const paid = await tx.transaction.findFirst({
       where: { orderId, type: "PAYMENT_IN", status: "SUCCEEDED" },
@@ -84,7 +91,6 @@ export async function respondCancellation(orderId: string, user: User, approve: 
     // Return any referral credit reserved on this order — whether it was paid (refunded above)
     // or still unpaid (credit was reserved at checkout). Idempotent, so it can't double-credit.
     await restoreOrderCredit(tx, order);
-    await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
     await tx.cancellationRequest.update({ where: { orderId }, data: { status: "APPROVED" } });
   });
   await audit({ actorId: user.id, action: "cancellation.approve", entity: "Order", entityId: orderId });

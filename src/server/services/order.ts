@@ -243,10 +243,16 @@ export async function deliverOrder(orderId: string, seller: User, message: strin
   if (!order) throw Errors.notFound("Order not found");
   if (order.sellerId !== seller.id && seller.role !== "ADMIN") throw Errors.forbidden();
   assertTransition(order.status, "DELIVERED");
-  await prisma.$transaction([
-    prisma.orderDelivery.create({ data: { orderId, message: message.trim() || null, fileUrls } }),
-    prisma.order.update({ where: { id: orderId }, data: { status: "DELIVERED", deliveredAt: new Date() } }),
-  ]);
+  // Claim the transition atomically (guard on the exact from-state we validated) so a
+  // concurrent accept / cancel / dispute can't collide with this write.
+  await prisma.$transaction(async (tx) => {
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, status: order.status },
+      data: { status: "DELIVERED", deliveredAt: new Date() },
+    });
+    if (claimed.count === 0) throw Errors.conflict("Order status changed — please refresh");
+    await tx.orderDelivery.create({ data: { orderId, message: message.trim() || null, fileUrls } });
+  });
   await audit({ actorId: seller.id, action: "order.deliver", entity: "Order", entityId: orderId });
   await notifyAndPush(order.buyerId, "order.delivered", "Buyurtmangiz topshirildi", {
     body: "Ijrochi ishni topshirdi — koʻrib chiqing.",
@@ -266,7 +272,14 @@ export async function acceptOrder(orderId: string, buyer: User) {
   if (!order) throw Errors.notFound("Order not found");
   if (order.buyerId !== buyer.id && buyer.role !== "ADMIN") throw Errors.forbidden();
   assertTransition(order.status, "COMPLETED");
-  await prisma.order.update({ where: { id: orderId }, data: { status: "COMPLETED", completedAt: new Date() } });
+  // Atomic claim: only complete if the order is STILL in the state we validated. Prevents a
+  // concurrent cancellation/dispute-refund from also succeeding (buyer refunded AND seller
+  // credited via the COMPLETED-derived balance).
+  const claimed = await prisma.order.updateMany({
+    where: { id: orderId, status: order.status },
+    data: { status: "COMPLETED", completedAt: new Date() },
+  });
+  if (claimed.count === 0) throw Errors.conflict("Order status changed — please refresh");
   await recomputeSellerStats(order.sellerId);
   // Reward the buyer's referrer on their first completed order (idempotent, best-effort).
   // Never for test orders — they must not mint real referral credit (qa review C2).
@@ -286,7 +299,11 @@ export async function requestRevision(orderId: string, buyer: User) {
   if (!order) throw Errors.notFound("Order not found");
   if (order.buyerId !== buyer.id && buyer.role !== "ADMIN") throw Errors.forbidden();
   assertTransition(order.status, "REVISION");
-  await prisma.order.update({ where: { id: orderId }, data: { status: "REVISION" } });
+  const claimed = await prisma.order.updateMany({
+    where: { id: orderId, status: order.status },
+    data: { status: "REVISION" },
+  });
+  if (claimed.count === 0) throw Errors.conflict("Order status changed — please refresh");
   await audit({ actorId: buyer.id, action: "order.revision", entity: "Order", entityId: orderId });
   await notifyAndPush(order.sellerId, "order.revision", "Oʻzgartirish soʻraldi", {
     body: "Buyurtmachi ishga oʻzgartirish kiritishni soʻradi — batafsil buyurtmada.",

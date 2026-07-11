@@ -6,6 +6,7 @@ import { audit } from "@/lib/audit";
 import { canTransition } from "@/lib/order-state";
 import { reversalPostings } from "@/lib/commission";
 import { restoreOrderCredit } from "@/server/services/affiliate";
+import { recomputeSellerStats } from "@/server/services/profile";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 
 const NAME = { select: { firstName: true, name: true, username: true } } as const;
@@ -65,6 +66,18 @@ export async function resolveDispute(
     if (!canTransition(order.status, "CANCELLED")) throw Errors.conflict("Cannot refund this order");
     const idem = `order:${order.id}:refund`;
     await prisma.$transaction(async (tx) => {
+      // Claim the dispute AND the order atomically first — a concurrent resolve (refund vs
+      // release) can otherwise both post, leaving the buyer refunded AND the seller payable.
+      const claimedDispute = await tx.dispute.updateMany({
+        where: { id: disputeId, status: "OPEN" },
+        data: { status: "RESOLVED_REFUND", resolution: note?.trim() || null },
+      });
+      if (claimedDispute.count === 0) throw Errors.conflict("Dispute already resolved");
+      const claimedOrder = await tx.order.updateMany({
+        where: { id: order.id, status: order.status },
+        data: { status: "CANCELLED" },
+      });
+      if (claimedOrder.count === 0) throw Errors.conflict("Order status changed");
       const existing = await tx.transaction.findUnique({ where: { idempotencyKey: idem } });
       if (!existing) {
         await tx.transaction.create({
@@ -89,21 +102,24 @@ export async function resolveDispute(
         // Give the buyer back any credit they spent on this (now refunded) order.
         await restoreOrderCredit(tx, order);
       }
-      await tx.order.update({ where: { id: order.id }, data: { status: "CANCELLED" } });
-      await tx.dispute.update({
-        where: { id: disputeId },
-        data: { status: "RESOLVED_REFUND", resolution: note?.trim() || null },
-      });
     });
   } else {
     if (!canTransition(order.status, "COMPLETED")) throw Errors.conflict("Cannot release this order");
-    await prisma.$transaction([
-      prisma.order.update({ where: { id: order.id }, data: { status: "COMPLETED", completedAt: new Date() } }),
-      prisma.dispute.update({
-        where: { id: disputeId },
+    await prisma.$transaction(async (tx) => {
+      const claimedDispute = await tx.dispute.updateMany({
+        where: { id: disputeId, status: "OPEN" },
         data: { status: "RESOLVED_RELEASE", resolution: note?.trim() || null },
-      }),
-    ]);
+      });
+      if (claimedDispute.count === 0) throw Errors.conflict("Dispute already resolved");
+      const claimedOrder = await tx.order.updateMany({
+        where: { id: order.id, status: order.status },
+        data: { status: "COMPLETED", completedAt: new Date() },
+      });
+      if (claimedOrder.count === 0) throw Errors.conflict("Order status changed");
+    });
+    // Release completes the order → keep the seller's public stats fresh (parity with
+    // acceptOrder; auto-complete/dispute previously skipped this).
+    await recomputeSellerStats(order.sellerId);
   }
   await audit({ actorId: admin.id, action: `dispute.${resolution}`, entity: "Dispute", entityId: disputeId });
 }
