@@ -7,7 +7,7 @@ import { enforceRateLimit, clientIp } from "@/lib/rate-limit";
 
 const schema = z
   .object({
-    prefix: z.enum(["gigs", "portfolio", "deliveries", "requirements", "messages"]),
+    prefix: z.enum(["gigs", "portfolio", "deliveries", "requirements", "messages", "avatars"]),
     contentType: z.string().min(3).max(100),
     size: z.number().int().positive(),
   })

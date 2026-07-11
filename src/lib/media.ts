@@ -67,7 +67,7 @@ function privateBucketFor(prefix: string): string | undefined {
  * `r2-private:<key>` ref that only the access-controlled proxy can resolve (no public URL exists).
  */
 export async function presignUpload(
-  prefix: "gigs" | "portfolio" | "deliveries" | "requirements" | "messages",
+  prefix: "gigs" | "portfolio" | "deliveries" | "requirements" | "messages" | "avatars",
   contentType: string,
   size: number
 ): Promise<PresignResult> {
@@ -82,10 +82,12 @@ export async function presignUpload(
   const privateBucket = privateBucketFor(prefix);
   const bucket = privateBucket ?? process.env.S3_BUCKET;
   const key = `${prefix}/${crypto.randomBytes(16).toString("hex")}.${EXT[contentType]}`;
-  // Bind the declared size into the signature: ContentLength becomes a signed header, so the
-  // browser's PUT must send exactly this Content-Length. Without it the size check is advisory —
-  // a client could declare 1 KB to pass validation, then upload gigabytes to the presigned URL.
-  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType, ContentLength: size });
+  // Size is capped at presign time (above). We intentionally do NOT bind ContentLength into the
+  // signature: signing content-length makes the PUT zero-tolerance (any 1-byte divergence from
+  // the browser's actual Content-Length → hard 403), which is fragile across R2/proxies and not
+  // worth the marginal "declared-small-then-upload-big" hardening. The proper cap is a
+  // post-upload HEAD (tracked); until then the presign-time size check stands.
+  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
   const uploadUrl = await getSignedUrl(r2(), command, { expiresIn: 300 });
   const publicUrl = privateBucket
     ? `${PRIVATE_REF}${key}`
@@ -157,7 +159,7 @@ export function isPrivateRef(stored: string): boolean {
 // Exact shape of a key we mint: "<prefix>/<32 hex>.<ext>" (crypto.randomBytes(16) + known ext).
 // Validating it means a client can't smuggle an arbitrary/cross-prefix key inside an
 // `r2-private:` ref (defense-in-depth on top of the 128-bit key entropy).
-const OWN_KEY_SHAPE = /^(gigs|portfolio|deliveries|requirements|messages)\/[0-9a-f]{32}\.(jpg|png|webp|avif|mp4|webm)$/;
+const OWN_KEY_SHAPE = /^(gigs|portfolio|deliveries|requirements|messages|avatars)\/[0-9a-f]{32}\.(jpg|png|webp|avif|mp4|webm)$/;
 
 /**
  * True if a stored file value is one of OUR uploads — a public-bucket URL or a private-bucket

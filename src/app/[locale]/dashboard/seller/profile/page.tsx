@@ -4,6 +4,7 @@ import { requireSellerUser } from "@/lib/auth-guards";
 import { getOwnProfile } from "@/server/services/profile";
 import { ProfileForm } from "@/components/profile-form";
 import { BannerUploader } from "@/components/banner-uploader";
+import { AvatarUpload } from "@/components/avatar-upload";
 import { Images } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,9 @@ export default async function EditProfilePage({
             {t("viewPublic")}
           </Link>
         )}
+      </div>
+      <div className="mb-6">
+        <AvatarUpload initialUrl={user.photoUrl} name={user.firstName ?? user.username} />
       </div>
       <div className="mb-6">
         <BannerUploader

@@ -785,7 +785,15 @@
     "portfolioHubIntro": "Управляйте своими работами в одном месте. Выберите любой источник — ни один не обязателен.",
     "portfolioUploadTitle": "Фото и видео",
     "portfolioHint": "Загрузите лучшие работы напрямую — до 12 изображений.",
-    "portfolioBack": "Назад в панель"
+    "portfolioBack": "Назад в панель",
+    "avatarAdd": "Добавить фото",
+    "avatarChange": "Заменить фото",
+    "avatarRemove": "Удалить",
+    "avatarUploading": "Загрузка…",
+    "avatarHint": "Лучше всего смотрится квадратное фото. JPG, PNG или WebP.",
+    "avatarType": "Фото должно быть JPG, PNG или WebP.",
+    "avatarSize": "Фото не должно превышать 8 МБ.",
+    "avatarError": "Не удалось загрузить фото. Попробуйте ещё раз."
   },
   "Instagram": {
     "connect": "Подключить Instagram",

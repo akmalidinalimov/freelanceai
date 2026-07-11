@@ -785,7 +785,15 @@
     "portfolioHubIntro": "Manage your work in one place. Pick any source — none are required.",
     "portfolioUploadTitle": "Images & videos",
     "portfolioHint": "Upload your best work directly — up to 12 images.",
-    "portfolioBack": "Back to dashboard"
+    "portfolioBack": "Back to dashboard",
+    "avatarAdd": "Add photo",
+    "avatarChange": "Change photo",
+    "avatarRemove": "Remove",
+    "avatarUploading": "Uploading…",
+    "avatarHint": "A square photo looks best. JPG, PNG or WebP.",
+    "avatarType": "Photo must be JPG, PNG or WebP.",
+    "avatarSize": "Photo must be under 8 MB.",
+    "avatarError": "Couldn't upload the photo. Please try again."
   },
   "Instagram": {
     "connect": "Connect Instagram",

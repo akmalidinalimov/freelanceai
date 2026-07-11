@@ -785,7 +785,15 @@
     "portfolioHubIntro": "Ishlaringizni bir joyda boshqaring. Istalgan manbani tanlang — hech biri majburiy emas.",
     "portfolioUploadTitle": "Rasm va videolar",
     "portfolioHint": "Eng yaxshi ishlaringizni toʻgʻridan-toʻgʻri yuklang — 12 tagacha rasm.",
-    "portfolioBack": "Panelga qaytish"
+    "portfolioBack": "Panelga qaytish",
+    "avatarAdd": "Rasm qo'shish",
+    "avatarChange": "Rasmni almashtirish",
+    "avatarRemove": "O'chirish",
+    "avatarUploading": "Yuklanmoqda…",
+    "avatarHint": "Kvadrat rasm eng yaxshi ko'rinadi. JPG, PNG yoki WebP.",
+    "avatarType": "Rasm JPG, PNG yoki WebP bo'lishi kerak.",
+    "avatarSize": "Rasm 8 MB dan katta bo'lmasin.",
+    "avatarError": "Rasmni yuklab bo'lmadi. Qayta urinib ko'ring."
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",
