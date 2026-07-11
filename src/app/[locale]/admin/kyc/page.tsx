@@ -23,7 +23,8 @@ export default async function AdminKycPage({ params }: { params: Promise<{ local
       {pending.length === 0 ? (
         <p className="text-sm text-[hsl(var(--muted-foreground))]">No pending KYC.</p>
       ) : (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[40rem] text-sm">
           <thead>
             <tr className="border-b border-[hsl(var(--border))] text-left text-xs text-[hsl(var(--muted-foreground))]">
               <th className="py-2">User</th>
@@ -52,6 +53,7 @@ export default async function AdminKycPage({ params }: { params: Promise<{ local
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

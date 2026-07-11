@@ -88,7 +88,8 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
       {categories.length === 0 ? (
         <p className="text-sm text-[hsl(var(--muted-foreground))]">No categories yet.</p>
       ) : (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[36rem] text-sm">
           <thead>
             <tr className="border-b border-[hsl(var(--border))] text-left text-xs text-[hsl(var(--muted-foreground))]">
               <th className="py-2">Slug</th>
@@ -121,6 +122,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

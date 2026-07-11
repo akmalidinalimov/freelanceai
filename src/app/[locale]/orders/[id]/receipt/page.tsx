@@ -44,7 +44,7 @@ export default async function ReceiptPage({
         <div className="mb-4 flex items-center justify-between border-b border-[hsl(var(--border))] pb-3">
           <span className="text-lg font-bold text-[hsl(var(--primary-ink))]">{BRAND_NAME}</span>
           <span className="text-[hsl(var(--muted-foreground))]">
-            #{order.id.slice(-8)} · {new Date(order.createdAt).toLocaleDateString()}
+            #{order.id.slice(-8)} · {new Date(order.createdAt).toLocaleDateString(locale)}
           </span>
         </div>
 

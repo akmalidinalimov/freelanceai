@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { formatUzs } from "@/lib/utils";
 
 const PRESETS = [10000, 25000, 50000];
 
@@ -51,7 +52,7 @@ export function TipButton({ orderId }: { orderId: string }) {
       <div className="flex flex-wrap items-center gap-2">
         {PRESETS.map((p) => (
           <Button key={p} size="sm" variant="outline" disabled={busy} onClick={() => tip(p)}>
-            +{p.toLocaleString()}
+            +{formatUzs(p)}
           </Button>
         ))}
         <input

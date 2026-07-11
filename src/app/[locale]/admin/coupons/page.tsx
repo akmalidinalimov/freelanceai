@@ -21,7 +21,8 @@ export default async function AdminCouponsPage({ params }: { params: Promise<{ l
       {coupons.length === 0 ? (
         <p className="text-sm text-[hsl(var(--muted-foreground))]">No coupons yet.</p>
       ) : (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[30rem] text-sm">
           <thead>
             <tr className="border-b border-[hsl(var(--border))] text-left text-xs text-[hsl(var(--muted-foreground))]">
               <th className="py-2">Code</th>
@@ -43,6 +44,7 @@ export default async function AdminCouponsPage({ params }: { params: Promise<{ l
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
