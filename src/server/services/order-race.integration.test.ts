@@ -11,8 +11,7 @@ import { describe, it, expect, afterAll } from "vitest";
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { confirmOrderPayment, sellerAvailableUzs } from "@/server/services/payments";
-import { deliverOrder, acceptOrder } from "@/server/services/order";
-import { requestCancellation, respondCancellation } from "@/server/services/cancellation";
+import { deliverOrder, acceptOrder, requestRevision } from "@/server/services/order";
 import { openDispute, resolveDispute } from "@/server/services/dispute";
 
 let seq = 0;
@@ -78,17 +77,18 @@ async function assertNoDoubleSettle(orderId: string, sellerId: string) {
 }
 
 describe("order work-phase races (T2)", () => {
-  it("concurrent accept vs cancellation-approve never double-settles", async () => {
-    const s = await seedDelivered();
-    await requestCancellation(s.orderId, s.seller, "changed my mind"); // seller asks to cancel
-
+  it("concurrent accept vs request-revision: exactly one wins (atomic claim)", async () => {
+    const s = await seedDelivered(); // DELIVERED → both COMPLETED (accept) and REVISION are valid
     const r = await Promise.allSettled([
       acceptOrder(s.orderId, s.buyer),
-      respondCancellation(s.orderId, s.buyer, true),
+      requestRevision(s.orderId, s.buyer),
     ]);
-    // At most one of the two conflicting operations may win; the other must be rejected.
-    expect(r.filter((x) => x.status === "fulfilled").length).toBeLessThanOrEqual(1);
-    await assertNoDoubleSettle(s.orderId, s.sellerId);
+    // The atomic status claim guarantees exactly one commits; the other conflicts.
+    expect(r.filter((x) => x.status === "fulfilled").length).toBe(1);
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: s.orderId } });
+    expect(["COMPLETED", "REVISION"]).toContain(order.status);
+    // Seller is credited iff the accept won — never a half-applied both.
+    expect(await sellerAvailableUzs(s.sellerId)).toBe(order.status === "COMPLETED" ? 80_000 : 0);
   });
 
   it("concurrent dispute resolve (refund vs release) never double-settles", async () => {

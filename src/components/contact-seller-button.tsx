@@ -20,6 +20,7 @@ export function ContactSellerButton({
 }) {
   const t = useTranslations("Message");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (viewer === "owner") return null;
 
@@ -32,6 +33,7 @@ export function ContactSellerButton({
       return;
     }
     setBusy(true);
+    setError(null);
     try {
       const r = await fetch("/api/contact", {
         method: "POST",
@@ -40,21 +42,32 @@ export function ContactSellerButton({
       });
       const j = await r.json();
       if (j.ok) window.location.href = `/${locale}/messages/${j.data.conversationId}`;
-      else setBusy(false);
+      else {
+        setError(j.error?.message ?? t("contactError"));
+        setBusy(false);
+      }
     } catch {
+      setError(t("contactError"));
       setBusy(false);
     }
   }
 
   return (
-    <Button
-      variant="outline"
-      size={fullWidth ? "lg" : "sm"}
-      className={fullWidth ? "w-full" : undefined}
-      onClick={go}
-      disabled={busy}
-    >
-      {busy ? "…" : `💬 ${t("contact")}`}
-    </Button>
+    <div className={fullWidth ? "w-full" : undefined}>
+      <Button
+        variant="outline"
+        size={fullWidth ? "lg" : "sm"}
+        className={fullWidth ? "w-full" : undefined}
+        onClick={go}
+        disabled={busy}
+      >
+        {busy ? "…" : `💬 ${t("contact")}`}
+      </Button>
+      {error && (
+        <p role="alert" className="mt-1.5 text-sm text-[hsl(var(--danger))]">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

@@ -120,7 +120,8 @@
     "cancel": "Close",
     "waiting": "Waiting for the other party to confirm.",
     "approve": "Approve",
-    "decline": "Decline"
+    "decline": "Decline",
+    "error": "Something went wrong — try again."
   },
   "Brand": {
     "name": "Gigora",
@@ -613,7 +614,9 @@
     "filteredNote": "A contact detail was hidden to keep you protected.",
     "filteredWhy": "Payments and disputes are only protected on Gigora. Sharing contact details off-platform removes that protection.",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "contactError": "Couldn’t start the chat — try again.",
+    "actionFailed": "Action failed — try again."
   },
   "Admin": {
     "dashboard": "Admin dashboard",
@@ -846,7 +849,8 @@
     "contactSent": "Open Telegram and tap “Share my phone”.",
     "codeSent": "Code sent — enter it below.",
     "verifyError": "Something went wrong. Try again.",
-    "saved": "Saved ✓"
+    "saved": "Saved ✓",
+    "saveError": "Couldn’t save — try again."
   },
   "Dispute": {
     "open": "Report a problem",

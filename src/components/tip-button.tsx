@@ -14,6 +14,7 @@ export function TipButton({ orderId }: { orderId: string }) {
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Stable per-form idempotency key: a double-click / retry of this tip dedups server-side
   // instead of double-crediting the seller.
   const [idemKey] = useState(() => crypto.randomUUID());
@@ -21,16 +22,22 @@ export function TipButton({ orderId }: { orderId: string }) {
   async function tip(value: number) {
     if (busy || value < 1000) return;
     setBusy(true);
+    setError(null);
     try {
       const r = await fetch(`/api/orders/${orderId}/tip`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amountUzs: value, idempotencyKey: idemKey }),
       });
-      if ((await r.json()).ok) {
+      const j = await r.json();
+      if (j.ok) {
         setDone(true);
         router.refresh();
+      } else {
+        setError(j.error?.message ?? t("error"));
       }
+    } catch {
+      setError(t("error"));
     } finally {
       setBusy(false);
     }
@@ -59,6 +66,11 @@ export function TipButton({ orderId }: { orderId: string }) {
           {t("tipSend")}
         </Button>
       </div>
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-[hsl(var(--danger))]">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

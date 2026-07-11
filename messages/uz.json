@@ -120,7 +120,8 @@
     "cancel": "Yopish",
     "waiting": "Boshqa tomon tasdiqlashini kutmoqda.",
     "approve": "Tasdiqlash",
-    "decline": "Rad etish"
+    "decline": "Rad etish",
+    "error": "Xatolik — qayta urinib koʻring."
   },
   "Brand": {
     "name": "Gigora",
@@ -613,7 +614,9 @@
     "filteredNote": "Aloqa maʼlumoti sizni himoya qilish uchun yashirildi.",
     "filteredWhy": "Toʻlov va nizolar faqat Gigorada himoyalangan. Platformadan tashqarida aloqa almashish bu himoyadan mahrum qiladi.",
     "today": "Bugun",
-    "yesterday": "Kecha"
+    "yesterday": "Kecha",
+    "contactError": "Bogʻlanib boʻlmadi — qayta urinib koʻring.",
+    "actionFailed": "Amal bajarilmadi — qayta urinib koʻring."
   },
   "Admin": {
     "dashboard": "Admin paneli",
@@ -846,7 +849,8 @@
     "contactSent": "Telegramni oching va “Raqamni ulashish” tugmasini bosing.",
     "codeSent": "Kod yuborildi — quyiga kiriting.",
     "verifyError": "Xatolik yuz berdi. Qayta urinib koʻring.",
-    "saved": "Saqlandi ✓"
+    "saved": "Saqlandi ✓",
+    "saveError": "Saqlab boʻlmadi — qayta urinib koʻring."
   },
   "Dispute": {
     "open": "Muammo haqida xabar berish",

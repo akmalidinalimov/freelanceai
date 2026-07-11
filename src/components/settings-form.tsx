@@ -35,6 +35,8 @@ export function SettingsForm({
   const [phone, setPhone] = useState(initial.phone);
   const [card, setCard] = useState(initial.payoutCardMasked);
   const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function togglePref(key: keyof Prefs, value: boolean) {
     const next = { ...prefs, [key]: value };
@@ -50,12 +52,22 @@ export function SettingsForm({
     payoutCardMasked?: string;
   }) {
     setSaved(false);
-    const r = await fetch("/api/me/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    if ((await r.json()).ok) setSaved(true);
+    setError(null);
+    setBusy(true);
+    try {
+      const r = await fetch("/api/me/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      const j = await r.json();
+      if (j.ok) setSaved(true);
+      else setError(j.error?.message ?? t("saveError"));
+    } catch {
+      setError(t("saveError"));
+    } finally {
+      setBusy(false);
+    }
   }
 
   const row = "flex items-center justify-between gap-4 rounded-xl border border-[hsl(var(--border))] p-4";
@@ -168,7 +180,8 @@ export function SettingsForm({
         </div>
       )}
 
-      {saved && <p className="text-sm text-[hsl(var(--success))]">{t("saved")}</p>}
+      {saved && !error && <p className="text-sm text-[hsl(var(--success))]">{t("saved")}</p>}
+      {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

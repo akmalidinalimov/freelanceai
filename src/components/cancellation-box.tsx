@@ -25,18 +25,25 @@ export function CancellationBox({
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function send(body: Record<string, unknown>) {
     setBusy(true);
+    setError(null);
     try {
       const r = await fetch(`/api/orders/${orderId}/cancellation`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if ((await r.json()).ok) window.location.reload();
-      else setBusy(false);
+      const j = await r.json();
+      if (j.ok) window.location.reload();
+      else {
+        setError(j.error?.message ?? t("error"));
+        setBusy(false);
+      }
     } catch {
+      setError(t("error"));
       setBusy(false);
     }
   }
@@ -59,6 +66,7 @@ export function CancellationBox({
             </Button>
           </div>
         )}
+        {error && <p role="alert" className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
       </div>
     );
   }
@@ -87,6 +95,7 @@ export function CancellationBox({
               {t("cancel")}
             </Button>
           </div>
+          {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{error}</p>}
         </div>
       ) : (
         <button

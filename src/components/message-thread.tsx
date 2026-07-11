@@ -65,8 +65,9 @@ export function MessageThread({
       });
       const j = await r.json();
       if (j.ok) setBlocked(j.data.blocked);
+      else setSendError(j.error?.message ?? t("actionFailed"));
     } catch {
-      /* ignore — user can retry */
+      setSendError(t("actionFailed"));
     } finally {
       setTsBusy(false);
     }
@@ -87,9 +88,9 @@ export function MessageThread({
         setReported(true);
         setReporting(false);
         setReportReason("");
-      }
+      } else setSendError(j.error?.message ?? t("actionFailed"));
     } catch {
-      /* ignore */
+      setSendError(t("actionFailed"));
     } finally {
       setTsBusy(false);
     }
