@@ -57,6 +57,7 @@ export async function createOrder(
   let discountUzs = 0;
   let appliedCode: string | null = null;
   let couponId: string | null = null;
+  let couponMaxUses = 0;
   if (!testMode && couponCode?.trim()) {
     const coupon = await findValidCoupon(couponCode);
     if (coupon) {
@@ -64,12 +65,27 @@ export async function createOrder(
       if (discountUzs > 0) {
         appliedCode = coupon.code;
         couponId = coupon.id;
+        couponMaxUses = coupon.maxUses;
       }
     }
   }
 
   const order = await prisma.$transaction(async (tx) => {
-    if (couponId) await tx.coupon.update({ where: { id: couponId }, data: { uses: { increment: 1 } } });
+    // Atomically claim ONE coupon use: increment only while uses < maxUses (the value read at
+    // validation). findValidCoupon's uses<maxUses check is a TOCTOU — concurrent orders could
+    // both pass it and over-redeem. If the claim finds 0 rows the coupon was exhausted since,
+    // so we drop the discount and let the order proceed at full price (never fail the order).
+    if (couponId) {
+      const claimed = await tx.coupon.updateMany({
+        where: { id: couponId, uses: { lt: couponMaxUses } },
+        data: { uses: { increment: 1 } },
+      });
+      if (claimed.count === 0) {
+        discountUzs = 0;
+        appliedCode = null;
+        couponId = null;
+      }
+    }
     const created = await tx.order.create({
       data: {
         gigId: gig.id,
@@ -266,31 +282,48 @@ export async function deliverOrder(orderId: string, seller: User, message: strin
   });
 }
 
-/** Buyer accepts a delivery → COMPLETED. */
-export async function acceptOrder(orderId: string, buyer: User) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order) throw Errors.notFound("Order not found");
-  if (order.buyerId !== buyer.id && buyer.role !== "ADMIN") throw Errors.forbidden();
-  assertTransition(order.status, "COMPLETED");
-  // Atomic claim: only complete if the order is STILL in the state we validated. Prevents a
-  // concurrent cancellation/dispute-refund from also succeeding (buyer refunded AND seller
-  // credited via the COMPLETED-derived balance).
+/**
+ * Complete a SINGLE order and run every post-completion effect exactly once, in one place:
+ * atomic status claim (only if still in the validated `from` state — a concurrent
+ * cancel/dispute-refund can't also win), seller stats recompute, first-order referral
+ * reward (skipped for test orders), audit, and the seller notification. Returns whether THIS
+ * call is the one that completed it. Shared by acceptOrder + the auto-complete cron so both
+ * behave identically — the cron previously skipped the stats recompute and the notification.
+ * (Dispute-release completes inside its own tx alongside the dispute claim, so it stays there.)
+ */
+export async function completeOrder(
+  order: { id: string; sellerId: string; buyerId: string; commissionUzs: number; isTest: boolean; status: OrderStatus },
+  opts?: { actorId?: string; notifySeller?: boolean }
+): Promise<boolean> {
   const claimed = await prisma.order.updateMany({
-    where: { id: orderId, status: order.status },
+    where: { id: order.id, status: order.status },
     data: { status: "COMPLETED", completedAt: new Date() },
   });
-  if (claimed.count === 0) throw Errors.conflict("Order status changed — please refresh");
+  if (claimed.count === 0) return false;
   await recomputeSellerStats(order.sellerId);
   // Reward the buyer's referrer on their first completed order (idempotent, best-effort).
   // Never for test orders — they must not mint real referral credit (qa review C2).
   if (!order.isTest) {
     await issueReferralReward({ id: order.id, buyerId: order.buyerId, commissionUzs: order.commissionUzs });
   }
-  await audit({ actorId: buyer.id, action: "order.complete", entity: "Order", entityId: orderId });
-  await notifyAndPush(order.sellerId, "order.completed", "Buyurtma yakunlandi", {
-    body: "Buyurtmachi ishni qabul qildi. Mablagʻ hisobingizga oʻtkazildi.",
-    link: `/orders/${orderId}`,
-  });
+  await audit({ actorId: opts?.actorId ?? order.buyerId, action: "order.complete", entity: "Order", entityId: order.id });
+  if (opts?.notifySeller !== false) {
+    await notifyAndPush(order.sellerId, "order.completed", "Buyurtma yakunlandi", {
+      body: "Buyurtmachi ishni qabul qildi. Mablagʻ hisobingizga oʻtkazildi.",
+      link: `/orders/${order.id}`,
+    });
+  }
+  return true;
+}
+
+/** Buyer accepts a delivery → COMPLETED. */
+export async function acceptOrder(orderId: string, buyer: User) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw Errors.notFound("Order not found");
+  if (order.buyerId !== buyer.id && buyer.role !== "ADMIN") throw Errors.forbidden();
+  assertTransition(order.status, "COMPLETED");
+  const done = await completeOrder(order, { actorId: buyer.id });
+  if (!done) throw Errors.conflict("Order status changed — please refresh");
 }
 
 /** Buyer requests changes → REVISION. */
@@ -317,18 +350,19 @@ export async function autoCompleteDeliveredOrders(days = 3): Promise<number> {
   // Fetch the due orders first (bounded) so we can issue referral rewards per completion.
   const due = await prisma.order.findMany({
     where: { status: "DELIVERED", deliveredAt: { lt: cutoff } },
-    select: { id: true, buyerId: true, commissionUzs: true, isTest: true },
+    select: { id: true, sellerId: true, buyerId: true, commissionUzs: true, isTest: true },
     take: 500,
   });
   if (due.length === 0) return 0;
-  const res = await prisma.order.updateMany({
-    where: { id: { in: due.map((o) => o.id) }, status: "DELIVERED" },
-    data: { status: "COMPLETED", completedAt: new Date() },
-  });
-  // First-completed-order referral reward (idempotent per referee, best-effort). Never for
-  // test orders — they must not mint real referral credit (qa review C2).
-  for (const o of due) if (!o.isTest) await issueReferralReward(o);
-  return res.count;
+  // Route each through the shared completeOrder() so an auto-completed order gets the SAME
+  // effects as a buyer-accepted one — stats recompute, referral reward, audit, seller notify
+  // (a plain batch updateMany silently skipped all but the reward). Per-order atomic claim
+  // still makes exactly one of {buyer-accept, auto-complete} win.
+  let completed = 0;
+  for (const o of due) {
+    if (await completeOrder({ ...o, status: "DELIVERED" })) completed += 1;
+  }
+  return completed;
 }
 
 /** Buyer or seller cancels an active order → CANCELLED. */
