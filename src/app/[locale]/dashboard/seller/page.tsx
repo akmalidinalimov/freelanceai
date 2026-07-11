@@ -160,7 +160,10 @@ export default async function SellerDashboardPage({
         </div>
       </div>
 
-      <SellerApprovalBanner state={approval} />
+      <SellerApprovalBanner
+        state={approval}
+        pendingGigCount={gigs.filter((g) => g.status === "PENDING_REVIEW").length}
+      />
 
       {!onboardingComplete && (
         <div className="mb-5 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">

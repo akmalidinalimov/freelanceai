@@ -676,7 +676,8 @@
       "bio": "Add a bio",
       "specialization": "Choose at least one specialization",
       "gig": "Create at least one gig"
-    }
+    },
+    "gigsInReview": "{count} gig(s) still under review — they'll appear once approved."
   },
   "Creators": {
     "title": "AI creators",

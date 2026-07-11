@@ -11,7 +11,14 @@ import type { ApprovalState } from "@/server/services/seller-approval";
  * calm states (incomplete / pending / approved / rejected) and, when the seller is
  * eligible, a "Submit for approval" button that POSTs and reloads.
  */
-export function SellerApprovalBanner({ state }: { state: ApprovalState }) {
+export function SellerApprovalBanner({
+  state,
+  pendingGigCount = 0,
+}: {
+  state: ApprovalState;
+  /** Gigs still in admin review — even an APPROVED seller isn't visible until these clear. */
+  pendingGigCount?: number;
+}) {
   const t = useTranslations("SellerApproval");
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -34,10 +41,16 @@ export function SellerApprovalBanner({ state }: { state: ApprovalState }) {
 
   if (state.status === "APPROVED") {
     return (
-      <div className="mb-5 flex items-center gap-2 rounded-xl border border-[hsl(var(--success))]/40 bg-[hsl(var(--success))]/10 px-4 py-2.5 text-sm">
+      <div className="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-[hsl(var(--success))]/40 bg-[hsl(var(--success))]/10 px-4 py-2.5 text-sm">
         <span aria-hidden>✓</span>
         <span className="font-medium text-[hsl(var(--foreground))]">{t("liveTitle")}</span>
         <span className="text-[hsl(var(--muted-foreground))]">{t("liveBody")}</span>
+        {pendingGigCount > 0 && (
+          // Approved seller, but a gig is still in review — say so, or they think it's hidden by a bug.
+          <span className="basis-full text-[hsl(var(--muted-foreground))]">
+            ⏳ {t("gigsInReview", { count: pendingGigCount })}
+          </span>
+        )}
       </div>
     );
   }

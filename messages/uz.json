@@ -676,7 +676,8 @@
       "bio": "Oʻzingiz haqingizda yozing",
       "specialization": "Kamida bitta mutaxassislik tanlang",
       "gig": "Kamida bitta xizmat yarating"
-    }
+    },
+    "gigsInReview": "{count} ta e'loningiz hali tekshiruvda — tasdiqlangach ko'rinadi."
   },
   "Creators": {
     "title": "AI ijodkorlar",

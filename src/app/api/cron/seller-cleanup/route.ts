@@ -1,4 +1,4 @@
-import { expireUnsubmittedSellers } from "@/server/services/seller-approval";
+import { expireUnsubmittedSellers, warnExpiringSellers } from "@/server/services/seller-approval";
 
 /**
  * Scheduled job endpoint (daily): revoke the seller capability from users who turned on
@@ -11,6 +11,8 @@ export async function POST(request: Request) {
   if (!secret || auth !== `Bearer ${secret}`) {
     return new Response("unauthorized", { status: 401 });
   }
+  // Warn those ~24h out FIRST (so nobody is revoked without a heads-up), then revoke the expired.
+  const warned = await warnExpiringSellers();
   const revoked = await expireUnsubmittedSellers();
-  return Response.json({ revoked });
+  return Response.json({ warned, revoked });
 }

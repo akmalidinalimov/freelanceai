@@ -75,6 +75,40 @@ export async function submitForApproval(userId: string): Promise<ApprovalState> 
   return { status: "PENDING", canSubmit: false, missing: [], rejectionReason: null };
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Warn sellers ~24h BEFORE their unsubmitted-grace expires, so the revoke is never silent.
+ * Targets INCOMPLETE + never-submitted profiles created between (grace−1) and grace days ago.
+ * Idempotent via an ActivityEvent so a daily cron re-run can't double-notify. Returns the count.
+ */
+export async function warnExpiringSellers(): Promise<number> {
+  const now = Date.now();
+  const warnAfter = new Date(now - (UNSUBMITTED_GRACE_DAYS - 1) * DAY_MS); // older than grace−1 day
+  const cutoff = new Date(now - UNSUBMITTED_GRACE_DAYS * DAY_MS); // not yet past the full grace
+  const soon = await prisma.sellerProfile.findMany({
+    where: { approvalStatus: "INCOMPLETE", submittedAt: null, createdAt: { lt: warnAfter, gte: cutoff } },
+    select: { userId: true },
+  });
+  let warned = 0;
+  for (const s of soon) {
+    const already = await prisma.activityEvent.findFirst({
+      where: { type: "seller_expiry_warn", entityId: s.userId },
+      select: { id: true },
+    });
+    if (already) continue;
+    await notifyAndPush(s.userId, "seller.expiry_warn", "⏳ Sotuvchi profilingiz tez orada o'chiriladi", {
+      body: "Profilni tekshiruvga yuboring — aks holda ertaga sotuvchi ruxsati bekor qilinadi.",
+      link: "/dashboard/seller",
+    }).catch(() => {});
+    await prisma.activityEvent
+      .create({ data: { userId: s.userId, type: "seller_expiry_warn", entityId: s.userId } })
+      .catch(() => {});
+    warned += 1;
+  }
+  return warned;
+}
+
 /** Auto-revoke the seller capability from sellers who never completed onboarding.
  * INCOMPLETE + never submitted + profile older than the grace window → drop isSeller and
  * delete the empty SellerProfile. The user KEEPS their account (they stay a buyer). */
