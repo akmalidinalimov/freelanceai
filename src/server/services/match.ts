@@ -494,6 +494,7 @@ export async function matchGigs(
       coverPosterUrl: true,
       tags: true,
       featured: true,
+      salesCount: true,
       sellerId: true,
       category: { select: { slug: true } },
       packages: { select: { priceUzs: true, deliveryDays: true } },
@@ -587,7 +588,10 @@ export async function matchGigs(
     });
     const matchedKeys = [...provenKeys, ...supportedKeys, ...declaredKeys];
 
-    const completed = completedBy.get(g.sellerId) ?? 0;
+    // Pre-launch, real completed orders are 0 for everyone, which collapsed the proof
+    // term into identical scores (QA). Fall back to the DEMO salesCount so proof
+    // differentiates per gig; real orders win once they exist. Reset with demo stats.
+    const completed = Math.max(completedBy.get(g.sellerId) ?? 0, g.salesCount ?? 0);
     // Graded by real cosine similarity (0.55-floor → ~0.08, strong ~0.9 → ~0.16)
     const semanticBoost = (semanticSim.get(g.sellerId) ?? 0) * 0.18;
     const relevance = Math.min(
