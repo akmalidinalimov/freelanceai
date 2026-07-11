@@ -104,9 +104,11 @@ test("message attachments: a file-only message is accepted and rendered", async 
   });
   expect(sent.ok(), `attach -> ${sent.status()}`).toBeTruthy();
 
-  // The thread renders the attachment as a link to the file.
+  // The thread renders the attachment through the access-controlled proxy (chat files live in
+  // the private bucket; the raw object URL is never exposed), keyed by the stored value.
   await buyer.reload();
-  await expect(buyer.locator(`a[href="${fileUrl}"]`)).toHaveCount(1);
+  const proxied = `/api/conversations/${convId}/file?u=${encodeURIComponent(fileUrl)}`;
+  await expect(buyer.locator(`a[href="${proxied}"]`)).toHaveCount(1);
 
   await ctx.close();
 });
