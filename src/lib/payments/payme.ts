@@ -1,4 +1,5 @@
 import "server-only";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { settleOrderByProvider, reverseSettlementByProvider } from "@/server/services/payments";
 import type { CheckoutOrder, PaymentProvider } from "./index";
@@ -76,7 +77,10 @@ export async function handlePaymeRpc(rpc: Rpc): Promise<RpcResult> {
       if (Number(p.amount) !== (order.amountUzs - order.discountUzs) * 100) return err(PaymeErr.INVALID_AMOUNT);
       // Reject a SECOND Payme transaction for an order that already has an active (pending or
       // paid) one under a different id — otherwise the buyer could be charged twice. Payme
-      // treats CANT_PERFORM here as "order already in process".
+      // treats CANT_PERFORM here as "order already in process". The findFirst handles the
+      // common (serial) case; the partial unique index `payme_active_txn_per_order` is the
+      // ATOMIC backstop for a true race (two CreateTransaction with different ids at once) —
+      // one insert wins, the other trips the constraint (P2002) and we map it to CANT_PERFORM.
       const otherActive = await prisma.transaction.findFirst({
         where: {
           orderId,
@@ -87,17 +91,34 @@ export async function handlePaymeRpc(rpc: Rpc): Promise<RpcResult> {
       });
       if (otherActive) return err(PaymeErr.CANT_PERFORM);
       const createTime = Number(p.time) || undefined;
-      const txn = await prisma.transaction.create({
-        data: {
-          orderId,
-          provider: "PAYME",
-          type: "PAYMENT_IN",
-          status: "PENDING",
-          amountUzs: order.amountUzs - order.discountUzs,
-          providerTxnId: paymeId,
-          rawPayload: { create_time: createTime ?? null, order_id: orderId },
-        },
-      });
+      let txn;
+      try {
+        txn = await prisma.transaction.create({
+          data: {
+            orderId,
+            provider: "PAYME",
+            type: "PAYMENT_IN",
+            status: "PENDING",
+            amountUzs: order.amountUzs - order.discountUzs,
+            providerTxnId: paymeId,
+            rawPayload: { create_time: createTime ?? null, order_id: orderId },
+          },
+        });
+      } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+          // A concurrent insert won. If it was the SAME payme id (idempotent retry that raced
+          // past the `existing` pre-check), return that now-committed row — Payme expects
+          // idempotent success. If it was a DIFFERENT id, the order's one active-txn slot is
+          // taken → "order in process".
+          const raced = await prisma.transaction.findFirst({ where: { provider: "PAYME", providerTxnId: paymeId } });
+          if (raced) {
+            const rraw = (raced.rawPayload as Record<string, unknown>) ?? {};
+            return { result: { create_time: rraw.create_time ?? raced.createdAt.getTime(), transaction: raced.id, state: 1 } };
+          }
+          return err(PaymeErr.CANT_PERFORM);
+        }
+        throw e;
+      }
       return { result: { create_time: createTime ?? txn.createdAt.getTime(), transaction: txn.id, state: 1 } };
     }
     case "PerformTransaction": {

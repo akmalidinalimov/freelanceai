@@ -142,4 +142,26 @@ describe("Payme adapter money paths (T5)", () => {
     const retry = await handlePaymeRpc({ id: 3, method: "CreateTransaction", params: { id: `pm_a_${s.orderId}`, time: Date.now(), amount, account: { order_id: s.orderId } } });
     expect(hasError(retry)).toBe(false);
   });
+
+  it("P1-race: two CONCURRENT CreateTransaction (different ids) — the DB constraint lets exactly one win", async () => {
+    const s = await seedPending();
+    const amount = s.amountUzs * 100;
+    // Fire both at once: they can both pass the findFirst pre-check before either inserts, so
+    // the partial unique index `payme_active_txn_per_order` is the real guard — one insert
+    // wins, the other trips P2002 → mapped to CANT_PERFORM.
+    const [a, b] = await Promise.all([
+      handlePaymeRpc({ id: 1, method: "CreateTransaction", params: { id: `pm_race_a_${s.orderId}`, time: Date.now(), amount, account: { order_id: s.orderId } } }),
+      handlePaymeRpc({ id: 2, method: "CreateTransaction", params: { id: `pm_race_b_${s.orderId}`, time: Date.now(), amount, account: { order_id: s.orderId } } }),
+    ]);
+    const oks = [a, b].filter((r) => !hasError(r));
+    const errs = [a, b].filter(hasError);
+    expect(oks.length).toBe(1); // exactly one created
+    expect(errs.length).toBe(1);
+    expect((errs[0] as { error: { code: number } }).error.code).toBe(-31008); // CANT_PERFORM
+    // Only one active adapter transaction exists for the order — no double charge.
+    const active = await prisma.transaction.count({
+      where: { orderId: s.orderId, provider: "PAYME", providerTxnId: { not: null }, status: { in: ["PENDING", "SUCCEEDED"] } },
+    });
+    expect(active).toBe(1);
+  });
 });
