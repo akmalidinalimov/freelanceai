@@ -353,7 +353,10 @@
     "dueTomorrow": "Due tomorrow",
     "dueInDays": "Due in {n} days",
     "revenueTrend": "Revenue trend",
-    "revenuePeriod": "Last {n} weeks"
+    "revenuePeriod": "Last {n} weeks",
+    "earnMoreTitle": "Earn more",
+    "earnAddExtras": "{count} of your gigs have no add-ons. Extras (faster delivery, source files) earn more on every order.",
+    "earnAddTiers": "{count} of your gigs have fewer than 3 packages. Add tiers — buyers often pick the higher one."
   },
   "Gig": {
     "createTitle": "Create a gig",

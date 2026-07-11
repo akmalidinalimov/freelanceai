@@ -247,7 +247,8 @@ export function listSellerGigs(sellerId: string) {
     include: {
       packages: { orderBy: { priceUzs: "asc" }, take: 1 },
       category: true,
-      _count: { select: { orders: true } },
+      // extras + packages counts drive the "earn more" nudges (add add-ons / add tiers).
+      _count: { select: { orders: true, extras: true, packages: true } },
     },
   });
 }

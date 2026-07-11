@@ -14,6 +14,7 @@ import { myWeeklyRank } from "@/server/services/engagement";
 import { getOwnProfile } from "@/server/services/profile";
 import { getApprovalState } from "@/server/services/seller-approval";
 import { SellerApprovalBanner } from "@/components/seller-approval-banner";
+import { SellerEarnMore } from "@/components/seller-earn-more";
 import { formatUzs } from "@/lib/utils";
 import { xpLevel } from "@/lib/badges";
 import { PayoutRequestButton } from "@/components/payout-request-button";
@@ -164,6 +165,7 @@ export default async function SellerDashboardPage({
         state={approval}
         pendingGigCount={gigs.filter((g) => g.status === "PENDING_REVIEW").length}
       />
+      {approval.status === "APPROVED" && <SellerEarnMore gigs={gigs} />}
 
       {!onboardingComplete && (
         <div className="mb-5 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">
