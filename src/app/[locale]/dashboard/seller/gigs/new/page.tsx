@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { requireSellerUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { GigForm } from "@/components/gig-form";
+import { NewGigExperience } from "@/components/new-gig-experience";
 import type { Locale } from "@/i18n/routing";
 
 export default async function NewGigPage({
@@ -23,7 +23,7 @@ export default async function NewGigPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="mb-6 text-3xl font-bold">{t("createTitle")}</h1>
-      <GigForm locale={locale} categories={categories} />
+      <NewGigExperience locale={locale} categories={categories} />
     </div>
   );
 }
