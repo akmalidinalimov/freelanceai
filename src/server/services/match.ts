@@ -395,17 +395,23 @@ export async function matchGigs(
 
   // 1) trigram / ILIKE over gig text (gig-grain, so a strong gig surfaces even if the
   //    seller has weaker gigs elsewhere)
-  const like = `%${query.trim()}%`;
+  // Cross-script: fold the query to Latin and match BOTH forms, so a Cyrillic query reaches
+  // Latin gig text (and vice-versa). When already Latin, qf === the raw query (harmless dup).
+  const qtrim = query.trim();
+  const qf = foldToLatin(qtrim.toLowerCase());
+  const like = `%${qtrim}%`;
+  const likeF = `%${qf}%`;
   try {
     const rows = await prisma.$queryRaw<{ gigId: string; rel: number }[]>(Prisma.sql`
       SELECT g.id AS "gigId",
-             GREATEST(word_similarity(${query}, g.title), word_similarity(${query}, g.description))::float AS rel
+             GREATEST(word_similarity(${qtrim}, g.title), word_similarity(${qtrim}, g.description),
+                      word_similarity(${qf}, g.title), word_similarity(${qf}, g.description))::float AS rel
       FROM "Gig" g
       WHERE g.status = 'ACTIVE' AND g."deletedAt" IS NULL
-        AND ( word_similarity(${query}, g.title) >= 0.2
-           OR word_similarity(${query}, g.description) >= 0.2
-           OR g.title ILIKE ${like}
-           OR g.description ILIKE ${like} )
+        AND ( word_similarity(${qtrim}, g.title) >= 0.2 OR word_similarity(${qtrim}, g.description) >= 0.2
+           OR word_similarity(${qf}, g.title) >= 0.2 OR word_similarity(${qf}, g.description) >= 0.2
+           OR g.title ILIKE ${like} OR g.description ILIKE ${like}
+           OR g.title ILIKE ${likeF} OR g.description ILIKE ${likeF} )
       ORDER BY rel DESC
       LIMIT 120`);
     for (const r of rows) gigRel.set(r.gigId, Math.max(gigRel.get(r.gigId) ?? 0, Math.min(1, r.rel)));
@@ -415,8 +421,10 @@ export async function matchGigs(
         status: "ACTIVE",
         deletedAt: null,
         OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { description: { contains: query, mode: "insensitive" } },
+          { title: { contains: qtrim, mode: "insensitive" } },
+          { description: { contains: qtrim, mode: "insensitive" } },
+          { title: { contains: qf, mode: "insensitive" } },
+          { description: { contains: qf, mode: "insensitive" } },
         ],
       },
       select: { id: true },
