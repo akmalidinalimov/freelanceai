@@ -75,6 +75,32 @@ export async function submitForApproval(userId: string): Promise<ApprovalState> 
   return { status: "PENDING", canSubmit: false, missing: [], rejectionReason: null };
 }
 
+/**
+ * One-time nudge the moment a seller becomes eligible to submit (profile + first gig done), so
+ * they don't have to notice the dashboard banner. Call best-effort after any step that could
+ * complete eligibility (gig create, profile save). Idempotent via an ActivityEvent; never throws.
+ */
+export async function nudgeIfReadyToSubmit(userId: string): Promise<void> {
+  try {
+    const state = await getApprovalState(userId);
+    if (!state.canSubmit || state.status !== "INCOMPLETE") return;
+    const already = await prisma.activityEvent.findFirst({
+      where: { type: "seller_ready_nudge", entityId: userId },
+      select: { id: true },
+    });
+    if (already) return;
+    await notifyAndPush(userId, "seller.ready", "🎉 Hammasi tayyor — tekshiruvga yuboring", {
+      body: "Profil va e'loningiz tayyor. Bitta tugma bilan sotuvchi profilini faollashtirish uchun yuboring.",
+      link: "/dashboard/seller",
+    }).catch(() => {});
+    await prisma.activityEvent
+      .create({ data: { userId, type: "seller_ready_nudge", entityId: userId } })
+      .catch(() => {});
+  } catch {
+    // best-effort — a missed nudge never breaks the action that triggered it
+  }
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**

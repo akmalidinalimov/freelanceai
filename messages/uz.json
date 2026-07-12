@@ -713,7 +713,10 @@
       "specialization": "Kamida bitta mutaxassislik tanlang",
       "gig": "Kamida bitta xizmat yarating"
     },
-    "gigsInReview": "{count} ta e'loningiz hali tekshiruvda — tasdiqlangach ko'rinadi."
+    "gigsInReview": "{count} ta e'loningiz hali tekshiruvda — tasdiqlangach ko'rinadi.",
+    "submitReady": "🎉 Tekshiruvga yuborish",
+    "submitLocked": "Yuborish uchun yuqoridagi bosqichlarni bajaring.",
+    "progress": "{done}/{total}"
   },
   "Creators": {
     "title": "AI ijodkorlar",

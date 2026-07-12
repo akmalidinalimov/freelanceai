@@ -1,4 +1,5 @@
 import "server-only";
+import { nudgeIfReadyToSubmit } from "@/server/services/seller-approval";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Errors } from "@/lib/api";
@@ -209,9 +210,12 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
       : {}),
     ...(input.bannerPosterUrl !== undefined ? { bannerPosterUrl: ownUrlOrNull(input.bannerPosterUrl) } : {}),
   };
-  return prisma.sellerProfile.upsert({
+  const saved = await prisma.sellerProfile.upsert({
     where: { userId },
     create: { userId, ...data },
     update: data,
   });
+  // Saving the profile can complete eligibility (headline/bio/spec) — nudge to submit if ready.
+  void nudgeIfReadyToSubmit(userId).catch(() => {});
+  return saved;
 }

@@ -713,7 +713,10 @@
       "specialization": "Choose at least one specialization",
       "gig": "Create at least one gig"
     },
-    "gigsInReview": "{count} gig(s) still under review — they'll appear once approved."
+    "gigsInReview": "{count} gig(s) still under review — they'll appear once approved.",
+    "submitReady": "🎉 Submit for review",
+    "submitLocked": "Complete the steps above to submit.",
+    "progress": "{done}/{total}"
   },
   "Creators": {
     "title": "AI creators",

@@ -1,4 +1,5 @@
 import "server-only";
+import { nudgeIfReadyToSubmit } from "@/server/services/seller-approval";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, User } from "@prisma/client";
@@ -159,6 +160,8 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       buttons: adminGigReviewButtons(undefined, gig.id),
     });
   }
+  // The gig is usually the last step to eligibility — nudge them to submit (one-time, best-effort).
+  void nudgeIfReadyToSubmit(sellerId).catch(() => {});
   return gig;
 }
 
