@@ -1,0 +1,27 @@
+name: seller-cleanup
+
+# Revoke the seller capability from users who never completed seller onboarding
+# (INCOMPLETE + never submitted + older than the grace window). Daily.
+# Needs the CRON_SECRET repo secret to match the app env.
+on:
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: seller-cleanup
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger seller cleanup
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET repo secret not set — skipping."
+            exit 0
+          fi
+          curl -fsS --max-time 90 -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://gigora.ai/api/cron/seller-cleanup

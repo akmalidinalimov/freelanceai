@@ -1,43 +1,398 @@
 @import "tailwindcss";
 
-/* Design tokens — light theme. shadcn-compatible HSL variables. */
+/* ===========================================================================
+ * DESIGN TOKENS
+ * Light is the canonical theme; dark is an automatic, equally-polished
+ * translation via prefers-color-scheme (no manual toggle in v1).
+ * Components must consume ONLY these tokens — never hardcoded colors — so both
+ * themes stay in lockstep forever.
+ * ======================================================================== */
+
+/* ---- LIGHT (canonical): Sandstone + clay + orange — the "clay meets Apple"
+   system (founder-approved 2026-07-09). Warm-stone page, pure-white cards that
+   lift, single orange accent, soft neutral shadows. Clay depth is reserved for
+   signature controls (search, chips) via the --shadow-clay-* tokens below. ---- */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --border: 214 32% 91%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  /* Brand: a confident teal/emerald for an "AI + trust" feel. */
-  --primary: 173 80% 36%;
+  /* Surfaces: warm Sandstone page; pure-white cards float above it. */
+  --background: 40 24% 94%;   /* Sandstone Weave #f3f1ec */
+  --foreground: 30 4% 12%;    /* near-black ink #1d1d1f */
+  --card: 0 0% 100%;          /* pure white cards lift off the stone */
+  --card-foreground: 30 4% 12%;
+  --surface-2: 40 16% 90%;    /* recessed / inset panels #eae7df */
+  --muted: 40 16% 91%;
+  --muted-foreground: 30 4% 42%;
+  --border: 40 16% 86%;
+  /* Darker border for form controls (WCAG 1.4.11 non-text contrast). */
+  --input-border: 36 12% 58%;
+
+  /* Brand: single orange accent (no yellow, no teal). */
+  --primary: 21 90% 48%;      /* orange #EA580C */
   --primary-foreground: 0 0% 100%;
-  --accent: 38 92% 50%;
-  --accent-foreground: 222 47% 11%;
-  --radius: 0.75rem;
+  /* Text-safe deep orange for links/labels on white (≈5:1). Referenced widely. */
+  --primary-ink: 18 88% 38%;  /* #C2410C */
+  --accent: 24 88% 52%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Semantic status — kept for order/money states (soft tint + readable ink). */
+  --success: 152 60% 27%;
+  --success-foreground: 0 0% 100%;
+  --success-soft: 152 42% 92%;
+  --danger: 0 72% 47%;
+  --danger-foreground: 0 0% 100%;
+  --danger-soft: 0 80% 96%;
+  --warning: 28 90% 40%;
+  --warning-foreground: 40 60% 12%;
+  --warning-soft: 32 90% 92%;
+  --info: 218 70% 48%;
+  --info-foreground: 0 0% 100%;
+  --info-soft: 218 80% 95%;
+  --violet: 262 60% 52%;
+  --violet-soft: 262 60% 95%;
+  --star: 28 90% 48%;         /* warm-orange stars (no yellow) */
+
+  /* Focus ring + Apple-clean neutral shadows (page/card/overlay). */
+  --ring: 21 90% 48%;
+  --shadow-soft: 0 1px 2px hsl(30 20% 20% / 0.05), 0 8px 24px -12px hsl(30 20% 18% / 0.12);
+  --shadow-hover: 0 2px 6px hsl(30 20% 18% / 0.07), 0 24px 48px -18px hsl(30 20% 16% / 0.2);
+  --shadow-overlay: 0 12px 28px -6px hsl(30 20% 14% / 0.16), 0 30px 60px -20px hsl(30 20% 12% / 0.24);
+
+  /* Clay depth — reserved for signature controls (search well, chips, toggles).
+     Neumorphic double shadow tuned for the Sandstone/white surfaces. */
+  --clay: 40 30% 96%;
+  --shadow-clay-in: inset 4px 4px 9px hsl(36 16% 70% / 0.5), inset -4px -4px 9px hsl(0 0% 100% / 0.9);
+  --shadow-clay-out: 8px 8px 20px hsl(36 16% 70% / 0.4), -7px -7px 18px hsl(0 0% 100% / 0.9);
+
+  /* Living-background stops (warm orange) — used by the hero background layer. */
+  --gradient-a: 24 90% 62%;
+  --gradient-b: 32 90% 60%;
+  --gradient-c: 16 85% 60%;
+
+  --radius: 1.15rem;
 }
 
+/* ---- DARK — DISABLED by founder decision (2026-07-04): light is pinned as
+   the only theme ("the white background is what keeps people trusting").
+   The palette is kept under `.theme-dark` (never applied) so re-enabling later
+   is a one-line change back to the media query. --------------------------- */
+.theme-dark {
+  :root {
+    --background: 24 14% 9%;
+    --foreground: 40 22% 92%;
+    --card: 26 13% 12.5%;
+    --card-foreground: 40 22% 92%;
+    --surface-2: 26 12% 16%;
+    --muted: 26 11% 18%;
+    --muted-foreground: 40 8% 64%;
+    --border: 30 10% 24%;
+    --input-border: 215 14% 42%; /* visible form-control border on dark charcoal */
+
+    --primary: 172 62% 46%;
+    --primary-foreground: 173 45% 8%;
+    --primary-ink: 172 60% 62%; /* lighter teal for link text on dark charcoal */
+    --accent: 12 82% 62%;
+    --accent-foreground: 15 40% 10%;
+
+    --success: 152 52% 50%;
+    --success-foreground: 152 45% 8%;
+    --success-soft: 152 40% 16%;
+    --danger: 0 70% 60%;
+    --danger-foreground: 0 40% 10%;
+    --danger-soft: 0 45% 18%;
+    --warning: 36 88% 56%;
+    --warning-foreground: 40 60% 10%;
+    --warning-soft: 36 55% 18%;
+    --info: 214 86% 64%;
+    --info-foreground: 214 45% 10%;
+    --info-soft: 214 55% 20%;
+    --violet: 262 70% 70%;
+    --violet-soft: 262 40% 24%;
+    --star: 40 90% 58%;
+
+    --ring: 172 62% 52%;
+    --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.4), 0 6px 18px -8px hsl(0 0% 0% / 0.5);
+    --shadow-hover: 0 4px 14px -4px hsl(0 0% 0% / 0.5), 0 16px 38px -12px hsl(0 0% 0% / 0.6);
+    --shadow-overlay: 0 14px 32px -8px hsl(0 0% 0% / 0.6), 0 32px 64px -24px hsl(0 0% 0% / 0.7);
+
+    /* Gradient dims to embers in the dark. */
+    --gradient-a: 12 60% 30%;
+    --gradient-b: 32 55% 28%;
+    --gradient-c: 348 50% 30%;
+  }
+}
+
+/* ---- D02 "Blueprint Grid" — the dark theme, now applied SITE-WIDE (founder direction
+   2026-07-07). A flat token override set on <html> in the locale layout. Cool charcoal
+   canvas, blueprint-blue hairlines, teal primary, blue accent to match the homepage
+   beam. Every token here mirrors :root so nothing falls back to the light palette; the
+   :root/light values are the legacy baseline kept for reference. ------------------- */
+.theme-d02 {
+  --background: 224 26% 6%;
+  --foreground: 214 24% 92%;
+  --card: 222 22% 10.5%;
+  --card-foreground: 214 24% 92%;
+  --surface-2: 221 20% 14%;
+  --muted: 221 18% 15%;
+  --muted-foreground: 214 15% 64%;
+  --border: 216 22% 20%;
+  --input-border: 214 18% 44%;
+
+  --primary: 173 68% 46%;
+  --primary-foreground: 173 45% 8%;
+  --primary-ink: 190 82% 66%;
+  --accent: 12 82% 62%;
+  --accent-foreground: 15 40% 10%;
+
+  --success: 152 52% 50%; --success-foreground: 152 45% 8%; --success-soft: 152 40% 16%;
+  --danger: 0 70% 62%; --danger-foreground: 0 40% 10%; --danger-soft: 0 45% 18%;
+  --warning: 36 88% 56%; --warning-foreground: 40 60% 10%; --warning-soft: 36 55% 18%;
+  --info: 212 90% 62%; --info-foreground: 212 45% 10%; --info-soft: 212 55% 20%;
+  --violet: 262 70% 72%; --violet-soft: 262 40% 24%;
+  --star: 40 92% 58%;
+
+  --ring: 190 82% 60%;
+  --shadow-soft: 0 1px 2px hsl(220 60% 2% / 0.5), 0 6px 18px -8px hsl(220 60% 2% / 0.6);
+  --shadow-hover: 0 4px 14px -4px hsl(220 60% 2% / 0.55), 0 16px 38px -12px hsl(220 60% 2% / 0.65);
+  --shadow-overlay: 0 14px 32px -8px hsl(220 60% 2% / 0.6), 0 32px 64px -24px hsl(220 60% 2% / 0.7);
+
+  --gradient-a: 212 70% 32%; --gradient-b: 200 60% 26%; --gradient-c: 224 55% 26%;
+
+  color: hsl(var(--foreground));
+  color-scheme: dark; /* native controls (scrollbars, form widgets, autofill) render dark */
+}
+
+/* Register tokens as Tailwind color utilities (bg-success, text-danger, …). */
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-surface-2: hsl(var(--surface-2));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-border: hsl(var(--border));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
   --color-primary: hsl(var(--primary));
+  --color-primary-ink: hsl(var(--primary-ink));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-success-soft: hsl(var(--success-soft));
+  --color-danger: hsl(var(--danger));
+  --color-danger-foreground: hsl(var(--danger-foreground));
+  --color-danger-soft: hsl(var(--danger-soft));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-warning-soft: hsl(var(--warning-soft));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+  --color-info-soft: hsl(var(--info-soft));
+  --color-violet: hsl(var(--violet));
+  --color-violet-soft: hsl(var(--violet-soft));
+  --color-star: hsl(var(--star));
+  --color-clay: hsl(var(--clay));
+  --color-ring: hsl(var(--ring));
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-manrope), sans-serif;
+}
+
+html {
+  color-scheme: light; /* light pinned — see the disabled .theme-dark block above */
 }
 
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
-    sans-serif;
+    var(--font-manrope), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Arial, sans-serif;
+}
+
+/* Sandstone Weave — a whisper-fine woven texture over the page so white cards
+   read as lifted, not floating in a void. Fixed, behind everything, non-blocking. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='none' stroke='%23a89a80' stroke-opacity='0.14' stroke-width='1'%3E%3Cpath d='M0 15h60M0 30h60M0 45h60M15 0v60M30 0v60M45 0v60'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 30px 30px;
+}
+
+/* Display face for hero/section headings (Unbounded). Falls back gracefully. */
+.font-display {
+  font-family: var(--font-unbounded), var(--font-manrope), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ===== Amber Classic living background (founder-chosen, 2026-07-04) ===== */
+.amber-dots {
+  /* founder decision: the dotted pattern must clearly read — it sits above the
+     washes, so slightly stronger ink */
+  background-image: radial-gradient(hsl(18 50% 40% / 0.14) 1.15px, transparent 1.55px);
+  background-size: 21px 21px;
+  animation: amber-pan 90s linear infinite;
+}
+.amber-wash {
+  filter: blur(54px) saturate(1.12);
+  will-change: transform, border-radius;
+}
+@keyframes amber-pan {
+  to { background-position: 210px 105px; }
+}
+@keyframes amber-morph-a {
+  0%   { border-radius: 42% 58% 63% 37% / 45% 45% 55% 55%; transform: translate(0, 0) rotate(0deg) scale(1); }
+  50%  { border-radius: 62% 38% 36% 64% / 60% 40% 60% 40%; transform: translate(7vmax, -5vmax) rotate(8deg) scale(1.08); }
+  100% { border-radius: 36% 64% 56% 44% / 38% 62% 38% 62%; transform: translate(-5vmax, 5vmax) rotate(-7deg) scale(0.96); }
+}
+@keyframes amber-morph-b {
+  0%   { border-radius: 55% 45% 40% 60% / 50% 55% 45% 50%; transform: translate(0, 0) rotate(0deg) scale(1); }
+  50%  { border-radius: 38% 62% 60% 40% / 42% 58% 42% 58%; transform: translate(-7vmax, 6vmax) rotate(-9deg) scale(1.1); }
+  100% { border-radius: 60% 40% 45% 55% / 58% 42% 58% 42%; transform: translate(6vmax, -4vmax) rotate(7deg) scale(0.94); }
+}
+
+/* Live activity ticker marquee (content is duplicated; scrolls one copy width). */
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Instagram zoom-grid: a few tiles periodically zoom to draw the eye. Only under
+   no-preference so reduced-motion users get a calm static grid. */
+@keyframes ig-zoom {
+  0%, 70%, 100% {
+    transform: scale(1);
+    box-shadow: none;
+    z-index: 1;
+  }
+  10%, 55% {
+    transform: scale(1.12);
+    box-shadow: 0 12px 30px -10px hsl(20 50% 30% / 0.4);
+    z-index: 3;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ig-zoom-grid > *:nth-child(6n + 1) {
+    animation: ig-zoom 12s infinite;
+  }
+  .ig-zoom-grid > *:nth-child(6n + 4) {
+    animation: ig-zoom 12s infinite 6s;
+  }
+}
+
+/* Skeleton shimmer (Task 7) — token-based so it reads in both themes. */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Toast entrance (Task 10) — slide + fade; instant under reduced-motion. */
+@keyframes toastin {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Visible focus ring for keyboard users (a11y). Mouse clicks don't trigger :focus-visible. */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Ensure placeholder text meets 4.5:1 (WCAG 1.4.3) — don't rely on the browser
+   default (~#9CA3AF ≈ 2.8:1 on white). Uses the (darkened) secondary-text token. */
+::placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: 1;
+}
+
+/* ===== Homepage (clay meets Apple) — featured marquee + abstract bento ===== */
+/* Native horizontal scroll rail: real finger-swiping (with momentum) works; the
+   idle auto-advance is driven by JS nudging scrollLeft (see featured-marquee.tsx). */
+.home-marquee {
+  position: relative; margin: 0 -1rem; padding: 0.5rem 0;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.home-marquee::-webkit-scrollbar { display: none; }
+.home-marquee-track { display: flex; gap: 1rem; width: max-content; padding: 2px 1rem; }
+.home-mcard { flex: 0 0 300px; max-width: 300px; }
+@media (prefers-reduced-motion: reduce) {
+  .home-marquee { -webkit-mask: none; mask: none; }
+}
+
+.home-bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; grid-auto-rows: 130px; }
+@media (min-width: 760px) { .home-bento { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 150px; } }
+.home-cat {
+  position: relative; overflow: hidden; border-radius: 1.25rem; display: block;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s;
+}
+.home-cat.big { grid-column: span 2; grid-row: span 2; }
+.home-cat:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+.home-cat-field { position: absolute; inset: 0; }
+.home-cat-ic {
+  position: absolute; top: 14px; left: 14px; width: 34px; height: 34px;
+  color: rgba(255, 255, 255, 0.92); filter: drop-shadow(0 2px 5px rgba(90, 35, 5, 0.4));
+}
+.home-cat.big .home-cat-ic { width: 52px; height: 52px; }
+.home-cat-ic svg { width: 100%; height: 100%; }
+.home-cat-name {
+  position: absolute; left: 14px; right: 14px; bottom: 13px; color: #fff;
+  font-family: var(--font-unbounded), var(--font-manrope), sans-serif;
+  font-weight: 700; font-size: 1rem; line-height: 1.12; text-shadow: 0 1px 8px rgba(60, 25, 5, 0.5);
+}
+.home-cat.big .home-cat-name { font-size: 1.4rem; }
+.home-cat-sub { display: block; font-size: 0.72rem; font-weight: 600; color: rgba(255, 255, 255, 0.82); margin-top: 2px; text-shadow: 0 1px 6px rgba(60, 25, 5, 0.5); }
+/* per-tile warm abstract fields (orange refraction on charcoal) */
+.home-cat.c1 .home-cat-field { background: radial-gradient(90% 90% at 25% 20%, #7a2f08, transparent 60%), radial-gradient(80% 80% at 85% 80%, #ea580c, transparent 55%), #1c1613; }
+.home-cat.c2 .home-cat-field { background: radial-gradient(90% 90% at 80% 15%, #8a3a10, transparent 60%), radial-gradient(70% 70% at 15% 85%, #c2410c, transparent 55%), #1a1512; }
+.home-cat.c3 .home-cat-field { background: conic-gradient(from 140deg at 60% 40%, #3a201a, #b4470c, #2a1c16, #3a201a), #241812; }
+.home-cat.c4 .home-cat-field { background: radial-gradient(90% 90% at 30% 80%, #7a2f08, transparent 60%), radial-gradient(70% 70% at 80% 20%, #f2620e, transparent 55%), #1c1512; }
+.home-cat.c5 .home-cat-field { background: radial-gradient(100% 90% at 50% 10%, #8a3a12, transparent 60%), #1e1613; }
+.home-cat.c6 .home-cat-field { background: conic-gradient(from 300deg at 40% 60%, #2a1a14, #de5209, #3a2018, #2a1a14), #201712; }
+/* flagship tile — one living refraction, everything else static */
+.home-cat.big .home-cat-field::after {
+  content: ""; position: absolute; inset: -35%; border-radius: 50%;
+  background: radial-gradient(closest-side, #f2620e, rgba(242, 98, 14, 0) 70%);
+  opacity: 0.5; filter: blur(26px);
+  animation: home-abdrift 15s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate; will-change: transform;
+}
+@keyframes home-abdrift { 0% { transform: translate(-8%, -5%) scale(1); } 100% { transform: translate(10%, 7%) scale(1.18); } }
+@media (prefers-reduced-motion: reduce) { .home-cat.big .home-cat-field::after { animation: none; } }
+
+/* clay-well container for the hero search (signature control) */
+.home-search-well { background: hsl(var(--clay)); border-radius: 1.5rem; box-shadow: var(--shadow-clay-in); padding: 0.75rem; }
+
+/* Printing (receipts): drop the site chrome for a clean page. */
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

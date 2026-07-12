@@ -1,0 +1,58 @@
+import { z } from "zod";
+import { defineHandler } from "@/lib/handler";
+import { ok, Errors } from "@/lib/api";
+import { requireSeller } from "@/lib/authz";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { createGig } from "@/server/services/gig";
+
+const packageSchema = z.object({
+  tier: z.enum(["BASIC", "STANDARD", "PREMIUM"]),
+  title: z.string().min(1).max(80),
+  description: z.string().max(400).optional(),
+  priceUzs: z.number().int().min(1000).max(100_000_000),
+  deliveryDays: z.number().int().min(1).max(90),
+  revisions: z.number().int().min(0).max(20),
+});
+
+const schema = z
+  .object({
+    title: z.string().min(5).max(80),
+    description: z.string().min(20).max(5000),
+    coverUrl: z.string().url().optional(),
+    coverFocal: z.string().max(16).optional(),
+    coverType: z.enum(["image", "video"]).optional(),
+    coverPosterUrl: z.string().url().optional(),
+    coverW: z.number().int().positive().max(30000).optional(),
+    coverH: z.number().int().positive().max(30000).optional(),
+    galleryUrls: z.array(z.string().url()).max(8).optional(),
+    categoryId: z.string().optional(),
+    tags: z.array(z.string().min(1).max(30)).max(8).optional(),
+    faq: z
+      .array(z.object({ q: z.string().min(1).max(200), a: z.string().min(1).max(1000) }))
+      .max(10)
+      .optional(),
+    extras: z
+      .array(
+        z.object({
+          title: z.string().min(1).max(80),
+          priceUzs: z.number().int().min(1000).max(100_000_000),
+          deliveryDays: z.number().int().min(0).max(60).optional(),
+        })
+      )
+      .max(6)
+      .optional(),
+    requirementPrompts: z.array(z.string().min(1).max(200)).max(8).optional(),
+    draft: z.boolean().optional(),
+    packages: z.array(packageSchema).min(1).max(3),
+  })
+  .strict();
+
+/** Create a gig. Requires an active seller (or admin). */
+export const POST = defineHandler({ auth: true, schema }, async ({ user, body }) => {
+  if (!user) throw Errors.unauthenticated();
+  requireSeller(user);
+  // Gig creation rebuilds the seller's search embedding — throttle to stop bulk-create abuse.
+  enforceRateLimit(`gig-create:${user.id}`, 10, 60_000);
+  const gig = await createGig(user.id, body, user.role === "ADMIN");
+  return ok({ id: gig.id, slug: gig.slug });
+});

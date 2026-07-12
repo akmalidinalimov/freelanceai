@@ -1,0 +1,87 @@
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # pgvector image: the schema has a vector column (SellerEmbedding.embedding), so a
+        # plain postgres:16 fails `prisma db push` with 'type "vector" does not exist'. A
+        # fresh CI DB each run, so the alpine/libc concern that pins the PROD image doesn't
+        # apply here.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: freelanceai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/freelanceai?schema=public
+      # Test-only secrets/dummies — satisfy prod env-validation; no real services hit.
+      AUTH_SECRET: e2e-test-secret-e2e-test-secret-e2e-0123
+      AUTH_TRUST_HOST: "true"
+      APP_ORIGIN: http://localhost:3000
+      TELEGRAM_BOT_TOKEN: "000000:e2e-dummy-bot-token"
+      TELEGRAM_BOT_USERNAME: e2e_bot
+      TELEGRAM_WEBHOOK_SECRET: e2e-webhook-secret-0123456789
+      # Throwaway PII key (base64 32 bytes). `next start` forces NODE_ENV=production, so
+      # encryptPII fails CLOSED (500) without a key — the KYC phone-submit test needs one.
+      PII_ENCRYPTION_KEY: 6hIzHd6alWKMAJZXnRTDBJeH8Xhlu6+f0RmC/oQwBLQ=
+      E2E_TEST_AUTH: "1"
+      # Test R2 public base so message-attachment URL validation (keyFromPublicUrl) can pass.
+      S3_PUBLIC_BASE_URL: https://r2-test.example.com
+      # Test PSP creds so the Payme/Click webhook signature checks pass in the e2e tests.
+      # PAYMENT_PROVIDER is intentionally unset → buyer-facing checkout stays MANUAL.
+      PAYME_MERCHANT_ID: e2e_payme_merchant
+      PAYME_KEY: e2e_payme_key
+      CLICK_SERVICE_ID: e2e_click_service
+      CLICK_MERCHANT_ID: e2e_click_merchant
+      CLICK_SECRET_KEY: e2e_click_secret
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # Extensions must exist before db push creates the vector column + before the
+      # trigram fuzzy-search paths run (mirrors the prod migrate step).
+      - name: Create Postgres extensions
+        run: printf 'CREATE EXTENSION IF NOT EXISTS vector;\nCREATE EXTENSION IF NOT EXISTS pg_trgm;\n' | npx prisma db execute --stdin --schema=prisma/schema.prisma
+      - run: npx prisma db push --skip-generate
+      # `db push` doesn't run migrations, so the partial unique index from
+      # 20260724_payme_active_txn_unique won't exist — recreate it here so the Payme
+      # double-charge race test exercises the real DB constraint (mirrors prod migrate).
+      - name: Create partial indexes (parity with migrations)
+        run: |
+          cat prisma/migrations/20260724_payme_active_txn_unique/migration.sql \
+            | npx prisma db execute --stdin --schema=prisma/schema.prisma
+      # Integration suite (money invariants, payout/tip/affiliate races, order authz) runs
+      # against this real Postgres — previously it ran NOWHERE in CI.
+      - name: Integration tests
+        run: npm run test:integration
+      - run: node prisma/seed-e2e.mjs
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

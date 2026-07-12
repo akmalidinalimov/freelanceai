@@ -36,3 +36,39 @@ jobs:
         env:
           # Build does not connect to the DB, but the datasource URL must be set.
           DATABASE_URL: postgresql://user:pass@localhost:5432/db?schema=public
+
+  # Money-path integration tests against a real Postgres — advisory locks + aggregate
+  # balance reads + unique constraints can't be exercised by mocks. Proves the payout
+  # race and tip-idempotency fixes from the code verification.
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+      - name: Integration tests
+        run: npm run test:integration

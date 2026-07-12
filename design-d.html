@@ -1,0 +1,76 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreelanceAI — D · Work Showcase</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#070c17;--teal:#14c79a;--coral:#ff6a3d;--soft:#93a0b4;--line:rgba(255,255,255,.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Manrope,system-ui,sans-serif;color:#fff;background:var(--ink);overflow-x:hidden}
+.disp{font-family:Unbounded,sans-serif;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1160px;margin:0 auto;padding:0 30px;position:relative;z-index:2}
+.neon{position:fixed;inset:0;z-index:0;overflow:hidden}
+.neon::before,.neon::after{content:"";position:absolute;width:120vw;height:340px;border-radius:50%;filter:blur(90px);opacity:.5}
+.neon::before{background:var(--teal);top:-140px;left:-10vw;animation:sway 12s ease-in-out infinite alternate}
+.neon::after{background:var(--coral);bottom:-160px;right:-10vw;animation:sway 14s ease-in-out infinite alternate-reverse}
+@keyframes sway{to{transform:translateX(12vw)}}
+nav{display:flex;align-items:center;justify-content:space-between;height:80px}
+.brand{font-family:Unbounded;font-weight:800;font-size:21px}.brand b{color:var(--teal)}
+.nl{display:flex;gap:26px;align-items:center;font-weight:500;font-size:15px;color:#cbd4e0}
+.join{background:var(--teal);color:#03231c;font-weight:700;padding:10px 18px;border-radius:12px}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:36px 0 20px}
+.tag{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);color:#dfe6ee;font-weight:600;font-size:13px;padding:7px 14px;border-radius:999px}
+h1{font-weight:800;font-size:58px;line-height:1.03;margin-top:18px}
+h1 .g{color:var(--teal)}
+.sub{color:#b9c3d1;font-size:19px;margin-top:20px;max-width:36ch;line-height:1.5}
+.cta{display:flex;gap:14px;margin-top:28px}
+.p1{background:var(--coral);color:#fff;font-weight:700;padding:14px 24px;border-radius:13px;transition:.15s}
+.p1:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.p2{border:1.5px solid var(--line);font-weight:600;padding:14px 22px;border-radius:13px}
+/* floating deliverables */
+.frames{position:relative;height:440px}
+.frm{position:absolute;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -22px rgba(0,0,0,.7);border:1px solid var(--line);animation:bob 7s ease-in-out infinite}
+.frm .th{height:100%}
+.frm .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(4,8,15,.92));padding:26px 12px 11px;font-size:11.5px;font-weight:700}
+.frm .cap b{color:var(--teal)}
+.a{width:230px;height:150px;top:20px;left:8%;animation-delay:.2s}
+.b{width:190px;height:250px;top:90px;right:6%;animation-delay:1s}
+.c{width:180px;height:120px;bottom:14px;left:20%;animation-delay:1.7s;z-index:3}
+@keyframes bob{50%{transform:translateY(-16px)}}
+/* masonry */
+.showh{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 18px}
+.showh h2{font-family:Unbounded;font-size:24px}.showh a{color:var(--teal);font-weight:600;font-size:15px}
+.mason{columns:4;column-gap:16px;padding-bottom:56px}
+.tile{break-inside:avoid;margin-bottom:16px;border-radius:14px;overflow:hidden;position:relative;opacity:0;transform:translateY(18px);animation:rise .7s forwards;border:1px solid var(--line)}
+.tile:hover .th{transform:scale(1.06)}
+.tile .th{transition:.5s cubic-bezier(.2,.8,.2,1)}
+.tile .lb{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(4,8,15,.9));padding:22px 11px 9px;font-size:11.5px;font-weight:700}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.frm,.neon::before,.neon::after{animation:none}.tile{opacity:1;transform:none;animation:none}}
+@media(max-width:860px){.hero{grid-template-columns:1fr}h1{font-size:40px}.frames{height:340px}.mason{columns:2}.nl a:not(.join){display:none}}
+</style></head><body>
+<div class="neon"></div>
+<div class="wrap">
+ <nav><div class="brand">Freelance<b>AI</b></div><div class="nl"><a>Xizmatlar</a><a>Ijodkor boʻlish</a><a>Oʻzbek ▾</a><a class="join">Kirish</a></div></nav>
+ <section class="hero">
+  <div>
+   <span class="tag">◈ Haqiqiy AI ishlar galereyasi</span>
+   <h1 class="disp">Koʻring, tanlang, <span class="g">buyurtma bering</span></h1>
+   <p class="sub">Oʻzbekistonlik AI-ijodkorlarning haqiqiy ishlari. Har biri narxi va muddati bilan.</p>
+   <div class="cta"><a class="p1">Ishlarni koʻrish →</a><a class="p2">Ijodkor boʻlish</a></div>
+  </div>
+  <div class="frames">
+   <div class="frm a"><div class="th" style="background:radial-gradient(circle at 30% 30%,#ffd27a,#ff6a3d 60%,#8a2d5a)"></div><div class="cap">AI reklama roligi · <b>250 000 soʻm · 3 kun</b></div></div>
+   <div class="frm b"><div class="th" style="background:radial-gradient(circle at 55% 40%,#7ef0d0,#14c79a 55%,#0a3f4a)"></div><div class="cap">Talking-head avatar · <b>180 000 soʻm · 2 kun</b></div></div>
+   <div class="frm c"><div class="th" style="background:radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0 60%,#22143f)"></div><div class="cap">Brend identika · <b>500 000 soʻm</b></div></div>
+  </div>
+ </section>
+ <div class="showh"><h2 class="disp">Yangi ishlar</h2><a>Galereya →</a></div>
+ <div class="mason" id="mason"></div>
+</div>
+<script>
+const g=["radial-gradient(circle at 30% 30%,#ffd27a,#ff6a3d 60%,#8a2d5a)","radial-gradient(circle at 55% 45%,#7ef0d0,#14c79a,#0a3f4a)","radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0,#22143f)","radial-gradient(circle at 45% 40%,#c9a2ff,#6d4ad0,#241146)","radial-gradient(circle at 50% 35%,#ffb0c8,#f0623c,#5a1030)","radial-gradient(circle at 35% 55%,#a0f0d8,#0f9e79,#053b2c)","radial-gradient(circle at 60% 40%,#ffe08a,#f7a53c,#7a3d10)","radial-gradient(circle at 45% 45%,#9fc2ff,#3b6ad0,#122347)"];
+const cap=["AI reklama · 250 000","AI avatar · 180 000","Brending · 500 000","Personaj · 220 000","Poster · 90 000","Fotosurat · 100 000","Explainer · 300 000","Retush · 60 000"];
+const h=[150,210,170,240,160,200,180,220];const m=document.getElementById('mason');
+g.forEach((bg,i)=>{const d=document.createElement('div');d.className='tile';d.style.animationDelay=(i*.08)+'s';d.innerHTML=`<div class="th" style="background:${bg};height:${h[i]}px"></div><div class="lb">${cap[i]} soʻm</div>`;m.appendChild(d)});
+</script></body></html>
