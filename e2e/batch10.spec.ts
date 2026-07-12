@@ -63,6 +63,8 @@ test("seller payout request: complete an order, seller requests, admin fulfils",
 
   await buyer.goto(orderUrl);
   await buyer.getByRole("button", { name: "Qabul qilish va yakunlash" }).click();
+  // Accepting releases escrow → a confirm dialog; approve it.
+  await buyer.getByRole("dialog").getByRole("button", { name: "Qabul qilish va yakunlash" }).click();
   await expect(buyer.getByText("Yakunlangan").first()).toBeVisible();
 
   // Tip the seller — regression for the unified-balance fix: a tipped seller's payout must

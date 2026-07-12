@@ -40,6 +40,8 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
   // Buyer accepts → completed.
   await buyer.goto(orderUrl);
   await buyer.getByRole("button", { name: "Qabul qilish va yakunlash" }).click();
+  // Accepting releases escrow → a confirm dialog; approve it.
+  await buyer.getByRole("dialog").getByRole("button", { name: "Qabul qilish va yakunlash" }).click();
   await expect(buyer.getByText("Yakunlangan").first()).toBeVisible();
 
   // Buyer leaves a 5-star review.
