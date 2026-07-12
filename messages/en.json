@@ -513,7 +513,12 @@
     "extraFastDelivery": "Faster delivery",
     "extraSourceFiles": "Source files",
     "extraRevision": "Extra revision",
-    "extraCommercial": "Commercial rights"
+    "extraCommercial": "Commercial rights",
+    "gs_DRAFT": "Draft",
+    "gs_PENDING_REVIEW": "Under review",
+    "gs_ACTIVE": "Live",
+    "gs_PAUSED": "Paused",
+    "gs_REJECTED": "Rejected"
   },
   "Order": {
     "bannerRevision": "Revision in progress",
@@ -917,7 +922,8 @@
     "missing_activeGig": "Create an active service",
     "missing_payout": "Payout card",
     "missing_kyc": "Identity verification (KYC)",
-    "missing_phone": "Phone number"
+    "missing_phone": "Phone number",
+    "missing_avatar": "Profile photo"
   },
   "Feed": {
     "fromFollowed": "New from creators you follow",

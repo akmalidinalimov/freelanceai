@@ -513,7 +513,12 @@
     "extraFastDelivery": "Быстрая сдача",
     "extraSourceFiles": "Исходные файлы",
     "extraRevision": "Доп. правка",
-    "extraCommercial": "Коммерч. права"
+    "extraCommercial": "Коммерч. права",
+    "gs_DRAFT": "Черновик",
+    "gs_PENDING_REVIEW": "На проверке",
+    "gs_ACTIVE": "Активно",
+    "gs_PAUSED": "Приостановлено",
+    "gs_REJECTED": "Отклонено"
   },
   "Order": {
     "bannerRevision": "Идёт доработка",
@@ -917,7 +922,8 @@
     "missing_activeGig": "Создайте активную услугу",
     "missing_payout": "Карта для выплат",
     "missing_kyc": "Верификация (KYC)",
-    "missing_phone": "Номер телефона"
+    "missing_phone": "Номер телефона",
+    "missing_avatar": "Фото профиля"
   },
   "Feed": {
     "fromFollowed": "Новое от ваших авторов",

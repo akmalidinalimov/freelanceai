@@ -98,6 +98,7 @@ export interface Completeness {
 }
 
 const COMPLETENESS_ITEMS = [
+  "avatar",
   "headline",
   "bio",
   "specializations",
@@ -114,6 +115,7 @@ export async function computeCompleteness(sellerId: string): Promise<Completenes
     where: { id: sellerId },
     select: {
       phone: true,
+      photoUrl: true,
       kycStatus: true,
       payoutCardMasked: true,
       sellerProfile: {
@@ -135,6 +137,7 @@ export async function computeCompleteness(sellerId: string): Promise<Completenes
 
   const p = u.sellerProfile;
   const have: Record<(typeof COMPLETENESS_ITEMS)[number], boolean> = {
+    avatar: Boolean(u.photoUrl),
     headline: Boolean(p?.headline && p.headline.length >= 10),
     bio: Boolean(p?.bio && p.bio.length >= 80),
     specializations: (p?.specializations.length ?? 0) >= 1,

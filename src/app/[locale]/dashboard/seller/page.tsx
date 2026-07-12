@@ -300,7 +300,22 @@ export default async function SellerDashboardPage({
                     {g.title}
                   </Link>
                   <span className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
-                    <span className="rounded-full bg-[hsl(var(--muted))] px-2 py-0.5 text-xs">{g.status}</span>
+                    {(() => {
+                      // Localized, color-coded status so a seller sees at a glance why a gig
+                      // isn't live yet (under review) vs live vs draft — not a raw enum.
+                      const meta: Record<string, string> = {
+                        ACTIVE: "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]",
+                        PENDING_REVIEW: "bg-[hsl(var(--warning-soft))] text-[hsl(var(--warning))]",
+                        DRAFT: "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]",
+                        PAUSED: "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]",
+                        REJECTED: "bg-[hsl(var(--danger))]/15 text-[hsl(var(--danger))]",
+                      };
+                      return (
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta[g.status] ?? "bg-[hsl(var(--muted))]"}`}>
+                          {tg(`gs_${g.status}`)}
+                        </span>
+                      );
+                    })()}
                     <span
                       className="hidden tabular-nums text-xs sm:inline"
                       title={`${g.views} ${tg("views")} · ${g._count.orders} ${t("statOrders")}`}

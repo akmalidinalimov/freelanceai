@@ -513,7 +513,12 @@
     "extraFastDelivery": "Tezroq yetkazish",
     "extraSourceFiles": "Manba fayllar",
     "extraRevision": "Qo'shimcha tuzatish",
-    "extraCommercial": "Tijorat huquqi"
+    "extraCommercial": "Tijorat huquqi",
+    "gs_DRAFT": "Qoralama",
+    "gs_PENDING_REVIEW": "Tekshiruvda",
+    "gs_ACTIVE": "Faol",
+    "gs_PAUSED": "To'xtatilgan",
+    "gs_REJECTED": "Rad etilgan"
   },
   "Order": {
     "bannerRevision": "Tahrir jarayonda",
@@ -917,7 +922,8 @@
     "missing_activeGig": "Faol xizmat yarating",
     "missing_payout": "Toʻlov kartasi",
     "missing_kyc": "Shaxsni tasdiqlash (KYC)",
-    "missing_phone": "Telefon raqami"
+    "missing_phone": "Telefon raqami",
+    "missing_avatar": "Profil rasmi"
   },
   "Feed": {
     "fromFollowed": "Kuzatayotgan ijodkorlaringizdan yangi",
