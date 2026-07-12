@@ -7,6 +7,7 @@ import { computeSellerLevel } from "@/lib/seller-level";
 import { sanitizeSpecKeys } from "@/lib/specializations";
 import { provenSpecKeys } from "@/lib/niche-evidence";
 import { normalizeTelegramChannel, normalizeTelegramPost } from "@/lib/telegram-link";
+import { normalizeInstagramPost, normalizeInstagramHandle } from "@/lib/instagram-link";
 import { keyFromPublicUrl } from "@/lib/media";
 import { PUBLIC_SELLER_USER } from "@/server/services/seller-visibility";
 
@@ -156,6 +157,7 @@ export interface ProfileInput {
   aiTools?: string[];
   specializations?: string[];
   instagramUsername?: string;
+  instagramPosts?: string[];
   telegramChannel?: string;
   telegramPosts?: string[];
   bannerUrl?: string | null;
@@ -179,9 +181,14 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
       ? { specializations: sanitizeSpecKeys(input.specializations) }
       : {}),
     ...(input.instagramUsername !== undefined
+      ? { instagramUsername: normalizeInstagramHandle(input.instagramUsername) }
+      : {}),
+    ...(input.instagramPosts !== undefined
       ? {
-          instagramUsername:
-            input.instagramUsername.replace(/[^A-Za-z0-9._]/g, "").slice(0, 30) || null,
+          // Keep only valid, de-duplicated public post/reel links; cap at PORTFOLIO_MAX.
+          instagramPosts: Array.from(
+            new Set(input.instagramPosts.map(normalizeInstagramPost).filter((x): x is string => x !== null))
+          ).slice(0, PORTFOLIO_MAX),
         }
       : {}),
     ...(input.telegramChannel !== undefined

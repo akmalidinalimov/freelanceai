@@ -846,7 +846,21 @@
     "viewOnInstagram": "View on Instagram",
     "showcaseLabel": "From Instagram",
     "postBy": "Instagram post by @{handle}",
-    "close": "Close"
+    "close": "Close",
+    "handle": "Your Instagram (@)",
+    "handleHint": "e.g. @yourstudio or the full link",
+    "posts": "Posts to show",
+    "postsHint": "Paste the link of a post or reel you want to feature. They appear on your profile.",
+    "removePost": "Remove post",
+    "savedDetail": "Saved — your posts now show on your profile.",
+    "savedNoPosts": "Saved. Add post links to have them show up.",
+    "saveError": "Couldn't save. Please try again.",
+    "viewProfile": "View profile",
+    "portfolio": "Instagram portfolio",
+    "followProfile": "Follow",
+    "postTitle": "Instagram post {n}",
+    "hubHint": "Connect your Instagram and pick the posts to show — no API needed.",
+    "autoSyncTitle": "Or auto-sync a Business account (needs Meta approval)"
   },
   "Account": {
     "title": "Account",

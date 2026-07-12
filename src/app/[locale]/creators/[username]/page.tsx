@@ -12,6 +12,7 @@ import { ShareButton } from "@/components/share-button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { PortfolioShowcase } from "@/components/portfolio-showcase";
 import { TelegramShowcase } from "@/components/telegram-showcase";
+import { InstagramEmbeds } from "@/components/instagram-embeds";
 import { ProfileBanner } from "@/components/profile-banner";
 import { coverVariant } from "@/lib/cover-variant";
 import { specLabel } from "@/lib/specializations";
@@ -193,11 +194,14 @@ export default async function CreatorProfilePage({
       {/* Portfolio — merged uploads + Instagram in one zoom-grid */}
       <PortfolioShowcase items={portfolioItems} igHandle={igHandle} />
 
+      {/* Instagram portfolio (no-API) — live embedded posts the seller chose */}
+      <InstagramEmbeds posts={profile?.instagramPosts ?? []} handle={profile?.instagramUsername ?? null} />
+
       {/* Telegram-channel portfolio — Masonry of live embedded posts (pinned + auto-fetched) */}
       <TelegramShowcase posts={tgPosts} channel={profile?.telegramChannel ?? null} />
 
       {/* Owner empty-state: nudge the creator to add their work (any source) if empty. */}
-      {viewer === "owner" && portfolioItems.length === 0 && tgPosts.length === 0 && (
+      {viewer === "owner" && portfolioItems.length === 0 && tgPosts.length === 0 && (profile?.instagramPosts?.length ?? 0) === 0 && (
         <div className="mb-8 rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--surface-2))]/40 p-6 text-center">
           <p className="font-semibold">{t("portfolioEmptyTitle")}</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-[hsl(var(--muted-foreground))]">{t("portfolioEmptyHint")}</p>

@@ -846,7 +846,21 @@
     "viewOnInstagram": "Instagram'da koʻrish",
     "showcaseLabel": "Instagram lentasi",
     "postBy": "@{handle} ning Instagram posti",
-    "close": "Yopish"
+    "close": "Yopish",
+    "handle": "Instagram profilingiz (@)",
+    "handleHint": "masalan: @studiongiz yoki to'liq havola",
+    "posts": "Ko'rsatmoqchi bo'lgan postlar",
+    "postsHint": "Ko'rsatmoqchi bo'lgan post yoki reel havolasini joylang. Ular profilingizda ko'rinadi.",
+    "removePost": "Postni o'chirish",
+    "savedDetail": "Saqlandi — postlaringiz endi profilda ko'rinadi.",
+    "savedNoPosts": "Saqlandi. Postlar ko'rinishi uchun post havolalarini qo'shing.",
+    "saveError": "Saqlab bo'lmadi. Qayta urinib ko'ring.",
+    "viewProfile": "Profilni ko'rish",
+    "portfolio": "Instagram portfolio",
+    "followProfile": "Kuzatish",
+    "postTitle": "Instagram post {n}",
+    "hubHint": "Instagram profilingizni ulang va ko'rsatmoqchi bo'lgan postlarni tanlang — API talab qilinmaydi.",
+    "autoSyncTitle": "Yoki Business akkauntni avtomatik ulash (Meta ruxsati kerak)"
   },
   "Account": {
     "title": "Hisob",

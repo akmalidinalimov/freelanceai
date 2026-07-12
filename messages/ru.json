@@ -846,7 +846,21 @@
     "viewOnInstagram": "Смотреть в Instagram",
     "showcaseLabel": "Лента Instagram",
     "postBy": "Пост в Instagram от @{handle}",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "handle": "Ваш Instagram (@)",
+    "handleHint": "например: @вашастудия или полная ссылка",
+    "posts": "Посты для показа",
+    "postsHint": "Вставьте ссылку на пост или reel, который хотите показать. Они появятся в вашем профиле.",
+    "removePost": "Удалить пост",
+    "savedDetail": "Сохранено — ваши посты теперь видны в профиле.",
+    "savedNoPosts": "Сохранено. Добавьте ссылки на посты, чтобы они отображались.",
+    "saveError": "Не удалось сохранить. Попробуйте ещё раз.",
+    "viewProfile": "Открыть профиль",
+    "portfolio": "Instagram портфолио",
+    "followProfile": "Подписаться",
+    "postTitle": "Пост Instagram {n}",
+    "hubHint": "Подключите Instagram и выберите посты для показа — без API.",
+    "autoSyncTitle": "Или автосинхронизация Business-аккаунта (нужно одобрение Meta)"
   },
   "Account": {
     "title": "Аккаунт",

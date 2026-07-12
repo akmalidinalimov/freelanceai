@@ -304,6 +304,10 @@ model SellerProfile {
   aiTools         String[]    @default([])
   specializations String[]    @default([])
   instagramUsername String?
+  // Instagram portfolio (NO-API path): public post/reel links the seller chose to showcase,
+  // embedded on the profile via Instagram's own /embed iframe — works without Meta App Review
+  // (the OAuth instagram* fields below are the approved-API path). Mirrors telegramPosts.
+  instagramPosts  String[] @default([])
   // Telegram-channel portfolio: an optional channel handle (for a "follow" link)
   // plus a list of public post links (t.me/<channel>/<id>) embedded on the profile
   // as live Telegram posts — the common "my Telegram channel is my portfolio" case.

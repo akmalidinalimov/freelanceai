@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { requireSellerUser } from "@/lib/auth-guards";
 import { getOwnProfile } from "@/server/services/profile";
 import { InstagramConnect } from "@/components/instagram-connect";
+import { InstagramPortfolioForm } from "@/components/instagram-portfolio-form";
 import { TelegramPortfolioForm } from "@/components/telegram-portfolio-form";
 import { PortfolioEditor } from "@/components/portfolio-editor";
 import { Instagram, Send, Upload } from "lucide-react";
@@ -22,6 +23,7 @@ export default async function PortfolioHubPage({
   const user = await requireSellerUser(locale);
   const t = await getTranslations("Profile");
   const tt = await getTranslations("Telegram");
+  const ti = await getTranslations("Instagram");
   const profile = await getOwnProfile(user.id);
 
   // Direct uploads only in the upload card; Instagram-synced items are managed by the IG card.
@@ -79,13 +81,26 @@ export default async function PortfolioHubPage({
           <PortfolioEditor items={uploads} />
         </Card>
 
-        <Card icon={<Instagram className="h-5 w-5" aria-hidden />} title="Instagram" hint={t("instagramHint")}>
-          <InstagramConnect
-            connected={Boolean(profile?.instagramUserId)}
-            handle={profile?.instagramUsername ?? null}
-            syncedAt={profile?.instagramSyncedAt?.toISOString() ?? null}
-            marker={ig}
+        <Card icon={<Instagram className="h-5 w-5" aria-hidden />} title="Instagram" hint={ti("hubHint")}>
+          {/* Easy no-API path (always works): paste your @handle + the posts you want to show. */}
+          <InstagramPortfolioForm
+            initial={{ handle: profile?.instagramUsername ?? "", posts: profile?.instagramPosts ?? [] }}
+            username={user.username}
           />
+          {/* Auto-sync a Business/Creator account (needs Meta approval — may be unavailable). */}
+          <details className="mt-4 border-t border-[hsl(var(--border))] pt-4">
+            <summary className="cursor-pointer text-sm font-medium text-[hsl(var(--muted-foreground))]">
+              {ti("autoSyncTitle")}
+            </summary>
+            <div className="mt-3">
+              <InstagramConnect
+                connected={Boolean(profile?.instagramUserId)}
+                handle={profile?.instagramUsername ?? null}
+                syncedAt={profile?.instagramSyncedAt?.toISOString() ?? null}
+                marker={ig}
+              />
+            </div>
+          </details>
         </Card>
 
         <Card icon={<Send className="h-5 w-5" aria-hidden />} title={tt("channel")} hint={tt("channelHint")}>

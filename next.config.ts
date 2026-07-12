@@ -43,9 +43,10 @@ const nextConfig: NextConfig = {
       // collector); the Meta Pixel beacons to www.facebook.com — required or
       // analytics silently drops every payload.
       "connect-src 'self' https://*.clarity.ms https://c.bing.com https://www.facebook.com",
-      // t.me: creators embed their Telegram-channel posts as portfolio (public post
-      // iframes from t.me only; the widget's auto-height uses postMessage, no script).
-      "frame-src 'self' https://t.me https://*.telegram.org",
+      // t.me + instagram.com: creators embed their Telegram-channel posts AND Instagram
+      // posts/reels as portfolio via each platform's own public /embed iframe (no third-party
+      // script; Instagram's /embed page renders the post itself). No Meta App Review needed.
+      "frame-src 'self' https://t.me https://*.telegram.org https://www.instagram.com",
       "font-src 'self' data:",
     ].join("; ");
     // Report-Only "discovery" policy: actionable directives (img/connect/frame/font) are
@@ -60,7 +61,7 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: https://www.facebook.com",
       "font-src 'self' data:",
       "connect-src 'self' https://*.clarity.ms https://c.bing.com https://www.facebook.com",
-      "frame-src 'self' https://t.me https://*.telegram.org",
+      "frame-src 'self' https://t.me https://*.telegram.org https://www.instagram.com",
       "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
       "base-uri 'self'",
       "object-src 'none'",
