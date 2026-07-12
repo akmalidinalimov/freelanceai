@@ -507,7 +507,13 @@
     "aiGenerating": "Creating…",
     "aiBack": "Back",
     "aiError": "Couldn't generate. Please try again.",
-    "aiFillAll": "Fill in the service, deliverable and price."
+    "aiFillAll": "Fill in the service, deliverable and price.",
+    "pkgPriceInvalid": "Each package price must be at least 1000 UZS.",
+    "pkgDaysInvalid": "Set the delivery time (in days) for each package.",
+    "extraFastDelivery": "Faster delivery",
+    "extraSourceFiles": "Source files",
+    "extraRevision": "Extra revision",
+    "extraCommercial": "Commercial rights"
   },
   "Order": {
     "bannerRevision": "Revision in progress",
@@ -817,7 +823,8 @@
     "avatarHint": "A square photo looks best. JPG, PNG or WebP.",
     "avatarType": "Photo must be JPG, PNG or WebP.",
     "avatarSize": "Photo must be under 8 MB.",
-    "avatarError": "Couldn't upload the photo. Please try again."
+    "avatarError": "Couldn't upload the photo. Please try again.",
+    "tagHint": "Type and pick"
   },
   "Instagram": {
     "connect": "Connect Instagram",

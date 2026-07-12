@@ -139,6 +139,16 @@ export function GigForm({
       setError(t("needPackage"));
       return;
     }
+    // Validate client-side so an empty delivery-days / too-low price gives a clear message here
+    // instead of a raw server validation error after the round-trip.
+    if (packages.some((p) => !Number.isFinite(p.priceUzs) || p.priceUzs < 1000)) {
+      setError(t("pkgPriceInvalid"));
+      return;
+    }
+    if (packages.some((p) => !Number.isFinite(p.deliveryDays) || p.deliveryDays < 1)) {
+      setError(t("pkgDaysInvalid"));
+      return;
+    }
 
     setBusy(true);
     try {
@@ -375,13 +385,42 @@ export function GigForm({
             </div>
           ))}
           {extras.length < 6 && (
-            <button
-              type="button"
-              onClick={() => setExtras((arr) => [...arr, { title: "", priceUzs: "", deliveryDays: "" }])}
-              className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
-            >
-              + {t("extraAdd")}
-            </button>
+            <div className="flex flex-col gap-2">
+              {/* One-tap common extras — the biggest average-order-value lever, made effortless
+                  for a manual-form seller who wouldn't know what add-ons to offer. */}
+              <div className="flex flex-wrap gap-1.5">
+                {(
+                  [
+                    ["extraFastDelivery", 15000],
+                    ["extraSourceFiles", 20000],
+                    ["extraRevision", 10000],
+                    ["extraCommercial", 30000],
+                  ] as const
+                )
+                  .filter(([key]) => !extras.some((e) => e.title === t(key)))
+                  .map(([key, price]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() =>
+                        setExtras((arr) =>
+                          arr.length < 6 ? [...arr, { title: t(key), priceUzs: String(price), deliveryDays: "" }] : arr
+                        )
+                      }
+                      className="rounded-full border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/[0.06] px-3 py-1 text-xs font-medium text-[hsl(var(--primary-ink))]"
+                    >
+                      + {t(key)}
+                    </button>
+                  ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setExtras((arr) => [...arr, { title: "", priceUzs: "", deliveryDays: "" }])}
+                className="self-start rounded-md border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))]"
+              >
+                + {t("extraAdd")}
+              </button>
+            </div>
           )}
         </div>
       </Section>

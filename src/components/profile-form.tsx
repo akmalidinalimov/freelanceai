@@ -99,11 +99,11 @@ export function ProfileForm({
       </label>
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("skills")}</span>
-        <TagInput value={skills} onChange={setSkills} suggestions={skillSuggestions} placeholder={t("commaHint")} ariaLabel={t("skills")} max={20} />
+        <TagInput value={skills} onChange={setSkills} suggestions={skillSuggestions} placeholder={t("tagHint")} ariaLabel={t("skills")} max={20} />
       </div>
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("tools")}</span>
-        <TagInput value={aiTools} onChange={setAiTools} suggestions={AI_TOOL_SUGGESTIONS} placeholder={t("commaHint")} ariaLabel={t("tools")} max={20} />
+        <TagInput value={aiTools} onChange={setAiTools} suggestions={AI_TOOL_SUGGESTIONS} placeholder={t("tagHint")} ariaLabel={t("tools")} max={20} />
       </div>
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("instagram")}</span>
