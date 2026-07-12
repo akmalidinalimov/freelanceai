@@ -520,7 +520,8 @@
     "gs_ACTIVE": "Faol",
     "gs_PAUSED": "To'xtatilgan",
     "gs_REJECTED": "Rad etilgan",
-    "noGigsCta": "AI yordamida bir necha tugmada birinchi e'loningizni yarating."
+    "noGigsCta": "AI yordamida bir necha tugmada birinchi e'loningizni yarating.",
+    "verified": "Tasdiqlangan"
   },
   "Order": {
     "bannerRevision": "Tahrir jarayonda",
@@ -597,7 +598,12 @@
     },
     "goToOrder": "Buyurtmaga oʻtish",
     "andMore": "va yana {count} ta — quyidagi jadvalda",
-    "errorRetry": "Tanlovlaringiz saqlandi — qayta urinib koʻring."
+    "errorRetry": "Tanlovlaringiz saqlandi — qayta urinib koʻring.",
+    "autoAcceptOn": "Agar javob bermasangiz, {date} da avtomatik qabul qilinadi.",
+    "protectHeld": "Toʻlovingiz himoyalangan",
+    "protectHeldBody": "Mablagʻ xavfsiz saqlanadi — ijodkor faqat siz ishni qabul qilganingizdan keyin toʻlov oladi.",
+    "acceptConfirmTitle": "Ishni qabul qilasizmi?",
+    "acceptConfirmBody": "Bu toʻlovni ijodkorga oʻtkazadi va qaytarib boʻlmaydi. Ishdan roziligmisiz?"
   },
   "Review": {
     "leaveReview": "Sharh qoldiring",

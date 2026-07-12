@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { GalleryUpload } from "@/components/gallery-upload";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type Status =
   | "IN_PROGRESS"
@@ -31,6 +32,7 @@ export function OrderActions({
 }) {
   const t = useTranslations("Order");
   const router = useRouter();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<string[]>([]);
@@ -117,7 +119,16 @@ export function OrderActions({
 
       {isBuyer && status === "DELIVERED" && (
         <div className="flex flex-wrap gap-3">
-          <Button onClick={() => act("accept")} disabled={busy} variant="accent">
+          <Button
+            onClick={async () => {
+              // Accepting releases the held payment and is irreversible — confirm first.
+              if (await confirm({ title: t("acceptConfirmTitle"), message: t("acceptConfirmBody"), confirmLabel: t("accept") })) {
+                act("accept");
+              }
+            }}
+            disabled={busy}
+            variant="accent"
+          >
             {t("accept")}
           </Button>
           <Button onClick={() => act("revision")} disabled={busy} variant="outline">

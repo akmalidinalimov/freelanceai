@@ -237,7 +237,27 @@ export default async function OrderPage({
             <div className="rounded-2xl border border-[hsl(var(--violet))]/35 bg-[hsl(var(--violet-soft))]/50 p-5">
               <p className="text-[11px] font-bold uppercase tracking-wide text-[hsl(var(--violet))]">{t("naTag")}</p>
               <p className="mb-3 mt-1 text-base font-bold">{t(naKey)}</p>
+              {/* Disclose the silent 3-day auto-accept — otherwise the buyer's protection window
+                  closes with zero warning, undermining the whole escrow promise. */}
+              {role === "buyer" && order.status === "DELIVERED" && order.deliveredAt && (
+                <p className="mb-3 -mt-2 text-xs text-[hsl(var(--muted-foreground))]">
+                  {t("autoAcceptOn", {
+                    date: new Date(new Date(order.deliveredAt).getTime() + 3 * 86_400_000).toLocaleDateString(locale),
+                  })}
+                </p>
+              )}
               <OrderActions orderId={order.id} status={order.status} role={role} checkoutUrl={checkoutUrl} />
+            </div>
+          )}
+
+          {/* Buyer protection — the money is HELD until acceptance. Keep it visible for the whole
+              anxious wait (IN_PROGRESS/DELIVERED/REVISION/PAID), not only at checkout. */}
+          {role === "buyer" && ["PAID", "IN_PROGRESS", "DELIVERED", "REVISION"].includes(order.status) && (
+            <div className="rounded-2xl border border-[hsl(var(--success))]/30 bg-[hsl(var(--success-soft))]/50 p-4 text-sm">
+              <p className="flex items-center gap-2 font-semibold text-[hsl(var(--success))]">
+                <span aria-hidden>🛡</span> {t("protectHeld")}
+              </p>
+              <p className="mt-1 text-[hsl(var(--muted-foreground))]">{t("protectHeldBody")}</p>
             </div>
           )}
 

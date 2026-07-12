@@ -497,6 +497,7 @@ async function listPublicGigsUncached(opts: GigFilters = {}) {
           name: true,
           photoUrl: true,
           image: true,
+          kycStatus: true, // gate the card's "verified" tick on REAL KYC (parity with gig detail)
           sellerProfile: { select: { ratingAvg: true, ratingCount: true, level: true } },
         },
       },

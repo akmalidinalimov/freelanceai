@@ -520,7 +520,8 @@
     "gs_ACTIVE": "Live",
     "gs_PAUSED": "Paused",
     "gs_REJECTED": "Rejected",
-    "noGigsCta": "Create your first gig with AI in a couple of taps."
+    "noGigsCta": "Create your first gig with AI in a couple of taps.",
+    "verified": "Verified"
   },
   "Order": {
     "bannerRevision": "Revision in progress",
@@ -597,7 +598,12 @@
     },
     "goToOrder": "To order",
     "andMore": "and {count} more — in the table below",
-    "errorRetry": "Your selections are saved — please try again."
+    "errorRetry": "Your selections are saved — please try again.",
+    "autoAcceptOn": "Auto-accepts on {date} if you don't respond.",
+    "protectHeld": "Your payment is protected",
+    "protectHeldBody": "We hold it safely — the seller is paid only after you accept the delivery.",
+    "acceptConfirmTitle": "Accept the delivery?",
+    "acceptConfirmBody": "This releases your payment to the seller and can't be undone. Happy with the work?"
   },
   "Review": {
     "leaveReview": "Leave a review",

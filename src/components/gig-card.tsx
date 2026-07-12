@@ -121,8 +121,11 @@ export async function GigCard({
             </span>
           )}
           <span className="truncate">@{handle}</span>
-          {gig.seller.sellerProfile && ratingCount >= 0 && gig.seller.username && (
-            <span className="grid h-[15px] w-[15px] shrink-0 place-items-center rounded-full bg-[hsl(var(--primary))] text-[0.6rem] text-white">
+          {gig.seller.kycStatus === "VERIFIED" && gig.seller.username && (
+            <span
+              title={tg("verified")}
+              className="grid h-[15px] w-[15px] shrink-0 place-items-center rounded-full bg-[hsl(var(--primary))] text-[0.6rem] text-white"
+            >
               ✓
             </span>
           )}
