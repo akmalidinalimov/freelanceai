@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { SPECIALIZATIONS, specLabel, specBySlug } from "@/lib/specializations";
 import { computeSpecEvidence } from "@/lib/niche-evidence";
 import { parseIntentWithClaude } from "@/server/services/intent-ai";
+import { foldToLatin } from "@/lib/translit";
 import { embedQuery, semanticCandidates } from "@/server/services/embeddings";
 import { PUBLIC_SELLER_USER, PUBLIC_GIG_SELLER } from "@/server/services/seller-visibility";
 
@@ -39,10 +40,11 @@ export interface MatchResult {
 
 const LEVEL_RANK: Record<string, number> = { NEW: 0, LEVEL_1: 1, LEVEL_2: 2, TOP_RATED: 3 };
 
-/** Lowercase + strip Uzbek apostrophe variants (oʻyin/o'yin → oyin) so queries match the
- * apostrophe-less taxonomy synonyms, and Cyrillic/Latin both normalize consistently. */
+/** Lowercase + fold Cyrillic→Latin (Uzbek is written in both scripts) + strip apostrophe
+ * variants (oʻyin/o'yin → oyin), so a query in EITHER script matches the taxonomy synonyms and
+ * each other. Latin input is unchanged; a Cyrillic query now reaches Latin content/synonyms. */
 function normalize(s: string): string {
-  return s.toLowerCase().replace(/['`ʻʼ‘’]/g, "");
+  return foldToLatin(s.toLowerCase()).replace(/['`ʻʼ‘’]/g, "");
 }
 
 /**

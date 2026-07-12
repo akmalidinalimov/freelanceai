@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, User } from "@prisma/client";
 import { uniqueSlug } from "@/lib/slug";
+import { foldToLatin } from "@/lib/translit";
 import { audit } from "@/lib/audit";
 import { stripContactInfo } from "@/lib/sanitize";
 import { Errors } from "@/lib/api";
@@ -431,24 +432,37 @@ function listFeaturedGigsUncached(take = 8) {
 
 /** Fuzzy (typo-tolerant) text match via pg_trgm; falls back to ILIKE if trigram is unavailable. */
 async function fuzzyTextWhere(q: string): Promise<Prisma.GigWhereInput> {
+  // Cross-script: match the query AND its Cyrillic→Latin fold. Uzbek is written in both scripts,
+  // so a Cyrillic query ("дизайн") reaches Latin content via `qf`, while the raw `q` still reaches
+  // Cyrillic content — neither direction regresses. When already Latin, qf === q (a harmless dup).
+  const qf = foldToLatin(q.toLowerCase());
+  const forms = Array.from(new Set([q, qf]));
   const ilike: Prisma.GigWhereInput = {
-    OR: [
-      { title: { contains: q, mode: "insensitive" } },
-      { description: { contains: q, mode: "insensitive" } },
-      { tags: { has: q.toLowerCase() } },
-    ],
+    OR: forms.flatMap((f) => [
+      { title: { contains: f, mode: "insensitive" } },
+      { description: { contains: f, mode: "insensitive" } },
+      { tags: { has: f.toLowerCase() } },
+    ]),
   };
   try {
     const like = `%${q}%`;
+    const likeF = `%${qf}%`;
+    const qfTag = qf.toLowerCase();
+    const qTag = q.toLowerCase();
     const rows = await prisma.$queryRaw<{ id: string }[]>`
       SELECT g.id FROM "Gig" g
       JOIN "User" u ON u.id = g."sellerId" AND u."isSeller" = true AND u.status = 'ACTIVE'
       JOIN "SellerProfile" sp ON sp."userId" = g."sellerId" AND sp."approvalStatus" = 'APPROVED'
       WHERE g.status = 'ACTIVE' AND g."deletedAt" IS NULL
-        AND (word_similarity(${q}, g.title) >= 0.3 OR word_similarity(${q}, g.description) >= 0.3
+        AND (word_similarity(${qf}, g.title) >= 0.3 OR word_similarity(${qf}, g.description) >= 0.3
+             OR word_similarity(${q}, g.title) >= 0.3 OR word_similarity(${q}, g.description) >= 0.3
              OR g.title ILIKE ${like} OR g.description ILIKE ${like}
-             OR ${q.toLowerCase()} = ANY(g.tags))
-      ORDER BY GREATEST(word_similarity(${q}, g.title), word_similarity(${q}, g.description)) DESC
+             OR g.title ILIKE ${likeF} OR g.description ILIKE ${likeF}
+             OR ${qfTag} = ANY(g.tags) OR ${qTag} = ANY(g.tags))
+      ORDER BY GREATEST(
+        word_similarity(${qf}, g.title), word_similarity(${q}, g.title),
+        word_similarity(${qf}, g.description), word_similarity(${q}, g.description)
+      ) DESC
       LIMIT 200`;
     return { id: { in: rows.map((r) => r.id) } };
   } catch {
