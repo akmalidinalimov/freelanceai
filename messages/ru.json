@@ -518,7 +518,8 @@
     "gs_PENDING_REVIEW": "На проверке",
     "gs_ACTIVE": "Активно",
     "gs_PAUSED": "Приостановлено",
-    "gs_REJECTED": "Отклонено"
+    "gs_REJECTED": "Отклонено",
+    "noGigsCta": "Создайте первое объявление с AI в пару кликов."
   },
   "Order": {
     "bannerRevision": "Идёт доработка",

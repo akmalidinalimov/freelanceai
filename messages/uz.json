@@ -518,7 +518,8 @@
     "gs_PENDING_REVIEW": "Tekshiruvda",
     "gs_ACTIVE": "Faol",
     "gs_PAUSED": "To'xtatilgan",
-    "gs_REJECTED": "Rad etilgan"
+    "gs_REJECTED": "Rad etilgan",
+    "noGigsCta": "AI yordamida bir necha tugmada birinchi e'loningizni yarating."
   },
   "Order": {
     "bannerRevision": "Tahrir jarayonda",

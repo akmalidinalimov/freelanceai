@@ -518,7 +518,8 @@
     "gs_PENDING_REVIEW": "Under review",
     "gs_ACTIVE": "Live",
     "gs_PAUSED": "Paused",
-    "gs_REJECTED": "Rejected"
+    "gs_REJECTED": "Rejected",
+    "noGigsCta": "Create your first gig with AI in a couple of taps."
   },
   "Order": {
     "bannerRevision": "Revision in progress",

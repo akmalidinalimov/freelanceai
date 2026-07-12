@@ -289,7 +289,17 @@ export default async function SellerDashboardPage({
           </Link>
         </div>
         {gigs.length === 0 ? (
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">{tg("noGigs")}</p>
+          <Link
+            href="/dashboard/seller/gigs/new"
+            className="flex items-center gap-3 rounded-2xl border border-dashed border-[hsl(var(--primary))]/50 bg-[hsl(var(--primary))]/[0.05] p-4 transition-colors hover:bg-[hsl(var(--primary))]/[0.1]"
+          >
+            <span aria-hidden className="text-xl">✨</span>
+            <span className="flex flex-col">
+              <span className="text-sm font-semibold">{tg("noGigs")}</span>
+              <span className="text-sm text-[hsl(var(--muted-foreground))]">{tg("noGigsCta")}</span>
+            </span>
+            <span className="ml-auto text-[hsl(var(--muted-foreground))]" aria-hidden>→</span>
+          </Link>
         ) : (
           <ul className="divide-y divide-[hsl(var(--border))]">
             {gigs.map((g) => {
