@@ -3,6 +3,7 @@ import { Star, Clock, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { coverVariant } from "@/lib/cover-variant";
 import { VerifiedBadge } from "@/components/verified-badge";
+import { Avatar } from "@/components/ui/avatar";
 import { GigCoverVideo } from "@/components/gig-cover-video";
 import type { GigMatch } from "@/server/services/match";
 
@@ -115,14 +116,7 @@ export async function SearchGigCard({ match: m }: { match: GigMatch }) {
 
         {/* Seller trust row */}
         <div className="mt-1 flex items-center gap-2">
-          {m.seller.avatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.seller.avatar} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
-          ) : (
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/15 text-[10px] font-bold text-[hsl(var(--primary-ink))]">
-              {m.seller.name.slice(0, 1).toUpperCase()}
-            </span>
-          )}
+          <Avatar src={m.seller.avatar} name={m.seller.name} className="h-6 w-6 text-[10px]" />
           <span className="truncate text-sm text-[hsl(var(--muted-foreground))]">{m.seller.name}</span>
           {m.seller.verified && <VerifiedBadge label={tp("verified")} />}
           {m.seller.ratingCount > 0 && (

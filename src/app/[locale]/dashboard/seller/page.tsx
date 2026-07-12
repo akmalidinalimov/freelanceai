@@ -8,10 +8,9 @@ import { listSellerOrders, autoCompleteDeliveredOrders } from "@/server/services
 import { getSellerEarnings } from "@/server/services/payments";
 import { getSellerStats, getSellerRevenueSeries } from "@/server/services/analytics";
 import { RevenueTrend } from "@/components/revenue-trend";
-import { getUserBadges, computeCompleteness } from "@/server/services/gamification";
+import { getUserBadges, computeCompleteness, COMPLETENESS_ITEMS } from "@/server/services/gamification";
 import { GamificationStrip } from "@/components/gamification-strip";
 import { myWeeklyRank } from "@/server/services/engagement";
-import { getOwnProfile } from "@/server/services/profile";
 import { getApprovalState } from "@/server/services/seller-approval";
 import { SellerApprovalBanner } from "@/components/seller-approval-banner";
 import { SellerEarnMore } from "@/components/seller-earn-more";
@@ -37,6 +36,7 @@ export default async function SellerDashboardPage({
     myWeeklyRank(user.id).catch(() => null),
   ]);
   const t = await getTranslations("Dash");
+  const tgam = await getTranslations("Gamification");
   const tg = await getTranslations("Gig");
   const to = await getTranslations("Order");
   const ta = await getTranslations("Admin");
@@ -50,25 +50,33 @@ export default async function SellerDashboardPage({
   const earnings = await getSellerEarnings(user.id);
   const stats = await getSellerStats(user.id);
   const revenue = await getSellerRevenueSeries(user.id);
-  const profile = await getOwnProfile(user.id);
   const approval = await getApprovalState(user.id);
 
   const firstName = user.firstName || user.name || "";
   const level = xpLevel(user.xp, locale);
 
-  // Onboarding checklist (computed from existing data; hidden once complete).
-  const checklist = [
-    { key: "profile", done: Boolean(profile?.headline || profile?.bio), href: "/dashboard/seller/profile" },
-    {
-      key: "portfolio",
-      done: Boolean((profile?.portfolio?.length ?? 0) > 0 || profile?.telegramChannel || profile?.instagramUserId),
-      href: "/dashboard/seller/portfolio",
-    },
-    { key: "gig", done: gigs.length > 0, href: "/dashboard/seller/gigs/new" },
-    { key: "active", done: gigs.some((g) => g.status === "ACTIVE"), href: "/dashboard/seller" },
-    { key: "sale", done: stats.completed > 0, href: "/dashboard/seller" },
-  ];
-  const onboardingComplete = checklist.every((c) => c.done);
+  // ONE profile-strength checklist, derived from computeCompleteness (the single source of
+  // truth) so it can't disagree with the % meter — and it now surfaces payout/KYC/phone, which
+  // used to be stranded in Settings, disconnected from any checklist. Each item links to where
+  // it's fixed. `missing` drives done/not-done; labels reuse the Gamification.missing_* keys.
+  const CHECKLIST_LINKS: Record<string, string> = {
+    avatar: "/dashboard/seller/profile",
+    headline: "/dashboard/seller/profile",
+    bio: "/dashboard/seller/profile",
+    specializations: "/dashboard/seller/profile",
+    portfolio: "/dashboard/seller/portfolio",
+    activeGig: "/dashboard/seller/gigs/new",
+    payout: "/dashboard/settings",
+    kyc: "/dashboard/settings",
+    phone: "/dashboard/settings",
+  };
+  const missingSet = new Set(completeness?.missing ?? []);
+  const checklist = COMPLETENESS_ITEMS.map((key) => ({
+    key,
+    done: !missingSet.has(key),
+    href: CHECKLIST_LINKS[key] ?? "/dashboard/seller",
+  }));
+  const onboardingComplete = (completeness?.missing.length ?? 0) === 0;
 
   // --- Focus: what needs the seller right now ---
   const needDelivery = orders.filter((o) => o.status === "IN_PROGRESS" || o.status === "REVISION");
@@ -183,10 +191,10 @@ export default async function SellerDashboardPage({
                   {c.done ? "✓" : ""}
                 </span>
                 {c.done ? (
-                  <span className="text-[hsl(var(--muted-foreground))] line-through">{t(`ck_${c.key}`)}</span>
+                  <span className="text-[hsl(var(--muted-foreground))] line-through">{tgam(`missing_${c.key}`)}</span>
                 ) : (
                   <Link href={c.href} className="text-[hsl(var(--primary-ink))] hover:underline">
-                    {t(`ck_${c.key}`)}
+                    {tgam(`missing_${c.key}`)}
                   </Link>
                 )}
               </li>

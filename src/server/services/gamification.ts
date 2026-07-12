@@ -97,7 +97,7 @@ export interface Completeness {
   missing: string[]; // catalog keys of missing items (UI localizes)
 }
 
-const COMPLETENESS_ITEMS = [
+export const COMPLETENESS_ITEMS = [
   "avatar",
   "headline",
   "bio",

@@ -2,6 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { specLabel } from "@/lib/specializations";
 import { VerifiedBadge } from "@/components/verified-badge";
+import { Avatar } from "@/components/ui/avatar";
 import { Stars } from "@/components/stars";
 import { cardClass } from "@/components/ui/card";
 import type { BrowseCreator } from "@/server/services/browse";
@@ -13,14 +14,7 @@ export async function CreatorCard({ creator }: { creator: BrowseCreator }) {
   const inner = (
     <div className={cardClass(true, "flex h-full flex-col p-4")}>
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(var(--primary))]/20 to-[hsl(var(--accent))]/20 text-lg font-bold text-[hsl(var(--primary-ink))]">
-          {creator.avatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={creator.avatar} alt="" className="h-full w-full object-cover" />
-          ) : (
-            creator.name.slice(0, 1).toUpperCase()
-          )}
-        </div>
+        <Avatar src={creator.avatar} name={creator.name} className="h-12 w-12 rounded-xl text-lg" />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="truncate font-semibold">{creator.name}</span>
