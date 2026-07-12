@@ -3,6 +3,10 @@
 Central Asia's marketplace for AI creators — a Fiverr-style platform for buying and
 selling AI-generated creative work (video, images), built Uzbekistan-first.
 
+> **Cloning to continue?** Read [`docs/CONTINUE-HERE.md`](docs/CONTINUE-HERE.md) first —
+> setup, which secret files to bring, current state, the open deploy-freshness issue to
+> resume on, and pending work.
+
 > Full product/architecture plan: see `~/.claude/plans/i-m-reaching-out-about-humming-rivest.md`.
 
 ## Stack
