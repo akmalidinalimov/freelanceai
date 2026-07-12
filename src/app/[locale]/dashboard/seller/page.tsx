@@ -173,7 +173,7 @@ export default async function SellerDashboardPage({
         state={approval}
         pendingGigCount={gigs.filter((g) => g.status === "PENDING_REVIEW").length}
       />
-      {approval.status === "APPROVED" && <SellerEarnMore gigs={gigs} />}
+      {approval.status === "APPROVED" && <SellerEarnMore gigs={gigs} sellerId={user.id} />}
 
       {!onboardingComplete && (
         <div className="mb-5 rounded-xl border border-[hsl(var(--primary))]/40 bg-[hsl(var(--primary))]/5 p-5">

@@ -356,7 +356,8 @@
     "revenuePeriod": "Last {n} weeks",
     "earnMoreTitle": "Earn more",
     "earnAddExtras": "{count} of your gigs have no add-ons. Extras (faster delivery, source files) earn more on every order.",
-    "earnAddTiers": "{count} of your gigs have fewer than 3 packages. Add tiers — buyers often pick the higher one."
+    "earnAddTiers": "{count} of your gigs have fewer than 3 packages. Add tiers — buyers often pick the higher one.",
+    "earnRespond": "Reply to messages fast — quick responders rank higher and win more orders."
   },
   "Gig": {
     "createTitle": "Create a gig",

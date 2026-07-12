@@ -356,7 +356,8 @@
     "revenuePeriod": "Soʻnggi {n} hafta",
     "earnMoreTitle": "Ko'proq daromad oling",
     "earnAddExtras": "{count} ta e'loningizda qo'shimcha xizmat yo'q. Qo'shimchalar (tezroq yetkazish, manba fayllar) har buyurtmadan ko'proq daromad keltiradi.",
-    "earnAddTiers": "{count} ta e'loningizda Standard/Premium paket yo'q. Paketlar qo'shsangiz, mijozlar qimmatroqini tanlaydi."
+    "earnAddTiers": "{count} ta e'loningizda Standard/Premium paket yo'q. Paketlar qo'shsangiz, mijozlar qimmatroqini tanlaydi.",
+    "earnRespond": "Xabarlarga tez javob bering — tez javob beruvchilar yuqori o'rinda turadi va ko'proq buyurtma oladi."
   },
   "Gig": {
     "createTitle": "Yangi xizmat yaratish",

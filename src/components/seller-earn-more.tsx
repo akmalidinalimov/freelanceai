@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { prisma } from "@/lib/prisma";
 
 interface GigLite {
   id: string;
@@ -9,12 +10,13 @@ interface GigLite {
 }
 
 /**
- * "Earn more" nudge — the single highest-leverage, still-open income action for this seller,
- * derived from their real gigs. Add-ons are the biggest average-order-value lever, so a live
- * gig with no extras is the top nudge; then a gig with fewer than 3 tiers. Renders nothing when
- * there's nothing actionable, so it never nags a fully-optimized seller.
+ * "Earn more" nudge — the single highest-leverage, still-open action for this seller. Add-ons
+ * are the biggest average-order-value lever, so a live gig with no extras is the top nudge; then
+ * a gig with fewer than 3 tiers; then, once the gigs are optimized, a response-time tip (fast
+ * responders rank higher and convert more — a lever a beginner can pull without any reviews).
+ * Renders nothing when there's nothing actionable, so it never nags a fully-optimized seller.
  */
-export async function SellerEarnMore({ gigs }: { gigs: GigLite[] }) {
+export async function SellerEarnMore({ gigs, sellerId }: { gigs: GigLite[]; sellerId: string }) {
   const t = await getTranslations("Dash");
   const active = gigs.filter((g) => g.status === "ACTIVE");
   if (active.length === 0) return null;
@@ -30,6 +32,15 @@ export async function SellerEarnMore({ gigs }: { gigs: GigLite[] }) {
   } else if (fewTiers.length > 0) {
     body = t("earnAddTiers", { count: fewTiers.length });
     href = `/dashboard/seller/gigs/${fewTiers[0].id}/edit`;
+  } else {
+    // Gigs are optimized — coach the one remaining lever a review-less seller controls.
+    const sp = await prisma.sellerProfile
+      .findUnique({ where: { userId: sellerId }, select: { responseMins: true } })
+      .catch(() => null);
+    if (sp && (sp.responseMins == null || sp.responseMins > 60)) {
+      body = t("earnRespond");
+      href = "/messages";
+    }
   }
   if (!body) return null;
 
