@@ -49,9 +49,25 @@ export function OrderPanel({
   // Restore the tier a guest had picked before being sent through login
   // (?tier=… is round-tripped via the login `next` param). Post-mount to
   // keep server and first client render identical (no hydration mismatch).
+  // Chosen extras round-trip via a localStorage stash (written just before the
+  // login redirect) — the URL param stays small and the typing-free choices survive.
   useEffect(() => {
     const wanted = new URLSearchParams(window.location.search).get("tier");
     if (wanted && packages.some((p) => p.tier === wanted)) setTier(wanted as Pkg["tier"]);
+    if (viewer === "buyer") {
+      try {
+        const key = `order-draft:${gigId}`;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          localStorage.removeItem(key); // one-shot: consume it whether or not it applies
+          const d = JSON.parse(raw) as { extras?: string[] };
+          const valid = (d.extras ?? []).filter((id) => extras.some((e) => e.id === id));
+          if (valid.length) setChosenExtras(new Set(valid));
+        }
+      } catch {
+        /* corrupt/blocked storage — the buyer just re-ticks extras */
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [requirements, setRequirements] = useState("");
@@ -80,6 +96,14 @@ export function OrderPanel({
     if (viewer === "guest") {
       // Round-trip the gig AND the chosen tier through login so the buyer
       // returns exactly where they left off (critique P1: context loss).
+      // Extras can't ride the URL comfortably — stash them for the return visit.
+      if (chosenExtras.size > 0) {
+        try {
+          localStorage.setItem(`order-draft:${gigId}`, JSON.stringify({ extras: [...chosenExtras] }));
+        } catch {
+          /* best-effort */
+        }
+      }
       const next = encodeURIComponent(`${window.location.pathname}?tier=${tier}`);
       window.location.href = `/${locale}/login?next=${next}`;
       return;
