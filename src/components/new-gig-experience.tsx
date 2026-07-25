@@ -64,8 +64,8 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
   const [draft, setDraft] = useState<GigInitial | undefined>(undefined);
 
   // Wizard field state — one required sentence; price is optional (server suggests the
-  // category's market median when skipped).
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
+  // category's market median when skipped) and the category is inferred from the brief
+  // (the seller can still adjust it on the prefilled form).
   const [brief, setBrief] = useState("");
   const [days, setDays] = useState("3");
   const [price, setPrice] = useState("");
@@ -90,14 +90,13 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
           service: brief.trim(),
           days: Math.max(1, parseInt(days, 10) || 3),
           ...(Number.isFinite(priceNum) && priceNum > 0 ? { priceUzs: Math.max(1000, priceNum) } : {}),
-          ...(categoryId ? { categoryId } : {}),
           differentiator: differentiator.trim() || undefined,
           locale,
         }),
       });
       const j = await r.json();
       if (!j.ok) return setError(j.error?.message ?? t("aiError"));
-      setDraft(toInitial(j.data.draft as GigDraft, categoryId));
+      setDraft(toInitial(j.data.draft as GigDraft, (j.data.categoryId as string | null) ?? ""));
       setMode("form");
     } catch {
       setError(t("aiError"));
@@ -117,17 +116,6 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
         <h2 className="font-display text-lg font-bold">✨ {t("aiWizardTitle")}</h2>
         <p className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">{t("aiWizardIntro")}</p>
       </div>
-
-      <label className="block space-y-1.5">
-        <span className="text-sm font-medium">{t("aiCategory")}</span>
-        <select className={field} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
 
       <label className="block space-y-1.5">
         <span className="text-sm font-medium">{t("aiBrief")}</span>

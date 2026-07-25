@@ -45,6 +45,8 @@ export interface GigDraft {
   packages: DraftPackage[]; // exactly 3, monotonic price
   extras: { title: string; priceUzs: number }[];
   requirementPrompts: string[];
+  /** Model-picked category (validated against the allowed slugs); undefined = no confident pick. */
+  categorySlug?: string;
 }
 
 const clampInt = (n: unknown, min: number, max: number, fallback: number): number => {
@@ -58,7 +60,11 @@ const clampStr = (s: unknown, max: number): string => (typeof s === "string" ? s
  * priced tiers, prices ≥ 1000, days ≥ 1, bounded lengths — synthesizing sane values from the
  * seller's base answers when the model omits or mangles a field. Pure → unit-tested.
  */
-export function clampGigDraft(raw: Partial<GigDraft> | null | undefined, input: GigDraftInput): GigDraft {
+export function clampGigDraft(
+  raw: Partial<GigDraft> | null | undefined,
+  input: GigDraftInput,
+  allowedCategorySlugs?: string[]
+): GigDraft {
   const base = Math.max(1000, clampInt(input.priceUzs, 1000, 1_000_000_000, 1000));
   const baseDays = clampInt(input.days, 1, 365, 3);
 
@@ -102,6 +108,12 @@ export function clampGigDraft(raw: Partial<GigDraft> | null | undefined, input: 
     .filter(Boolean)
     .slice(0, 8);
 
+  // Category only counts when it is one of OUR slugs — a hallucinated slug is dropped.
+  const categorySlug =
+    typeof raw?.categorySlug === "string" && allowedCategorySlugs?.includes(raw.categorySlug)
+      ? raw.categorySlug
+      : undefined;
+
   return {
     title: clampStr(raw?.title, 80) || clampStr(input.service, 80),
     description: clampStr(raw?.description, 2000) || clampStr(input.deliverable, 2000),
@@ -109,6 +121,7 @@ export function clampGigDraft(raw: Partial<GigDraft> | null | undefined, input: 
     packages,
     extras,
     requirementPrompts,
+    ...(categorySlug ? { categorySlug } : {}),
   };
 }
 
@@ -134,12 +147,18 @@ function spendAllowed(): boolean {
 const LANG = { uz: "Uzbek (Latin script)", ru: "Russian", en: "English" } as const;
 
 /** Generate a structured gig draft with Claude. Returns null on any failure (caller falls back). */
-export async function generateGigDraft(input: GigDraftInput, locale: string): Promise<GigDraft | null> {
+export async function generateGigDraft(
+  input: GigDraftInput,
+  locale: string,
+  /** Marketplace categories (slug + localized label) — lets the model classify the gig too. */
+  categories?: { slug: string; label: string }[]
+): Promise<GigDraft | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
   if (!spendAllowed()) return null;
 
   const lang = LANG[(locale as keyof typeof LANG) in LANG ? (locale as keyof typeof LANG) : "uz"];
+  const catSlugs = categories?.map((c) => c.slug) ?? [];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -155,7 +174,12 @@ export async function generateGigDraft(input: GigDraftInput, locale: string): Pr
           `Write EVERYTHING in ${lang}, in a plain, simple, honest register — no marketing hype, no words the seller couldn't defend to a buyer. ` +
           `Produce a clean 3-tier package ladder (Basic/Standard/Premium) with rising price and value. ` +
           `Prices are in Uzbek soum (UZS); keep them realistic and monotonically increasing. ` +
-          `Suggest 5-8 short search tags and 2-4 upsell extras and 2-4 short buyer requirement questions.`,
+          `Suggest 5-8 short search tags and 2-4 upsell extras and 2-4 short buyer requirement questions.` +
+          (categories?.length
+            ? ` Also pick the single best-matching categorySlug for this gig from: ${categories
+                .map((c) => `${c.slug} (${c.label})`)
+                .join(", ")}.`
+            : ""),
         tools: [
           {
             name: "draft_gig",
@@ -190,6 +214,7 @@ export async function generateGigDraft(input: GigDraftInput, locale: string): Pr
                   },
                 },
                 requirementPrompts: { type: "array", items: { type: "string" } },
+                ...(catSlugs.length ? { categorySlug: { type: "string", enum: catSlugs } } : {}),
               },
               required: ["title", "description", "packages"],
             },
@@ -213,7 +238,7 @@ export async function generateGigDraft(input: GigDraftInput, locale: string): Pr
     const data = (await res.json()) as { content?: { type: string; name?: string; input?: unknown }[] };
     const tool = data.content?.find((c) => c.type === "tool_use" && c.name === "draft_gig");
     if (!tool?.input) return null;
-    return clampGigDraft(tool.input as Partial<GigDraft>, input);
+    return clampGigDraft(tool.input as Partial<GigDraft>, input, catSlugs);
   } catch (e) {
     logger.warn("gig_ai_draft_failed", { error: e instanceof Error ? e.message : String(e) });
     return null;

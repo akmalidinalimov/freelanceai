@@ -47,12 +47,49 @@ async function suggestBasePriceUzs(categoryId?: string): Promise<number> {
   }
 }
 
+interface Cat {
+  id: string;
+  slug: string;
+  nameUz: string;
+  nameRu: string;
+  nameEn: string;
+}
+
+/**
+ * No-AI category guess: score each category by how many of its name/slug tokens
+ * (≥4 chars) appear in the brief. Used to anchor the price median before the AI
+ * call, and as the classification fallback when the model is unavailable.
+ */
+function keywordCategory(brief: string, cats: Cat[]): Cat | null {
+  const b = brief.toLowerCase();
+  let best: Cat | null = null;
+  let bestScore = 0;
+  for (const c of cats) {
+    const tokens = [c.slug, c.nameUz, c.nameRu, c.nameEn]
+      .flatMap((n) => n.toLowerCase().split(/[^\p{L}\p{N}]+/u))
+      .filter((t) => t.length >= 4);
+    const score = new Set(tokens.filter((t) => b.includes(t))).size;
+    if (score > bestScore) {
+      bestScore = score;
+      best = c;
+    }
+  }
+  return best;
+}
+
 /** Generate a structured gig draft from a few answers. Seller-only; never publishes. */
 export const POST = defineHandler({ auth: true, schema }, async ({ user, body }) => {
   if (!user) throw Errors.unauthenticated();
   requireSeller(user);
   enforceRateLimit(`gig-ai:${user.id}`, 10, 60_000);
-  const priceUzs = body.priceUzs ?? (await suggestBasePriceUzs(body.categoryId));
+
+  const cats: Cat[] = await prisma.category
+    .findMany({ select: { id: true, slug: true, nameUz: true, nameRu: true, nameEn: true } })
+    .catch(() => []);
+  const kwCat = keywordCategory(body.service, cats);
+
+  // Price anchor: explicit seller category > keyword-guessed category > global median.
+  const priceUzs = body.priceUzs ?? (await suggestBasePriceUzs(body.categoryId ?? kwCat?.id));
   const input = {
     service: body.service,
     // The one-field brief doubles as the deliverable when none was given separately.
@@ -61,8 +98,20 @@ export const POST = defineHandler({ auth: true, schema }, async ({ user, body })
     priceUzs,
     ...(body.differentiator ? { differentiator: body.differentiator } : {}),
   };
+  const locale = body.locale ?? "uz";
+  const label = ({ uz: "nameUz", ru: "nameRu", en: "nameEn" } as const)[locale];
   // Fail-open: if Claude is unavailable/over-budget, return the deterministic template draft so
   // the seller still gets a filled-in form instead of an error.
-  const draft = (await generateGigDraft(input, body.locale ?? "uz")) ?? templateGigDraft(input);
-  return ok({ draft, aiUsed: draft !== null });
+  const draft =
+    (await generateGigDraft(input, locale, cats.map((c) => ({ slug: c.slug, label: c[label] })))) ??
+    templateGigDraft(input);
+
+  // Category: the seller's explicit pick wins; else the model's validated slug; else keywords.
+  const categoryId =
+    body.categoryId ??
+    (draft.categorySlug ? (cats.find((c) => c.slug === draft.categorySlug)?.id ?? null) : null) ??
+    kwCat?.id ??
+    null;
+
+  return ok({ draft, categoryId, aiUsed: draft !== null });
 });
