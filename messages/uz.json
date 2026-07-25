@@ -219,7 +219,9 @@
   "Common": {
     "comingSoon": "Tez orada",
     "loading": "Yuklanmoqda...",
-    "deletedUser": "Oʻchirilgan foydalanuvchi"
+    "deletedUser": "Oʻchirilgan foydalanuvchi",
+    "cancel": "Bekor qilish",
+    "ok": "OK"
   },
   "Auth": {
     "loginTelegram": "Telegram orqali kirish",

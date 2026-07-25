@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 type ConfirmOpts = {
@@ -53,6 +54,7 @@ function Dialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const t = useTranslations("Common");
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
 
@@ -101,10 +103,10 @@ function Dialog({
         {opts.message && <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{opts.message}</p>}
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={onCancel}>
-            {opts.cancelLabel ?? "Cancel"}
+            {opts.cancelLabel ?? t("cancel")}
           </Button>
           <Button variant={opts.danger ? "destructive" : "default"} size="sm" onClick={onConfirm}>
-            {opts.confirmLabel ?? "OK"}
+            {opts.confirmLabel ?? t("ok")}
           </Button>
         </div>
       </div>

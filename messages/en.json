@@ -219,7 +219,9 @@
   "Common": {
     "comingSoon": "Coming soon",
     "loading": "Loading...",
-    "deletedUser": "Deleted user"
+    "deletedUser": "Deleted user",
+    "cancel": "Cancel",
+    "ok": "OK"
   },
   "Auth": {
     "loginTelegram": "Log in with Telegram",
