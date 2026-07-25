@@ -71,6 +71,21 @@ if ($Sha) { $lines += "GIT_SHA=$Sha" }
 $envStr = [string]($lines -join "`n")
 $content = [string](Get-Content "$root\deploy\docker-compose.prod.yml" -Raw)
 
+# Hostinger caps the compose `content` field at 8192 chars (hit 2026-07-26 at 8312).
+# Strip full-line comments + collapse blank runs before sending: the repo file keeps
+# its documentation, only the API payload is minified. Inline comments are left
+# untouched (safer around YAML strings).
+$stripped = New-Object System.Collections.Generic.List[string]
+$prevBlank = $false
+foreach ($l in ($content -split "`r?`n")) {
+  if ($l -match '^\s*#') { continue }
+  $isBlank = [string]::IsNullOrWhiteSpace($l)
+  if ($isBlank -and $prevBlank) { continue }
+  $stripped.Add($l); $prevBlank = $isBlank
+}
+$content = [string]($stripped -join "`n")
+if ($content.Length -gt 8192) { throw "compose still exceeds the 8192-char API cap ($($content.Length)) - trim deploy/docker-compose.prod.yml" }
+
 # Call the Hostinger API (replaces the existing 'freelanceai' project)
 $obj = [pscustomobject]@{ project_name = "freelanceai"; content = $content; environment = $envStr }
 $bytes = [System.Text.Encoding]::UTF8.GetBytes(($obj | ConvertTo-Json -Compress -Depth 5))
