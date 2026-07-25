@@ -97,7 +97,6 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
     } catch {
       /* blocked storage — the seller just retypes */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     const id = setTimeout(() => {
@@ -109,7 +108,6 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
       }
     }, 400);
     return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brief, days, price, differentiator]);
 
   const field = "h-11 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
