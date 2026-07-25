@@ -58,7 +58,7 @@ export default async function LoginPage({
         </p>
       )}
 
-      <TelegramDeepLinkLogin locale={locale} />
+      <TelegramDeepLinkLogin locale={locale} next={next ?? undefined} />
 
       <div className="flex w-full items-center gap-3 text-xs text-[hsl(var(--muted-foreground))]">
         <span className="h-px flex-1 bg-[hsl(var(--border))]" />

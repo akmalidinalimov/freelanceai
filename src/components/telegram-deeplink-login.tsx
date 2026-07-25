@@ -11,8 +11,10 @@ type Phase = "init" | "ready" | "waiting" | "error";
  * Bot deep-link login. Fetches a one-time token on mount, opens the Telegram bot
  * deep link on click, and polls until the bot confirms — then redirects. No phone
  * number, no popup credential entry: the user just taps Start in Telegram.
+ * `next` is a pre-validated locale-prefixed internal path (see login page), so the
+ * visitor returns to where they were headed (e.g. the gig they wanted to order).
  */
-export function TelegramDeepLinkLogin({ locale }: { locale: string }) {
+export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?: string }) {
   const t = useTranslations("Auth");
   const [phase, setPhase] = useState<Phase>("init");
   const [deepLink, setDeepLink] = useState<string>();
@@ -66,7 +68,7 @@ export function TelegramDeepLinkLogin({ locale }: { locale: string }) {
             redirect: false,
           });
           if (res && !res.error) {
-            window.location.href = `/${locale}`;
+            window.location.href = next ?? `/${locale}`;
           } else {
             setPhase("error");
           }
