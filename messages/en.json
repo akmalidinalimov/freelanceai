@@ -594,6 +594,10 @@
     "deliver": "Deliver",
     "accept": "Accept & complete",
     "requestRevision": "Request revision",
+    "revisionTitle": "What should be changed?",
+    "revisionPh": "Be specific: what's not right, and how should it look?",
+    "revisionSend": "Send revision request",
+    "autoAcceptNote": "If you don't respond, the order is accepted automatically on {date}.",
     "cancel": "Cancel order",
     "status": {
       "PENDING_PAYMENT": "Pending payment",

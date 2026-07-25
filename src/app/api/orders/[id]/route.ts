@@ -49,7 +49,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         await acceptOrder(id, user);
         break;
       case "revision":
-        await requestRevision(id, user);
+        await requestRevision(id, user, body.message ?? "");
         break;
       case "cancel":
         await cancelOrder(id, user);

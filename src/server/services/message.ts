@@ -75,6 +75,34 @@ export async function getOrderConversationId(orderId: string) {
   return convo.id;
 }
 
+/**
+ * Post a note into an order's conversation WITHOUT the per-message Telegram push —
+ * for lifecycle actions (e.g. a revision request) whose caller sends its own, more
+ * specific notification. Sanitized like any chat message; realtime SSE still fires.
+ */
+export async function postOrderNoteQuiet(orderId: string, sender: User, text: string): Promise<void> {
+  const body = stripContactInfo(text.trim()).text.slice(0, 2000);
+  if (!body) return;
+  const conversationId = await getOrderConversationId(orderId);
+  const message = await prisma.message.create({
+    data: { conversationId, senderId: sender.id, body, fileUrls: [] },
+    include: { sender: SENDER_SELECT },
+  });
+  publishMessage({
+    id: message.id,
+    conversationId,
+    body: message.body,
+    fileUrls: message.fileUrls,
+    senderId: message.senderId,
+    sender: {
+      firstName: message.sender.firstName,
+      name: message.sender.name,
+      username: message.sender.username,
+    },
+    createdAt: message.createdAt.toISOString(),
+  });
+}
+
 /** Find (or create) the direct buyer↔seller conversation; returns its id. Can't contact yourself. */
 export async function getOrCreateDirectConversation(buyerId: string, sellerId: string, gigId?: string) {
   if (buyerId === sellerId) throw Errors.forbidden("You cannot contact yourself");

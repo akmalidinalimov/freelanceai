@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
-import { getOrderForUser } from "@/server/services/order";
+import { getOrderForUser, AUTO_COMPLETE_DAYS } from "@/server/services/order";
 import { getOrderReview, getOrderBuyerReview, getBuyerRating } from "@/server/services/review";
 import { getOrderConversationId, listConversationMessages } from "@/server/services/message";
 import { formatUzs } from "@/lib/utils";
@@ -249,7 +249,17 @@ export default async function OrderPage({
                   })}
                 </p>
               )}
-              <OrderActions orderId={order.id} status={order.status} role={role} checkoutUrl={checkoutUrl} />
+              <OrderActions
+                orderId={order.id}
+                status={order.status}
+                role={role}
+                checkoutUrl={checkoutUrl}
+                autoCompleteAt={
+                  order.status === "DELIVERED" && order.deliveredAt
+                    ? new Date(order.deliveredAt.getTime() + AUTO_COMPLETE_DAYS * 24 * 60 * 60 * 1000).toISOString()
+                    : null
+                }
+              />
             </div>
           )}
 

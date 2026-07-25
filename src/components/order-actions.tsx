@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { GalleryUpload } from "@/components/gallery-upload";
@@ -24,18 +24,24 @@ export function OrderActions({
   status,
   role,
   checkoutUrl,
+  autoCompleteAt,
 }: {
   orderId: string;
   status: Status;
   role: Role;
   checkoutUrl?: string | null;
+  /** ISO date when a DELIVERED order auto-accepts — shown so escrow release never surprises. */
+  autoCompleteAt?: string | null;
 }) {
   const t = useTranslations("Order");
+  const format = useFormatter();
   const router = useRouter();
   const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<string[]>([]);
+  const [revisionOpen, setRevisionOpen] = useState(false);
+  const [revisionNote, setRevisionNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function act(action: string, body: Record<string, unknown> = {}) {
@@ -118,22 +124,57 @@ export function OrderActions({
       )}
 
       {isBuyer && status === "DELIVERED" && (
-        <div className="flex flex-wrap gap-3">
-          <Button
-            onClick={async () => {
-              // Accepting releases the held payment and is irreversible — confirm first.
-              if (await confirm({ title: t("acceptConfirmTitle"), message: t("acceptConfirmBody"), confirmLabel: t("accept") })) {
-                act("accept");
-              }
-            }}
-            disabled={busy}
-            variant="accent"
-          >
-            {t("accept")}
-          </Button>
-          <Button onClick={() => act("revision")} disabled={busy} variant="outline">
-            {t("requestRevision")}
-          </Button>
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={async () => {
+                // Accepting releases the held payment and is irreversible — confirm first.
+                if (await confirm({ title: t("acceptConfirmTitle"), message: t("acceptConfirmBody"), confirmLabel: t("accept") })) {
+                  act("accept");
+                }
+              }}
+              disabled={busy}
+              variant="accent"
+            >
+              {t("accept")}
+            </Button>
+            <Button
+              onClick={() => setRevisionOpen((v) => !v)}
+              disabled={busy}
+              variant="outline"
+              aria-expanded={revisionOpen}
+            >
+              {t("requestRevision")}
+            </Button>
+          </div>
+          {/* A revision needs a reason — the note lands in the order chat, so the seller
+              knows exactly what to change without a "what should I fix?" round-trip. */}
+          {revisionOpen && (
+            <div className="space-y-2 rounded-xl border border-[hsl(var(--border))] p-4">
+              <p className="text-sm font-medium">{t("revisionTitle")}</p>
+              <textarea
+                value={revisionNote}
+                onChange={(e) => setRevisionNote(e.target.value)}
+                placeholder={t("revisionPh")}
+                aria-label={t("revisionTitle")}
+                maxLength={1000}
+                className="min-h-20 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
+              />
+              <Button
+                onClick={() => act("revision", { message: revisionNote.trim() })}
+                disabled={busy || !revisionNote.trim()}
+              >
+                {t("revisionSend")}
+              </Button>
+            </div>
+          )}
+          {autoCompleteAt && (
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+              {t("autoAcceptNote", {
+                date: format.dateTime(new Date(autoCompleteAt), { day: "numeric", month: "long" }),
+              })}
+            </p>
+          )}
         </div>
       )}
 

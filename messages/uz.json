@@ -594,6 +594,10 @@
     "deliver": "Topshirish",
     "accept": "Qabul qilish va yakunlash",
     "requestRevision": "Tahrir soʻrash",
+    "revisionTitle": "Nimani oʻzgartirish kerak?",
+    "revisionPh": "Aniq yozing: nima toʻgʻri kelmadi va qanday boʻlishi kerak?",
+    "revisionSend": "Soʻrovni yuborish",
+    "autoAcceptNote": "Javob bermasangiz, buyurtma {date} kuni avtomatik qabul qilinadi.",
     "cancel": "Bekor qilish",
     "status": {
       "PENDING_PAYMENT": "Toʻlov kutilmoqda",

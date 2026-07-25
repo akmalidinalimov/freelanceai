@@ -9,6 +9,7 @@ import { canTransition } from "@/lib/order-state";
 import { orderTotals, couponDiscount } from "@/lib/commission";
 import { recomputeSellerStats } from "@/server/services/profile";
 import { notifyAndPush } from "@/server/services/notification";
+import { postOrderNoteQuiet } from "@/server/services/message";
 import { findValidCoupon } from "@/server/services/coupon";
 import { issueReferralReward, consumeCreditForOrder, restoreOrderCredit } from "@/server/services/affiliate";
 import { autoSettleFreeOrderIfEnabled, freeOrdersEnabled } from "@/server/services/payments";
@@ -271,7 +272,8 @@ export async function deliverOrder(orderId: string, seller: User, message: strin
   });
   await audit({ actorId: seller.id, action: "order.deliver", entity: "Order", entityId: orderId });
   await notifyAndPush(order.buyerId, "order.delivered", "Buyurtmangiz topshirildi", {
-    body: "Ijrochi ishni topshirdi — koʻrib chiqing.",
+    // Be upfront about the auto-accept window — escrow releasing "by itself" must never surprise.
+    body: `Ijrochi ishni topshirdi — koʻrib chiqing. ${AUTO_COMPLETE_DAYS} kun ichida javob boʻlmasa, buyurtma avtomatik qabul qilinadi.`,
     // One-tap actions right in the Telegram chat.
     buttons: [
       [
@@ -326,8 +328,13 @@ export async function acceptOrder(orderId: string, buyer: User) {
   if (!done) throw Errors.conflict("Order status changed — please refresh");
 }
 
-/** Buyer requests changes → REVISION. */
-export async function requestRevision(orderId: string, buyer: User) {
+/**
+ * Buyer requests changes → REVISION. The note (web UI requires one; the Telegram
+ * one-tap button sends none) lands in the order chat so the seller knows exactly
+ * what to change without a "what should I fix?" round-trip, and its first line
+ * rides the push notification.
+ */
+export async function requestRevision(orderId: string, buyer: User, message = "") {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw Errors.notFound("Order not found");
   if (order.buyerId !== buyer.id && buyer.role !== "ADMIN") throw Errors.forbidden();
@@ -337,15 +344,25 @@ export async function requestRevision(orderId: string, buyer: User) {
     data: { status: "REVISION" },
   });
   if (claimed.count === 0) throw Errors.conflict("Order status changed — please refresh");
+  const note = message.trim().slice(0, 1000);
+  if (note) {
+    // Best-effort: the transition must never fail because the chat write did.
+    await postOrderNoteQuiet(orderId, buyer, note).catch(() => {});
+  }
   await audit({ actorId: buyer.id, action: "order.revision", entity: "Order", entityId: orderId });
   await notifyAndPush(order.sellerId, "order.revision", "Oʻzgartirish soʻraldi", {
-    body: "Buyurtmachi ishga oʻzgartirish kiritishni soʻradi — batafsil buyurtmada.",
+    body: note
+      ? `"${note.length > 140 ? `${note.slice(0, 140)}…` : note}"`
+      : "Buyurtmachi ishga oʻzgartirish kiritishni soʻradi — batafsil buyurtmada.",
     link: `/orders/${orderId}`,
   });
 }
 
+/** Days a delivered order waits for the buyer before auto-accepting (shown in UI + notifications). */
+export const AUTO_COMPLETE_DAYS = 3;
+
 /** Auto-complete deliveries the buyer didn't act on after `days`. Returns the count completed. */
-export async function autoCompleteDeliveredOrders(days = 3): Promise<number> {
+export async function autoCompleteDeliveredOrders(days = AUTO_COMPLETE_DAYS): Promise<number> {
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   // Fetch the due orders first (bounded) so we can issue referral rewards per completion.
   const due = await prisma.order.findMany({
