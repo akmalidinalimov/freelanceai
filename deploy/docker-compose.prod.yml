@@ -84,6 +84,9 @@ services:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
+      # Deploy SHA surfaces in /api/health — makes "which commit is live?" answerable
+      # remotely (the CONTINUE-HERE deploy-freshness gap).
+      APP_VERSION: ${GIT_SHA:-dev}
       DATABASE_URL: "postgresql://freelanceai:${POSTGRES_PASSWORD}@db:5432/freelanceai?schema=public"
       SESSION_SECRET: ${SESSION_SECRET}
       AUTH_SECRET: ${AUTH_SECRET}
