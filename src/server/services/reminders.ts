@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { notifyAndPush } from "@/server/services/notification";
 import { tashkentDay } from "@/server/services/gamification";
+import { paymentsEnabled } from "@/lib/payments";
 
 /**
  * Order deadline reminders + post-delivery review nudges (nightly/hourly cron).
@@ -40,6 +41,22 @@ const REVIEW_NUDGE = {
   en: (t: string) => `⭐ "${t}" is done. Leave a review — it helps creators.`,
 };
 
+// Abandoned-checkout recovery (buyer-facing). {t} = gig title. Orders left in
+// PENDING_PAYMENT are auto-cancelled at 48h (expireStalePendingOrders), so the
+// "last call" fires at 36h with an honest 12-hour warning.
+const PAY_REMINDER = {
+  "1h": {
+    uz: (t: string) => `💳 "${t}" buyurtmangiz toʻlovni kutmoqda. Toʻlang — ish darhol boshlanadi.`,
+    ru: (t: string) => `💳 Заказ "${t}" ждёт оплаты. Оплатите — и работа начнётся сразу.`,
+    en: (t: string) => `💳 Your order "${t}" is waiting for payment. Pay to start the work.`,
+  },
+  lastcall: {
+    uz: (t: string) => `⏳ "${t}" buyurtmangiz 12 soatdan keyin bekor qilinadi. Hoziroq toʻlang.`,
+    ru: (t: string) => `⏳ Заказ "${t}" будет отменён через 12 часов. Оплатите сейчас.`,
+    en: (t: string) => `⏳ Your order "${t}" will be cancelled in 12 hours. Pay now to keep it.`,
+  },
+} as const;
+
 // "Don't lose your streak" — n = current streak length.
 const STREAK_RISK = {
   uz: (n: number) => `🔥 ${n} kunlik seriyangiz xavf ostida! Bugun Gigora'ga kiring va davom eting.`,
@@ -59,11 +76,47 @@ async function alreadySent(type: string, orderId: string, threshold?: string): P
   return Boolean(rows);
 }
 
-export async function sendOrderReminders(): Promise<{ deadlines: number; reviewNudges: number; streakNudges: number }> {
+export async function sendOrderReminders(): Promise<{
+  deadlines: number;
+  reviewNudges: number;
+  streakNudges: number;
+  payReminders: number;
+}> {
   const now = Date.now();
   let deadlines = 0;
   let reviewNudges = 0;
   let streakNudges = 0;
+  let payReminders = 0;
+
+  // 0) Abandoned-checkout recovery — unpaid orders nudge the buyer at 1h, then a
+  //    last call at 36h (12h before auto-cancel). Only when a real PSP is live:
+  //    in manual/free mode there is no pay button, so "pay now" would mislead.
+  if (paymentsEnabled()) {
+    const unpaid = await prisma.order.findMany({
+      where: { status: "PENDING_PAYMENT", createdAt: { lt: new Date(now - HOUR) } },
+      select: {
+        id: true,
+        buyerId: true,
+        createdAt: true,
+        buyer: { select: { locale: true } },
+        gig: { select: { title: true } },
+      },
+      take: 500,
+    });
+    for (const o of unpaid) {
+      const ageH = (now - o.createdAt.getTime()) / HOUR;
+      const threshold: keyof typeof PAY_REMINDER = ageH >= 36 ? "lastcall" : "1h";
+      if (await alreadySent("pay_reminder", o.id, threshold)) continue;
+      const loc = asLoc(o.buyer.locale);
+      await notifyAndPush(o.buyerId, "order.pay_reminder", PAY_REMINDER[threshold][loc](o.gig.title), {
+        link: `/orders/${o.id}`,
+      });
+      await prisma.activityEvent
+        .create({ data: { userId: o.buyerId, type: "pay_reminder", entityId: o.id, meta: { threshold } } })
+        .catch(() => {});
+      payReminders += 1;
+    }
+  }
 
   // 1) Deadline reminders — active, in-progress orders with a due date.
   const active = await prisma.order.findMany({
@@ -171,5 +224,5 @@ export async function sendOrderReminders(): Promise<{ deadlines: number; reviewN
   // Expired single-use login nonces (10-min TTL) — bound the replay-guard table.
   await prisma.telegramAuthNonce.deleteMany({ where: { expiresAt: { lt: new Date() } } }).catch(() => {});
 
-  return { deadlines, reviewNudges, streakNudges };
+  return { deadlines, reviewNudges, streakNudges, payReminders };
 }

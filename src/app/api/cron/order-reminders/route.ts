@@ -2,7 +2,8 @@ import { sendOrderReminders } from "@/server/services/reminders";
 
 /**
  * Order deadline reminders (2d/1d/overdue → seller) + review nudges (delivered >24h,
- * unreviewed → buyer). Every ~6h. Idempotent per (order, threshold). CRON_SECRET-guarded.
+ * unreviewed → buyer) + unpaid-order pay reminders (1h + 36h last call → buyer; only
+ * when a PSP is live). Every ~6h. Idempotent per (order, threshold). CRON_SECRET-guarded.
  */
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
