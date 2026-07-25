@@ -60,3 +60,4 @@ yarn-error.log*
 /design-pages/
 /design-assets/
 /.impeccable/
+.gstack/
