@@ -52,21 +52,21 @@ function toInitial(draft: GigDraft, categoryId: string): GigInitial {
 }
 
 /**
- * New-gig experience: offer an AI-assisted wizard (answer a few questions → a structured draft
- * generated in the seller's language) OR the blank form. The wizard hands its draft into the SAME
- * GigForm, so every gig — AI-made or hand-made — has the identical structured shape. AI is
- * fail-open (the server falls back to a deterministic template), so "Generate" always yields a
- * filled form, never an error.
+ * New-gig experience: the AI wizard IS the landing view (one sentence + a category tap →
+ * a structured draft in the seller's language); the blank form is a quiet escape hatch below.
+ * The wizard hands its draft into the SAME GigForm, so every gig — AI-made or hand-made —
+ * has the identical structured shape. AI is fail-open (the server falls back to a
+ * deterministic template), so "Generate" always yields a filled form, never an error.
  */
 export function NewGigExperience({ locale, categories }: { locale: string; categories: Category[] }) {
   const t = useTranslations("Gig");
-  const [mode, setMode] = useState<"choice" | "ai" | "form">("choice");
+  const [mode, setMode] = useState<"ai" | "form">("ai");
   const [draft, setDraft] = useState<GigInitial | undefined>(undefined);
 
-  // Wizard field state
+  // Wizard field state — one required sentence; price is optional (server suggests the
+  // category's market median when skipped).
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
-  const [service, setService] = useState("");
-  const [deliverable, setDeliverable] = useState("");
+  const [brief, setBrief] = useState("");
   const [days, setDays] = useState("3");
   const [price, setPrice] = useState("");
   const [differentiator, setDifferentiator] = useState("");
@@ -77,19 +77,20 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
 
   async function generate() {
     setError(null);
-    if (service.trim().length < 2 || deliverable.trim().length < 2 || !price) {
-      return setError(t("aiFillAll"));
+    if (brief.trim().length < 2) {
+      return setError(t("aiBriefRequired"));
     }
     setBusy(true);
     try {
+      const priceNum = parseInt(price, 10);
       const r = await fetch("/api/gigs/ai-draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          service: service.trim(),
-          deliverable: deliverable.trim(),
+          service: brief.trim(),
           days: Math.max(1, parseInt(days, 10) || 3),
-          priceUzs: Math.max(1000, parseInt(price, 10) || 1000),
+          ...(Number.isFinite(priceNum) && priceNum > 0 ? { priceUzs: Math.max(1000, priceNum) } : {}),
+          ...(categoryId ? { categoryId } : {}),
           differentiator: differentiator.trim() || undefined,
           locale,
         }),
@@ -109,30 +110,7 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
     return <GigForm locale={locale} categories={categories} initial={draft} />;
   }
 
-  if (mode === "choice") {
-    return (
-      <div className="grid gap-3 sm:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => setMode("ai")}
-          className="rounded-2xl border border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/[0.06] p-5 text-left transition-colors hover:bg-[hsl(var(--primary))]/[0.1]"
-        >
-          <span className="text-lg font-bold">✨ {t("aiOptionTitle")}</span>
-          <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{t("aiOptionDesc")}</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("form")}
-          className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 text-left transition-colors hover:border-[hsl(var(--primary))]"
-        >
-          <span className="text-lg font-bold">{t("scratchOptionTitle")}</span>
-          <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{t("scratchOptionDesc")}</p>
-        </button>
-      </div>
-    );
-  }
-
-  // mode === "ai"
+  // mode === "ai" — the default landing view
   return (
     <div className="space-y-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
       <div>
@@ -152,13 +130,14 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-sm font-medium">{t("aiService")}</span>
-        <input className={field} value={service} onChange={(e) => setService(e.target.value)} placeholder={t("aiServicePh")} />
-      </label>
-
-      <label className="block space-y-1.5">
-        <span className="text-sm font-medium">{t("aiDeliverable")}</span>
-        <input className={field} value={deliverable} onChange={(e) => setDeliverable(e.target.value)} placeholder={t("aiDeliverablePh")} />
+        <span className="text-sm font-medium">{t("aiBrief")}</span>
+        <textarea
+          className="min-h-20 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
+          value={brief}
+          onChange={(e) => setBrief(e.target.value)}
+          placeholder={t("aiBriefPh")}
+          maxLength={500}
+        />
       </label>
 
       <div className="grid grid-cols-2 gap-3">
@@ -167,8 +146,16 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
           <input className={field} inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value.replace(/\D/g, ""))} />
         </label>
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium">{t("aiPrice")}</span>
-          <input className={field} inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))} placeholder="50000" />
+          <span className="text-sm font-medium">
+            {t("aiPrice")} <span className="font-normal text-[hsl(var(--muted-foreground))]">({t("optional")})</span>
+          </span>
+          <input
+            className={field}
+            inputMode="numeric"
+            value={price}
+            onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))}
+            placeholder={t("aiPriceAutoPh")}
+          />
         </label>
       </div>
 
@@ -181,7 +168,7 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
 
       {error && <p className="text-sm text-[hsl(var(--danger))]" role="alert">{error}</p>}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={generate}
@@ -190,8 +177,15 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
         >
           {busy ? t("aiGenerating") : t("aiGenerate")}
         </button>
-        <button type="button" onClick={() => setMode("choice")} className="text-sm text-[hsl(var(--muted-foreground))] hover:underline">
-          {t("aiBack")}
+        <button
+          type="button"
+          onClick={() => {
+            setDraft(undefined);
+            setMode("form");
+          }}
+          className="text-sm text-[hsl(var(--muted-foreground))] hover:underline"
+        >
+          {t("scratchOptionTitle")}
         </button>
       </div>
     </div>

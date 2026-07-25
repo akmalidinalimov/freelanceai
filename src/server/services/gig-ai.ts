@@ -200,7 +200,7 @@ export async function generateGigDraft(input: GigDraftInput, locale: string): Pr
           {
             role: "user",
             content:
-              `Service: ${input.service.slice(0, 200)}\n` +
+              `Service: ${input.service.slice(0, 500)}\n` +
               `What I deliver: ${input.deliverable.slice(0, 500)}\n` +
               `Turnaround: ${input.days} days\n` +
               `Starting price: ${input.priceUzs} UZS\n` +
