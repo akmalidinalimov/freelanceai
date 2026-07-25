@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { CoverUpload } from "@/components/cover-upload";
@@ -22,6 +22,59 @@ interface PkgState {
 }
 
 const emptyPkg: PkgState = { title: "", priceUzs: "", deliveryDays: "", revisions: "1" };
+
+const TIERS: Tier[] = ["BASIC", "STANDARD", "PREMIUM"];
+
+/** A tier is "in use" when the seller (or a draft) has typed anything into it. */
+function pkgFilled(p: PkgState | undefined): boolean {
+  return Boolean(p && (p.title.trim() || p.priceUzs.trim() || p.deliveryDays.trim()));
+}
+
+/**
+ * Local autosave for the (long, phone-first) new-gig form: switching to Telegram or a
+ * stray back-tap must never cost the seller their typing. Edit mode is excluded — the
+ * server already holds that state.
+ */
+const DRAFT_KEY = "gig-form-draft:v1";
+
+interface SavedDraft {
+  title: string;
+  description: string;
+  categoryId: string;
+  tags: string[];
+  coverUrl?: string;
+  coverFocal?: string;
+  coverType?: "image" | "video";
+  coverPoster?: string;
+  coverDims?: { w: number; h: number };
+  galleryUrls: string[];
+  faq: { q: string; a: string }[];
+  extras: { title: string; priceUzs: string; deliveryDays: string }[];
+  reqPrompts: string[];
+  pkgs: Record<Tier, PkgState>;
+  visibleTiers: Tier[];
+}
+
+function loadSavedDraft(): SavedDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as SavedDraft;
+    // Only worth restoring when there is real typed content.
+    const meaningful = d.title?.trim() || d.description?.trim() || TIERS.some((t2) => pkgFilled(d.pkgs?.[t2]));
+    return meaningful ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearSavedDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* private mode etc. — losing the autosave is acceptable */
+  }
+}
 
 export interface GigInitial {
   title: string;
@@ -114,8 +167,91 @@ export function GigForm({
     STANDARD: initial?.packages?.STANDARD ?? { ...emptyPkg },
     PREMIUM: initial?.packages?.PREMIUM ?? { ...emptyPkg },
   }));
+  // One package is enough to publish — start with just BASIC and let the seller opt
+  // into more tiers, instead of facing a 3×4 input grid. Prefilled drafts (AI wizard,
+  // edit mode) open every tier they actually use.
+  const [visibleTiers, setVisibleTiers] = useState<Tier[]>(() => {
+    const used = TIERS.filter((tier) => pkgFilled(initial?.packages?.[tier]));
+    return used.length > 0 ? Array.from(new Set<Tier>(["BASIC", ...used])) : ["BASIC"];
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+
+  // Restore a local autosave once, client-side only (no hydration mismatch). An AI-wizard
+  // draft (`initial`) or edit mode (`gigId`) always wins over the autosave.
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (!gigId && !initial) {
+      const saved = loadSavedDraft();
+      if (saved) {
+        setTitle(saved.title ?? "");
+        setDescription(saved.description ?? "");
+        setCategoryId(saved.categoryId ?? "");
+        setTags(Array.isArray(saved.tags) ? saved.tags : []);
+        setCoverUrl(saved.coverUrl);
+        setCoverFocal(saved.coverFocal);
+        setCoverType(saved.coverType);
+        setCoverPoster(saved.coverPoster);
+        setCoverDims(saved.coverDims);
+        setGalleryUrls(Array.isArray(saved.galleryUrls) ? saved.galleryUrls : []);
+        setFaq(Array.isArray(saved.faq) ? saved.faq : []);
+        setExtras(Array.isArray(saved.extras) ? saved.extras : []);
+        setReqPrompts(Array.isArray(saved.reqPrompts) ? saved.reqPrompts : []);
+        setPkgs({
+          BASIC: saved.pkgs?.BASIC ?? { ...emptyPkg },
+          STANDARD: saved.pkgs?.STANDARD ?? { ...emptyPkg },
+          PREMIUM: saved.pkgs?.PREMIUM ?? { ...emptyPkg },
+        });
+        setVisibleTiers(saved.visibleTiers?.length ? saved.visibleTiers : ["BASIC"]);
+        setRestored(true);
+      }
+    }
+    hydrated.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced autosave (new gigs only). Empty forms remove the key instead of storing noise.
+  useEffect(() => {
+    if (gigId || !hydrated.current) return;
+    const id = setTimeout(() => {
+      const meaningful = title.trim() || description.trim() || TIERS.some((t2) => pkgFilled(pkgs[t2]));
+      if (!meaningful) {
+        clearSavedDraft();
+        return;
+      }
+      try {
+        const draft: SavedDraft = {
+          title, description, categoryId, tags, coverUrl, coverFocal, coverType,
+          coverPoster, coverDims, galleryUrls, faq, extras, reqPrompts, pkgs, visibleTiers,
+        };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      } catch {
+        /* storage full/blocked — autosave is best-effort */
+      }
+    }, 400);
+    return () => clearTimeout(id);
+  }, [gigId, title, description, categoryId, tags, coverUrl, coverFocal, coverType, coverPoster, coverDims, galleryUrls, faq, extras, reqPrompts, pkgs, visibleTiers]);
+
+  function discardRestored() {
+    clearSavedDraft();
+    setTitle("");
+    setDescription("");
+    setCategoryId("");
+    setTags([]);
+    setCoverUrl(undefined);
+    setCoverFocal(undefined);
+    setCoverType(undefined);
+    setCoverPoster(undefined);
+    setCoverDims(undefined);
+    setGalleryUrls([]);
+    setFaq([]);
+    setExtras([]);
+    setReqPrompts([]);
+    setPkgs({ BASIC: { ...emptyPkg }, STANDARD: { ...emptyPkg }, PREMIUM: { ...emptyPkg } });
+    setVisibleTiers(["BASIC"]);
+    setRestored(false);
+  }
 
   function setPkg(tier: Tier, field: keyof PkgState, value: string) {
     setPkgs((p) => ({ ...p, [tier]: { ...p[tier], [field]: value } }));
@@ -187,6 +323,7 @@ export function GigForm({
       });
       const j = await r.json();
       if (j.ok) {
+        clearSavedDraft(); // the work is on the server now — don't re-offer it next visit
         window.location.href = `/${locale}/dashboard/seller`;
       } else {
         setError(j.error?.message ?? t("error"));
@@ -198,9 +335,16 @@ export function GigForm({
     }
   }
 
+  function addTier(tier: Tier) {
+    setVisibleTiers((v) => (v.includes(tier) ? v : TIERS.filter((t2) => v.includes(t2) || t2 === tier)));
+  }
+  function removeTier(tier: Tier) {
+    setPkgs((p) => ({ ...p, [tier]: { ...emptyPkg } })); // cleared values never reach submit
+    setVisibleTiers((v) => v.filter((t2) => t2 !== tier));
+  }
+
   const field =
     "w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm";
-  const tiers: Tier[] = ["BASIC", "STANDARD", "PREMIUM"];
   const tierLabel: Record<Tier, string> = {
     BASIC: t("basic"),
     STANDARD: t("standard"),
@@ -209,6 +353,22 @@ export function GigForm({
 
   return (
     <form onSubmit={(e) => submit(e, false)} className="flex flex-col gap-5 pb-24">
+      {restored && (
+        <div
+          role="status"
+          className="flex items-center justify-between gap-3 rounded-xl border border-[hsl(var(--primary))]/30 bg-[hsl(var(--primary))]/8 px-4 py-2.5 text-sm"
+        >
+          <span className="text-[hsl(var(--primary-ink))]">{t("draftRestored")}</span>
+          <button
+            type="button"
+            onClick={discardRestored}
+            className="shrink-0 font-medium text-[hsl(var(--muted-foreground))] underline hover:text-[hsl(var(--foreground))]"
+          >
+            {t("draftDiscard")}
+          </button>
+        </div>
+      )}
+
       {/* 1 — Overview: the essentials a buyer reads first */}
       <Section title={t("secOverview")}>
         <div className="flex flex-col gap-4">
@@ -296,12 +456,32 @@ export function GigForm({
         </div>
       </Section>
 
-      {/* 3 — Packages: the money (required) */}
+      {/* 3 — Packages: the money (required). One tier is enough; more are opt-in. */}
       <Section title={t("packages")} desc={t("packagesDesc")}>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {tiers.map((tier) => (
+        <div
+          className={
+            visibleTiers.length === 1
+              ? "grid gap-4 sm:max-w-sm"
+              : visibleTiers.length === 2
+                ? "grid gap-4 sm:grid-cols-2"
+                : "grid gap-4 sm:grid-cols-3"
+          }
+        >
+          {TIERS.filter((tier) => visibleTiers.includes(tier)).map((tier) => (
             <div key={tier} className="rounded-xl border border-[hsl(var(--border))] p-4">
-              <p className="mb-2 font-semibold">{tierLabel[tier]}</p>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="font-semibold">{tierLabel[tier]}</p>
+                {tier !== "BASIC" && (
+                  <button
+                    type="button"
+                    aria-label={`${t("pkgRemoveTier")} — ${tierLabel[tier]}`}
+                    onClick={() => removeTier(tier)}
+                    className="rounded-md border border-[hsl(var(--border))] px-2 text-sm text-[hsl(var(--muted-foreground))]"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
               <div className="flex flex-col gap-2">
                 <input
                   className={field}
@@ -343,6 +523,20 @@ export function GigForm({
             </div>
           ))}
         </div>
+        {visibleTiers.length < TIERS.length && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {TIERS.filter((tier) => !visibleTiers.includes(tier)).map((tier) => (
+              <button
+                key={tier}
+                type="button"
+                onClick={() => addTier(tier)}
+                className="rounded-full border border-dashed border-[hsl(var(--border))] px-3 py-1 text-sm text-[hsl(var(--muted-foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary-ink))]"
+              >
+                + {t("pkgAddTier", { tier: tierLabel[tier] })}
+              </button>
+            ))}
+          </div>
+        )}
         <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">{t("packagesHint")}</p>
       </Section>
 
