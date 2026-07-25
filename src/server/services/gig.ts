@@ -1,5 +1,5 @@
 import "server-only";
-import { nudgeIfReadyToSubmit } from "@/server/services/seller-approval";
+import { autoDraftSellerProfile, nudgeIfReadyToSubmit } from "@/server/services/seller-approval";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, User } from "@prisma/client";
@@ -161,6 +161,14 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       buttons: adminGigReviewButtons(undefined, gig.id),
     });
   }
+  // Draft the storefront profile from this gig (fills blanks only) BEFORE the eligibility
+  // check, so a first gig can complete the whole storefront in one step — no double typing.
+  await autoDraftSellerProfile(sellerId, {
+    title: gig.title,
+    description: gig.description,
+    tags: gig.tags,
+    categoryId: gig.categoryId,
+  });
   // The gig is usually the last step to eligibility — nudge them to submit (one-time, best-effort).
   void nudgeIfReadyToSubmit(sellerId).catch(() => {});
   return gig;

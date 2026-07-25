@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
+import { SPECIALIZATIONS } from "@/lib/specializations";
 
 /**
  * Seller approval flow (2026-07-09). A new seller is INCOMPLETE: they can build a
@@ -73,6 +74,59 @@ export async function submitForApproval(userId: string): Promise<ApprovalState> 
   }).catch(() => {});
 
   return { status: "PENDING", canSubmit: false, missing: [], rejectionReason: null };
+}
+
+/**
+ * Draft the storefront profile from a just-created gig so the seller never types the same
+ * thing twice: gig title → headline, gig description → bio, gig tags/category → specializations.
+ * ONLY fills blanks — never overwrites anything the seller wrote. The seller can edit every
+ * drafted field on the profile page. Best-effort: a failure never breaks gig creation.
+ */
+export async function autoDraftSellerProfile(
+  userId: string,
+  gig: { title: string; description: string; tags: string[]; categoryId: string | null }
+): Promise<void> {
+  try {
+    const profile = await prisma.sellerProfile.findUnique({
+      where: { userId },
+      select: { headline: true, bio: true, specializations: true },
+    });
+    if (!profile) return;
+    const needHeadline = !profile.headline?.trim();
+    const needBio = !profile.bio?.trim();
+    const needSpecs = (profile.specializations?.length ?? 0) === 0;
+    if (!needHeadline && !needBio && !needSpecs) return;
+
+    let specs: string[] = [];
+    if (needSpecs) {
+      // Gig tags are stored lowercased; spec labels/synonyms are matched case-folded.
+      const terms = new Set(gig.tags.map((t) => t.toLowerCase()));
+      if (gig.categoryId) {
+        const cat = await prisma.category.findUnique({
+          where: { id: gig.categoryId },
+          select: { slug: true, nameUz: true, nameRu: true, nameEn: true },
+        });
+        for (const s of [cat?.slug, cat?.nameUz, cat?.nameRu, cat?.nameEn]) {
+          if (s) terms.add(s.toLowerCase());
+        }
+      }
+      specs = SPECIALIZATIONS.filter((s) =>
+        [s.key, s.uz, s.ru, s.en, ...s.synonyms].some((label) => terms.has(label.toLowerCase()))
+      )
+        .map((s) => s.key)
+        .slice(0, 5);
+    }
+
+    const data: Record<string, unknown> = {
+      ...(needHeadline && gig.title.trim() ? { headline: gig.title.trim().slice(0, 120) } : {}),
+      ...(needBio && gig.description.trim() ? { bio: gig.description.trim().slice(0, 600) } : {}),
+      ...(needSpecs && specs.length ? { specializations: specs } : {}),
+    };
+    if (Object.keys(data).length === 0) return;
+    await prisma.sellerProfile.update({ where: { userId }, data });
+  } catch {
+    // best-effort — a failed auto-draft never breaks gig creation
+  }
 }
 
 /**
