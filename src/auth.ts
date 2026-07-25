@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { upsertTelegramUser, upsertEmailUser } from "@/lib/users";
+import { upsertTelegramUser, upsertEmailUser, ensureUsername } from "@/lib/users";
 import { consumeMagicToken } from "@/lib/email-auth";
 import { verifyMiniAppInitData } from "@/lib/telegram";
 import { consumeLoginNonce } from "@/lib/login-nonce";
@@ -165,6 +165,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.uid = user.id;
         // `user` is only present on the sign-in request → this is the login moment.
         stampLastLogin(user.id);
+        // Storefront handle for accounts without one (email/Google, or Telegram users
+        // with no public username) — lazily backfills existing accounts too.
+        void ensureUsername(user.id);
       }
       return token;
     },
