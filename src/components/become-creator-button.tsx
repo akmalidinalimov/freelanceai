@@ -27,7 +27,7 @@ export function BecomeCreatorButton({ locale }: { locale: string }) {
 
   return (
     <Button size="lg" onClick={become} disabled={busy}>
-      {busy ? t("publishing") : t("becomeCreator")}
+      {busy ? t("becomingCreator") : t("becomeCreator")}
     </Button>
   );
 }

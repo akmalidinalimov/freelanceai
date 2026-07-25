@@ -80,6 +80,38 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // The brief is the ONE thing the seller types — a switch to Telegram mid-sentence
+  // must not cost it. Same protection the form already has, stash-restored on mount
+  // (effect, not initializer: localStorage during render breaks hydration).
+  const WIZARD_KEY = "gig-wizard-draft:v1";
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(WIZARD_KEY);
+      if (raw) {
+        const d = JSON.parse(raw) as { brief?: string; days?: string; price?: string; differentiator?: string };
+        if (d.brief) setBrief(d.brief);
+        if (d.days) setDays(d.days);
+        if (d.price) setPrice(d.price);
+        if (d.differentiator) setDifferentiator(d.differentiator);
+      }
+    } catch {
+      /* blocked storage — the seller just retypes */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      try {
+        if (brief.trim()) localStorage.setItem(WIZARD_KEY, JSON.stringify({ brief, days, price, differentiator }));
+        else localStorage.removeItem(WIZARD_KEY);
+      } catch {
+        /* best-effort */
+      }
+    }, 400);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brief, days, price, differentiator]);
+
   const field = "h-11 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
 
   async function generate() {
@@ -103,6 +135,11 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
       });
       const j = await r.json();
       if (!j.ok) return setError(j.error?.message ?? t("aiError"));
+      try {
+        localStorage.removeItem(WIZARD_KEY); // the form's own autosave takes over from here
+      } catch {
+        /* best-effort */
+      }
       setDraft(toInitial(j.data.draft as GigDraft, (j.data.categoryId as string | null) ?? ""));
       setMode("form");
     } catch {

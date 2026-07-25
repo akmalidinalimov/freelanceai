@@ -330,7 +330,9 @@ export function GigForm({
       const j = await r.json();
       if (j.ok) {
         clearSavedDraft(); // the work is on the server now — don't re-offer it next visit
-        window.location.href = `/${locale}/dashboard/seller`;
+        // ?published=1 → the dashboard confirms the submission and sets expectations
+        // (moderation → you'll be notified), instead of a silent landing.
+        window.location.href = `/${locale}/dashboard/seller${!gigId && !draft ? "?published=1" : ""}`;
       } else {
         setError(j.error?.message ?? t("error"));
         setBusy(false);

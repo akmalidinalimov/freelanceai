@@ -23,11 +23,14 @@ import { orderDueMeta, displayName, initialOf } from "@/lib/order-due";
 
 export default async function SellerDashboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ published?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const { published } = await searchParams;
 
   const user = await requireSellerUser(locale);
   const [sellerBadges, completeness, weeklyRank] = await Promise.all([
@@ -168,6 +171,18 @@ export default async function SellerDashboardPage({
           </Link>
         </div>
       </div>
+
+      {/* Just published → confirm it landed and set the expectation, instead of a
+          silent redirect (the "did it work?" black hole right after the biggest step). */}
+      {published === "1" && (
+        <div
+          role="status"
+          className="mb-4 rounded-xl border border-[hsl(var(--success))]/30 bg-[hsl(var(--success-soft))] px-4 py-3"
+        >
+          <p className="font-semibold text-[hsl(var(--success))]">{t("gigPublishedTitle")}</p>
+          <p className="text-sm text-[hsl(var(--foreground))]">{t("gigPublishedBody")}</p>
+        </div>
+      )}
 
       <SellerApprovalBanner
         state={approval}

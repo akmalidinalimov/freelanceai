@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/session";
 import { listFeaturedCreators } from "@/server/services/browse";
 import { listFeaturedGigs, listPublicGigs } from "@/server/services/gig";
 import { specLabel } from "@/lib/specializations";
@@ -38,6 +39,14 @@ type GigWithSeller = {
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  // First-login intent capture: email/Google signups arrive here not yet onboarded and
+  // the buy-vs-sell choice page was otherwise unreachable (no link ever pointed at it).
+  // One redirect, once — the choice marks onboardingCompleted, so it never repeats.
+  // Telegram users are onboarded at creation (Fiverr-style) and skip this entirely.
+  const visitor = await getCurrentUser();
+  if (visitor && !visitor.onboardingCompleted && visitor.role !== "ADMIN") {
+    redirect({ href: "/onboarding", locale });
+  }
   setRequestLocale(locale);
   const t = await getTranslations("Home");
   const creators = await listFeaturedCreators(8).catch(() => []);

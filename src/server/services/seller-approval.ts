@@ -99,7 +99,7 @@ export async function autoDraftSellerProfile(
 
     let specs: string[] = [];
     if (needSpecs) {
-      // Gig tags are stored lowercased; spec labels/synonyms are matched case-folded.
+      // Exact-term set: gig tags (stored lowercased) + category names/slug.
       const terms = new Set(gig.tags.map((t) => t.toLowerCase()));
       if (gig.categoryId) {
         const cat = await prisma.category.findUnique({
@@ -110,9 +110,19 @@ export async function autoDraftSellerProfile(
           if (s) terms.add(s.toLowerCase());
         }
       }
-      specs = SPECIALIZATIONS.filter((s) =>
-        [s.key, s.uz, s.ru, s.en, ...s.synonyms].some((label) => terms.has(label.toLowerCase()))
-      )
+      // Also mine the gig's own words: the no-AI template path produces no tags at all,
+      // which used to leave specializations empty — the one approval-checklist item a
+      // one-sentence gig couldn't complete. Word-boundary tokens (not substrings), so
+      // "start" never matches the synonym "art"; multi-word synonyms match as phrases.
+      const text = `${gig.title} ${gig.description}`.toLowerCase();
+      const words = new Set(text.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 3));
+      const specMatches = (label: string): boolean => {
+        const l = label.toLowerCase();
+        if (terms.has(l)) return true;
+        if (l.includes(" ") || l.includes("-")) return text.includes(l);
+        return l.length >= 3 && words.has(l);
+      };
+      specs = SPECIALIZATIONS.filter((s) => [s.key, s.uz, s.ru, s.en, ...s.synonyms].some(specMatches))
         .map((s) => s.key)
         .slice(0, 5);
     }
