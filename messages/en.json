@@ -561,6 +561,7 @@
     "protectTitle": "Your payment is protected.",
     "protectBody": "If the seller doesn't deliver what was agreed, you get a refund — Gigora reviews the dispute.",
     "payAmount": "Pay {amount} so'm",
+    "payWith": "Pay with {provider}",
     "redirectNote": "You'll continue on {provider}'s secure page and return automatically.",
     "payTitle": "Complete payment",
     "payNow": "Pay now",

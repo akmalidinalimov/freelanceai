@@ -27,8 +27,7 @@ export async function CheckoutReview({
   sellerName,
   ratingAvg,
   ratingCount,
-  checkoutUrl,
-  providerId,
+  checkoutOptions,
   currentUserId,
   cancellationPending,
   canCancel,
@@ -47,8 +46,8 @@ export async function CheckoutReview({
   sellerName: string;
   ratingAvg: number;
   ratingCount: number;
-  checkoutUrl: string | null;
-  providerId: string | null;
+  /** One entry per configured PSP — buyers pick the wallet app they actually have. */
+  checkoutOptions: { id: string; name: string; url: string }[];
   currentUserId: string;
   cancellationPending: { requestedById: string; reason: string } | null;
   canCancel: boolean;
@@ -56,7 +55,7 @@ export async function CheckoutReview({
   const t = await getTranslations("Order");
   const tm = await getTranslations("Message");
   const format = await getFormatter();
-  const providerName = providerId === "payme" ? "Payme" : providerId === "click" ? "Click" : null;
+  const providerNames = checkoutOptions.map((o) => o.name).join(" / ");
 
   const li = "flex items-baseline justify-between gap-3 py-1.5 text-sm";
   const initial = (sellerName.replace(/^@/, "").charAt(0) || "•").toUpperCase();
@@ -163,16 +162,27 @@ export async function CheckoutReview({
             </span>
           </div>
 
-          {checkoutUrl && providerName ? (
+          {checkoutOptions.length > 0 ? (
             <>
-              <a
-                href={checkoutUrl}
-                className="mt-4 flex w-full items-center justify-center rounded-xl bg-[hsl(var(--primary))] px-4 py-3 text-base font-extrabold text-[hsl(var(--primary-foreground))]"
-              >
-                {t("payAmount", { amount: formatUzs(totalUzs) })}
-              </a>
+              {/* One button per configured PSP: the first is the primary CTA; any further
+                  providers render as equal, clearly-labelled alternatives (wallet loyalty). */}
+              {checkoutOptions.map((o, i) => (
+                <a
+                  key={o.id}
+                  href={o.url}
+                  className={
+                    i === 0
+                      ? "mt-4 flex w-full items-center justify-center rounded-xl bg-[hsl(var(--primary))] px-4 py-3 text-base font-extrabold text-[hsl(var(--primary-foreground))]"
+                      : "mt-2 flex w-full items-center justify-center rounded-xl border-2 border-[hsl(var(--primary))]/50 px-4 py-3 text-base font-bold text-[hsl(var(--primary-ink))]"
+                  }
+                >
+                  {checkoutOptions.length === 1
+                    ? t("payAmount", { amount: formatUzs(totalUzs) })
+                    : t("payWith", { provider: o.name })}
+                </a>
+              ))}
               <p className="mt-2 text-center text-[11.5px] text-[hsl(var(--muted-foreground))]">
-                {t("redirectNote", { provider: providerName })}
+                {t("redirectNote", { provider: providerNames })}
               </p>
             </>
           ) : (
@@ -202,19 +212,29 @@ export async function CheckoutReview({
         </div>
       )}
 
-      {/* Mobile: sticky pay bar so the CTA is always reachable without scrolling. */}
-      {checkoutUrl && providerName && (
-        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-3 shadow-[0_-4px_14px_-6px_hsl(30_30%_28%/0.12)] lg:hidden">
+      {/* Mobile: sticky pay bar so the CTA is always reachable without scrolling.
+          With several PSPs the bar shows one compact button per provider. */}
+      {checkoutOptions.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-3 shadow-[0_-4px_14px_-6px_hsl(30_30%_28%/0.12)] lg:hidden">
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-wide text-[hsl(var(--muted-foreground))]">{t("total")}</p>
             <p className="text-lg font-extrabold tabular-nums leading-none">{formatUzs(totalUzs)}</p>
           </div>
-          <a
-            href={checkoutUrl}
-            className="ml-auto flex items-center justify-center rounded-xl bg-[hsl(var(--primary))] px-5 py-3 text-sm font-extrabold text-[hsl(var(--primary-foreground))]"
-          >
-            {t("payAmount", { amount: formatUzs(totalUzs) })}
-          </a>
+          <div className="ml-auto flex shrink-0 gap-2">
+            {checkoutOptions.map((o, i) => (
+              <a
+                key={o.id}
+                href={o.url}
+                className={
+                  i === 0
+                    ? "flex items-center justify-center rounded-xl bg-[hsl(var(--primary))] px-5 py-3 text-sm font-extrabold text-[hsl(var(--primary-foreground))]"
+                    : "flex items-center justify-center rounded-xl border-2 border-[hsl(var(--primary))]/50 px-4 py-3 text-sm font-bold text-[hsl(var(--primary-ink))]"
+                }
+              >
+                {checkoutOptions.length === 1 ? t("payAmount", { amount: formatUzs(totalUzs) }) : o.name}
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </div>

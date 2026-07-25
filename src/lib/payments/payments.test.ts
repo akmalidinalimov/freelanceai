@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { activeProvider, paymentsEnabled } from "./index";
+import { activeProvider, activeProviders, paymentsEnabled } from "./index";
 import { paymeProvider, verifyPaymeAuth } from "./payme";
 import { clickProvider, clickSignString, verifyClickSign, type ClickParams } from "./click";
 
@@ -36,6 +36,24 @@ describe("provider factory", () => {
   it("does not activate a provider whose creds are missing", () => {
     process.env.PAYMENT_PROVIDER = "click"; // no CLICK_* set
     expect(activeProvider()).toBeNull();
+  });
+
+  it("offers every configured provider from a comma list, in order", () => {
+    process.env.PAYMENT_PROVIDER = "payme,click";
+    process.env.PAYME_MERCHANT_ID = "m1";
+    process.env.PAYME_KEY = "secret";
+    process.env.CLICK_SERVICE_ID = "svc";
+    process.env.CLICK_MERCHANT_ID = "mid";
+    process.env.CLICK_SECRET_KEY = "sk";
+    expect(activeProviders().map((p) => p.id)).toEqual(["payme", "click"]);
+    expect(activeProvider()?.id).toBe("payme"); // first in list stays the primary
+  });
+
+  it("skips unconfigured providers in a comma list", () => {
+    process.env.PAYMENT_PROVIDER = "click,payme"; // click listed first but has no creds
+    process.env.PAYME_MERCHANT_ID = "m1";
+    process.env.PAYME_KEY = "secret";
+    expect(activeProviders().map((p) => p.id)).toEqual(["payme"]);
   });
 });
 

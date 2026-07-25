@@ -561,6 +561,7 @@
     "protectTitle": "Toʻlovingiz himoyada.",
     "protectBody": "Agar sotuvchi kelishilgan ishni bajarmasa, pulingiz qaytariladi — Gigora nizoni koʻrib chiqadi.",
     "payAmount": "{amount} soʻm toʻlash",
+    "payWith": "{provider} orqali toʻlash",
     "redirectNote": "{provider}ning xavfsiz sahifasida davom etasiz va avtomatik qaytasiz.",
     "payTitle": "Toʻlovni amalga oshiring",
     "payNow": "Hozir toʻlash",

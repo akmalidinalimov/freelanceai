@@ -9,7 +9,7 @@ import { formatUzs } from "@/lib/utils";
 import { OrderActions } from "@/components/order-actions";
 import { CheckoutReview } from "@/components/checkout-review";
 import { prisma } from "@/lib/prisma";
-import { activeProvider } from "@/lib/payments";
+import { activeProvider, activeProviders } from "@/lib/payments";
 import { DisputeBox } from "@/components/dispute-box";
 import { CancellationBox } from "@/components/cancellation-box";
 import { getOrderCancellation } from "@/server/services/cancellation";
@@ -100,8 +100,11 @@ export default async function OrderPage({
         sellerName={cpName}
         ratingAvg={sp?.ratingAvg ?? 0}
         ratingCount={sp?.ratingCount ?? 0}
-        checkoutUrl={checkoutUrl}
-        providerId={activeProvider()?.id ?? null}
+        checkoutOptions={activeProviders().map((p) => ({
+          id: p.id,
+          name: p.id === "payme" ? "Payme" : "Click",
+          url: p.checkoutUrl({ id: order.id, amountUzs: order.amountUzs - order.discountUzs }),
+        }))}
         currentUserId={user.id}
         cancellationPending={
           cancellation?.status === "PENDING"
