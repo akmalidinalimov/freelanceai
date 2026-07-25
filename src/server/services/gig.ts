@@ -115,7 +115,10 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       title,
       slug: uniqueSlug(title),
       description,
-      coverUrl: input.coverUrl || null,
+      // No cover but work samples exist → promote the first gallery image to the display
+      // cover. A real sample beats the generic prism fallback on cards/search, and the
+      // seller can still replace it in edit. (Gig galleries are images, so type stays "image".)
+      coverUrl: input.coverUrl || input.galleryUrls?.[0] || null,
       coverFocal: normalizeFocal(input.coverFocal),
       coverType: input.coverUrl ? normalizeCoverType(input.coverType) : "image",
       coverPosterUrl: input.coverUrl && input.coverType === "video" ? input.coverPosterUrl || null : null,
