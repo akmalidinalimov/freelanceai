@@ -1,65 +1,97 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { User } from "@prisma/client";
+import type { Prisma, User } from "@prisma/client";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { decryptPII } from "@/lib/pii-crypto";
 import { anonymizeAndClose } from "@/server/services/account";
 import { sellerAvailableUzs } from "@/server/services/payments";
+import { notifyAndPush } from "@/server/services/notification";
 
 const displayName = (u: { firstName: string | null; name: string | null; username: string | null }) =>
   u.firstName ?? u.name ?? u.username ?? "";
 
-/** Admin: list users (optional search over username / name / email), newest first. */
-export async function listUsersForAdmin(query?: string) {
-  const q = query?.trim();
-  const where = q
-    ? {
-        OR: [
-          { username: { contains: q, mode: "insensitive" as const } },
-          { firstName: { contains: q, mode: "insensitive" as const } },
-          { name: { contains: q, mode: "insensitive" as const } },
-          { email: { contains: q, mode: "insensitive" as const } },
-        ],
-      }
-    : {};
-  const users = await prisma.user.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 100,
+export type AdminUserSegment = "all" | "buyers" | "sellers" | "pending" | "suspended";
+export type AdminKycFilter = "NONE" | "PENDING" | "VERIFIED" | "REJECTED";
+
+export interface AdminUserListParams {
+  q?: string;
+  segment?: AdminUserSegment;
+  kyc?: AdminKycFilter;
+  flagged?: boolean;
+  page?: number; // 1-based
+}
+
+export const ADMIN_USERS_PAGE_SIZE = 50;
+
+/** One shared WHERE builder so the list, the tab counts, and the CSV export can't drift. */
+function adminUserWhere({ q, segment, kyc, flagged }: AdminUserListParams): Prisma.UserWhereInput {
+  const where: Prisma.UserWhereInput = {};
+  const query = q?.trim();
+  if (query) {
+    where.OR = [
+      { username: { contains: query, mode: "insensitive" } },
+      { firstName: { contains: query, mode: "insensitive" } },
+      { name: { contains: query, mode: "insensitive" } },
+      { email: { contains: query, mode: "insensitive" } },
+      { telegramId: { contains: query } },
+    ];
+  }
+  if (segment === "buyers") {
+    where.isSeller = false;
+    where.role = { not: "ADMIN" };
+  } else if (segment === "sellers") {
+    where.isSeller = true;
+  } else if (segment === "pending") {
+    // The daily work queue: sellers waiting for storefront approval.
+    where.sellerProfile = { is: { approvalStatus: "PENDING" } };
+  } else if (segment === "suspended") {
+    where.status = "SUSPENDED";
+  }
+  if (kyc) where.kycStatus = kyc;
+  if (flagged) where.flags = { some: {} };
+  return where;
+}
+
+const LIST_SELECT = {
+  id: true,
+  firstName: true,
+  name: true,
+  username: true,
+  email: true,
+  telegramId: true,
+  role: true,
+  isSeller: true,
+  status: true,
+  kycStatus: true,
+  createdAt: true,
+  lastLoginAt: true,
+  lastSeenAt: true,
+  telegramLastChatAt: true,
+  sellerProfile: { select: { approvalStatus: true } },
+  _count: {
     select: {
-      id: true,
-      firstName: true,
-      name: true,
-      username: true,
-      email: true,
-      role: true,
-      isSeller: true,
-      status: true,
-      kycStatus: true,
-      createdAt: true,
-      lastLoginAt: true,
-      lastSeenAt: true,
-      telegramLastChatAt: true,
-      _count: {
-        select: {
-          ordersAsBuyer: true,
-          ordersAsSeller: true,
-          gigs: true,
-          convosAsBuyer: true,
-          convosAsSeller: true,
-          messages: true,
-        },
-      },
+      ordersAsBuyer: true,
+      ordersAsSeller: true,
+      gigs: true,
+      convosAsBuyer: true,
+      convosAsSeller: true,
+      messages: true,
+      flags: true,
     },
-  });
-  return users.map((u) => ({
+  },
+} satisfies Prisma.UserSelect;
+
+function toListRow(u: Prisma.UserGetPayload<{ select: typeof LIST_SELECT }>) {
+  return {
     id: u.id,
     name: displayName(u),
     username: u.username,
     email: u.email,
+    telegramId: u.telegramId,
     role: u.role,
     isSeller: u.isSeller,
+    approvalStatus: u.sellerProfile?.approvalStatus ?? null,
     status: u.status,
     kycStatus: u.kycStatus,
     orders: u._count.ordersAsBuyer,
@@ -67,11 +99,56 @@ export async function listUsersForAdmin(query?: string) {
     gigs: u._count.gigs,
     contacts: u._count.convosAsBuyer + u._count.convosAsSeller,
     messages: u._count.messages,
+    flags: u._count.flags,
     createdAt: u.createdAt,
     lastLoginAt: u.lastLoginAt,
     lastSeenAt: u.lastSeenAt,
     telegramLastChatAt: u.telegramLastChatAt,
-  }));
+  };
+}
+
+/**
+ * Admin: filterable, paginated user list + live tab counts. Search covers
+ * username / name / email / Telegram id; segments mirror the marketplace roles
+ * (buyers, sellers, pending approval, suspended).
+ */
+export async function listUsersForAdmin(params: AdminUserListParams = {}) {
+  const where = adminUserWhere(params);
+  const page = Math.max(1, params.page ?? 1);
+  const [users, total, all, buyers, sellers, pending, suspended] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * ADMIN_USERS_PAGE_SIZE,
+      take: ADMIN_USERS_PAGE_SIZE,
+      select: LIST_SELECT,
+    }),
+    prisma.user.count({ where }),
+    prisma.user.count(),
+    prisma.user.count({ where: { isSeller: false, role: { not: "ADMIN" } } }),
+    prisma.user.count({ where: { isSeller: true } }),
+    prisma.user.count({ where: { sellerProfile: { is: { approvalStatus: "PENDING" } } } }),
+    prisma.user.count({ where: { status: "SUSPENDED" } }),
+  ]);
+  return {
+    users: users.map(toListRow),
+    total,
+    page,
+    pageSize: ADMIN_USERS_PAGE_SIZE,
+    pages: Math.max(1, Math.ceil(total / ADMIN_USERS_PAGE_SIZE)),
+    counts: { all, buyers, sellers, pending, suspended },
+  };
+}
+
+/** Admin: the current filter's rows for CSV export (capped — an export is a snapshot, not a sync). */
+export async function exportUsersForAdmin(params: AdminUserListParams = {}) {
+  const users = await prisma.user.findMany({
+    where: adminUserWhere(params),
+    orderBy: { createdAt: "desc" },
+    take: 5000,
+    select: LIST_SELECT,
+  });
+  return users.map(toListRow);
 }
 
 /**
@@ -85,6 +162,9 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
     include: {
       sellerProfile: {
         select: {
+          id: true,
+          approvalStatus: true,
+          rejectionReason: true,
           headline: true,
           level: true,
           ratingAvg: true,
@@ -123,6 +203,10 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
     balance,
     refundAgg,
     flags,
+    gigsRecent,
+    ordersAsBuyer,
+    ordersAsSeller,
+    payoutsRecent,
   ] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], where: { buyerId: userId }, _count: true }),
     prisma.order.groupBy({ by: ["status"], where: { sellerId: userId }, _count: true }),
@@ -161,6 +245,30 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
       _count: true,
     }),
     prisma.userFlag.findMany({ where: { userId }, orderBy: { severity: "desc" } }),
+    prisma.gig.findMany({
+      where: { sellerId: userId, deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { id: true, title: true, slug: true, status: true, createdAt: true, _count: { select: { orders: true } } },
+    }),
+    prisma.order.findMany({
+      where: { buyerId: userId },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: { id: true, status: true, amountUzs: true, createdAt: true, gig: { select: { title: true } } },
+    }),
+    prisma.order.findMany({
+      where: { sellerId: userId },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: { id: true, status: true, amountUzs: true, createdAt: true, gig: { select: { title: true } } },
+    }),
+    prisma.payoutRequest.findMany({
+      where: { sellerId: userId },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { id: true, amountUzs: true, status: true, createdAt: true },
+    }),
   ]);
 
   const toMap = (groups: { status: string; _count: number }[]) =>
@@ -185,6 +293,7 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
       lastSeenAt: u.lastSeenAt,
       telegramLastChatAt: u.telegramLastChatAt,
       referrals: u._count.referrals,
+      creditBalanceUzs: u.creditBalanceUzs,
     },
     buyer: {
       ordersByStatus: toMap(buyerByStatus as never),
@@ -216,6 +325,10 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
     recentEvents,
     recentAudit,
     flags,
+    gigsRecent,
+    ordersAsBuyer,
+    ordersAsSeller,
+    payoutsRecent,
   };
 }
 
@@ -259,16 +372,66 @@ async function loadTarget(admin: User, userId: string): Promise<User> {
   return target;
 }
 
-/** Suspend or reactivate a user (never changes role; admin role stays allowlist-only). */
-export async function setUserStatus(admin: User, userId: string, suspend: boolean) {
+/** Suspend or reactivate a user (never changes role; admin role stays allowlist-only).
+ * The optional reason lands in the audit trail and rides the suspension notice. */
+export async function setUserStatus(admin: User, userId: string, suspend: boolean, reason?: string) {
   await loadTarget(admin, userId);
+  const trimmed = reason?.trim().slice(0, 500) || undefined;
   await prisma.user.update({ where: { id: userId }, data: { status: suspend ? "SUSPENDED" : "ACTIVE" } });
   await audit({
     actorId: admin.id,
     action: suspend ? "admin.user.suspend" : "admin.user.activate",
     entity: "User",
     entityId: userId,
+    ...(trimmed ? { metadata: { reason: trimmed } } : {}),
   });
+  if (suspend) {
+    // Tell the user, with the reason when one was given — a silent lockout only breeds
+    // support chats. Best-effort: notification failure never blocks the suspension.
+    await notifyAndPush(userId, "account.suspended", "Hisobingiz vaqtincha toʻxtatildi", {
+      body: trimmed ? `Sabab: ${trimmed}` : "Batafsil maʼlumot uchun qoʻllab-quvvatlashga yozing.",
+    }).catch(() => {});
+  }
+}
+
+/** Cap on a single admin credit adjustment (UZS, either direction). */
+const CREDIT_ADJUST_MAX_UZS = 10_000_000;
+
+/**
+ * Admin support lever: grant (or claw back) promo/referral credit with a mandatory
+ * reason. Balance can never go negative; every adjustment is audited with the delta,
+ * reason, and resulting balance. Positive deltas notify the user.
+ */
+export async function adjustUserCredit(admin: User, userId: string, deltaUzs: number, reason: string) {
+  await loadTarget(admin, userId);
+  const delta = Math.trunc(deltaUzs);
+  const why = reason.trim();
+  if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > CREDIT_ADJUST_MAX_UZS) {
+    throw Errors.validation({ amountUzs: `Must be a non-zero amount up to ${CREDIT_ADJUST_MAX_UZS}` });
+  }
+  if (why.length < 3) throw Errors.validation({ reason: "A reason is required" });
+
+  const newBalance = await prisma.$transaction(async (tx) => {
+    const row = await tx.user.findUnique({ where: { id: userId }, select: { creditBalanceUzs: true } });
+    if (!row) throw Errors.notFound("User not found");
+    const next = row.creditBalanceUzs + delta;
+    if (next < 0) throw Errors.validation({ amountUzs: `Balance would go negative (current ${row.creditBalanceUzs})` });
+    await tx.user.update({ where: { id: userId }, data: { creditBalanceUzs: next } });
+    return next;
+  });
+  await audit({
+    actorId: admin.id,
+    action: "admin.user.credit_adjust",
+    entity: "User",
+    entityId: userId,
+    metadata: { deltaUzs: delta, reason: why, newBalanceUzs: newBalance },
+  });
+  if (delta > 0) {
+    await notifyAndPush(userId, "credit.granted", `🎁 Hisobingizga ${delta.toLocaleString("uz-UZ")} soʻm kredit qoʻshildi`, {
+      body: "Keyingi buyurtmangizda avtomatik qoʻllanadi.",
+    }).catch(() => {});
+  }
+  return newBalance;
 }
 
 /** Toggle a user's seller capability. */

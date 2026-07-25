@@ -3,18 +3,37 @@ import { ok, errorResponse, parseInput, Errors } from "@/lib/api";
 import { isSameOrigin } from "@/lib/http";
 import { getCurrentUser } from "@/lib/session";
 import { requireAdmin } from "@/lib/authz";
-import { setUserStatus, setUserSeller, setUserKyc, adminDeleteUser } from "@/server/services/admin-users";
+import {
+  setUserStatus,
+  setUserSeller,
+  setUserKyc,
+  adminDeleteUser,
+  adjustUserCredit,
+} from "@/server/services/admin-users";
 
 const schema = z
   .object({
-    action: z.enum(["suspend", "unsuspend", "makeSeller", "removeSeller", "kycApprove", "kycReject", "delete"]),
+    action: z.enum([
+      "suspend",
+      "unsuspend",
+      "makeSeller",
+      "removeSeller",
+      "kycApprove",
+      "kycReject",
+      "creditAdjust",
+      "delete",
+    ]),
+    // Suspension reason (optional) — audited and included in the user's notice.
+    reason: z.string().max(500).optional(),
+    // creditAdjust only: signed UZS delta (grant positive, claw back negative).
+    amountUzs: z.number().int().optional(),
     // Deletion is irreversible (anonymize-and-close) — require typed confirmation.
     confirm: z.string().optional(),
   })
   .strict();
 
-/** Admin user actions: suspend / unsuspend / toggle seller / KYC / delete. Never changes role
- * (ADMIN is allowlist-only by design — no UI path may grant it). */
+/** Admin user actions: suspend / unsuspend / toggle seller / KYC / credit / delete. Never
+ * changes role (ADMIN is allowlist-only by design — no UI path may grant it). */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!isSameOrigin(request)) throw Errors.forbidden("Cross-origin request rejected");
@@ -22,14 +41,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!user) throw Errors.unauthenticated();
     requireAdmin(user); // defense-in-depth alongside the service-layer role check
     const { id } = await params;
-    const { action, confirm } = parseInput(schema, await request.json().catch(() => ({})));
-    if (action === "suspend") await setUserStatus(user, id, true);
+    const { action, reason, amountUzs, confirm } = parseInput(schema, await request.json().catch(() => ({})));
+    if (action === "suspend") await setUserStatus(user, id, true, reason);
     else if (action === "unsuspend") await setUserStatus(user, id, false);
     else if (action === "makeSeller") await setUserSeller(user, id, true);
     else if (action === "removeSeller") await setUserSeller(user, id, false);
     else if (action === "kycApprove") await setUserKyc(user, id, "VERIFIED");
     else if (action === "kycReject") await setUserKyc(user, id, "REJECTED");
-    else {
+    else if (action === "creditAdjust") {
+      if (typeof amountUzs !== "number") throw Errors.validation({ amountUzs: "Amount is required" });
+      const newBalanceUzs = await adjustUserCredit(user, id, amountUzs, reason ?? "");
+      return ok({ done: true, newBalanceUzs });
+    } else {
       if (confirm !== "DELETE") throw Errors.validation({ confirm: 'Type "DELETE" to confirm' });
       await adminDeleteUser(user, id);
     }
