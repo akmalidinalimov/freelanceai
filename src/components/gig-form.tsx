@@ -76,6 +76,12 @@ function clearSavedDraft() {
   }
 }
 
+/** True when a restorable local draft exists — lets the new-gig page skip the wizard
+ * and land straight on the form, so the seller actually SEES their restored work. */
+export function hasSavedGigDraft(): boolean {
+  return loadSavedDraft() !== null;
+}
+
 export interface GigInitial {
   title: string;
   description: string;

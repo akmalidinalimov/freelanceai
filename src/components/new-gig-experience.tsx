@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { GigForm, type GigInitial } from "@/components/gig-form";
+import { GigForm, hasSavedGigDraft, type GigInitial } from "@/components/gig-form";
 
 interface Category {
   id: string;
@@ -62,6 +62,13 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
   const t = useTranslations("Gig");
   const [mode, setMode] = useState<"ai" | "form">("ai");
   const [draft, setDraft] = useState<GigInitial | undefined>(undefined);
+
+  // A half-typed gig autosaved in THIS browser beats a fresh wizard: land straight on
+  // the form so the seller sees their restored work (the form shows the restore banner).
+  // Effect, not initializer — localStorage reads during render would break hydration.
+  useEffect(() => {
+    if (hasSavedGigDraft()) setMode("form");
+  }, []);
 
   // Wizard field state — one required sentence; price is optional (server suggests the
   // category's market median when skipped) and the category is inferred from the brief
