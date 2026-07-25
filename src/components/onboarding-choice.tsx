@@ -21,7 +21,9 @@ export function OnboardingChoice({ locale }: { locale: string }) {
       });
       const j = await r.json();
       if (j.ok) {
-        window.location.href = intent === "sell" ? `/${locale}/sell` : `/${locale}/gigs`;
+        // "sell" already turned on isSeller — the /sell landing would just bounce to an
+        // empty dashboard. Land in the gig wizard instead: the first gig IS the onboarding.
+        window.location.href = intent === "sell" ? `/${locale}/dashboard/seller/gigs/new` : `/${locale}/gigs`;
       } else {
         setError(true);
         setBusy(null);

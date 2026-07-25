@@ -50,7 +50,9 @@ export default async function SellPage({ params }: { params: Promise<{ locale: s
     user ? (
       <BecomeCreatorButton locale={locale} />
     ) : (
-      <Link href="/login">
+      // Round-trip the sell intent through login (next = full locale-prefixed path),
+      // so the visitor comes back HERE instead of being dropped on the homepage.
+      <Link href={`/login?next=${encodeURIComponent(`/${locale}/sell`)}`}>
         <Button size="lg">{tg("becomeCreator")}</Button>
       </Link>
     );
