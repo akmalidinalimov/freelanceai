@@ -39,7 +39,11 @@ export default async function OnboardingPage({
         <p className="mt-2 text-[hsl(var(--muted-foreground))]">{t("subtitle")}</p>
       </div>
       <div className="relative">
-        <OnboardingChoice locale={locale} />
+        <OnboardingChoice
+          locale={locale}
+          initialFirstName={user.firstName ?? user.name?.split(" ")[0] ?? ""}
+          initialLastName={user.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? ""}
+        />
       </div>
     </div>
   );

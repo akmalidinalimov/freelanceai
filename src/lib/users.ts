@@ -51,9 +51,11 @@ export async function ensureUsername(userId: string): Promise<void> {
 
 /**
  * Create/refresh a User from a verified Telegram identity, applying the admin
- * allowlist. New users are onboarded immediately (Fiverr-style: everyone is a buyer;
- * selling is the opt-in `isSeller` capability). Admin only via ADMIN_TELEGRAM_IDS.
- * Accepts a transaction client so it can run atomically with token consumption.
+ * allowlist. New users go through the one-time onboarding step (name confirm +
+ * buy/sell intent — founder decision 2026-07-26); everyone remains a buyer by
+ * default and selling stays the opt-in `isSeller` capability. Admin only via
+ * ADMIN_TELEGRAM_IDS. Accepts a transaction client so it can run atomically with
+ * token consumption.
  */
 export async function upsertTelegramUser(
   tg: TelegramUser,
@@ -76,7 +78,9 @@ export async function upsertTelegramUser(
       lastName: tg.lastName,
       photoUrl: tg.photoUrl,
       role: targetRole,
-      onboardingCompleted: true,
+      // The home page routes not-yet-onboarded users to /onboarding exactly once
+      // (names arrive prefilled from Telegram, so it's a confirm + one tap).
+      onboardingCompleted: false,
     },
   });
 }

@@ -300,6 +300,10 @@ model SellerProfile {
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   headline      String?
   bio           String?
+  // Years of AI-creation experience, stored as the band's lower bound
+  // (0 = under a year, 1 = 1–2, 3 = 3–5, 5 = 5+). Asked at onboarding; a trust
+  // badge on the public profile. Null = never answered.
+  experienceYears Int?
   skills          String[]    @default([])
   aiTools         String[]    @default([])
   specializations String[]    @default([])

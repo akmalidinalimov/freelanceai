@@ -25,6 +25,7 @@ export function ProfileForm({
     aiTools: string;
     specializations: string[];
     instagramUsername: string;
+    experienceYears: number | null;
   };
 }) {
   const t = useTranslations("Profile");
@@ -40,6 +41,7 @@ export function ProfileForm({
   const skillSuggestions = SKILLS.map((s) => specLabel(s.key, locale));
   const [instagram, setInstagram] = useState(initial.instagramUsername);
   const [specs, setSpecs] = useState<string[]>(initial.specializations);
+  const [experience, setExperience] = useState<number | null>(initial.experienceYears);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -61,6 +63,7 @@ export function ProfileForm({
         aiTools: aiTools.slice(0, 20),
         specializations: specs,
         instagramUsername: instagram.trim().replace(/^@/, ""),
+        experienceYears: experience,
       }),
     });
     const j = await r.json();
@@ -104,6 +107,31 @@ export function ProfileForm({
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("tools")}</span>
         <TagInput value={aiTools} onChange={setAiTools} suggestions={AI_TOOL_SUGGESTIONS} placeholder={t("tagHint")} ariaLabel={t("tools")} max={20} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium">{t("experience")}</span>
+        <div className="flex flex-wrap gap-2">
+          {([
+            [0, t("exp.0")],
+            [1, t("exp.1")],
+            [3, t("exp.3")],
+            [5, t("exp.5")],
+          ] as const).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={experience === v}
+              onClick={() => setExperience(experience === v ? null : v)}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                experience === v
+                  ? "border-transparent bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                  : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:border-[hsl(var(--primary))]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t("instagram")}</span>

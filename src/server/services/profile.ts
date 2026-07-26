@@ -164,6 +164,8 @@ export interface ProfileInput {
   bannerUrl?: string | null;
   bannerType?: string;
   bannerPosterUrl?: string | null;
+  /** Band lower bound (0 / 1 / 3 / 5); null clears. */
+  experienceYears?: number | null;
 }
 
 /** Only accept a banner media URL that is one of OUR R2 public objects (else null). */
@@ -184,6 +186,7 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
     ...(input.instagramUsername !== undefined
       ? { instagramUsername: normalizeInstagramHandle(input.instagramUsername) }
       : {}),
+    ...(input.experienceYears !== undefined ? { experienceYears: input.experienceYears } : {}),
     ...(input.instagramPosts !== undefined
       ? {
           // Keep only valid, de-duplicated public post/reel links; cap at PORTFOLIO_MAX.

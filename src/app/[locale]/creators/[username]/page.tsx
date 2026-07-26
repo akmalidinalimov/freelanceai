@@ -138,6 +138,12 @@ export default async function CreatorProfilePage({
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-0.5 text-xs font-medium">{t(`level.${profile?.level ?? "NEW"}`)}</span>
+            {/* Experience trust badge — asked at onboarding, buyers see it at a glance. */}
+            {profile?.experienceYears != null && (
+              <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-0.5 text-xs font-medium">
+                🎯 {t(`exp.${profile.experienceYears >= 5 ? 5 : profile.experienceYears >= 3 ? 3 : profile.experienceYears >= 1 ? 1 : 0}`)}
+              </span>
+            )}
             {profile && profile.ratingCount > 0 ? (
               <span className="flex items-center gap-1.5">
                 <Stars value={profile.ratingAvg} />

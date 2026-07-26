@@ -50,6 +50,7 @@ export default async function EditProfilePage({
           aiTools: (profile?.aiTools ?? []).join(", "),
           specializations: profile?.specializations ?? [],
           instagramUsername: profile?.instagramUsername ?? "",
+          experienceYears: profile?.experienceYears ?? null,
         }}
       />
       <Link

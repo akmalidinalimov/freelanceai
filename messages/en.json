@@ -249,7 +249,18 @@
     "hireDesc": "I want to buy AI video and image services",
     "offer": "Offer my work",
     "offerDesc": "I want to provide services as a creator",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "nameFirst": "First name",
+    "nameLast": "Last name",
+    "expTitle": "How much AI-creation experience do you have?",
+    "exp0": "Under 1 year",
+    "exp1": "1–2 years",
+    "exp3": "3–5 years",
+    "exp5": "5+ years",
+    "portfolioTitle": "Samples of your work",
+    "portfolioHint": "Upload 2–4 of your best pieces — buyers trust what they can see. You can add more later.",
+    "continueBtn": "Continue",
+    "skipForNow": "Skip for now"
   },
   "Sell": {
     "eyebrow": "For creators",
@@ -858,7 +869,14 @@
     "avatarType": "Photo must be JPG, PNG or WebP.",
     "avatarSize": "Photo must be under 8 MB.",
     "avatarError": "Couldn't upload the photo. Please try again.",
-    "tagHint": "Type and pick"
+    "tagHint": "Type and pick",
+    "experience": "AI experience",
+    "exp": {
+      "0": "under 1 yr experience",
+      "1": "1–2 yrs experience",
+      "3": "3–5 yrs experience",
+      "5": "5+ yrs experience"
+    }
   },
   "Instagram": {
     "connect": "Connect Instagram",

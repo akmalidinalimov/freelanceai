@@ -249,7 +249,18 @@
     "hireDesc": "Men AI video va rasm xizmatlarini sotib olmoqchiman",
     "offer": "Oʻz ishimni sotish",
     "offerDesc": "Men ijodkor sifatida xizmat koʻrsatmoqchiman",
-    "error": "Xatolik yuz berdi. Qaytadan urinib koʻring."
+    "error": "Xatolik yuz berdi. Qaytadan urinib koʻring.",
+    "nameFirst": "Ism",
+    "nameLast": "Familiya",
+    "expTitle": "AI ijodkorligida qancha tajribangiz bor?",
+    "exp0": "1 yildan kam",
+    "exp1": "1–2 yil",
+    "exp3": "3–5 yil",
+    "exp5": "5+ yil",
+    "portfolioTitle": "Ishlaringizdan namunalar",
+    "portfolioHint": "Eng yaxshi 2–4 ishingizni yuklang — xaridorlar koʻrgan ishiga ishonadi. Keyin ham qoʻshish mumkin.",
+    "continueBtn": "Davom etish",
+    "skipForNow": "Keyinroq"
   },
   "Sell": {
     "eyebrow": "Ijodkorlar uchun",
@@ -858,7 +869,14 @@
     "avatarType": "Rasm JPG, PNG yoki WebP bo'lishi kerak.",
     "avatarSize": "Rasm 8 MB dan katta bo'lmasin.",
     "avatarError": "Rasmni yuklab bo'lmadi. Qayta urinib ko'ring.",
-    "tagHint": "Yozing va tanlang"
+    "tagHint": "Yozing va tanlang",
+    "experience": "AI tajribasi",
+    "exp": {
+      "0": "1 yildan kam tajriba",
+      "1": "1–2 yil tajriba",
+      "3": "3–5 yil tajriba",
+      "5": "5+ yil tajriba"
+    }
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",
