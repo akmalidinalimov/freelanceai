@@ -31,7 +31,13 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/uz/creators/${vanity[1]}`, request.url), 302);
   }
 
-  return intlMiddleware(request);
+  // Expose the requested path to server components (they can't read the URL).
+  // Auth guards use it to build /login?next=<path>, so a Telegram Mini App that
+  // deep-links into a protected page returns THERE after auto-authenticating
+  // instead of being dumped on the home page.
+  const res = intlMiddleware(request);
+  res.headers.set("x-pathname", request.nextUrl.pathname + request.nextUrl.search);
+  return res;
 }
 
 export const config = {

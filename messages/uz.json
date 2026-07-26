@@ -249,7 +249,8 @@
     "emailError": "Yuborib boʻlmadi. Qaytadan urinib koʻring.",
     "emailSigningIn": "Hisobingizga kirilmoqda...",
     "emailLinkInvalid": "Havola yaroqsiz yoki muddati oʻtgan. Qaytadan urinib koʻring.",
-    "loginToContinue": "Davom etish uchun kiring — 30 soniya kifoya. Tanlovingiz saqlanadi."
+    "loginToContinue": "Davom etish uchun kiring — 30 soniya kifoya. Tanlovingiz saqlanadi.",
+    "miniAppSigningIn": "Kirish amalga oshirilmoqda…"
   },
   "Onboarding": {
     "title": "Xush kelibsiz! 👋",

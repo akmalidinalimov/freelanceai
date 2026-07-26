@@ -11,6 +11,15 @@ import { useRouter } from "next/navigation";
  * We hand it to the `telegram-miniapp` Credentials bridge (verified server-side against
  * the bot token) to establish a session with NO password. Outside Telegram (normal web),
  * `initData` is empty and this no-ops. Also calls ready()/expand() for the app-like frame.
+ *
+ * Two things this has to get right, both learned from the WebView behaving unlike a
+ * normal browser:
+ *  1. Skip signing in only when a session REALLY exists (ask /api/auth/session). An
+ *     optimistic "already authed" flag used to stick around after the cookie was gone,
+ *     which left the user staring at the login page for the rest of the launch.
+ *  2. Land where the user was going. A protected page bounces to /login?next=… before
+ *     any client code runs, so after authenticating we follow `next` instead of
+ *     dropping the user on the home page.
  */
 declare global {
   interface Window {
@@ -20,9 +29,20 @@ declare global {
   }
 }
 
+/** True when the browser currently holds a real Auth.js session. */
+async function hasSession(): Promise<boolean> {
+  try {
+    const r = await fetch("/api/auth/session", { cache: "no-store" });
+    const j = await r.json();
+    return Boolean(j?.user?.id);
+  } catch {
+    return false;
+  }
+}
+
 export function TelegramMiniAppBootstrap() {
   const router = useRouter();
-  const done = useRef(false);
+  const running = useRef(false);
 
   const init = useCallback(async () => {
     const wa = window.Telegram?.WebApp;
@@ -31,24 +51,25 @@ export function TelegramMiniAppBootstrap() {
     wa.expand?.();
     const initData = wa.initData;
     if (!initData) return; // opened outside Telegram — nothing to do
-    // Once per Mini App session: sessionStorage survives full reloads within the
-    // WebView; the ref covers client-side (SPA) navigations. Avoids re-signing an
-    // already-authenticated user on every open.
-    if (done.current) return;
-    done.current = true;
+    if (running.current) return; // guard against onReady+onLoad both firing
+    running.current = true;
+
     try {
-      if (sessionStorage.getItem("tg_miniapp_authed") === "1") return;
-    } catch {
-      /* private mode — proceed */
-    }
-    const res = await signIn("telegram-miniapp", { initData, redirect: false }).catch(() => null);
-    if (res?.ok && !res.error) {
-      try {
-        sessionStorage.setItem("tg_miniapp_authed", "1");
-      } catch {
-        /* ignore */
+      // Already signed in (cookie survived from an earlier launch) → nothing to do.
+      if (await hasSession()) return;
+
+      const res = await signIn("telegram-miniapp", { initData, redirect: false }).catch(() => null);
+      if (!res?.ok || res.error) return; // stale/replayed initData — leave the login UI up
+
+      // Follow the destination the guard preserved, else re-render as logged-in.
+      const next = new URLSearchParams(window.location.search).get("next");
+      if (next && next.startsWith("/") && !next.startsWith("//")) {
+        window.location.href = next;
+        return;
       }
-      router.refresh(); // re-render server components as logged-in
+      router.refresh();
+    } finally {
+      running.current = false;
     }
   }, [router]);
 

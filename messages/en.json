@@ -249,7 +249,8 @@
     "emailError": "Couldn't send. Please try again.",
     "emailSigningIn": "Signing you in...",
     "emailLinkInvalid": "This link is invalid or expired. Please try again.",
-    "loginToContinue": "Sign in to continue — takes 30 seconds. Your selection is saved."
+    "loginToContinue": "Sign in to continue — takes 30 seconds. Your selection is saved.",
+    "miniAppSigningIn": "Signing you in…"
   },
   "Onboarding": {
     "title": "Welcome aboard! 👋",

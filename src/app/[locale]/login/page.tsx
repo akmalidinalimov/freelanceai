@@ -6,6 +6,7 @@ import { safeInternalPath } from "@/lib/utils";
 import { TelegramDeepLinkLogin } from "@/components/telegram-deeplink-login";
 import { GoogleLoginButton } from "@/components/google-login-button";
 import { EmailLoginForm } from "@/components/email-login-form";
+import { MiniAppSigningIn } from "@/components/miniapp-signing-in";
 import { emailConfigured } from "@/lib/email";
 
 export default async function LoginPage({
@@ -38,7 +39,10 @@ export default async function LoginPage({
   const ta = await getTranslations("Auth");
 
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
+    <div className="relative mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
+      {/* Inside Telegram the Mini App bridge signs in a moment later — cover the
+          login options so they don't flash (self-dismisses if it doesn't land). */}
+      <MiniAppSigningIn />
       <div>
         <h1 className="text-3xl font-bold">{t("login")}</h1>
         <p className="mt-2 text-[hsl(var(--muted-foreground))]">
