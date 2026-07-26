@@ -29,6 +29,8 @@ const schema = z
       "publish",
       "duplicate",
     ]),
+    // Moderation rejection reason — audited and sent to the seller.
+    reason: z.string().max(500).optional(),
   })
   .strict();
 
@@ -73,6 +75,7 @@ const editSchema = z
   })
   .strict();
 
+
 /** Owner gig management + admin moderation (approve/reject) + report. Authz enforced in the service. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -80,12 +83,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
     const { id } = await params;
-    const { action } = parseInput(schema, await request.json().catch(() => ({})));
+    const { action, reason } = parseInput(schema, await request.json().catch(() => ({})));
     if (action === "pause") await pauseGig(id, user);
     else if (action === "resume") await resumeGig(id, user);
     else if (action === "delete") await softDeleteGig(id, user);
     else if (action === "approve") await approveGig(id, user);
-    else if (action === "reject") await rejectGig(id, user);
+    else if (action === "reject") await rejectGig(id, user, reason);
     else if (action === "feature") await setGigFeatured(id, user, true);
     else if (action === "unfeature") await setGigFeatured(id, user, false);
     else if (action === "publish") await publishGig(id, user);

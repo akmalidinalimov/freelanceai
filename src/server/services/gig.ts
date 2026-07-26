@@ -287,24 +287,49 @@ export const resumeGig = (gigId: string, user: GigActor) =>
 export const softDeleteGig = (gigId: string, user: GigActor) =>
   updateOwnedGig(gigId, user, { deletedAt: new Date(), status: "PAUSED" }, "gig.softDelete");
 
-/** Gigs awaiting moderation — admin queue. */
+/** Gigs awaiting moderation — admin queue, with everything needed to judge the
+ * listing IN the queue (public gig pages 404 for PENDING_REVIEW, so this is the
+ * only place an admin can actually see what they're approving). */
 export function listPendingGigs() {
   return prisma.gig.findMany({
     where: { status: "PENDING_REVIEW", deletedAt: null },
     orderBy: { createdAt: "asc" },
     take: 100,
     include: {
-      packages: { orderBy: { priceUzs: "asc" }, take: 1 },
-      seller: { select: { firstName: true, name: true, username: true } },
+      packages: { orderBy: { priceUzs: "asc" } },
+      seller: {
+        select: {
+          id: true,
+          firstName: true,
+          name: true,
+          username: true,
+          createdAt: true,
+          sellerProfile: { select: { approvalStatus: true, experienceYears: true } },
+          _count: { select: { gigs: true, flags: true } },
+        },
+      },
     },
   });
 }
 
-async function moderateGig(gigId: string, admin: GigActor, status: "ACTIVE" | "REJECTED", action: string) {
+async function moderateGig(
+  gigId: string,
+  admin: GigActor,
+  status: "ACTIVE" | "REJECTED",
+  action: string,
+  reason?: string
+) {
   if (admin.role !== "ADMIN") throw Errors.forbidden("Admins only");
+  const why = reason?.trim().slice(0, 500) || undefined;
   const res = await prisma.gig.updateMany({ where: { id: gigId, deletedAt: null }, data: { status } });
   if (res.count === 0) throw Errors.notFound("Gig not found");
-  await audit({ actorId: admin.id, action, entity: "Gig", entityId: gigId });
+  await audit({
+    actorId: admin.id,
+    action,
+    entity: "Gig",
+    entityId: gigId,
+    ...(why ? { metadata: { reason: why } } : {}),
+  });
   const gig = await prisma.gig.findUnique({
     where: { id: gigId },
     select: { sellerId: true, title: true, slug: true },
@@ -319,8 +344,11 @@ async function moderateGig(gigId: string, admin: GigActor, status: "ACTIVE" | "R
     // A newly-approved gig is now public — let the seller's followers know (best-effort).
     await notifyFollowersOfNewGig(gig.sellerId, gig.title, gig.slug).catch(() => {});
   } else {
+    // A rejection without a reason teaches the seller nothing — include it when given.
     await notifyAndPush(gig.sellerId, "gig.rejected", "Xizmat tasdiqlanmadi", {
-      body: `"${gig.title}" moderatsiyadan oʻtmadi. Iltimos, qoidalarni tekshirib qayta yuboring.`,
+      body: why
+        ? `"${gig.title}" moderatsiyadan oʻtmadi.\nSabab: ${why}\nTuzatib qayta yuborishingiz mumkin.`
+        : `"${gig.title}" moderatsiyadan oʻtmadi. Iltimos, qoidalarni tekshirib qayta yuboring.`,
       link: `/dashboard/seller`,
     });
   }
@@ -328,8 +356,8 @@ async function moderateGig(gigId: string, admin: GigActor, status: "ACTIVE" | "R
 
 export const approveGig = (gigId: string, admin: GigActor) =>
   moderateGig(gigId, admin, "ACTIVE", "gig.approve");
-export const rejectGig = (gigId: string, admin: GigActor) =>
-  moderateGig(gigId, admin, "REJECTED", "gig.reject");
+export const rejectGig = (gigId: string, admin: GigActor, reason?: string) =>
+  moderateGig(gigId, admin, "REJECTED", "gig.reject", reason);
 
 /** Anyone can report a live gig — logged for admin review (non-hiding to prevent griefing). */
 export async function reportGig(gigId: string, reporter: GigActor) {
