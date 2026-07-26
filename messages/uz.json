@@ -726,7 +726,15 @@
     "noPendingSellers": "Tasdiqlash kutayotgan sotuvchilar yoʻq.",
     "sellerGigCount": "{n} ta xizmat",
     "sellerRejectReasonPh": "Rad etish sababi",
-    "error": "Xatolik yuz berdi."
+    "error": "Xatolik yuz berdi.",
+    "navMain": "Asosiy",
+    "navStats": "Statistika",
+    "navQueues": "Navbatlar",
+    "navPeople": "Odamlar",
+    "navMoney": "Moliya",
+    "navSystem": "Tizim",
+    "navConversations": "Suhbatlar",
+    "navCategories": "Kategoriyalar"
   },
   "SellerApproval": {
     "incompleteTitle": "Koʻrinadigan boʻlish uchun sozlashni yakunlang",

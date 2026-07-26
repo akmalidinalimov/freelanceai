@@ -1,6 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { getAdminStats, getAdminActivityStats } from "@/server/services/analytics";
 import { getPairStats, getCategoryStats } from "@/server/services/admin-conversations";
@@ -13,7 +12,6 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
   setRequestLocale(locale);
   await requireAdminUser(locale);
   const t = await getTranslations("Admin");
-  const td = await getTranslations("Dispute");
   // Core stats stay fatal; the two insight tables degrade to empty so a failure
   // there can't take down the incident-response entry point.
   const [stats, act, pairs, categories] = await Promise.all([
@@ -35,51 +33,9 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">{t("dashboard")}</h1>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/admin/settlements">
-            <Button variant="outline" size="sm">{t("title")}</Button>
-          </Link>
-          <Link href="/admin/moderation">
-            <Button variant="outline" size="sm">{t("moderation")}</Button>
-          </Link>
-          <Link href="/admin/sellers">
-            <Button variant="outline" size="sm">{t("sellersTitle")}</Button>
-          </Link>
-          <Link href="/admin/disputes">
-            <Button variant="outline" size="sm">{td("adminTitle")}</Button>
-          </Link>
-          <Link href="/admin/coupons">
-            <Button variant="outline" size="sm">{t("coupons")}</Button>
-          </Link>
-          <Link href="/admin/categories">
-            <Button variant="outline" size="sm">Categories</Button>
-          </Link>
-          <Link href="/admin/kyc">
-            <Button variant="outline" size="sm">KYC</Button>
-          </Link>
-          <Link href="/admin/users">
-            <Button variant="outline" size="sm">{t("users")}</Button>
-          </Link>
-          <Link href="/admin/conversations">
-            <Button variant="outline" size="sm">Conversations</Button>
-          </Link>
-          <Link href="/admin/flags">
-            <Button variant="outline" size="sm">Red flags</Button>
-          </Link>
-          <Link href="/admin/broadcast">
-            <Button variant="outline" size="sm">Broadcast</Button>
-          </Link>
-          <Link href="/admin/audit">
-            <Button variant="outline" size="sm">{t("audit")}</Button>
-          </Link>
-          <Link href="/admin/search-debug">
-            <Button variant="outline" size="sm">Search debug</Button>
-          </Link>
-        </div>
-      </div>
+    <div className="mx-auto max-w-5xl px-0 py-6 lg:px-4">
+      {/* Navigation lives in the admin sidebar (admin/layout.tsx) — this page is pure KPIs. */}
+      <h1 className="mb-6 text-3xl font-bold">{t("dashboard")}</h1>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         {money.map((m) => (

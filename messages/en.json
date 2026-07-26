@@ -726,7 +726,15 @@
     "noPendingSellers": "No sellers awaiting approval.",
     "sellerGigCount": "{n} gigs",
     "sellerRejectReasonPh": "Reason for rejection",
-    "error": "Something went wrong."
+    "error": "Something went wrong.",
+    "navMain": "Main",
+    "navStats": "Statistics",
+    "navQueues": "Queues",
+    "navPeople": "People",
+    "navMoney": "Finance",
+    "navSystem": "System",
+    "navConversations": "Conversations",
+    "navCategories": "Categories"
   },
   "SellerApproval": {
     "incompleteTitle": "Finish setting up to go live",

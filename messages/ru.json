@@ -726,7 +726,15 @@
     "noPendingSellers": "Нет продавцов на одобрении.",
     "sellerGigCount": "Услуг: {n}",
     "sellerRejectReasonPh": "Причина отклонения",
-    "error": "Что-то пошло не так."
+    "error": "Что-то пошло не так.",
+    "navMain": "Основное",
+    "navStats": "Статистика",
+    "navQueues": "Очереди",
+    "navPeople": "Пользователи",
+    "navMoney": "Финансы",
+    "navSystem": "Система",
+    "navConversations": "Диалоги",
+    "navCategories": "Категории"
   },
   "SellerApproval": {
     "incompleteTitle": "Завершите настройку, чтобы стать видимым",
