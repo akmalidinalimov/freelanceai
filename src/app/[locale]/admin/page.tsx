@@ -169,7 +169,12 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
 
       <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {counts.map((c) => (
-          <div key={c.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-4">
+          // White card, same treatment as the money KPIs — a tinted tile
+          // disappeared into the sandstone page background.
+          <div
+            key={c.label}
+            className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-[var(--shadow-soft)]"
+          >
             <p className="text-xs text-[hsl(var(--muted-foreground))]">{c.label}</p>
             <p className="mt-1 text-xl font-bold tabular-nums">{c.value.toLocaleString()}</p>
           </div>
@@ -193,7 +198,12 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
           { label: "Messages 7d", value: act.messages.d7 },
           { label: "KYC verified", value: act.kycVerified },
         ].map((c) => (
-          <div key={c.label} className="rounded-lg bg-[hsl(var(--muted))]/40 p-4">
+          // White card, same treatment as the money KPIs — a tinted tile
+          // disappeared into the sandstone page background.
+          <div
+            key={c.label}
+            className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-[var(--shadow-soft)]"
+          >
             <p className="text-xs text-[hsl(var(--muted-foreground))]">{c.label}</p>
             <p className="mt-1 text-xl font-bold tabular-nums">{c.value.toLocaleString()}</p>
           </div>
@@ -210,7 +220,10 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
           { label: "Contact clicks", value: act.funnel.contactCtaClicks },
           { label: "Conversations started", value: act.funnel.conversationsStarted },
         ].map((c) => (
-          <div key={c.label} className="rounded-lg border border-[hsl(var(--border))] p-4">
+          <div
+            key={c.label}
+            className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-[var(--shadow-soft)]"
+          >
             <p className="text-xs text-[hsl(var(--muted-foreground))]">{c.label}</p>
             <p className="mt-1 text-xl font-bold tabular-nums">{c.value.toLocaleString()}</p>
           </div>

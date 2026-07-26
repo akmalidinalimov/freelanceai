@@ -1,7 +1,7 @@
 import "server-only";
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { tgSendMessage, tgOpenButton, tgFileUrl } from "@/lib/telegram-bot";
+import { tgSendMessage, tgOpenButton, tgFileUrl, miniAppUrl } from "@/lib/telegram-bot";
 import { uploadFromUrl } from "@/lib/media";
 import { addPortfolioItem } from "@/server/services/profile";
 import { audit } from "@/lib/audit";
@@ -19,13 +19,31 @@ type Loc = "uz" | "ru" | "en";
 const asLoc = (l?: string | null): Loc => (l === "ru" || l === "en" ? l : "uz");
 
 const T = {
+  // Primary welcome: one tap opens the profile form in the Mini App, where fields and
+  // the photo upload (with cropping) live. The chat Q&A stays as a second button for
+  // anyone who would rather answer here.
   kickoff: {
-    uz: (f: string, l: string) =>
-      `🎉 Gigora'ga xush kelibsiz!\nKeling, shu yerning oʻzida 30 soniyada tanishib olamiz — atigi 2-3 savol 😉\n\n👤 Siz: ${f}${l ? " " + l : ""}\nToʻgʻrimi?`,
-    ru: (f: string, l: string) =>
-      `🎉 Добро пожаловать в Gigora!\nДавайте познакомимся прямо здесь — всего 2-3 вопроса, 30 секунд 😉\n\n👤 Вы: ${f}${l ? " " + l : ""}\nВерно?`,
-    en: (f: string, l: string) =>
-      `🎉 Welcome to Gigora!\nLet's get you set up right here — 2-3 questions, 30 seconds 😉\n\n👤 You: ${f}${l ? " " + l : ""}\nIs that right?`,
+    uz: (f: string) =>
+      `🎉 Xush kelibsiz${f ? ", " + f : ""}!\n\nProfilingizni toʻldirib olamiz — ism, nima ish qilasiz va profil rasmi. Bir daqiqa vaqt oladi ✨\n\nPastdagi tugmani bosing 👇`,
+    ru: (f: string) =>
+      `🎉 Добро пожаловать${f ? ", " + f : ""}!\n\nЗаполним профиль — имя, чем вы занимаетесь и фото профиля. Это займёт минуту ✨\n\nНажмите кнопку ниже 👇`,
+    en: (f: string) =>
+      `🎉 Welcome${f ? ", " + f : ""}!\n\nLet's fill in your profile — your name, what you do, and a profile photo. Takes a minute ✨\n\nTap the button below 👇`,
+  },
+  openForm: {
+    uz: "✍️ Profilni toʻldirish",
+    ru: "✍️ Заполнить профиль",
+    en: "✍️ Fill in my profile",
+  },
+  chatInstead: {
+    uz: "💬 Shu yerda javob beraman",
+    ru: "💬 Ответить здесь",
+    en: "💬 Answer here instead",
+  },
+  chatIntro: {
+    uz: (f: string, l: string) => `Yaxshi! 😉\n\n👤 Siz: ${f}${l ? " " + l : ""}\nToʻgʻrimi?`,
+    ru: (f: string, l: string) => `Хорошо! 😉\n\n👤 Вы: ${f}${l ? " " + l : ""}\nВерно?`,
+    en: (f: string, l: string) => `Sure! 😉\n\n👤 You: ${f}${l ? " " + l : ""}\nIs that right?`,
   },
   nameOk: { uz: "✅ Toʻgʻri", ru: "✅ Верно", en: "✅ That's me" },
   nameEdit: { uz: "✏️ Boshqacha", ru: "✏️ Изменить", en: "✏️ Edit" },
@@ -86,7 +104,12 @@ const kb = (rows: { text: string; data: string }[][]) => ({
   inline_keyboard: rows.map((r) => r.map((b) => ({ text: b.text, callback_data: b.data }))),
 });
 
-/** Kick off the conversation (after login confirm, or /start with an unfinished profile). */
+/**
+ * Kick off onboarding (after login confirm, or /start with an unfinished profile).
+ * Leads with a Mini App button into the profile form — that's where the fields and
+ * the photo upload (with cropping) actually live. A second button keeps the
+ * answer-in-chat path for anyone who prefers it.
+ */
 export async function startBotOnboarding(
   tgId: number | string,
   firstName: string,
@@ -94,11 +117,12 @@ export async function startBotOnboarding(
   locale?: string | null
 ): Promise<void> {
   const L = asLoc(locale);
-  await tgSendMessage(
-    tgId,
-    T.kickoff[L](firstName || "—", lastName || ""),
-    kb([[{ text: T.nameOk[L], data: "ob:n:ok" }, { text: T.nameEdit[L], data: "ob:n:edit" }]])
-  );
+  await tgSendMessage(tgId, T.kickoff[L](firstName || ""), {
+    inline_keyboard: [
+      [{ text: T.openForm[L], web_app: { url: miniAppUrl(locale ?? undefined, "/onboarding") } }],
+      [{ text: T.chatInstead[L], callback_data: "ob:chat" }],
+    ],
+  });
 }
 
 const askRole = (tgId: number | string, L: Loc, firstName: string) =>
@@ -130,6 +154,15 @@ export async function handleOnboardCallback(account: User, data: string): Promis
   const L = asLoc(account.locale);
   const tgId = String(account.telegramId);
 
+  if (data === "ob:chat") {
+    // They chose to answer in the chat — start with the name confirmation.
+    await tgSendMessage(
+      tgId,
+      T.chatIntro[L](account.firstName ?? "—", account.lastName ?? ""),
+      kb([[{ text: T.nameOk[L], data: "ob:n:ok" }, { text: T.nameEdit[L], data: "ob:n:edit" }]])
+    );
+    return undefined;
+  }
   if (data === "ob:n:ok") {
     await askRole(tgId, L, account.firstName ?? "");
     return undefined;
