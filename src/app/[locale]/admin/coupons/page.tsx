@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { listCoupons } from "@/server/services/coupon";
 import { formatUzs } from "@/lib/utils";
@@ -9,12 +9,13 @@ export const dynamic = "force-dynamic";
 export default async function AdminCouponsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const ta = await getTranslations("Admin");
   await requireAdminUser(locale);
   const coupons = await listCoupons();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold">Promo codes</h1>
+      <h1 className="mb-6 text-2xl font-bold">{ta("coupons")}</h1>
       <div className="mb-6">
         <CouponForm />
       </div>

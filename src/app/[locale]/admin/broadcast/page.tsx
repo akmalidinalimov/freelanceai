@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { listBroadcasts } from "@/server/services/broadcast";
@@ -11,6 +11,7 @@ const dt = (d: Date) => new Date(d).toISOString().slice(0, 16).replace("T", " ")
 export default async function AdminBroadcastPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const ta = await getTranslations("Admin");
   await requireAdminUser(locale);
   const history = await listBroadcasts();
 
@@ -21,7 +22,7 @@ export default async function AdminBroadcastPage({ params }: { params: Promise<{
           ← Admin
         </Link>
       </p>
-      <h1 className="mb-1 text-2xl font-bold">Broadcast</h1>
+      <h1 className="mb-1 text-2xl font-bold">{ta("navBroadcast")}</h1>
       <p className="mb-6 text-sm text-[hsl(var(--muted-foreground))]">
         Send a one-off message to Telegram bot users. Throttled + resumable; blocked users are
         skipped automatically.

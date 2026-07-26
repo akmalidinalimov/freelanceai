@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { matchCreators } from "@/server/services/match";
 
@@ -14,6 +14,7 @@ export default async function SearchDebugPage({
   const { locale } = await params;
   const { q } = await searchParams;
   setRequestLocale(locale);
+  const ta = await getTranslations("Admin");
   await requireAdminUser(locale);
 
   const query = (q ?? "").trim();
@@ -21,7 +22,7 @@ export default async function SearchDebugPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="mb-1 text-2xl font-bold">Search debug</h1>
+      <h1 className="mb-1 text-2xl font-bold">{ta("navSearchDebug")}</h1>
       <p className="mb-6 text-sm text-[hsl(var(--muted-foreground))]">
         Ranking = 0.50·relevance + 0.25·proof + 0.25·quality. Proven niche matches lift
         relevance (+0.5) above declared-only (+0.25).

@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { listConversationsForAdmin } from "@/server/services/admin-conversations";
@@ -18,6 +18,7 @@ export default async function AdminConversationsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const ta = await getTranslations("Admin");
   await requireAdminUser(locale);
   const { user } = await searchParams;
   const convos = await listConversationsForAdmin(user);
@@ -29,7 +30,7 @@ export default async function AdminConversationsPage({
           ← Admin
         </Link>
       </p>
-      <h1 className="mb-1 text-2xl font-bold">Conversations</h1>
+      <h1 className="mb-1 text-2xl font-bold">{ta("navConversations")}</h1>
       <p className="mb-6 text-sm text-[hsl(var(--muted-foreground))]">
         Read-only moderation view. Every transcript you open is recorded in the audit log.
         {user && (

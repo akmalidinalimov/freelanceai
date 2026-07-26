@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { getAdminInfographics } from "@/server/services/analytics";
@@ -114,6 +114,7 @@ function Trend({
 export default async function AdminStatsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const ta = await getTranslations("Admin");
   await requireAdminUser(locale);
   const s = await getAdminInfographics();
 
@@ -123,7 +124,7 @@ export default async function AdminStatsPage({ params }: { params: Promise<{ loc
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Statistics</h1>
+          <h1 className="text-3xl font-bold">{ta("navStats")}</h1>
           <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">Live platform overview</p>
         </div>
         <Link href="/admin" className="text-sm font-medium text-[hsl(var(--primary-ink))] hover:underline">

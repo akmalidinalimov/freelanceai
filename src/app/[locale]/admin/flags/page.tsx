@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireAdminUser } from "@/lib/auth-guards";
 import { listFlaggedUsers } from "@/server/services/red-flags";
@@ -28,6 +28,7 @@ const SIGNAL_LABEL: Record<string, string> = {
 export default async function AdminFlagsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const ta = await getTranslations("Admin");
   await requireAdminUser(locale);
   const flagged = await listFlaggedUsers();
 
@@ -38,7 +39,7 @@ export default async function AdminFlagsPage({ params }: { params: Promise<{ loc
           ← Admin
         </Link>
       </p>
-      <h1 className="mb-1 text-2xl font-bold">Red flags</h1>
+      <h1 className="mb-1 text-2xl font-bold">{ta("navFlags")}</h1>
       <p className="mb-6 text-sm text-[hsl(var(--muted-foreground))]">
         Deterministic trust &amp; safety signals, recomputed nightly. Every flag carries its
         evidence — click through to the user to investigate (their conversations are one link

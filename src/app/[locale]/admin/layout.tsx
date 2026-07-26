@@ -3,6 +3,7 @@ import { requireAdminUser } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { getAdminPendingCounts } from "@/server/services/analytics";
 import { AdminSidebar, type AdminNavGroup } from "@/components/admin-sidebar";
+import { AdminQuickSearch } from "@/components/admin-quick-search";
 
 /**
  * Admin shell: every /admin page gets the grouped sidebar (desktop) or chip bar
@@ -50,7 +51,7 @@ export default async function AdminLayout({
       items: [
         { href: "/admin/users", label: t("users") },
         { href: "/admin/conversations", label: t("navConversations") },
-        { href: "/admin/flags", label: "Red flags" },
+        { href: "/admin/flags", label: t("navFlags") },
       ],
     },
     {
@@ -63,10 +64,10 @@ export default async function AdminLayout({
     {
       heading: t("navSystem"),
       items: [
-        { href: "/admin/broadcast", label: "Broadcast" },
+        { href: "/admin/broadcast", label: t("navBroadcast") },
         { href: "/admin/categories", label: t("navCategories") },
         { href: "/admin/audit", label: t("audit") },
-        { href: "/admin/search-debug", label: "Search debug" },
+        { href: "/admin/search-debug", label: t("navSearchDebug") },
       ],
     },
   ];
@@ -74,7 +75,12 @@ export default async function AdminLayout({
   return (
     <div className="mx-auto flex max-w-7xl flex-col px-4 pt-4 lg:flex-row lg:gap-2 lg:px-6">
       <AdminSidebar groups={groups} />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1">
+        <div className="pt-2 lg:px-4">
+          <AdminQuickSearch />
+        </div>
+        {children}
+      </div>
     </div>
   );
 }
