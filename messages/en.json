@@ -49,7 +49,10 @@
     "select": "select",
     "bulkReasonPh": "Reason (audited + sent to users)…",
     "bulkCredit": "Grant credit",
-    "bulkGrant": "Grant to"
+    "bulkGrant": "Grant to",
+    "tagCourse": "Tag as course student",
+    "untagCourse": "Untag course",
+    "courseStudent": "AI CREATORS course graduate"
   },
   "AdminAudit": {
     "title": "Audit log",
@@ -555,7 +558,12 @@
     "gs_PAUSED": "Paused",
     "gs_REJECTED": "Rejected",
     "noGigsCta": "Create your first gig with AI in a couple of taps.",
-    "verified": "Verified"
+    "verified": "Verified",
+    "secProof": "Proof of work for this service",
+    "proofHint": "A public channel or Instagram showing THIS kind of work. Buyers trust what they can see.",
+    "proofTelegram": "Telegram channel",
+    "proofInstagram": "Instagram username",
+    "reviewNotice": "After you publish, this service goes to review. Buyers see it once it's approved — we'll notify you."
   },
   "Order": {
     "bannerRevision": "Revision in progress",

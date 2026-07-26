@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma, User } from "@prisma/client";
 import { uniqueSlug } from "@/lib/slug";
 import { foldToLatin } from "@/lib/translit";
+import { normalizeTelegramChannel } from "@/lib/telegram-link";
+import { normalizeInstagramHandle } from "@/lib/instagram-link";
 import { audit } from "@/lib/audit";
 import { stripContactInfo } from "@/lib/sanitize";
 import { Errors } from "@/lib/api";
@@ -60,6 +62,9 @@ export interface CreateGigInput {
   faq?: GigFaqItem[];
   extras?: GigExtraInput[];
   requirementPrompts?: string[];
+  /** Per-gig proof of work: public Telegram channel handle / Instagram handle. */
+  portfolioTelegram?: string;
+  portfolioInstagram?: string;
   draft?: boolean;
   packages: GigPackageInput[];
 }
@@ -129,6 +134,8 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
       requirementPrompts: cleanPrompts(input.requirementPrompts),
       categoryId: input.categoryId || null,
       tags: normalizeTags(input.tags),
+      portfolioTelegram: input.portfolioTelegram ? normalizeTelegramChannel(input.portfolioTelegram) : null,
+      portfolioInstagram: input.portfolioInstagram ? normalizeInstagramHandle(input.portfolioInstagram) : null,
       locale: input.locale ?? "uz",
       // Drafts stay private; otherwise new gigs await moderation (admins publish immediately).
       status: input.draft ? "DRAFT" : autoApprove ? "ACTIVE" : "PENDING_REVIEW",
@@ -213,6 +220,8 @@ export async function updateGig(gigId: string, user: GigActor, input: CreateGigI
         galleryUrls: (input.galleryUrls ?? []).slice(0, 8),
         categoryId: input.categoryId || null,
         tags: normalizeTags(input.tags),
+        portfolioTelegram: input.portfolioTelegram ? normalizeTelegramChannel(input.portfolioTelegram) : null,
+        portfolioInstagram: input.portfolioInstagram ? normalizeInstagramHandle(input.portfolioInstagram) : null,
         faq,
         requirementPrompts: cleanPrompts(input.requirementPrompts),
         packages: {

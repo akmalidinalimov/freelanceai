@@ -49,7 +49,10 @@
     "select": "tanlash",
     "bulkReasonPh": "Sabab (audit + foydalanuvchilarga)…",
     "bulkCredit": "Kredit berish",
-    "bulkGrant": "Berish"
+    "bulkGrant": "Berish",
+    "tagCourse": "Kurs oʻquvchisi deb belgilash",
+    "untagCourse": "Kurs belgisini olib tashlash",
+    "courseStudent": "AI CREATORS kursi bitiruvchisi"
   },
   "AdminAudit": {
     "title": "Audit jurnali",
@@ -555,7 +558,12 @@
     "gs_PAUSED": "To'xtatilgan",
     "gs_REJECTED": "Rad etilgan",
     "noGigsCta": "AI yordamida bir necha tugmada birinchi e'loningizni yarating.",
-    "verified": "Tasdiqlangan"
+    "verified": "Tasdiqlangan",
+    "secProof": "Bu xizmat uchun ish namunalari",
+    "proofHint": "SHU turdagi ishlaringiz koʻrinadigan ochiq kanal yoki Instagram. Xaridorlar koʻrgan ishiga ishonadi.",
+    "proofTelegram": "Telegram kanal",
+    "proofInstagram": "Instagram foydalanuvchi nomi",
+    "reviewNotice": "E'lon qilgach, xizmat tekshiruvga yuboriladi. Tasdiqlangach xaridorlar koʻra boshlaydi — sizga xabar beramiz."
   },
   "Order": {
     "bannerRevision": "Tahrir jarayonda",

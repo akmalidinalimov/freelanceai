@@ -7,7 +7,7 @@ import { bulkUserAction } from "@/server/services/admin-users";
 
 const schema = z
   .object({
-    action: z.enum(["suspend", "unsuspend", "makeSeller", "removeSeller", "creditGrant"]),
+    action: z.enum(["suspend", "unsuspend", "makeSeller", "removeSeller", "creditGrant", "tagCourse", "untagCourse"]),
     userIds: z.array(z.string().min(1).max(40)).min(1).max(200),
     reason: z.string().max(500).optional(),
     amountUzs: z.number().int().positive().optional(),

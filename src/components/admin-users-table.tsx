@@ -14,6 +14,7 @@ export interface AdminUserRow {
   approvalStatus: string | null;
   status: string;
   kycStatus: string;
+  isCourseStudent: boolean;
   orders: number;
   sales: number;
   flags: number;
@@ -21,7 +22,14 @@ export interface AdminUserRow {
   lastSeenAt: string | null;
 }
 
-type Bulk = "suspend" | "unsuspend" | "makeSeller" | "removeSeller" | "creditGrant";
+type Bulk =
+  | "suspend"
+  | "unsuspend"
+  | "makeSeller"
+  | "removeSeller"
+  | "creditGrant"
+  | "tagCourse"
+  | "untagCourse";
 
 /** Compact "how long ago". */
 function ago(iso: string | null): string {
@@ -143,6 +151,12 @@ export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
           <button type="button" className={btn} disabled={busy} onClick={() => setMode(mode === "creditGrant" ? null : "creditGrant")}>
             🎁 {t("bulkCredit")}…
           </button>
+          <button type="button" className={btn} disabled={busy} onClick={() => run("tagCourse")}>
+            🎓 {t("tagCourse")}
+          </button>
+          <button type="button" className={btn} disabled={busy} onClick={() => run("untagCourse")}>
+            {t("untagCourse")}
+          </button>
 
           {/* Reason / amount inputs appear for the actions that require them. */}
           {mode === "suspend" && (
@@ -236,6 +250,14 @@ export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
                   <Link href={`/admin/users/${u.id}`} className="font-medium text-[hsl(var(--primary-ink))] hover:underline">
                     {u.name || "(no name)"}
                   </Link>
+                  {u.isCourseStudent && (
+                    <span
+                      title={t("courseStudent")}
+                      className="ml-1 rounded-full bg-[hsl(var(--primary))]/12 px-1.5 py-0.5 text-[10px] font-bold text-[hsl(var(--primary-ink))]"
+                    >
+                      🎓
+                    </span>
+                  )}
                   <span className="block truncate text-xs text-[hsl(var(--muted-foreground))]">
                     {u.username && `@${u.username}`} {u.email && `· ${u.email}`}
                   </span>

@@ -51,6 +51,8 @@ interface SavedDraft {
   faq: { q: string; a: string }[];
   extras: { title: string; priceUzs: string; deliveryDays: string }[];
   reqPrompts: string[];
+  pfTelegram?: string;
+  pfInstagram?: string;
   pkgs: Record<Tier, PkgState>;
   visibleTiers: Tier[];
 }
@@ -97,6 +99,8 @@ export interface GigInitial {
   faq: { q: string; a: string }[];
   extras: { title: string; priceUzs: string; deliveryDays: string }[];
   requirementPrompts: string[];
+  portfolioTelegram?: string;
+  portfolioInstagram?: string;
   packages: Partial<Record<Tier, PkgState>>;
 }
 
@@ -168,6 +172,8 @@ export function GigForm({
     initial?.extras ?? []
   );
   const [reqPrompts, setReqPrompts] = useState<string[]>(initial?.requirementPrompts ?? []);
+  const [pfTelegram, setPfTelegram] = useState(initial?.portfolioTelegram ?? "");
+  const [pfInstagram, setPfInstagram] = useState(initial?.portfolioInstagram ?? "");
   const [pkgs, setPkgs] = useState<Record<Tier, PkgState>>(() => ({
     BASIC: initial?.packages?.BASIC ?? { ...emptyPkg },
     STANDARD: initial?.packages?.STANDARD ?? { ...emptyPkg },
@@ -204,6 +210,8 @@ export function GigForm({
         setFaq(Array.isArray(saved.faq) ? saved.faq : []);
         setExtras(Array.isArray(saved.extras) ? saved.extras : []);
         setReqPrompts(Array.isArray(saved.reqPrompts) ? saved.reqPrompts : []);
+        setPfTelegram(saved.pfTelegram ?? "");
+        setPfInstagram(saved.pfInstagram ?? "");
         setPkgs({
           BASIC: saved.pkgs?.BASIC ?? { ...emptyPkg },
           STANDARD: saved.pkgs?.STANDARD ?? { ...emptyPkg },
@@ -230,6 +238,7 @@ export function GigForm({
         const draft: SavedDraft = {
           title, description, categoryId, tags, coverUrl, coverFocal, coverType,
           coverPoster, coverDims, galleryUrls, faq, extras, reqPrompts, pkgs, visibleTiers,
+          pfTelegram, pfInstagram,
         };
         localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
       } catch {
@@ -237,7 +246,7 @@ export function GigForm({
       }
     }, 400);
     return () => clearTimeout(id);
-  }, [gigId, title, description, categoryId, tags, coverUrl, coverFocal, coverType, coverPoster, coverDims, galleryUrls, faq, extras, reqPrompts, pkgs, visibleTiers]);
+  }, [gigId, title, description, categoryId, tags, coverUrl, coverFocal, coverType, coverPoster, coverDims, galleryUrls, faq, extras, reqPrompts, pkgs, visibleTiers, pfTelegram, pfInstagram]);
 
   function discardRestored() {
     clearSavedDraft();
@@ -254,6 +263,8 @@ export function GigForm({
     setFaq([]);
     setExtras([]);
     setReqPrompts([]);
+    setPfTelegram("");
+    setPfInstagram("");
     setPkgs({ BASIC: { ...emptyPkg }, STANDARD: { ...emptyPkg }, PREMIUM: { ...emptyPkg } });
     setVisibleTiers(["BASIC"]);
     setRestored(false);
@@ -323,6 +334,8 @@ export function GigForm({
             .filter((e) => e.title && e.priceUzs >= 1000)
             .slice(0, 6),
           requirementPrompts: reqPrompts.map((p) => p.trim()).filter(Boolean).slice(0, 8),
+          portfolioTelegram: pfTelegram.trim() || undefined,
+          portfolioInstagram: pfInstagram.trim() || undefined,
           draft: gigId ? undefined : draft,
           packages,
         }),
@@ -461,6 +474,32 @@ export function GigForm({
             <FocalPicker src={coverUrl} value={coverFocal} onChange={setCoverFocal} />
           )}
           <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
+        </div>
+      </Section>
+
+      {/* 2b — Proof of work for THIS service: channel / IG showing exactly this kind of job. */}
+      <Section title={t("secProof")} desc={t("proofHint")} optional={t("optional")}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium">{t("proofTelegram")}</span>
+            <input
+              className={field}
+              value={pfTelegram}
+              onChange={(e) => setPfTelegram(e.target.value)}
+              placeholder="t.me/mychannel"
+              autoCapitalize="none"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium">{t("proofInstagram")}</span>
+            <input
+              className={field}
+              value={pfInstagram}
+              onChange={(e) => setPfInstagram(e.target.value)}
+              placeholder="studio.aurora"
+              autoCapitalize="none"
+            />
+          </label>
         </div>
       </Section>
 
@@ -705,6 +744,13 @@ export function GigForm({
       </Section>
 
       {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
+
+      {/* Set the expectation BEFORE they publish: review first, buyers after. */}
+      {!gigId && (
+        <p className="rounded-xl border border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning))]/8 px-4 py-3 text-sm">
+          📌 {t("reviewNotice")}
+        </p>
+      )}
 
       {/* Sticky action bar — the submit/draft CTAs stay reachable in this long form */}
       <div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/75">

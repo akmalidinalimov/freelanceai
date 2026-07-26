@@ -132,6 +132,7 @@ export default async function AdminUsersPage({
             approvalStatus: u.approvalStatus,
             status: u.status,
             kycStatus: u.kycStatus,
+            isCourseStudent: u.isCourseStudent,
             orders: u.orders,
             sales: u.sales,
             flags: u.flags,

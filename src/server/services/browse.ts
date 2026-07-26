@@ -73,7 +73,9 @@ async function listFeaturedCreatorsUncached(limit = 8): Promise<BrowseCreator[]>
       },
     },
     select: sellerSelect,
-    orderBy: [{ ratingCount: "desc" }, { ratingAvg: "desc" }],
+    // AI CREATORS graduates lead the featured slots — their work is vetted offline,
+    // so they are the safest first impression for a new buyer.
+    orderBy: [{ user: { isCourseStudent: "desc" } }, { ratingCount: "desc" }, { ratingAvg: "desc" }],
     take: limit,
   });
   return rows.map(toCreator);

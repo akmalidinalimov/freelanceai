@@ -64,6 +64,7 @@ const LIST_SELECT = {
   isSeller: true,
   status: true,
   kycStatus: true,
+  isCourseStudent: true,
   createdAt: true,
   lastLoginAt: true,
   lastSeenAt: true,
@@ -94,6 +95,7 @@ function toListRow(u: Prisma.UserGetPayload<{ select: typeof LIST_SELECT }>) {
     approvalStatus: u.sellerProfile?.approvalStatus ?? null,
     status: u.status,
     kycStatus: u.kycStatus,
+    isCourseStudent: u.isCourseStudent,
     orders: u._count.ordersAsBuyer,
     sales: u._count.ordersAsSeller,
     gigs: u._count.gigs,
@@ -521,7 +523,14 @@ export async function setUserSeller(admin: User, userId: string, isSeller: boole
   });
 }
 
-export type BulkUserAction = "suspend" | "unsuspend" | "makeSeller" | "removeSeller" | "creditGrant";
+export type BulkUserAction =
+  | "suspend"
+  | "unsuspend"
+  | "makeSeller"
+  | "removeSeller"
+  | "creditGrant"
+  | "tagCourse"
+  | "untagCourse";
 
 /** Hard cap per bulk request — keeps one click from touching the whole user base. */
 const BULK_MAX = 200;
@@ -566,6 +575,8 @@ export async function bulkUserAction(
       else if (action === "unsuspend") await setUserStatus(admin, id, false);
       else if (action === "makeSeller") await setUserSeller(admin, id, true);
       else if (action === "removeSeller") await setUserSeller(admin, id, false);
+      else if (action === "tagCourse" || action === "untagCourse")
+        await setCourseStudent(admin, id, action === "tagCourse");
       else await adjustUserCredit(admin, id, opts.amountUzs!, opts.reason!);
       done += 1;
     } catch (err) {
@@ -581,6 +592,18 @@ export async function bulkUserAction(
     metadata: { requested: ids.length, done, skipped, failed, ...(opts.reason ? { reason: opts.reason } : {}) },
   });
   return { done, skipped, failed };
+}
+
+/** Tag/untag a user as an AI CREATORS course graduate (featured ranking + badge). */
+export async function setCourseStudent(admin: User, userId: string, isCourseStudent: boolean) {
+  await loadTarget(admin, userId);
+  await prisma.user.update({ where: { id: userId }, data: { isCourseStudent } });
+  await audit({
+    actorId: admin.id,
+    action: isCourseStudent ? "admin.user.tag_course" : "admin.user.untag_course",
+    entity: "User",
+    entityId: userId,
+  });
 }
 
 /** Users awaiting KYC review (phone captured → kycStatus PENDING). */

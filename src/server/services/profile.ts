@@ -1,5 +1,6 @@
 import "server-only";
 import { nudgeIfReadyToSubmit } from "@/server/services/seller-approval";
+import { nudgeCreateService } from "@/server/services/bot-onboarding";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Errors } from "@/lib/api";
@@ -220,5 +221,8 @@ export async function updateOwnProfile(userId: string, input: ProfileInput) {
   });
   // Saving the profile can complete eligibility (headline/bio/spec) — nudge to submit if ready.
   void nudgeIfReadyToSubmit(userId).catch(() => {});
+  // Profile just became storefront-ready → invite them into the gig wizard in Telegram
+  // (one-shot, and it states up front that a new service goes to review).
+  void nudgeCreateService(userId).catch(() => {});
   return saved;
 }

@@ -60,6 +60,9 @@ model User {
   // Bot-native onboarding conversation: which free-input step the bot is waiting on
   // ("name" | "portfolio"). Buttons carry their own state; only typed/photo steps need this.
   botOnboardStep String?
+  // AI CREATORS course graduate: admin-tagged trust signal. Course students rank first
+  // in featured creator slots and carry a badge, because their work is vetted offline.
+  isCourseStudent Boolean @default(false)
   kycStatus  KycStatus @default(NONE)
   // Seller payout destination — only the masked card is stored (last 4), never the full PAN.
   payoutCardMasked String?
@@ -409,6 +412,11 @@ model Gig {
   slug        String    @unique
   description String
   tags        String[]  @default([])
+  // Per-gig proof of work: a public Telegram channel and/or Instagram handle showing
+  // THIS service specifically (gallery media covers uploads). Buyers judge the gig,
+  // not just the seller, so the evidence lives on the gig.
+  portfolioTelegram  String?
+  portfolioInstagram String?
   coverUrl    String?
   // Focal point as a CSS object-position ("x% y%") so any frame (4:5 featured, 16:9 card)
   // crops the cover sensibly around what the creator chose. Null = center.
