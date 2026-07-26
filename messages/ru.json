@@ -930,7 +930,8 @@
     "statOrders": "заказы",
     "statClients": "клиенты",
     "statRating": "рейтинг",
-    "nextLevelAt": "след. уровень: {xp} XP"
+    "nextLevelAt": "след. уровень: {xp} XP",
+    "portfolioVideoFormat": "Для видео используйте MP4, WebM или MOV. MP4 воспроизводится везде."
   },
   "Instagram": {
     "connect": "Подключить Instagram",

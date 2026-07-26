@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { prepareImage } from "@/lib/image-normalize";
 
 interface Item {
   id: string;
@@ -11,10 +12,11 @@ interface Item {
   caption: string | null;
 }
 
-const IMAGE = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const VIDEO = ["video/mp4", "video/webm"];
-const ACCEPT = [...IMAGE, ...VIDEO];
-const MAX_IMAGE = 8 * 1024 * 1024; // 8 MB
+// Portfolio takes ANY image the browser can decode (re-encoded to webp before upload)
+// and the common video containers INCLUDING .mov, which is what iPhones record.
+const VIDEO = ["video/mp4", "video/webm", "video/quicktime"];
+const ACCEPT = "image/*,video/*";
+const MAX_IMAGE = 12 * 1024 * 1024; // pre-normalize (phone photos are big; we re-encode)
 const MAX_VIDEO = 100 * 1024 * 1024; // 100 MB
 
 /** Seller portfolio manager: upload images or short videos (presign → R2 → persist) and remove them. */
@@ -27,23 +29,33 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
 
   async function add(file: File) {
     setError(null);
-    const isVideo = VIDEO.includes(file.type);
-    const isImage = IMAGE.includes(file.type);
+    const isVideo = file.type.startsWith("video/");
+    const isImage = file.type.startsWith("image/");
     if (!isImage && !isVideo) return setError(t("portfolioType"));
+    if (isVideo && !VIDEO.includes(file.type)) return setError(t("portfolioVideoFormat"));
     if (file.size > (isVideo ? MAX_VIDEO : MAX_IMAGE)) return setError(t("portfolioSize"));
     setBusy(true);
     try {
+      // Videos upload as-is; images are re-encoded to webp so HEIC/GIF/etc. all work.
+      let body: Blob = file;
+      let contentType = file.type;
+      if (isImage) {
+        const prepared = await prepareImage(file);
+        if (!prepared) return setError(t("portfolioType"));
+        body = prepared.blob;
+        contentType = prepared.contentType;
+      }
       const pre = await fetch("/api/media/presign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prefix: "portfolio", contentType: file.type, size: file.size }),
+        body: JSON.stringify({ prefix: "portfolio", contentType, size: body.size }),
       });
       const pj = await pre.json();
-      if (!pj.ok) return setError(t("portfolioError"));
+      if (!pj.ok) return setError(pj.error?.message ?? t("portfolioError"));
       const put = await fetch(pj.data.uploadUrl, {
         method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
+        headers: { "Content-Type": contentType },
+        body,
       });
       if (!put.ok) return setError(t("portfolioError"));
       const save = await fetch("/api/me/portfolio", {
@@ -121,7 +133,7 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPT.join(",")}
+        accept={ACCEPT}
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];

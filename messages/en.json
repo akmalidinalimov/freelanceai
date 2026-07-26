@@ -930,7 +930,8 @@
     "statOrders": "orders",
     "statClients": "clients",
     "statRating": "rating",
-    "nextLevelAt": "next level: {xp} XP"
+    "nextLevelAt": "next level: {xp} XP",
+    "portfolioVideoFormat": "Use MP4, WebM or MOV for video. MP4 plays everywhere."
   },
   "Instagram": {
     "connect": "Connect Instagram",

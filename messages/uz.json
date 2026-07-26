@@ -930,7 +930,8 @@
     "statOrders": "buyurtma",
     "statClients": "mijoz",
     "statRating": "reyting",
-    "nextLevelAt": "keyingi daraja: {xp} XP"
+    "nextLevelAt": "keyingi daraja: {xp} XP",
+    "portfolioVideoFormat": "Video uchun MP4, WebM yoki MOV dan foydalaning. MP4 hamma joyda ochiladi."
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",

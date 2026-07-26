@@ -320,3 +320,37 @@ export async function tgSetWebhook(url: string, secretToken: string): Promise<un
   });
   return res.json();
 }
+
+/**
+ * Send an album (2–10 items) of public media URLs. Telegram fetches the URLs itself,
+ * so nothing is proxied through us. Used for the gig-review packet: the reviewer sees
+ * the actual work in the chat instead of clicking through to the site.
+ * Returns false on any failure — the caller still sends its text message.
+ */
+export async function tgSendMediaGroup(
+  chatId: number | string,
+  media: { url: string; type: "photo" | "video" }[],
+  caption?: string
+): Promise<boolean> {
+  const items = media.slice(0, 10);
+  if (items.length === 0) return false;
+  try {
+    const res = await fetch(api("sendMediaGroup"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        media: items.map((m, i) => ({
+          type: m.type,
+          media: m.url,
+          // Only the first item carries the caption (Telegram shows it for the album).
+          ...(i === 0 && caption ? { caption: caption.slice(0, 1024) } : {}),
+        })),
+      }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("tgSendMediaGroup failed", err);
+    return false;
+  }
+}

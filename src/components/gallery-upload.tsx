@@ -8,8 +8,8 @@ const MAX_IMAGE = 12 * 1024 * 1024; // pre-normalize; we re-encode images to web
 const MAX_VIDEO = 100 * 1024 * 1024;
 /** Formats the storage layer accepts as-is. Anything else decodable is re-encoded. */
 const NATIVE_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const VIDEO = "video/mp4,video/webm";
-const isVideoUrl = (u: string) => /\.(mp4|webm)$/i.test(u);
+const VIDEO = "video/mp4,video/webm,video/quicktime";
+const isVideoUrl = (u: string) => /\.(mp4|webm|mov)$/i.test(u);
 
 /**
  * Re-encode a picked image to webp (max 1600px on the long edge). This is what makes

@@ -11,7 +11,10 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
  * is a tracked hardening follow-up.
  */
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const VIDEO_TYPES = ["video/mp4", "video/webm"];
+// video/quicktime = the iPhone default (.mov). Rejecting it blocked most phone-shot
+// portfolio clips outright. Note: a HEVC .mov may not PLAY in Chrome/Firefox, so the
+// upload UI nudges toward MP4 — but storing it beats refusing the seller's only video.
+const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -19,6 +22,7 @@ const EXT: Record<string, string> = {
   "image/avif": "avif",
   "video/mp4": "mp4",
   "video/webm": "webm",
+  "video/quicktime": "mov",
 };
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
 export const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB

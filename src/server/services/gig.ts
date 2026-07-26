@@ -14,6 +14,7 @@ import { gigEditWhereForUser } from "@/lib/authz";
 import { notifyFollowersOfNewGig } from "@/server/services/follow";
 import { notifyAndPush, notifyAdmins } from "@/server/services/notification";
 import { adminGigReviewButtons } from "@/lib/telegram-bot";
+import { sendGigReviewPacket } from "@/server/services/gig-review-packet";
 import { PUBLIC_GIG_SELLER } from "@/server/services/seller-visibility";
 
 export type GigSort = "newest" | "price_asc" | "price_desc" | "popular";
@@ -164,12 +165,15 @@ export async function createGig(sellerId: string, input: CreateGigInput, autoApp
     include: { packages: true },
   });
   await audit({ actorId: sellerId, action: "gig.create", entity: "Gig", entityId: gig.id });
-  // Ping admins to moderate — one-tap approve/reject right in Telegram.
+  // Manual review: send admins the full packet — an album of the actual work plus the
+  // facts and one-tap approve/reject. The in-app notification still lands for the
+  // notification centre; the packet is what makes reviewing possible from the phone.
   if (gig.status === "PENDING_REVIEW") {
     await notifyAdmins("admin.gig_review", "🆕 Yangi gig tekshiruvda", {
       body: `"${gig.title}"`,
       buttons: adminGigReviewButtons(undefined, gig.id),
     });
+    void sendGigReviewPacket(gig.id).catch(() => {});
   }
   // Draft the storefront profile from this gig (fills blanks only) BEFORE the eligibility
   // check, so a first gig can complete the whole storefront in one step — no double typing.
