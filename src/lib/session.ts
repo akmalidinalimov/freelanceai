@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { touchLastSeen } from "@/server/services/activity";
 import { resolveRole, parseAdminIds } from "@/lib/roles";
+import { impersonatedUserId } from "@/lib/impersonation";
 import type { User } from "@prisma/client";
 
 /**
@@ -18,6 +19,18 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user || user.status !== "ACTIVE") return null;
+
+  // Impersonation overlay ("log in as"): only an ADMIN session can wear it, targets
+  // can never be admins, and the signed cookie self-expires in 30 minutes. The real
+  // admin session is untouched underneath — exiting is just deleting the cookie.
+  if (user.role === "ADMIN") {
+    const targetId = await impersonatedUserId();
+    if (targetId && targetId !== user.id) {
+      const target = await prisma.user.findUnique({ where: { id: targetId } });
+      if (target && target.role !== "ADMIN") return target;
+    }
+  }
+
   touchLastSeen(user.id); // throttled fire-and-forget (admin activity analytics)
 
   // Reconcile the admin role against the LIVE allowlist so a demotion (or promotion)

@@ -5,6 +5,8 @@ import { setRequestLocale, getTranslations, getMessages } from "next-intl/server
 import { notFound } from "next/navigation";
 import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
+import { ImpersonationBanner } from "@/components/impersonation-banner";
+import { impersonatedUserId } from "@/lib/impersonation";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ClarityAnalytics } from "@/components/clarity-analytics";
@@ -72,6 +74,13 @@ export default async function LocaleLayout({
   const botUsername = process.env.TELEGRAM_BOT_USERNAME;
   const showReconnect = Boolean(user && botUsername && needsBotReconnect(user));
 
+  // Impersonation strip: when the admin's signed "log in as" cookie is active,
+  // `user` above IS the target — show who they appear as, permanently, site-wide.
+  const impersonating = (await impersonatedUserId()) !== null && user !== null;
+  const impName = impersonating
+    ? (user!.firstName ?? user!.name ?? user!.username ?? user!.id)
+    : null;
+
   const skip =
     ({ uz: "Asosiy kontentga oʻtish", ru: "Перейти к содержимому", en: "Skip to content" } as Record<string, string>)[
       locale
@@ -92,6 +101,7 @@ export default async function LocaleLayout({
           >
             {skip}
           </a>
+          {impName && <ImpersonationBanner targetName={impName} />}
           <SiteHeader />
           {showReconnect && botUsername && (
             <BotReconnectBanner deepLink={`https://t.me/${botUsername}`} botName={`@${botUsername}`} />

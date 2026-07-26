@@ -135,6 +135,18 @@ export function AdminUserManage({
           </button>
         )}
         <button
+          className={btn}
+          disabled={!!busy}
+          onClick={async () => {
+            // "Log in as": signed 30-min overlay cookie; the admin session stays intact.
+            if (await post("/api/admin/impersonate", { userId }, "impersonate")) {
+              window.location.href = "/";
+            }
+          }}
+        >
+          {busy === "impersonate" ? "…" : "👁 Log in as"}
+        </button>
+        <button
           className={`${btn} border-[hsl(var(--danger))]/40 text-[hsl(var(--danger))]`}
           disabled={!!busy}
           onClick={() => setShowDelete((s) => !s)}
