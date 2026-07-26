@@ -40,7 +40,9 @@
     "suspend": "Заблокировать",
     "unsuspend": "Разблокировать",
     "makeSeller": "Сделать исполнителем",
-    "removeSeller": "Убрать исполнителя"
+    "removeSeller": "Убрать исполнителя",
+    "statistics": "Статистика",
+    "manage": "Управление"
   },
   "AdminAudit": {
     "title": "Журнал аудита",

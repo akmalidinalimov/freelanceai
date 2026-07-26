@@ -9,6 +9,7 @@ import {
   setUserKyc,
   adminDeleteUser,
   adjustUserCredit,
+  updateUserIdentity,
 } from "@/server/services/admin-users";
 
 const schema = z
@@ -21,8 +22,15 @@ const schema = z
       "kycApprove",
       "kycReject",
       "creditAdjust",
+      "updateIdentity",
       "delete",
     ]),
+    // updateIdentity only. Auth identities (email / telegramId) are deliberately
+    // NOT editable — they are login credentials.
+    firstName: z.string().max(60).optional(),
+    lastName: z.string().max(60).optional(),
+    username: z.string().max(40).optional(),
+    locale: z.enum(["uz", "ru", "en"]).optional(),
     // Suspension reason (optional) — audited and included in the user's notice.
     reason: z.string().max(500).optional(),
     // creditAdjust only: signed UZS delta (grant positive, claw back negative).
@@ -41,14 +49,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!user) throw Errors.unauthenticated();
     requireAdmin(user); // defense-in-depth alongside the service-layer role check
     const { id } = await params;
-    const { action, reason, amountUzs, confirm } = parseInput(schema, await request.json().catch(() => ({})));
+    const body = parseInput(schema, await request.json().catch(() => ({})));
+    const { action, reason, amountUzs, confirm } = body;
     if (action === "suspend") await setUserStatus(user, id, true, reason);
     else if (action === "unsuspend") await setUserStatus(user, id, false);
     else if (action === "makeSeller") await setUserSeller(user, id, true);
     else if (action === "removeSeller") await setUserSeller(user, id, false);
     else if (action === "kycApprove") await setUserKyc(user, id, "VERIFIED");
     else if (action === "kycReject") await setUserKyc(user, id, "REJECTED");
-    else if (action === "creditAdjust") {
+    else if (action === "updateIdentity") {
+      await updateUserIdentity(user, id, {
+        ...(body.firstName !== undefined ? { firstName: body.firstName } : {}),
+        ...(body.lastName !== undefined ? { lastName: body.lastName } : {}),
+        ...(body.username !== undefined ? { username: body.username } : {}),
+        ...(body.locale !== undefined ? { locale: body.locale } : {}),
+      });
+    } else if (action === "creditAdjust") {
       if (typeof amountUzs !== "number") throw Errors.validation({ amountUzs: "Amount is required" });
       const newBalanceUzs = await adjustUserCredit(user, id, amountUzs, reason ?? "");
       return ok({ done: true, newBalanceUzs });

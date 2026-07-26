@@ -17,6 +17,7 @@ export function AdminUserManage({
   sellerProfileId,
   approvalStatus,
   creditBalanceUzs,
+  identity,
 }: {
   userId: string;
   status: string;
@@ -24,8 +25,21 @@ export function AdminUserManage({
   sellerProfileId?: string | null;
   approvalStatus?: string | null;
   creditBalanceUzs: number;
+  identity: {
+    firstName: string;
+    lastName: string;
+    username: string;
+    locale: string;
+    email: string | null;
+    telegramId: string | null;
+  };
 }) {
   const router = useRouter();
+  const [firstName, setFirstName] = useState(identity.firstName);
+  const [lastName, setLastName] = useState(identity.lastName);
+  const [username, setUsername] = useState(identity.username);
+  const [locale, setLocale] = useState(identity.locale);
+  const [savedId, setSavedId] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmText, setConfirmText] = useState("");
@@ -72,6 +86,72 @@ export function AdminUserManage({
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] p-4">
       <h2 className="mb-3 font-semibold">Manage</h2>
+
+      {/* Editable identity. Email / Telegram ID are shown read-only ON PURPOSE:
+          they're login credentials — editing them would hand over account access.
+          Use "Log in as" (audited, time-boxed) for support instead. */}
+      <div className="mb-4 rounded-lg border border-[hsl(var(--border))] p-3">
+        <p className="mb-2 text-sm font-semibold">Profile</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="flex flex-col gap-1 text-xs">
+            First name
+            <input className={input} value={firstName} onChange={(e) => setFirstName(e.target.value)} maxLength={60} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            Last name
+            <input className={input} value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={60} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            Username (gigora.ai/@…)
+            <input
+              className={input}
+              value={username}
+              onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_@]/g, ""))}
+              maxLength={40}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            Language
+            <select className={input} value={locale} onChange={(e) => setLocale(e.target.value)}>
+              <option value="uz">uz</option>
+              <option value="ru">ru</option>
+              <option value="en">en</option>
+            </select>
+          </label>
+        </div>
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            className={btn}
+            disabled={!!busy || !firstName.trim()}
+            onClick={async () => {
+              if (
+                await post(
+                  `/api/admin/users/${userId}`,
+                  {
+                    action: "updateIdentity",
+                    firstName: firstName.trim(),
+                    lastName: lastName.trim(),
+                    username: username.trim(),
+                    locale,
+                  },
+                  "updateIdentity"
+                )
+              ) {
+                setSavedId(true);
+              }
+            }}
+          >
+            {busy === "updateIdentity" ? "…" : "Save profile"}
+          </button>
+          {savedId && <span className="text-xs text-[hsl(var(--success))]">saved ✓</span>}
+        </div>
+        <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">
+          Login identities are read-only: email <b>{identity.email ?? "—"}</b>, Telegram{" "}
+          <b>{identity.telegramId ?? "—"}</b>. Changing them would transfer account access — use
+          &ldquo;Log in as&rdquo; for support (audited, 30 min). Gigora has no passwords: sign-in is
+          Telegram / Google / email link only.
+        </p>
+      </div>
 
       {/* Seller approval — the storefront gate, right where the evidence is. */}
       {isSeller && sellerProfileId && (approvalStatus === "PENDING" || approvalStatus === "REJECTED") && (

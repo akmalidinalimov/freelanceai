@@ -40,7 +40,9 @@
     "suspend": "Bloklash",
     "unsuspend": "Blokdan chiqarish",
     "makeSeller": "Ijrochi qilish",
-    "removeSeller": "Ijrochilikni olib tashlash"
+    "removeSeller": "Ijrochilikni olib tashlash",
+    "statistics": "Statistika",
+    "manage": "Boshqarish"
   },
   "AdminAudit": {
     "title": "Audit jurnali",

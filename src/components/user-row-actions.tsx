@@ -1,54 +1,25 @@
-"use client";
+import { Link } from "@/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-
-type Action = "suspend" | "unsuspend" | "makeSeller" | "removeSeller";
-
-/** Admin row actions: suspend/unsuspend + toggle seller (never grants admin). */
-export function UserRowActions({
-  userId,
-  status,
-  isSeller,
-}: {
-  userId: string;
-  status: string;
-  isSeller: boolean;
-}) {
-  const t = useTranslations("AdminUsers");
-  const [busy, setBusy] = useState(false);
-
-  async function act(action: Action) {
-    setBusy(true);
-    const r = await fetch(`/api/admin/users/${userId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
-    if ((await r.json()).ok) window.location.reload();
-    else setBusy(false);
-  }
-
+/**
+ * Row actions in the admin user list: two links into the user's dossier —
+ * Statistics (their numbers) and Manage (edit + moderate).
+ *
+ * Deliberately NOT inline action buttons any more: a single mis-click used to
+ * suspend a real account with no confirmation. State changes now happen on the
+ * detail page, where the admin can see who they're acting on.
+ */
+export async function UserRowActions({ userId }: { userId: string }) {
+  const t = await getTranslations("AdminUsers");
+  const cls = "text-[hsl(var(--primary-ink))] hover:underline";
   return (
-    <span className="flex items-center gap-2 text-xs">
-      {status === "SUSPENDED" ? (
-        <button onClick={() => act("unsuspend")} disabled={busy} className="text-[hsl(var(--primary-ink))] hover:underline">
-          {t("unsuspend")}
-        </button>
-      ) : (
-        <button onClick={() => act("suspend")} disabled={busy} className="text-[hsl(var(--danger))] hover:underline">
-          {t("suspend")}
-        </button>
-      )}
-      {isSeller ? (
-        <button onClick={() => act("removeSeller")} disabled={busy} className="hover:underline">
-          {t("removeSeller")}
-        </button>
-      ) : (
-        <button onClick={() => act("makeSeller")} disabled={busy} className="hover:underline">
-          {t("makeSeller")}
-        </button>
-      )}
+    <span className="flex items-center gap-3 whitespace-nowrap text-xs">
+      <Link href={`/admin/users/${userId}`} className={cls}>
+        📊 {t("statistics")}
+      </Link>
+      <Link href={`/admin/users/${userId}?tab=manage`} className={cls}>
+        {t("manage")}
+      </Link>
     </span>
   );
 }

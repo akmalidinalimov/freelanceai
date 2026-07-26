@@ -166,6 +166,7 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
           approvalStatus: true,
           rejectionReason: true,
           headline: true,
+          experienceYears: true,
           level: true,
           ratingAvg: true,
           ratingCount: true,
@@ -207,6 +208,8 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
     ordersAsBuyer,
     ordersAsSeller,
     payoutsRecent,
+    clientBuyers,
+    sellerCompleted,
   ] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], where: { buyerId: userId }, _count: true }),
     prisma.order.groupBy({ by: ["status"], where: { sellerId: userId }, _count: true }),
@@ -269,6 +272,17 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
       take: 6,
       select: { id: true, amountUzs: true, status: true, createdAt: true },
     }),
+    // Clients served + repeat rate: group this seller's orders by buyer.
+    prisma.order.groupBy({
+      by: ["buyerId"],
+      where: { sellerId: userId },
+      _count: true,
+    }),
+    prisma.order.aggregate({
+      where: { sellerId: userId, status: "COMPLETED" },
+      _count: true,
+      _avg: { amountUzs: true },
+    }),
   ]);
 
   const toMap = (groups: { status: string; _count: number }[]) =>
@@ -278,6 +292,9 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
     identity: {
       id: u.id,
       name: displayName(u),
+      // Raw fields (not the display fallback) — the admin edit form needs the actual values.
+      firstName: u.firstName,
+      lastName: u.lastName,
       username: u.username,
       email: u.email,
       telegramId: u.telegramId,
@@ -311,6 +328,12 @@ export async function getUserDetailForAdmin(admin: User, userId: string) {
           profile: u.sellerProfile,
           gigsTotal: u._count.gigs,
           gigsActive: activeGigs,
+          // Marketplace performance: distinct clients, how many came back, and the
+          // average completed order value — the numbers that describe a real seller.
+          clientsServed: clientBuyers.length,
+          repeatClients: clientBuyers.filter((c) => c._count > 1).length,
+          completedOrders: sellerCompleted._count,
+          avgOrderUzs: Math.round(sellerCompleted._avg.amountUzs ?? 0),
           ordersByStatus: toMap(sellerByStatus as never),
           lifetimeEarnedUzs: sellerEarnedAgg._sum.sellerNetUzs ?? 0,
           availableUzs: balance,
@@ -432,6 +455,58 @@ export async function adjustUserCredit(admin: User, userId: string, deltaUzs: nu
     }).catch(() => {});
   }
   return newBalance;
+}
+
+/**
+ * Admin edits a user's identity fields. Deliberately excludes the AUTH identities
+ * (email, telegramId): those are login credentials, so changing them would silently
+ * transfer account access — support edits go through impersonation instead, which is
+ * time-boxed and audited. Username uniqueness is enforced (it's the public storefront
+ * handle, gigora.ai/@username).
+ */
+export async function updateUserIdentity(
+  admin: User,
+  userId: string,
+  input: { firstName?: string; lastName?: string | null; username?: string | null; locale?: string }
+) {
+  await loadTarget(admin, userId);
+  const data: Record<string, unknown> = {};
+
+  if (input.firstName !== undefined) {
+    const v = input.firstName.trim().slice(0, 60);
+    if (!v) throw Errors.validation({ firstName: "First name cannot be empty" });
+    data.firstName = v;
+  }
+  if (input.lastName !== undefined) data.lastName = input.lastName?.trim().slice(0, 60) || null;
+  if (input.username !== undefined) {
+    const raw = input.username?.trim().replace(/^@/, "").toLowerCase() ?? "";
+    if (!raw) data.username = null;
+    else {
+      if (!/^[a-z0-9_]{3,32}$/.test(raw)) {
+        throw Errors.validation({ username: "3-32 chars: a-z, 0-9, underscore" });
+      }
+      const taken = await prisma.user.findFirst({
+        where: { username: raw, id: { not: userId } },
+        select: { id: true },
+      });
+      if (taken) throw Errors.validation({ username: "Already taken" });
+      data.username = raw;
+    }
+  }
+  if (input.locale !== undefined) {
+    if (!["uz", "ru", "en"].includes(input.locale)) throw Errors.validation({ locale: "uz | ru | en" });
+    data.locale = input.locale;
+  }
+  if (Object.keys(data).length === 0) return;
+
+  await prisma.user.update({ where: { id: userId }, data });
+  await audit({
+    actorId: admin.id,
+    action: "admin.user.update_identity",
+    entity: "User",
+    entityId: userId,
+    metadata: { fields: Object.keys(data) },
+  });
 }
 
 /** Toggle a user's seller capability. */

@@ -59,10 +59,14 @@ function StatusRow({ map }: { map: Record<string, number> }) {
 
 export default async function AdminUserDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { locale, id } = await params;
+  const { tab } = await searchParams;
+  const manageTab = tab === "manage";
   setRequestLocale(locale);
   const admin = await requireAdminUser(locale);
   // Only a genuine NOT_FOUND becomes a 404 — DB failures must surface, not masquerade.
@@ -100,6 +104,59 @@ export default async function AdminUserDetailPage({
           View conversations
         </Link>
       </p>
+
+      {/* Tabs: the numbers vs the levers (the LMS-style split). */}
+      <div className="mb-6 flex gap-1.5">
+        <Link
+          href={`/admin/users/${u.id}`}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
+            !manageTab
+              ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+              : "border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]"
+          }`}
+        >
+          📊 Statistics
+        </Link>
+        <Link
+          href={`/admin/users/${u.id}?tab=manage`}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
+            manageTab
+              ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+              : "border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]"
+          }`}
+        >
+          ⚙ Manage
+        </Link>
+      </div>
+
+      {/* MANAGE TAB — every lever, on the page where you can see who you're acting on. */}
+      {manageTab && (
+        <div className="mb-6">
+          {u.role === "ADMIN" || u.id === admin.id ? (
+            <p className="rounded-xl border border-[hsl(var(--border))] p-4 text-sm text-[hsl(var(--muted-foreground))]">
+              Admin accounts (and your own) can&apos;t be managed here — the admin role is
+              allowlist-only via ADMIN_TELEGRAM_IDS, by design.
+            </p>
+          ) : (
+            <AdminUserManage
+              userId={u.id}
+              status={u.status}
+              isSeller={u.isSeller}
+              sellerProfileId={d.seller?.profile?.id ?? null}
+              approvalStatus={d.seller?.profile?.approvalStatus ?? null}
+              creditBalanceUzs={u.creditBalanceUzs}
+              identity={{
+                firstName: u.firstName ?? "",
+                lastName: u.lastName ?? "",
+                username: u.username ?? "",
+                locale: u.locale,
+                email: u.email,
+                telegramId: u.telegramId,
+              }}
+            />
+          )}
+        </div>
+      )}
 
       {/* Red flags (trust & safety) */}
       {d.flags.length > 0 && (
@@ -171,6 +228,18 @@ export default async function AdminUserDetailPage({
             <Stat label="Level" value={d.seller.profile?.level ?? "—"} />
             <Stat label="Buyer conversations" value={d.seller.conversations} />
           </div>
+          {/* Marketplace performance — what "a good seller" actually looks like. */}
+          <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Clients served" value={d.seller.clientsServed} />
+            <Stat label="Repeat clients" value={d.seller.repeatClients} />
+            <Stat label="Orders completed" value={d.seller.completedOrders} />
+            <Stat label="Avg order" value={`${formatUzs(d.seller.avgOrderUzs)} so'm`} />
+          </div>
+          {d.seller.profile?.experienceYears != null && (
+            <p className="mb-2 text-xs text-[hsl(var(--muted-foreground))]">
+              Declared AI experience: <b>{d.seller.profile.experienceYears}+ years</b>
+            </p>
+          )}
           {d.seller.profile?.instagramUsername && (
             <p className="mb-2 text-xs text-[hsl(var(--muted-foreground))]">
               Instagram: @{d.seller.profile.instagramUsername} (synced {dt(d.seller.profile.instagramSyncedAt)})
@@ -263,19 +332,6 @@ export default async function AdminUserDetailPage({
         </section>
       )}
 
-      {/* Management */}
-      {u.role !== "ADMIN" && u.id !== admin.id && (
-        <div className="mb-6">
-          <AdminUserManage
-            userId={u.id}
-            status={u.status}
-            isSeller={u.isSeller}
-            sellerProfileId={d.seller?.profile?.id ?? null}
-            approvalStatus={d.seller?.profile?.approvalStatus ?? null}
-            creditBalanceUzs={u.creditBalanceUzs}
-          />
-        </div>
-      )}
 
       {/* Activity — tracked events and the user's own audited actions, one feed,
           newest first, in plain words (the LMS-style timeline). */}

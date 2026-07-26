@@ -195,11 +195,7 @@ export default async function AdminUsersPage({
                   <td className="text-xs tabular-nums">{day(u.createdAt)}</td>
                   <td className="text-xs">{ago(u.lastSeenAt)}</td>
                   <td>
-                    {u.role === "ADMIN" ? (
-                      <span className="text-xs text-[hsl(var(--muted-foreground))]">—</span>
-                    ) : (
-                      <UserRowActions userId={u.id} status={u.status} isSeller={u.isSeller} />
-                    )}
+                    <UserRowActions userId={u.id} />
                   </td>
                 </tr>
               ))}

@@ -40,7 +40,9 @@
     "suspend": "Suspend",
     "unsuspend": "Reactivate",
     "makeSeller": "Make seller",
-    "removeSeller": "Remove seller"
+    "removeSeller": "Remove seller",
+    "statistics": "Statistics",
+    "manage": "Manage"
   },
   "AdminAudit": {
     "title": "Audit log",
