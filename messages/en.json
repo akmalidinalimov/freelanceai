@@ -42,7 +42,14 @@
     "makeSeller": "Make seller",
     "removeSeller": "Remove seller",
     "statistics": "Statistics",
-    "manage": "Manage"
+    "manage": "Manage",
+    "selected": "{n} selected",
+    "clearSel": "clear",
+    "selectAll": "select all on page",
+    "select": "select",
+    "bulkReasonPh": "Reason (audited + sent to users)…",
+    "bulkCredit": "Grant credit",
+    "bulkGrant": "Grant to"
   },
   "AdminAudit": {
     "title": "Audit log",

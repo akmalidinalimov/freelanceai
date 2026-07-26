@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, User } from "@prisma/client";
-import { Errors } from "@/lib/api";
+import { Errors, ApiError } from "@/lib/api";
 import { audit } from "@/lib/audit";
 import { decryptPII } from "@/lib/pii-crypto";
 import { anonymizeAndClose } from "@/server/services/account";
@@ -519,6 +519,68 @@ export async function setUserSeller(admin: User, userId: string, isSeller: boole
     entity: "User",
     entityId: userId,
   });
+}
+
+export type BulkUserAction = "suspend" | "unsuspend" | "makeSeller" | "removeSeller" | "creditGrant";
+
+/** Hard cap per bulk request — keeps one click from touching the whole user base. */
+const BULK_MAX = 200;
+
+/**
+ * Apply one action to many users. Routes every user through the SAME single-user
+ * service functions, so all guards (never an admin, never yourself), audit rows, and
+ * user notifications behave identically to acting one-by-one. Sequential on purpose:
+ * these are support batches, not a migration, and it keeps the DB calm.
+ *
+ * Deliberately NOT bulk-able: account deletion (irreversible, needs typed
+ * confirmation per user) and KYC approval (each one needs its phone reviewed).
+ */
+export async function bulkUserAction(
+  admin: User,
+  userIds: string[],
+  action: BulkUserAction,
+  opts: { reason?: string; amountUzs?: number } = {}
+): Promise<{ done: number; skipped: number; failed: number }> {
+  if (admin.role !== "ADMIN") throw Errors.forbidden("Admins only");
+  const ids = Array.from(new Set(userIds)).slice(0, BULK_MAX);
+  if (ids.length === 0) throw Errors.validation({ userIds: "Select at least one user" });
+  if (action === "suspend" && !opts.reason?.trim()) {
+    throw Errors.validation({ reason: "A reason is required to suspend" });
+  }
+  if (action === "creditGrant") {
+    if (!opts.amountUzs || opts.amountUzs <= 0) throw Errors.validation({ amountUzs: "Amount is required" });
+    if (!opts.reason?.trim()) throw Errors.validation({ reason: "A reason is required" });
+  }
+
+  let done = 0;
+  let skipped = 0;
+  let failed = 0;
+  for (const id of ids) {
+    // Admins and self are skipped, not errors — selecting a whole page shouldn't fail.
+    if (id === admin.id) {
+      skipped += 1;
+      continue;
+    }
+    try {
+      if (action === "suspend") await setUserStatus(admin, id, true, opts.reason);
+      else if (action === "unsuspend") await setUserStatus(admin, id, false);
+      else if (action === "makeSeller") await setUserSeller(admin, id, true);
+      else if (action === "removeSeller") await setUserSeller(admin, id, false);
+      else await adjustUserCredit(admin, id, opts.amountUzs!, opts.reason!);
+      done += 1;
+    } catch (err) {
+      // "Cannot modify an admin" / "not found" are skips; anything else is a failure.
+      if (err instanceof ApiError && (err.code === "FORBIDDEN" || err.code === "NOT_FOUND")) skipped += 1;
+      else failed += 1;
+    }
+  }
+  await audit({
+    actorId: admin.id,
+    action: `admin.users.bulk.${action}`,
+    entity: "User",
+    metadata: { requested: ids.length, done, skipped, failed, ...(opts.reason ? { reason: opts.reason } : {}) },
+  });
+  return { done, skipped, failed };
 }
 
 /** Users awaiting KYC review (phone captured → kycStatus PENDING). */

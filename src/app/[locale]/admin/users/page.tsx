@@ -1,21 +1,12 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { AdminUsersTable } from "@/components/admin-users-table";
 import { requireAdminUser } from "@/lib/auth-guards";
 import {
   listUsersForAdmin,
   type AdminKycFilter,
   type AdminUserSegment,
 } from "@/server/services/admin-users";
-import { UserRowActions } from "@/components/user-row-actions";
-
-/** Compact "how long ago" for activity columns (admin-only page — English is fine). */
-function ago(d: Date | null): string {
-  if (!d) return "—";
-  const mins = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
-  if (mins < 60) return `${mins}m`;
-  if (mins < 24 * 60) return `${Math.floor(mins / 60)}h`;
-  return `${Math.floor(mins / (24 * 60))}d`;
-}
 
 const day = (d: Date) => new Date(d).toISOString().slice(0, 10);
 
@@ -132,76 +123,24 @@ export default async function AdminUsersPage({
       {users.length === 0 ? (
         <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("none")}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead>
-              <tr className="border-b border-[hsl(var(--border))] text-left text-xs text-[hsl(var(--muted-foreground))]">
-                <th className="py-2">{t("user")}</th>
-                <th>{t("role")}</th>
-                <th>KYC</th>
-                <th>{t("status")}</th>
-                <th className="tabular-nums">{t("orders")}</th>
-                <th className="tabular-nums">{t("sales")}</th>
-                <th className="tabular-nums">🚩</th>
-                <th>Joined</th>
-                <th>Seen</th>
-                <th>{t("actions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b border-[hsl(var(--border))]">
-                  <td className="max-w-56 py-2">
-                    <Link href={`/admin/users/${u.id}`} className="font-medium text-[hsl(var(--primary-ink))] hover:underline">
-                      {u.name || "(no name)"}
-                    </Link>
-                    <span className="block truncate text-xs text-[hsl(var(--muted-foreground))]">
-                      {u.username && `@${u.username}`} {u.email && `· ${u.email}`}
-                    </span>
-                  </td>
-                  <td>
-                    {u.role === "ADMIN" ? (
-                      "ADMIN"
-                    ) : u.isSeller ? (
-                      <span>
-                        {t("seller")}
-                        {u.approvalStatus && u.approvalStatus !== "APPROVED" && (
-                          <span
-                            className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                              u.approvalStatus === "PENDING"
-                                ? "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))]"
-                                : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
-                            }`}
-                          >
-                            {u.approvalStatus}
-                          </span>
-                        )}
-                      </span>
-                    ) : (
-                      t("buyer")
-                    )}
-                  </td>
-                  <td className="text-xs">{u.kycStatus === "NONE" ? "—" : u.kycStatus}</td>
-                  <td>
-                    <span className={u.status === "ACTIVE" ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--danger))]"}>
-                      {u.status}
-                    </span>
-                  </td>
-                  <td className="tabular-nums">{u.orders}</td>
-                  <td className="tabular-nums">{u.sales}</td>
-                  <td className="tabular-nums">
-                    {u.flags > 0 ? <span className="font-bold text-[hsl(var(--danger))]">{u.flags}</span> : "—"}
-                  </td>
-                  <td className="text-xs tabular-nums">{day(u.createdAt)}</td>
-                  <td className="text-xs">{ago(u.lastSeenAt)}</td>
-                  <td>
-                    <UserRowActions userId={u.id} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AdminUsersTable
+          rows={users.map((u) => ({
+            id: u.id,
+            name: u.name,
+            username: u.username,
+            email: u.email,
+            role: u.role,
+            isSeller: u.isSeller,
+            approvalStatus: u.approvalStatus,
+            status: u.status,
+            kycStatus: u.kycStatus,
+            orders: u.orders,
+            sales: u.sales,
+            flags: u.flags,
+            createdAt: u.createdAt.toISOString(),
+            lastSeenAt: u.lastSeenAt ? u.lastSeenAt.toISOString() : null,
+          }))}
+        />
       )}
 
       {/* Pager */}

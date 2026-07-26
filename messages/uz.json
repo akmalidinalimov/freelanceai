@@ -42,7 +42,14 @@
     "makeSeller": "Ijrochi qilish",
     "removeSeller": "Ijrochilikni olib tashlash",
     "statistics": "Statistika",
-    "manage": "Boshqarish"
+    "manage": "Boshqarish",
+    "selected": "{n} ta tanlandi",
+    "clearSel": "tozalash",
+    "selectAll": "sahifadagi hammasini tanlash",
+    "select": "tanlash",
+    "bulkReasonPh": "Sabab (audit + foydalanuvchilarga)…",
+    "bulkCredit": "Kredit berish",
+    "bulkGrant": "Berish"
   },
   "AdminAudit": {
     "title": "Audit jurnali",
