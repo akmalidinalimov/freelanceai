@@ -267,6 +267,44 @@ export async function getAdminPendingCounts(): Promise<{
   return { gigs, kyc, disputes, payouts };
 }
 
+const personName = { id: true, firstName: true, name: true, username: true } as const;
+
+/**
+ * The admin's action inbox: the top items of every queue, ready to act on from the
+ * dashboard itself — "what needs me right now?" answered without touring five pages.
+ */
+export async function getActionInbox() {
+  const [counts, sellersPending, gigs, sellers, kyc, disputes] = await Promise.all([
+    getAdminPendingCounts(),
+    prisma.sellerProfile.count({ where: { approvalStatus: "PENDING" } }),
+    prisma.gig.findMany({
+      where: { status: "PENDING_REVIEW", deletedAt: null },
+      orderBy: { createdAt: "asc" },
+      take: 3,
+      select: { id: true, title: true, seller: { select: personName } },
+    }),
+    prisma.sellerProfile.findMany({
+      where: { approvalStatus: "PENDING" },
+      orderBy: { submittedAt: "asc" },
+      take: 3,
+      select: { id: true, headline: true, user: { select: personName } },
+    }),
+    prisma.user.findMany({
+      where: { kycStatus: "PENDING" },
+      orderBy: { updatedAt: "asc" },
+      take: 3,
+      select: personName,
+    }),
+    prisma.dispute.findMany({
+      where: { status: "OPEN" },
+      orderBy: { createdAt: "asc" },
+      take: 3,
+      select: { id: true, reason: true, orderId: true, order: { select: { gig: { select: { title: true } } } } },
+    }),
+  ]);
+  return { counts: { ...counts, sellers: sellersPending }, gigs, sellers, kyc, disputes };
+}
+
 export interface AdminInfographics {
   users: number;
   sellers: number;

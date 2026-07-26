@@ -1,7 +1,9 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireAdminUser } from "@/lib/auth-guards";
-import { getAdminStats, getAdminActivityStats } from "@/server/services/analytics";
+import { getAdminStats, getAdminActivityStats, getActionInbox } from "@/server/services/analytics";
+import { ModerationActions } from "@/components/moderation-actions";
+import { AdminSellerActions } from "@/components/admin-seller-actions";
 import { getPairStats, getCategoryStats } from "@/server/services/admin-conversations";
 import { formatUzs } from "@/lib/utils";
 
@@ -12,14 +14,18 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
   setRequestLocale(locale);
   await requireAdminUser(locale);
   const t = await getTranslations("Admin");
+  const td = await getTranslations("Dispute");
   // Core stats stay fatal; the two insight tables degrade to empty so a failure
   // there can't take down the incident-response entry point.
-  const [stats, act, pairs, categories] = await Promise.all([
+  const [stats, act, pairs, categories, inbox] = await Promise.all([
     getAdminStats(),
     getAdminActivityStats(),
     getPairStats().catch(() => []),
     getCategoryStats().catch(() => []),
+    getActionInbox().catch(() => null),
   ]);
+  const who = (u: { firstName: string | null; name: string | null; username: string | null }) =>
+    u.firstName ?? u.name ?? u.username ?? "—";
 
   const money = [
     { label: t("gmv"), value: `${formatUzs(stats.gmvUzs)} so'm` },
@@ -34,8 +40,123 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
 
   return (
     <div className="mx-auto max-w-5xl px-0 py-6 lg:px-4">
-      {/* Navigation lives in the admin sidebar (admin/layout.tsx) — this page is pure KPIs. */}
+      {/* Navigation lives in the admin sidebar (admin/layout.tsx). */}
       <h1 className="mb-6 text-3xl font-bold">{t("dashboard")}</h1>
+
+      {/* Action inbox — the day's work, actionable right here. */}
+      {inbox && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-lg font-bold">{t("inboxTitle")}</h2>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* Gig moderation */}
+            <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+              <div className="mb-2 flex items-baseline justify-between">
+                <h3 className="font-semibold">{t("moderation")} ({inbox.counts.gigs})</h3>
+                {inbox.counts.gigs > 0 && (
+                  <Link href="/admin/moderation" className="text-xs text-[hsl(var(--primary-ink))] hover:underline">
+                    {t("inboxAll")} →
+                  </Link>
+                )}
+              </div>
+              {inbox.gigs.length === 0 ? (
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">✅ {t("inboxEmpty")}</p>
+              ) : (
+                <ul className="space-y-2">
+                  {inbox.gigs.map((g) => (
+                    <li key={g.id} className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-sm">
+                        {g.title}
+                        <span className="ml-1 text-xs text-[hsl(var(--muted-foreground))]">· {who(g.seller)}</span>
+                      </span>
+                      <ModerationActions gigId={g.id} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Seller approval */}
+            <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+              <div className="mb-2 flex items-baseline justify-between">
+                <h3 className="font-semibold">{t("sellersTitle")} ({inbox.counts.sellers})</h3>
+                {inbox.counts.sellers > 0 && (
+                  <Link href="/admin/sellers" className="text-xs text-[hsl(var(--primary-ink))] hover:underline">
+                    {t("inboxAll")} →
+                  </Link>
+                )}
+              </div>
+              {inbox.sellers.length === 0 ? (
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">✅ {t("inboxEmpty")}</p>
+              ) : (
+                <ul className="space-y-2">
+                  {inbox.sellers.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-sm">
+                        <Link href={`/admin/users/${s.user.id}`} className="font-medium text-[hsl(var(--primary-ink))] hover:underline">
+                          {who(s.user)}
+                        </Link>
+                        {s.headline && <span className="ml-1 text-xs text-[hsl(var(--muted-foreground))]">· {s.headline}</span>}
+                      </span>
+                      <AdminSellerActions profileId={s.id} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* KYC */}
+            <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+              <div className="mb-2 flex items-baseline justify-between">
+                <h3 className="font-semibold">KYC ({inbox.counts.kyc})</h3>
+                {inbox.counts.kyc > 0 && (
+                  <Link href="/admin/kyc" className="text-xs text-[hsl(var(--primary-ink))] hover:underline">
+                    {t("inboxAll")} →
+                  </Link>
+                )}
+              </div>
+              {inbox.kyc.length === 0 ? (
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">✅ {t("inboxEmpty")}</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {inbox.kyc.map((u) => (
+                    <li key={u.id} className="text-sm">
+                      <Link href={`/admin/users/${u.id}`} className="text-[hsl(var(--primary-ink))] hover:underline">
+                        {who(u)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Disputes */}
+            <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+              <div className="mb-2 flex items-baseline justify-between">
+                <h3 className="font-semibold">{td("adminTitle")} ({inbox.counts.disputes})</h3>
+                {inbox.counts.disputes > 0 && (
+                  <Link href="/admin/disputes" className="text-xs text-[hsl(var(--primary-ink))] hover:underline">
+                    {t("inboxAll")} →
+                  </Link>
+                )}
+              </div>
+              {inbox.disputes.length === 0 ? (
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">✅ {t("inboxEmpty")}</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {inbox.disputes.map((d) => (
+                    <li key={d.id} className="text-sm">
+                      <Link href={`/orders/${d.orderId}`} className="text-[hsl(var(--primary-ink))] hover:underline">
+                        {d.order.gig.title}
+                      </Link>
+                      <span className="ml-1 text-xs text-[hsl(var(--muted-foreground))]">· {d.reason.slice(0, 60)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         {money.map((m) => (
