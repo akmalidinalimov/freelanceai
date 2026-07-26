@@ -8,8 +8,6 @@ import {
   type AdminUserSegment,
 } from "@/server/services/admin-users";
 
-const day = (d: Date) => new Date(d).toISOString().slice(0, 10);
-
 const SEGMENTS = ["all", "buyers", "sellers", "pending", "suspended"] as const;
 const KYC_OPTIONS = ["", "NONE", "PENDING", "VERIFIED", "REJECTED"] as const;
 
