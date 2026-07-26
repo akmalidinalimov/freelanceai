@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { ImageCropper } from "@/components/ui/image-cropper";
 
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const VIDEO_TYPES = ["video/mp4", "video/webm"];
 const MAX_IMAGE = 8 * 1024 * 1024; // 8 MB
 const MAX_VIDEO = 40 * 1024 * 1024; // 40 MB — keep the showreel light for mobile data
@@ -71,22 +71,34 @@ export function CoverUpload({ value, onChange }: { value?: CoverValue; onChange:
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+
+  /** Upload a 16:9 crop produced by the cropper. */
+  async function uploadCropped(blob: Blob) {
+    setBusy(true);
+    try {
+      const url = await upload(blob, "image/webp");
+      onChange({ url, type: "image", w: 1600, h: 900 });
+    } catch {
+      setError(t("mediaError"));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function pick(file: File) {
     setError(null);
     const isVideo = VIDEO_TYPES.includes(file.type);
-    const isImage = IMAGE_TYPES.includes(file.type);
+    const isImage = file.type.startsWith("image/"); // any decodable image; cropper re-encodes
     if (!isVideo && !isImage) return setError(t("coverAcceptType"));
     if (file.size > (isVideo ? MAX_VIDEO : MAX_IMAGE)) return setError(isVideo ? t("coverVideoSize") : t("mediaSize"));
 
     if (isImage) {
+      // Images go through the 16:9 cropper: the seller frames their own cover instead of
+      // discovering later that the card cropped their subject out.
       const { w, h } = await imageDims(file);
       if (w && h && Math.min(w, h) < MIN_EDGE) return setError(t("mediaTooSmall", { min: MIN_EDGE }));
-      setBusy(true);
-      try {
-        const url = await upload(file, file.type);
-        onChange({ url, type: "image", w: w || undefined, h: h || undefined });
-      } catch { setError(t("mediaError")); } finally { setBusy(false); }
+      setCropFile(file);
       return;
     }
 
@@ -117,7 +129,6 @@ export function CoverUpload({ value, onChange }: { value?: CoverValue; onChange:
         className="relative flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 text-sm text-[hsl(var(--muted-foreground))]"
       >
         {value?.type === "video" ? (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
           <video src={value.url} poster={value.poster} muted loop playsInline autoPlay className="h-full w-full object-cover" />
         ) : value?.url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -134,10 +145,22 @@ export function CoverUpload({ value, onChange }: { value?: CoverValue; onChange:
       <input
         ref={inputRef}
         type="file"
-        accept={[...IMAGE_TYPES, ...VIDEO_TYPES].join(",")}
+        accept={["image/*", ...VIDEO_TYPES].join(",")}
         className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) pick(f); e.target.value = ""; }}
       />
+      {cropFile && (
+        <ImageCropper
+          file={cropFile}
+          aspect={16 / 9}
+          outWidth={1600}
+          onCancel={() => setCropFile(null)}
+          onCropped={(blob) => {
+            setCropFile(null);
+            uploadCropped(blob);
+          }}
+        />
+      )}
       {value?.url && (
         <button type="button" onClick={() => onChange(undefined)} className="self-start text-xs text-[hsl(var(--danger))] underline">
           {t("removeCover")}

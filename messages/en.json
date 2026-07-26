@@ -909,7 +909,19 @@
       "1": "1–2 yrs experience",
       "3": "3–5 yrs experience",
       "5": "5+ yrs experience"
-    }
+    },
+    "cropTitle": "Crop your photo",
+    "cropZoom": "Zoom",
+    "cropHint": "Drag the image to reposition.",
+    "cropApply": "Apply",
+    "cropCancel": "Cancel",
+    "cropUnsupported": "This image format can't be read on this device. Try a JPG or PNG.",
+    "noHeadlineYet": "Add a headline so buyers know what you do",
+    "statGigs": "gigs",
+    "statOrders": "orders",
+    "statClients": "clients",
+    "statRating": "rating",
+    "nextLevelAt": "next level: {xp} XP"
   },
   "Instagram": {
     "connect": "Connect Instagram",

@@ -909,7 +909,19 @@
       "1": "1–2 yil tajriba",
       "3": "3–5 yil tajriba",
       "5": "5+ yil tajriba"
-    }
+    },
+    "cropTitle": "Rasmni kesing",
+    "cropZoom": "Kattalashtirish",
+    "cropHint": "Rasmni surib joylashtiring.",
+    "cropApply": "Qoʻllash",
+    "cropCancel": "Bekor qilish",
+    "cropUnsupported": "Bu format qurilmada oʻqilmadi. JPG yoki PNG sinab koʻring.",
+    "noHeadlineYet": "Sarlavha qoʻshing — xaridorlar nima qilishingizni bilsin",
+    "statGigs": "xizmat",
+    "statOrders": "buyurtma",
+    "statClients": "mijoz",
+    "statRating": "reyting",
+    "nextLevelAt": "keyingi daraja: {xp} XP"
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",
