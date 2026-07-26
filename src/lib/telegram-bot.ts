@@ -11,6 +11,27 @@ function api(method: string): string {
   return `https://api.telegram.org/bot${token}/${method}`;
 }
 
+/**
+ * Resolve a Telegram file_id to its short-lived download URL (getFile). Used to pull
+ * a user's photo (e.g. a portfolio sample sent to the bot) into our own storage.
+ * Returns null on any failure — callers treat ingestion as best-effort.
+ */
+export async function tgFileUrl(fileId: string): Promise<string | null> {
+  try {
+    const res = await fetch(api("getFile"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_id: fileId }),
+    });
+    if (!res.ok) return null;
+    const body = (await res.json().catch(() => null)) as { ok?: boolean; result?: { file_path?: string } } | null;
+    const path = body?.ok ? body.result?.file_path : undefined;
+    return path ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${path}` : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function tgSendMessage(
   chatId: number | string,
   text: string,

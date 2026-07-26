@@ -20,6 +20,12 @@ import { createReview } from "@/server/services/review";
 import { approveGig, rejectGig } from "@/server/services/gig";
 import { isAdminTelegramId } from "@/lib/roles";
 import { getAdminStats, getAdminPendingCounts } from "@/server/services/analytics";
+import {
+  startBotOnboarding,
+  handleOnboardCallback,
+  handleOnboardText,
+  handleOnboardPhoto,
+} from "@/server/services/bot-onboarding";
 
 /**
  * Telegram bot webhook. Verified by the secret header. Idempotent (dedups on
@@ -39,6 +45,7 @@ export async function POST(request: Request) {
     update_id?: number;
     message?: {
       text?: string;
+      photo?: { file_id: string }[];
       contact?: { phone_number?: string; user_id?: number };
       reply_to_message?: { message_id?: number };
       chat?: { id?: number; type?: string };
@@ -87,7 +94,11 @@ export async function POST(request: Request) {
     }
     const data = cb.data ?? "";
     try {
-      if (data.startsWith("o:acc:")) {
+      if (data.startsWith("ob:")) {
+        // Bot-native onboarding buttons (name confirm / role / experience / portfolio).
+        const toast = await handleOnboardCallback(account, data);
+        void tgAnswerCallback(cb.id, toast);
+      } else if (data.startsWith("o:acc:")) {
         await acceptOrder(data.slice(6), account);
         void tgAnswerCallback(cb.id, "✅ Buyurtma qabul qilindi!");
       } else if (data.startsWith("o:rev:")) {
@@ -161,6 +172,26 @@ export async function POST(request: Request) {
       });
     }
     return NextResponse.json({ ok: true });
+  }
+
+  // Bot-native onboarding: a dropped photo during the portfolio step, or a typed name.
+  // Both are gated on the user's stored conversation step, so ordinary chat is untouched.
+  const photos = update.message?.photo;
+  if (from && !from.is_bot && chatType === "private" && (photos?.length || (text && !replyToId && !text.startsWith("/")))) {
+    const acct = await prisma.user.findFirst({
+      where: { telegramId: String(from.id), status: "ACTIVE", botOnboardStep: { not: null } },
+    });
+    if (acct) {
+      if (!rateLimit(`tg-ob:${from.id}`, 20, 60_000)) return NextResponse.json({ ok: true });
+      if (photos?.length) {
+        // Telegram sends ascending sizes — the last entry is the full-resolution one.
+        const consumed = await handleOnboardPhoto(acct, photos[photos.length - 1].file_id).catch(() => false);
+        if (consumed) return NextResponse.json({ ok: true });
+      } else if (text) {
+        const consumed = await handleOnboardText(acct, text).catch(() => false);
+        if (consumed) return NextResponse.json({ ok: true });
+      }
+    }
   }
 
   // Bot-native quick reply: the user swipe-replied (in Telegram) to a "new message"
@@ -244,7 +275,7 @@ export async function POST(request: Request) {
     // Load the user (locale + seller capability) to render the right keyboard.
     const account = await prisma.user.findUnique({
       where: { telegramId: String(from.id) },
-      select: { firstName: true, locale: true, isSeller: true },
+      select: { firstName: true, locale: true, isSeller: true, onboardingCompleted: true },
     });
     const locale = account?.locale;
     const name = account?.firstName ?? from.first_name;
@@ -264,7 +295,20 @@ export async function POST(request: Request) {
       });
       if (confirmed.count > 0) {
         void tgSendMessage(from.id, "✅ Tasdiqlandi! Saytga qayting — avtomatik kirasiz.");
+        // New/unfinished profile → run the profile conversation right here in the chat
+        // (the account row may not exist for a heartbeat — the web poll creates it, and
+        // it exists by the time the first button is tapped).
+        if (!account || !account.onboardingCompleted) {
+          void startBotOnboarding(from.id, from.first_name ?? "", from.last_name ?? "", locale);
+        }
+        return NextResponse.json({ ok: true });
       }
+    }
+
+    // Unfinished profile → resume the conversation instead of the generic welcome.
+    if (account && !account.onboardingCompleted && text !== "/help") {
+      void startBotOnboarding(from.id, account.firstName ?? from.first_name ?? "", from.last_name ?? "", locale);
+      return NextResponse.json({ ok: true });
     }
 
     if (text === "/help") {

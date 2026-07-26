@@ -57,6 +57,9 @@ model User {
   isSeller   Boolean  @default(false)
   status     UserStatus @default(ACTIVE)
   onboardingCompleted Boolean @default(false)
+  // Bot-native onboarding conversation: which free-input step the bot is waiting on
+  // ("name" | "portfolio"). Buttons carry their own state; only typed/photo steps need this.
+  botOnboardStep String?
   kycStatus  KycStatus @default(NONE)
   // Seller payout destination — only the masked card is stored (last 4), never the full PAN.
   payoutCardMasked String?
