@@ -456,6 +456,10 @@ export function GigForm({
       <Section title={t("secMedia")} desc={t("mediaHint")}>
         <div className="flex flex-col gap-4">
           <CoverUpload
+            genTitle={title}
+            genCategoryId={categoryId || undefined}
+            genPriceUzs={Number(pkgs.BASIC?.priceUzs) || undefined}
+            locale={locale}
             value={
               coverUrl
                 ? { url: coverUrl, type: coverType ?? "image", poster: coverPoster, w: coverDims?.w, h: coverDims?.h }

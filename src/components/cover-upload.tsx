@@ -66,7 +66,22 @@ async function posterFrame(file: File): Promise<{ blob: Blob; w: number; h: numb
 
 /** Gig cover uploader: a 16:9 image OR short horizontal video. Reports the result up to
  *  the form (does not persist itself). Video covers also capture a first-frame poster. */
-export function CoverUpload({ value, onChange }: { value?: CoverValue; onChange: (v: CoverValue | undefined) => void }) {
+export function CoverUpload({
+  value,
+  onChange,
+  genTitle,
+  genCategoryId,
+  genPriceUzs,
+  locale,
+}: {
+  value?: CoverValue;
+  onChange: (v: CoverValue | undefined) => void;
+  /** Context for "generate a cover for me" — the branded 16:9 template render. */
+  genTitle?: string;
+  genCategoryId?: string;
+  genPriceUzs?: number;
+  locale?: string;
+}) {
   const t = useTranslations("Gig");
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -79,6 +94,32 @@ export function CoverUpload({ value, onChange }: { value?: CoverValue; onChange:
     try {
       const url = await upload(blob, "image/webp");
       onChange({ url, type: "image", w: 1600, h: 900 });
+    } catch {
+      setError(t("mediaError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Branded template cover (free, server-rendered) for sellers with no image ready. */
+  async function generate() {
+    setError(null);
+    if (!genTitle || genTitle.trim().length < 3) return setError(t("coverGenNeedTitle"));
+    setBusy(true);
+    try {
+      const r = await fetch("/api/gigs/cover-gen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: genTitle.trim(),
+          ...(genCategoryId ? { categoryId: genCategoryId } : {}),
+          ...(genPriceUzs ? { priceUzs: genPriceUzs } : {}),
+          locale: locale === "ru" || locale === "en" ? locale : "uz",
+        }),
+      });
+      const j = await r.json();
+      if (!j.ok) return setError(j.error?.message ?? t("mediaError"));
+      onChange({ url: j.data.url, type: "image", w: 1600, h: 900 });
     } catch {
       setError(t("mediaError"));
     } finally {
@@ -161,11 +202,24 @@ export function CoverUpload({ value, onChange }: { value?: CoverValue; onChange:
           }}
         />
       )}
-      {value?.url && (
-        <button type="button" onClick={() => onChange(undefined)} className="self-start text-xs text-[hsl(var(--danger))] underline">
-          {t("removeCover")}
-        </button>
-      )}
+      <div className="flex flex-wrap items-center gap-3">
+        {!value?.url && (
+          <button
+            type="button"
+            onClick={generate}
+            disabled={busy}
+            className="rounded-md border border-[hsl(var(--primary))]/50 px-3 py-1.5 text-xs font-semibold text-[hsl(var(--primary-ink))] disabled:opacity-50"
+          >
+            {busy ? t("uploading") : `✨ ${t("coverGenerate")}`}
+          </button>
+        )}
+        {!value?.url && <span className="text-xs text-[hsl(var(--muted-foreground))]">{t("coverGenHint")}</span>}
+        {value?.url && (
+          <button type="button" onClick={() => onChange(undefined)} className="text-xs text-[hsl(var(--danger))] underline">
+            {t("removeCover")}
+          </button>
+        )}
+      </div>
       {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );

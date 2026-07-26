@@ -563,7 +563,10 @@
     "proofHint": "A public channel or Instagram showing THIS kind of work. Buyers trust what they can see.",
     "proofTelegram": "Telegram channel",
     "proofInstagram": "Instagram username",
-    "reviewNotice": "After you publish, this service goes to review. Buyers see it once it's approved — we'll notify you."
+    "reviewNotice": "After you publish, this service goes to review. Buyers see it once it's approved — we'll notify you.",
+    "coverGenerate": "Generate a cover for me",
+    "coverGenHint": "No image ready? We'll make a branded 16:9 cover from your title.",
+    "coverGenNeedTitle": "Write the service title first — the cover uses it."
   },
   "Order": {
     "bannerRevision": "Revision in progress",

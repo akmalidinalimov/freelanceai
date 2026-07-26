@@ -7,7 +7,12 @@
 # Slimming back to `output: standalone` is a later optimization — correctness first.
 FROM node:24-alpine
 
-RUN apk add --no-cache openssl libc6-compat
+# fontconfig + the bundled brand fonts: sharp/librsvg renders the generated gig covers
+# via SVG text, and node:alpine ships NO fonts at all — without this the text renders as
+# nothing (silently blank covers). Fonts are OFL-licensed and committed under assets/fonts.
+RUN apk add --no-cache openssl libc6-compat fontconfig
+COPY assets/fonts/ /usr/share/fonts/gigora/
+RUN fc-cache -f
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 

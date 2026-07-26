@@ -104,6 +104,28 @@ export async function presignUpload(
  * expires) and store it in the public bucket. Returns the stable public URL.
  * Images only; capped at MAX_IMAGE_BYTES.
  */
+/**
+ * Store a buffer we generated ourselves (e.g. a rendered gig cover) and return its
+ * public URL. Unlike presignUpload this never involves the client — the bytes are
+ * already trusted, so only the prefix and content type are validated.
+ */
+export async function putBuffer(prefix: string, buf: Buffer, contentType: string): Promise<string> {
+  if (!mediaConfigured()) throw new Error("media_not_configured");
+  if (!IMAGE_TYPES.includes(contentType)) throw new Error("unsupported_type");
+  if (buf.byteLength === 0 || buf.byteLength > MAX_IMAGE_BYTES) throw new Error("bad_size");
+  const key = `${prefix}/${crypto.randomBytes(16).toString("hex")}.${EXT[contentType]}`;
+  await r2().send(
+    new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET!,
+      Key: key,
+      Body: buf,
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000, immutable",
+    })
+  );
+  return `${process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "")}/${key}`;
+}
+
 export async function uploadFromUrl(prefix: string, sourceUrl: string): Promise<string> {
   if (!mediaConfigured()) throw new Error("media_not_configured");
   // Only fetch https CDN URLs, and bound the work: reject oversized bodies by their

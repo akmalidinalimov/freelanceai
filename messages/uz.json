@@ -563,7 +563,10 @@
     "proofHint": "SHU turdagi ishlaringiz koʻrinadigan ochiq kanal yoki Instagram. Xaridorlar koʻrgan ishiga ishonadi.",
     "proofTelegram": "Telegram kanal",
     "proofInstagram": "Instagram foydalanuvchi nomi",
-    "reviewNotice": "E'lon qilgach, xizmat tekshiruvga yuboriladi. Tasdiqlangach xaridorlar koʻra boshlaydi — sizga xabar beramiz."
+    "reviewNotice": "E'lon qilgach, xizmat tekshiruvga yuboriladi. Tasdiqlangach xaridorlar koʻra boshlaydi — sizga xabar beramiz.",
+    "coverGenerate": "Muqova yaratib berish",
+    "coverGenHint": "Rasm tayyor emasmi? Sarlavhangizdan brend uslubidagi 16:9 muqova yasaymiz.",
+    "coverGenNeedTitle": "Avval xizmat sarlavhasini yozing — muqova undan foydalanadi."
   },
   "Order": {
     "bannerRevision": "Tahrir jarayonda",
