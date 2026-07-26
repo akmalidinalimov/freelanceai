@@ -13,7 +13,9 @@ export default async function OnboardingPage({
 
   const user = await getCurrentUser();
   if (!user) {
-    redirect({ href: "/login", locale });
+    // Carry the return path: a Telegram Mini App arrives here with no session yet,
+    // authenticates a moment later, and must come BACK to this form.
+    redirect({ href: `/login?next=${encodeURIComponent(`/${locale}/onboarding`)}`, locale });
     return null;
   }
   // Already onboarded (or admin) → into the app.

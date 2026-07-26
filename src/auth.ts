@@ -6,7 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { upsertTelegramUser, upsertEmailUser, ensureUsername } from "@/lib/users";
 import { consumeMagicToken } from "@/lib/email-auth";
 import { verifyMiniAppInitData } from "@/lib/telegram";
-import { consumeLoginNonce } from "@/lib/login-nonce";
 import { stampLastLogin } from "@/server/services/activity";
 import { readCookie, sha256 } from "@/lib/rate-limit";
 
@@ -112,10 +111,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // deep-link flow), so cap the replay window to the login moment (10 min).
         const tg = verifyMiniAppInitData(initData, { maxAgeSeconds: 600 });
         if (!tg) return null;
-        // Single-use: record the verified initData hash so a captured payload can't be
-        // replayed within the 10-min window. First login wins; a replay is rejected.
-        const hash = new URLSearchParams(initData).get("hash");
-        if (!hash || !(await consumeLoginNonce(hash, 600))) return null;
+        // NOT single-use, deliberately (fixed 2026-07-26). Telegram hands the SAME
+        // initData to every page of a Mini App launch, so consuming it made the first
+        // sign-in succeed and every later one fail — a user who tapped a second bot
+        // button, or whose WebView dropped its cookie, was bounced to the login page
+        // with no way back in. Security now rests on Telegram's own documented model,
+        // which this already enforces above: an HMAC signature over the payload keyed
+        // by the bot token, plus a 10-minute freshness window on auth_date. The
+        // residual exposure is a captured initData being replayable inside that
+        // window; the durable credential is the 7-day session cookie, not this.
         const user = await upsertTelegramUser({ ...tg, authDate: Math.floor(Date.now() / 1000) });
         if (user.status !== "ACTIVE") return null;
         return {
