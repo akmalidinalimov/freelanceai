@@ -3,6 +3,7 @@ import { defineHandler } from "@/lib/handler";
 import { ok, Errors } from "@/lib/api";
 import { requireSeller } from "@/lib/authz";
 import { addPortfolioItem, removePortfolioItem } from "@/server/services/profile";
+import { measureItem } from "@/server/services/portfolio-l0";
 
 const addSchema = z
   .object({
@@ -17,6 +18,9 @@ export const POST = defineHandler({ auth: true, schema: addSchema }, async ({ us
   if (!user) throw Errors.unauthenticated();
   requireSeller(user);
   const item = await addPortfolioItem(user.id, body.mediaUrl, body.mediaType, body.caption);
+  // Measure it now (dimensions, bytes, fingerprint) so the free L0 gate has data to
+  // work with later. Fire-and-forget: an upload must never fail on measurement.
+  void measureItem({ id: item.id, mediaUrl: item.mediaUrl, mediaType: item.mediaType }).catch(() => {});
   return ok({ item });
 });
 

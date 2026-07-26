@@ -113,6 +113,8 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       CRON_SECRET: ${CRON_SECRET:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Gemini: portfolio image/video review (vision + audio). Text stays on Claude.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       APP_EXTRA_ORIGINS: ${APP_EXTRA_ORIGINS:-}
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:-}

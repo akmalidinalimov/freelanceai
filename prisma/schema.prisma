@@ -123,6 +123,7 @@ model User {
   activityEvents ActivityEvent[]
   flags          UserFlag[]
   searchEmbedding SellerEmbedding?
+  portfolioAssessments PortfolioAssessment[]
   badges         UserBadge[]
 
   @@index([role])
@@ -363,6 +364,16 @@ model PortfolioItem {
   mediaUrl  String
   mediaType String        @default("image") // image | video
   caption   String?
+  // Technical metadata, measured server-side after upload (sharp for images). Drives the
+  // free L0 quality gate: too-small / over-compressed / duplicate work is caught without
+  // spending a single AI token. Null = not yet measured (older rows, or a fetch failure).
+  width      Int?
+  height     Int?
+  bytes      Int?
+  // dHash (64-bit, hex): near-duplicate detection inside one portfolio AND across
+  // sellers — the same file under two accounts is the strongest cheap fraud signal.
+  phash      String?
+  analyzedAt DateTime?
   position  Int           @default(0)
   // Provenance: manual upload vs Instagram sync (externalId = IG media id, for dedup).
   source     String   @default("upload") // upload | instagram
@@ -371,6 +382,7 @@ model PortfolioItem {
   createdAt DateTime      @default(now())
 
   @@index([profileId])
+  @@index([phash])
   @@unique([profileId, externalId])
 }
 
@@ -767,6 +779,39 @@ model SellerEmbedding {
   docText   String
   embedding Unsupported("vector(1024)")?
   updatedAt DateTime                     @updatedAt
+}
+
+/**
+ * One portfolio assessment run for a seller: the free deterministic gate (L0) plus the
+ * Gemini multimodal review (L1/L2). Stored per run so thresholds can be re-calibrated
+ * against history instead of re-billing the API, and so an admin decision always has
+ * the evidence that produced it.
+ */
+model PortfolioAssessment {
+  id       String @id @default(cuid())
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  // "l0" = deterministic only, "full" = deterministic + Gemini review.
+  stage    String @default("l0")
+  // 0..100 technical gate score; itemsPassed/itemsTotal describe the portfolio sample.
+  l0Score     Int
+  itemsTotal  Int    @default(0)
+  itemsPassed Int    @default(0)
+  // Gemini rubric scores, 1..5 each (null until the AI pass runs).
+  craft          Int?
+  commercialUse  Int?
+  coherence      Int?
+  specMatch      Int?
+  overall        Int?
+  // Model verdict + human-readable reasons (shown to the admin, never auto-approving).
+  verdict  String? // "pass" | "borderline" | "reject"
+  reasons  Json?
+  model    String?
+  // Hard blockers found by either layer (duplicate files, watermark, wrong category…).
+  blockers String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@index([sellerId, createdAt])
 }
 
 model UserFlag {
