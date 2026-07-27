@@ -567,7 +567,18 @@
     "reviewNotice": "After you publish, this service goes to review. Buyers see it once it's approved — we'll notify you.",
     "coverGenerate": "Generate a cover for me",
     "coverGenHint": "No image ready? We'll make a branded 16:9 cover from your title.",
-    "coverGenNeedTitle": "Write the service title first — the cover uses it."
+    "coverGenNeedTitle": "Write the service title first — the cover uses it.",
+    "stepWhat": "Service",
+    "stepProof": "Samples",
+    "stepPrice": "Price",
+    "stepFinish": "Finish",
+    "stepBack": "← Back",
+    "stepNext": "Next →",
+    "stepBlocked": "Fill the fields above to continue",
+    "gigSamples": "Samples of THIS service (image or video)",
+    "tplTitle": "Use a ready template?",
+    "tplHint": "We'll fill typical prices, delivery times, buyer questions and add-ons for this category. Change anything you like.",
+    "tplApply": "✨ Fill with template"
   },
   "Order": {
     "bannerRevision": "Revision in progress",

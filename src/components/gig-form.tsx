@@ -8,10 +8,12 @@ import { GalleryUpload } from "@/components/gallery-upload";
 import { FocalPicker } from "@/components/focal-picker";
 import { TagInput } from "@/components/ui/tag-input";
 import { SPECIALIZATIONS } from "@/lib/specializations";
+import { templateForSlug, type Loc } from "@/lib/gig-templates";
 
 interface Category {
   id: string;
   name: string;
+  slug?: string;
 }
 type Tier = "BASIC" | "STANDARD" | "PREMIUM";
 interface PkgState {
@@ -189,6 +191,57 @@ export function GigForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
+  // Stepped flow: one decision at a time beats a 7-section scroll on a phone. All state
+  // lives in this component, so moving between steps never loses input.
+  const [step, setStep] = useState(0);
+  const [templateApplied, setTemplateApplied] = useState(false);
+
+  const loc: Loc = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
+  const activeSlug = categories.find((c) => c.id === categoryId)?.slug;
+  const template = templateForSlug(activeSlug);
+
+  /**
+   * Apply the category-typical defaults: package ladder, buyer questions, upsells, tags.
+   * Only fills EMPTY fields — a seller's own numbers are never overwritten.
+   */
+  function applyTemplate() {
+    if (!template) return;
+    setPkgs((prev) => {
+      const next = { ...prev };
+      for (const tier of template.tiers) {
+        if (!pkgFilled(next[tier.tier])) {
+          next[tier.tier] = {
+            title: next[tier.tier].title,
+            priceUzs: String(tier.priceUzs),
+            deliveryDays: String(tier.deliveryDays),
+            revisions: String(tier.revisions),
+          };
+        }
+      }
+      return next;
+    });
+    setVisibleTiers(TIERS.slice());
+    if (reqPrompts.filter(Boolean).length === 0) setReqPrompts(template.requirementPrompts[loc]);
+    if (extras.length === 0) {
+      setExtras(
+        template.extras.map((e) => ({ title: e.label[loc], priceUzs: String(e.priceUzs), deliveryDays: "" }))
+      );
+    }
+    if (tags.length === 0) setTags(template.tags);
+    setTemplateApplied(true);
+  }
+
+  /** Per-step gate: nobody reaches "publish" missing what the API requires. */
+  function stepValid(i: number): boolean {
+    if (i === 0) return title.trim().length >= 5 && description.trim().length >= 20;
+    if (i === 2) {
+      return TIERS.some(
+        (tier) => Number(pkgs[tier].priceUzs) >= 1000 && Number(pkgs[tier].deliveryDays) >= 1
+      );
+    }
+    return true;
+  }
+  const STEP_KEYS = ["stepWhat", "stepProof", "stepPrice", "stepFinish"] as const;
 
   // Restore a local autosave once, client-side only (no hydration mismatch). An AI-wizard
   // draft (`initial`) or edit mode (`gigId`) always wins over the autosave.
@@ -390,7 +443,31 @@ export function GigForm({
         </div>
       )}
 
-      {/* 1 — Overview: the essentials a buyer reads first */}
+      {/* Progress: four named steps, so the seller always sees how much is left. */}
+      <ol className="flex gap-1.5">
+        {STEP_KEYS.map((k, i) => (
+          <li key={k} className="flex-1">
+            <button
+              type="button"
+              onClick={() => (i < step || stepValid(step) ? setStep(i) : undefined)}
+              aria-current={i === step ? "step" : undefined}
+              className={`w-full rounded-full border px-2 py-1.5 text-[11px] font-semibold transition-colors ${
+                i === step
+                  ? "border-transparent bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                  : i < step
+                    ? "border-[hsl(var(--primary))]/40 bg-[hsl(var(--card))] text-[hsl(var(--primary-ink))]"
+                    : "border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--muted-foreground))]"
+              }`}
+            >
+              {i + 1}. {t(k)}
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      {step === 0 && (
+        <>
+      {/* 1 - Overview: the essentials a buyer reads first */}
       <Section title={t("secOverview")}>
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
@@ -452,7 +529,12 @@ export function GigForm({
         </div>
       </Section>
 
-      {/* 2 — Media: the first visual impression */}
+        </>
+      )}
+
+      {step === 1 && (
+        <>
+      {/* 2 - Media: the first visual impression */}
       <Section title={t("secMedia")} desc={t("mediaHint")}>
         <div className="flex flex-col gap-4">
           <CoverUpload
@@ -477,7 +559,7 @@ export function GigForm({
           {coverUrl && coverType !== "video" && (
             <FocalPicker src={coverUrl} value={coverFocal} onChange={setCoverFocal} />
           )}
-          <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} />
+          <GalleryUpload value={galleryUrls} onChange={setGalleryUrls} label={t("gigSamples")} video />
         </div>
       </Section>
 
@@ -507,7 +589,27 @@ export function GigForm({
         </div>
       </Section>
 
-      {/* 3 — Packages: the money (required). One tier is enough; more are opt-in. */}
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+      {/* Category template: fills the ladder, buyer questions and upsells in one tap. */}
+      {template && !templateApplied && (
+        <div className="rounded-2xl border border-[hsl(var(--primary))]/35 bg-[hsl(var(--primary))]/[0.06] p-4">
+          <p className="text-sm font-semibold">{t("tplTitle")}</p>
+          <p className="mt-0.5 text-sm text-[hsl(var(--muted-foreground))]">{t("tplHint")}</p>
+          <button
+            type="button"
+            onClick={applyTemplate}
+            className="mt-3 rounded-md bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))]"
+          >
+            {t("tplApply")}
+          </button>
+        </div>
+      )}
+
+      {/* 3 - Packages: the money (required). One tier is enough; more are opt-in. */}
       <Section title={t("packages")} desc={t("packagesDesc")}>
         <div
           className={
@@ -670,7 +772,12 @@ export function GigForm({
         </div>
       </Section>
 
-      {/* 5 — Requirements (optional) */}
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+      {/* 5 - Requirements (optional) */}
       <Section title={t("requirements")} desc={t("requirementsDesc")} optional={t("optional")}>
         <div className="flex flex-col gap-2">
           {reqPrompts.map((p, i) => (
@@ -747,6 +854,9 @@ export function GigForm({
         </div>
       </Section>
 
+        </>
+      )}
+
       {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
 
       {/* Set the expectation BEFORE they publish: review first, buyers after. */}
@@ -756,15 +866,33 @@ export function GigForm({
         </p>
       )}
 
-      {/* Sticky action bar — the submit/draft CTAs stay reachable in this long form */}
-      <div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/90 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/75">
-        <Button type="submit" size="lg" disabled={busy}>
-          {busy ? t("publishing") : gigId ? t("saveChanges") : t("publish")}
-        </Button>
-        {!gigId && (
-          <Button type="button" size="lg" variant="outline" disabled={busy} onClick={() => submit(null, true)}>
-            {t("saveDraft")}
+      {/* Sticky wizard nav: Back / Next until the last step, then Publish. */}
+      <div className="sticky bottom-16 -mx-4 flex flex-wrap items-center gap-2 border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/92 px-4 py-3 backdrop-blur md:bottom-0">
+        {step > 0 && (
+          <Button type="button" size="lg" variant="outline" onClick={() => setStep((n) => n - 1)}>
+            {t("stepBack")}
           </Button>
+        )}
+        {step < 3 ? (
+          <>
+            <Button type="button" size="lg" disabled={!stepValid(step)} onClick={() => setStep((n) => n + 1)}>
+              {t("stepNext")}
+            </Button>
+            {!stepValid(step) && (
+              <span className="text-xs text-[hsl(var(--muted-foreground))]">{t("stepBlocked")}</span>
+            )}
+          </>
+        ) : (
+          <>
+            <Button type="submit" size="lg" disabled={busy}>
+              {busy ? t("publishing") : gigId ? t("saveChanges") : t("publish")}
+            </Button>
+            {!gigId && (
+              <Button type="button" size="lg" variant="outline" disabled={busy} onClick={() => submit(null, true)}>
+                {t("saveDraft")}
+              </Button>
+            )}
+          </>
         )}
       </div>
     </form>

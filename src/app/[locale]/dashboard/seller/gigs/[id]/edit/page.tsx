@@ -21,7 +21,7 @@ export default async function EditGigPage({ params }: { params: Promise<{ locale
 
   const rows = await prisma.category.findMany({ orderBy: { slug: "asc" } });
   const nameKey = ({ uz: "nameUz", ru: "nameRu", en: "nameEn" } as const)[locale as Locale];
-  const categories = rows.map((c) => ({ id: c.id, name: c[nameKey] }));
+  const categories = rows.map((c) => ({ id: c.id, name: c[nameKey], slug: c.slug }));
 
   const faqArr = Array.isArray(gig.faq) ? (gig.faq as { q: string; a: string }[]) : [];
   const packages: Partial<Record<Tier, GigInitial["packages"][Tier]>> = {};

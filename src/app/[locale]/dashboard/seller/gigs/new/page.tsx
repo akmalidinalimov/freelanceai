@@ -18,7 +18,7 @@ export default async function NewGigPage({
   const nameKey = (
     { uz: "nameUz", ru: "nameRu", en: "nameEn" } as const
   )[locale as Locale];
-  const categories = rows.map((c) => ({ id: c.id, name: c[nameKey] }));
+  const categories = rows.map((c) => ({ id: c.id, name: c[nameKey], slug: c.slug }));
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">

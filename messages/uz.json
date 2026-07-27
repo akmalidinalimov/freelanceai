@@ -567,7 +567,18 @@
     "reviewNotice": "E'lon qilgach, xizmat tekshiruvga yuboriladi. Tasdiqlangach xaridorlar koʻra boshlaydi — sizga xabar beramiz.",
     "coverGenerate": "Muqova yaratib berish",
     "coverGenHint": "Rasm tayyor emasmi? Sarlavhangizdan brend uslubidagi 16:9 muqova yasaymiz.",
-    "coverGenNeedTitle": "Avval xizmat sarlavhasini yozing — muqova undan foydalanadi."
+    "coverGenNeedTitle": "Avval xizmat sarlavhasini yozing — muqova undan foydalanadi.",
+    "stepWhat": "Xizmat",
+    "stepProof": "Namunalar",
+    "stepPrice": "Narx",
+    "stepFinish": "Yakunlash",
+    "stepBack": "← Orqaga",
+    "stepNext": "Keyingi →",
+    "stepBlocked": "Davom etish uchun yuqoridagi maydonlarni to‘ldiring",
+    "gigSamples": "SHU xizmat namunalari (rasm yoki video)",
+    "tplTitle": "Tayyor shablondan foydalanamizmi?",
+    "tplHint": "Bu yoʻnalish uchun odatiy narx, muddat, mijozga savollar va qoʻshimchalarni toʻldiramiz. Hammasini oʻzgartirish mumkin.",
+    "tplApply": "✨ Shablon bilan toʻldirish"
   },
   "Order": {
     "bannerRevision": "Tahrir jarayonda",
