@@ -273,7 +273,8 @@
     "portfolioTitle": "Samples of your work",
     "portfolioHint": "Upload 2–4 of your best pieces — buyers trust what they can see. You can add more later.",
     "continueBtn": "Continue",
-    "skipForNow": "Skip for now"
+    "skipForNow": "Skip for now",
+    "nameSection": "Your name"
   },
   "Sell": {
     "eyebrow": "For creators",
@@ -934,7 +935,16 @@
     "statClients": "clients",
     "statRating": "rating",
     "nextLevelAt": "next level: {xp} XP",
-    "portfolioVideoFormat": "Use MP4, WebM or MOV for video. MP4 plays everywhere."
+    "portfolioVideoFormat": "Use MP4, WebM or MOV for video. MP4 plays everywhere.",
+    "secAbout": "About you",
+    "secAboutHint": "This is what a buyer reads first.",
+    "secSkills": "Skills & experience",
+    "secSkillsHint": "What you make, and what you make it with.",
+    "secLinks": "Links",
+    "secLinksHint": "Where buyers can see more of your work.",
+    "optionalBadge": "Optional",
+    "headlinePh": "e.g. AI video for small brands",
+    "aboutPh": "What you do, how you work, what a client gets."
   },
   "Instagram": {
     "connect": "Connect Instagram",

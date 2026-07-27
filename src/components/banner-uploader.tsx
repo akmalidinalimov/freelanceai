@@ -120,14 +120,15 @@ export function BannerUploader({ initial }: { initial: Banner | null }) {
   }
 
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] p-4">
+    // Same white card as the other profile sections — a tinted panel blended into the
+    // Sandstone page on a phone.
+    <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-soft)]">
       <div className="mb-1 text-sm font-semibold">{t("banner")}</div>
       <p className="mb-3 text-xs text-[hsl(var(--muted-foreground))]">{t("bannerHint")}</p>
 
       {banner && (
         <div className="mb-3 aspect-[5/2] w-full overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--surface-2))]">
           {banner.type === "video" ? (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
             <video src={banner.url} poster={banner.poster ?? undefined} muted loop playsInline autoPlay className="h-full w-full object-cover" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element

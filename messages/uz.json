@@ -273,7 +273,8 @@
     "portfolioTitle": "Ishlaringizdan namunalar",
     "portfolioHint": "Eng yaxshi 2–4 ishingizni yuklang — xaridorlar koʻrgan ishiga ishonadi. Keyin ham qoʻshish mumkin.",
     "continueBtn": "Davom etish",
-    "skipForNow": "Keyinroq"
+    "skipForNow": "Keyinroq",
+    "nameSection": "Ismingiz"
   },
   "Sell": {
     "eyebrow": "Ijodkorlar uchun",
@@ -934,7 +935,16 @@
     "statClients": "mijoz",
     "statRating": "reyting",
     "nextLevelAt": "keyingi daraja: {xp} XP",
-    "portfolioVideoFormat": "Video uchun MP4, WebM yoki MOV dan foydalaning. MP4 hamma joyda ochiladi."
+    "portfolioVideoFormat": "Video uchun MP4, WebM yoki MOV dan foydalaning. MP4 hamma joyda ochiladi.",
+    "secAbout": "Siz haqingizda",
+    "secAboutHint": "Xaridor eng avval shuni oʻqiydi.",
+    "secSkills": "Koʻnikma va tajriba",
+    "secSkillsHint": "Nima yaratasiz va nima bilan.",
+    "secLinks": "Havolalar",
+    "secLinksHint": "Xaridorlar ishlaringizni qayerda koʻradi.",
+    "optionalBadge": "Ixtiyoriy",
+    "headlinePh": "Masalan: kichik brendlar uchun AI video",
+    "aboutPh": "Nima qilasiz, qanday ishlaysiz, mijoz nima oladi."
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",

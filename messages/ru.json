@@ -273,7 +273,8 @@
     "portfolioTitle": "Примеры ваших работ",
     "portfolioHint": "Загрузите 2–4 лучшие работы — покупатели доверяют тому, что видят. Можно добавить позже.",
     "continueBtn": "Продолжить",
-    "skipForNow": "Позже"
+    "skipForNow": "Позже",
+    "nameSection": "Ваше имя"
   },
   "Sell": {
     "eyebrow": "Для креаторов",
@@ -934,7 +935,16 @@
     "statClients": "клиенты",
     "statRating": "рейтинг",
     "nextLevelAt": "след. уровень: {xp} XP",
-    "portfolioVideoFormat": "Для видео используйте MP4, WebM или MOV. MP4 воспроизводится везде."
+    "portfolioVideoFormat": "Для видео используйте MP4, WebM или MOV. MP4 воспроизводится везде.",
+    "secAbout": "О вас",
+    "secAboutHint": "Это первое, что читает покупатель.",
+    "secSkills": "Навыки и опыт",
+    "secSkillsHint": "Что вы делаете и в чём.",
+    "secLinks": "Ссылки",
+    "secLinksHint": "Где покупатели увидят больше ваших работ.",
+    "optionalBadge": "Необязательно",
+    "headlinePh": "Напр.: AI-видео для малых брендов",
+    "aboutPh": "Чем занимаетесь, как работаете, что получит клиент."
   },
   "Instagram": {
     "connect": "Подключить Instagram",

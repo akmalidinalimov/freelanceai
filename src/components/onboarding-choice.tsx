@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Briefcase, Palette, ChevronRight } from "lucide-react";
 import { GalleryUpload } from "@/components/gallery-upload";
+import { FormSection, fieldClass } from "@/components/ui/form-section";
 
 /**
  * First-login onboarding, two steps:
@@ -81,9 +82,6 @@ export function OnboardingChoice({
     window.location.href = gigWizard;
   }
 
-  const field =
-    "h-11 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm";
-
   if (step === "creds") {
     const bands = [
       { value: 0, label: t("exp0") },
@@ -92,9 +90,8 @@ export function OnboardingChoice({
       { value: 5, label: t("exp5") },
     ];
     return (
-      <div className="flex w-full flex-col gap-5">
-        <div>
-          <p className="mb-2 text-sm font-medium">{t("expTitle")}</p>
+      <div className="flex w-full flex-col gap-4">
+        <FormSection title={t("expTitle")}>
           <div className="flex flex-wrap gap-2">
             {bands.map((b) => (
               <button
@@ -112,13 +109,11 @@ export function OnboardingChoice({
               </button>
             ))}
           </div>
-        </div>
+        </FormSection>
 
-        <div>
-          <p className="mb-1 text-sm font-medium">{t("portfolioTitle")}</p>
-          <p className="mb-2 text-xs text-[hsl(var(--muted-foreground))]">{t("portfolioHint")}</p>
-          <GalleryUpload value={portfolio} onChange={setPortfolio} prefix="portfolio" />
-        </div>
+        <FormSection title={t("portfolioTitle")} desc={t("portfolioHint")}>
+          <GalleryUpload value={portfolio} onChange={setPortfolio} prefix="portfolio" video />
+        </FormSection>
 
         {error && <p className="text-sm text-[hsl(var(--danger))]">{t("error")}</p>}
 
@@ -146,16 +141,18 @@ export function OnboardingChoice({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3">
-        <label className="flex flex-col gap-1 text-left">
-          <span className="text-sm font-medium">{t("nameFirst")}</span>
-          <input className={field} value={firstName} onChange={(e) => setFirstName(e.target.value)} maxLength={60} />
-        </label>
-        <label className="flex flex-col gap-1 text-left">
-          <span className="text-sm font-medium">{t("nameLast")}</span>
-          <input className={field} value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={60} />
-        </label>
-      </div>
+      <FormSection title={t("nameSection")}>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1 text-left">
+            <span className="text-sm font-medium">{t("nameFirst")}</span>
+            <input className={fieldClass} value={firstName} onChange={(e) => setFirstName(e.target.value)} maxLength={60} />
+          </label>
+          <label className="flex flex-col gap-1 text-left">
+            <span className="text-sm font-medium">{t("nameLast")}</span>
+            <input className={fieldClass} value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={60} />
+          </label>
+        </div>
+      </FormSection>
 
       {cards.map(({ intent, icon: Icon, title, desc }) => (
         <button
