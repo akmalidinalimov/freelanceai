@@ -98,7 +98,9 @@ test("message attachments: a file-only message is accepted and rendered", async 
   // Body is optional when at least one attachment is present (Batch 6-6). Must be under
   // S3_PUBLIC_BASE_URL (set in the e2e workflow) AND match a real minted key shape
   // (<prefix>/<32 hex>.<ext>) — isOwnUpload rejects anything else.
-  const fileUrl = "https://r2-test.example.com/messages/00112233445566778899aabbccddeeff.jpg";
+  // Unique key per run: the buyer↔seller conversation persists, so a fixed URL accumulates one
+  // link per run and the toHaveCount(1) assertion below would fail on the second run.
+  const fileUrl = `https://r2-test.example.com/messages/${crypto.randomUUID().replace(/-/g, "")}.jpg`;
   const sent = await buyer.request.post(`/api/conversations/${convId}/messages`, {
     headers: { Origin: origin },
     data: { fileUrls: [fileUrl] },
@@ -154,7 +156,7 @@ test("notifications: a user can delete one and clear all", async ({ browser }) =
   await buyer.waitForURL(/\/uz\/messages\/.+/);
   await buyer.getByPlaceholder("Xabar yozing...").fill("notification trigger");
   await buyer.getByRole("button", { name: "Yuborish" }).click();
-  await expect(buyer.getByText("notification trigger")).toBeVisible();
+  await expect(buyer.getByText("notification trigger").first()).toBeVisible();
 
   const sellerCtx = await browser.newContext();
   const seller = await sellerCtx.newPage();

@@ -875,7 +875,17 @@ export function GigForm({
         )}
         {step < 3 ? (
           <>
-            <Button type="button" size="lg" disabled={!stepValid(step)} onClick={() => setStep((n) => n + 1)}>
+            {/* key: without it React reconciles this button into the type="submit" Publish button
+                below (same position, same component). Advancing to the last step would then flip
+                THIS live node's type to "submit" mid-click, and the browser would run the submit
+                default action — tapping "Next" on the price step published the gig outright. */}
+            <Button
+              key="wizard-next"
+              type="button"
+              size="lg"
+              disabled={!stepValid(step)}
+              onClick={() => setStep((n) => n + 1)}
+            >
               {t("stepNext")}
             </Button>
             {!stepValid(step) && (
@@ -884,7 +894,7 @@ export function GigForm({
           </>
         ) : (
           <>
-            <Button type="submit" size="lg" disabled={busy}>
+            <Button key="wizard-publish" type="submit" size="lg" disabled={busy}>
               {busy ? t("publishing") : gigId ? t("saveChanges") : t("publish")}
             </Button>
             {!gigId && (

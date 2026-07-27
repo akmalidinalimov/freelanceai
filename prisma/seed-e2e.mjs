@@ -43,7 +43,10 @@ async function main() {
 
   await prisma.user.upsert({
     where: { id: "e2e_buyer" },
-    update: { status: "ACTIVE" },
+    // kycStatus/phone are reset because the admin-KYC test drives this user NONE → PENDING →
+    // VERIFIED. Without the reset the test can only pass once per database (it passes in CI only
+    // because the DB is created fresh each run).
+    update: { status: "ACTIVE", kycStatus: "NONE", phone: null },
     create: {
       id: "e2e_buyer",
       firstName: "E2E Buyer",

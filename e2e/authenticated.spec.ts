@@ -35,7 +35,15 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
   await seller.goto(orderUrl);
   await seller.getByPlaceholder("Buyurtmachi uchun xabar...").fill("Your video is ready.");
   await seller.getByRole("button", { name: "Topshirish" }).click();
-  await expect(seller.getByText("Topshirilgan").first()).toBeVisible();
+  // Don't assert on "Topshirilgan": it is also a label in the always-rendered status tracker, so it
+  // is visible while the deliver POST is still in flight, and the buyer would then open the order
+  // before it leaves IN_PROGRESS and find no accept button. waitForResponse is no good either —
+  // the handler reloads on success and the navigation discards the pending response event. Re-fetch
+  // until the deliver form is gone; it only renders while IN_PROGRESS/REVISION.
+  await expect(async () => {
+    await seller.reload();
+    await expect(seller.getByPlaceholder("Buyurtmachi uchun xabar...")).toHaveCount(0);
+  }).toPass({ timeout: 30_000 });
 
   // Buyer accepts → completed.
   await buyer.goto(orderUrl);
@@ -54,7 +62,8 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
   await seller.getByRole("button", { name: "Javob berish" }).first().click();
   await seller.getByPlaceholder("Javob yozing...").fill("Thank you for your order!");
   await seller.getByRole("button", { name: "Javob yuborish" }).click();
-  await expect(seller.getByText("Ijrochi javobi")).toBeVisible();
+  // .first(): replies accumulate on the seeded gig across runs, so an unscoped match is ambiguous.
+  await expect(seller.getByText("Ijrochi javobi").first()).toBeVisible();
 
   // Buyer tips the seller on the completed order (preset; regex avoids number-format issues).
   await buyer.goto(orderUrl);
@@ -63,7 +72,7 @@ test("order lifecycle: place → deliver → accept → review", async ({ browse
 
   // Seller has in-app notifications from the order events (e.g. the new review).
   await seller.goto("/uz/notifications");
-  await expect(seller.getByText("Yangi sharh")).toBeVisible();
+  await expect(seller.getByText("Yangi sharh").first()).toBeVisible();
 
   await buyerCtx.close();
   await sellerCtx.close();
@@ -85,7 +94,7 @@ test("messaging: buyer sends, seller sees it on the order", async ({ browser }) 
   await buyer.waitForURL(/\/uz\/messages\/.+/);
   await buyer.getByPlaceholder("Xabar yozing...").fill("Hello from the buyer");
   await buyer.getByRole("button", { name: "Yuborish" }).click();
-  await expect(buyer.getByText("Hello from the buyer")).toBeVisible();
+  await expect(buyer.getByText("Hello from the buyer").first()).toBeVisible();
 
   const sellerCtx = await browser.newContext();
   const seller = await sellerCtx.newPage();
@@ -181,7 +190,7 @@ test("realtime: a sent message appears on the other party's open thread via SSE"
   // 15s < the 20s fallback poll, so a pass here proves the SSE path specifically.
   await buyer.getByPlaceholder("Xabar yozing...").fill("realtime via sse");
   await buyer.getByRole("button", { name: "Yuborish" }).click();
-  await expect(seller.getByText("realtime via sse")).toBeVisible({ timeout: 15000 });
+  await expect(seller.getByText("realtime via sse").first()).toBeVisible({ timeout: 15000 });
 
   await buyerCtx.close();
   await sellerCtx.close();
@@ -210,7 +219,9 @@ test("moderation: a new gig is PENDING then admin approves it", async ({ browser
   await loginAs(admin, "e2e_admin");
   await admin.goto("/uz/admin/moderation");
   await expect(admin.getByText(title)).toBeVisible();
-  await admin.getByRole("button", { name: "Tasdiqlash" }).first().click();
+  // Approve THIS gig's row: the queue holds every pending gig, so .first() approves whichever
+  // unrelated gig sorts first and leaves this one pending (passes only on an empty queue).
+  await admin.locator("li").filter({ hasText: title }).getByRole("button", { name: "Tasdiqlash" }).click();
   await expect(admin.getByText(title)).toHaveCount(0);
 
   await sellerCtx.close();

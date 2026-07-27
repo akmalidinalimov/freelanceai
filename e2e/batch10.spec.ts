@@ -59,7 +59,12 @@ test("seller payout request: complete an order, seller requests, admin fulfils",
   await seller.goto(orderUrl);
   await seller.getByPlaceholder("Buyurtmachi uchun xabar...").fill("Delivered.");
   await seller.getByRole("button", { name: "Topshirish" }).click();
-  await expect(seller.getByText("Topshirilgan").first()).toBeVisible();
+  // Re-fetch until the order actually left IN_PROGRESS — see authenticated.spec.ts for why neither
+  // the "Topshirilgan" text nor waitForResponse is reliable here.
+  await expect(async () => {
+    await seller.reload();
+    await expect(seller.getByPlaceholder("Buyurtmachi uchun xabar...")).toHaveCount(0);
+  }).toPass({ timeout: 30_000 });
 
   await buyer.goto(orderUrl);
   await buyer.getByRole("button", { name: "Qabul qilish va yakunlash" }).click();
