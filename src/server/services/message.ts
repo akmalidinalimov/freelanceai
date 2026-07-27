@@ -65,6 +65,15 @@ export async function conversationHasFile(conversationId: string, url: string): 
   return Boolean(m);
 }
 
+/**
+ * Stamp a conversation's last-activity time. The inbox orders by this column, so every path
+ * that posts a message must call it — otherwise that thread sinks and can fall outside the
+ * inbox's `take` window, making a real buyer enquiry invisible.
+ */
+async function stampConversationActivity(conversationId: string, at: Date): Promise<void> {
+  await prisma.conversation.update({ where: { id: conversationId }, data: { lastActivityAt: at } });
+}
+
 /** Upsert the conversation tied to an order; returns its id. */
 export async function getOrderConversationId(orderId: string) {
   const convo = await prisma.conversation.upsert({
@@ -88,6 +97,7 @@ export async function postOrderNoteQuiet(orderId: string, sender: User, text: st
     data: { conversationId, senderId: sender.id, body, fileUrls: [] },
     include: { sender: SENDER_SELECT },
   });
+  await stampConversationActivity(conversationId, message.createdAt);
   publishMessage({
     id: message.id,
     conversationId,
@@ -165,6 +175,7 @@ export async function postConversationMessage(
     data: { conversationId, senderId: user.id, body: text, fileUrls: files },
     include: { sender: SENDER_SELECT },
   });
+  await stampConversationActivity(conversationId, message.createdAt);
 
   // Push to any open SSE streams for this conversation (realtime delivery).
   publishMessage({
@@ -294,6 +305,10 @@ export async function listInbox(user: Pick<User, "id">): Promise<InboxRow[]> {
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
       _count: { select: { messages: { where: { readAt: null, NOT: { senderId: user.id } } } } },
     },
+    // Order in the DB, not just in JS below: `take` without an orderBy returned an arbitrary
+    // 50 rows, so a new enquiry could be cut from a busy inbox while the JS sort still made
+    // the result look ordered. Newest activity first, so the cap keeps what matters.
+    orderBy: { lastActivityAt: "desc" },
     take: 50,
   });
 

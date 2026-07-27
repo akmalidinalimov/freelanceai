@@ -670,11 +670,17 @@ model Conversation {
   gigId     String?
   gig       Gig?      @relation(fields: [gigId], references: [id], onDelete: SetNull)
   createdAt DateTime  @default(now())
+  /// Last activity (a message posted, or creation). The inbox MUST order by a real column:
+  /// there is no other way for Postgres to sort by "newest message", so listInbox's `take`
+  /// previously returned an arbitrary slice and a brand-new enquiry could be missing from a
+  /// busy freelancer's inbox entirely (the JS re-sort hid the truncation).
+  lastActivityAt DateTime @default(now())
   messages  Message[]
 
   @@unique([buyerId, sellerId])
   @@index([buyerId])
   @@index([sellerId])
+  @@index([lastActivityAt])
 }
 
 model Message {
