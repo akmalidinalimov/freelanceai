@@ -1,0 +1,91 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreelanceAI — D2 · Work Showcase + IG</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#070c17;--teal:#14c79a;--coral:#ff6a3d;--soft:#93a0b4;--line:rgba(255,255,255,.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Manrope,system-ui,sans-serif;color:#fff;background:var(--ink);overflow-x:hidden}
+.disp{font-family:Unbounded,sans-serif;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1160px;margin:0 auto;padding:0 30px;position:relative;z-index:2}
+/* toned-down neon (lower opacity, less blur churn) */
+.neon{position:fixed;inset:0;z-index:0;overflow:hidden}
+.neon::before,.neon::after{content:"";position:absolute;width:100vw;height:300px;border-radius:50%;filter:blur(100px);opacity:.32}
+.neon::before{background:var(--teal);top:-160px;left:-8vw;animation:sway 16s ease-in-out infinite alternate}
+.neon::after{background:var(--coral);bottom:-180px;right:-8vw;animation:sway 18s ease-in-out infinite alternate-reverse}
+@keyframes sway{to{transform:translateX(8vw)}}
+nav{position:sticky;top:0;z-index:50;background:rgba(7,12,23,.72);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.navin{max-width:1160px;margin:0 auto;padding:0 30px;height:70px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:Unbounded;font-weight:800;font-size:20px}.brand b{color:var(--teal)}
+.nl{display:flex;gap:24px;align-items:center;font-weight:500;font-size:15px;color:#cbd4e0}
+.join{background:var(--teal);color:#03231c;font-weight:700;padding:9px 17px;border-radius:11px}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:38px 0 18px}
+.tag{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);color:#dfe6ee;font-weight:600;font-size:13px;padding:7px 14px;border-radius:999px}
+h1{font-weight:800;font-size:56px;line-height:1.03;margin-top:18px}h1 .g{color:var(--teal)}
+.sub{color:#b9c3d1;font-size:19px;margin-top:20px;max-width:36ch;line-height:1.5}
+.cta{display:flex;gap:14px;margin-top:26px}
+.p1{background:var(--coral);color:#fff;font-weight:700;padding:14px 24px;border-radius:13px;transition:.15s}
+.p1:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.p2{border:1.5px solid var(--line);font-weight:600;padding:14px 22px;border-radius:13px}
+.frames{position:relative;height:430px}
+.frm{position:absolute;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -22px rgba(0,0,0,.7);border:1px solid var(--line);animation:bob 7s ease-in-out infinite}
+.frm .th{height:100%}.frm .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(4,8,15,.92));padding:26px 12px 11px;font-size:11.5px;font-weight:700}.frm .cap b{color:var(--teal)}
+.a{width:230px;height:150px;top:20px;left:6%;animation-delay:.2s}.b{width:190px;height:250px;top:86px;right:5%;animation-delay:1s}.c{width:178px;height:120px;bottom:12px;left:20%;animation-delay:1.7s;z-index:3}
+@keyframes bob{50%{transform:translateY(-16px)}}
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin:34px 0 18px}
+.sh h2{font-family:Unbounded;font-size:24px}.sh a{color:var(--teal);font-weight:600;font-size:15px}
+/* featured creators rail */
+.crail{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 0 24px;scrollbar-width:none}
+.crail::-webkit-scrollbar{display:none}
+.creator{scroll-snap-align:start;flex:0 0 300px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:.2s}
+.creator:hover{transform:translateY(-3px);background:rgba(255,255,255,.08)}
+.chead{display:flex;align-items:center;gap:11px;padding:15px 15px 12px}
+.cav{width:46px;height:46px;border-radius:14px;flex:0 0 auto}
+.cnm{font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px}.vchip{color:var(--teal)}
+.chandle{font-size:12.5px;color:var(--soft);font-weight:600;display:flex;align-items:center;gap:5px}
+.igglyph{width:13px;height:13px;border-radius:4px;background:linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0);display:inline-block}
+.cwork{display:grid;grid-template-columns:2fr 1fr 1fr;grid-auto-rows:70px;gap:3px}
+.cwork .t{position:relative;overflow:hidden}.cwork .t.big{grid-row:span 2}
+.cwork .play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:19px;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.cfoot{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;font-size:13px;font-weight:600;color:var(--soft)}
+.cfoot .r{color:#fff}.cfoot .view{color:var(--teal)}
+/* masonry */
+.mason{columns:4;column-gap:16px;padding-bottom:56px}
+.tile{break-inside:avoid;margin-bottom:16px;border-radius:14px;overflow:hidden;position:relative;opacity:0;transform:translateY(18px);animation:rise .7s forwards;border:1px solid var(--line)}
+.tile:hover .th{transform:scale(1.06)}.tile .th{transition:.5s cubic-bezier(.2,.8,.2,1)}
+.tile .lb{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(4,8,15,.9));padding:22px 11px 9px;font-size:11.5px;font-weight:700}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.frm,.neon::before,.neon::after{animation:none}.tile{opacity:1;transform:none;animation:none}}
+@media(max-width:860px){.hero{grid-template-columns:1fr}h1{font-size:40px}.frames{height:330px}.mason{columns:2}.nl a:not(.join){display:none}}
+</style></head><body>
+<div class="neon"></div>
+<nav><div class="navin"><div class="brand">Freelance<b>AI</b></div><div class="nl"><a>Xizmatlar</a><a>Ijodkorlar</a><a>Ijodkor boʻlish</a><a>Oʻzbek ▾</a><a class="join">Kirish</a></div></div></nav>
+<div class="wrap">
+ <section class="hero">
+  <div>
+   <span class="tag">◈ Haqiqiy AI ishlar galereyasi</span>
+   <h1 class="disp">Koʻring, tanlang, <span class="g">buyurtma bering</span></h1>
+   <p class="sub">Oʻzbekistonlik AI-ijodkorlarning haqiqiy ishlari — toʻgʻridan-toʻgʻri Instagram'dan sinxronlangan.</p>
+   <div class="cta"><a class="p1">Ishlarni koʻrish →</a><a class="p2">Ijodkor boʻlish</a></div>
+  </div>
+  <div class="frames">
+   <div class="frm a"><div class="th" style="background:radial-gradient(circle at 30% 30%,#ffd27a,#ff6a3d 60%,#8a2d5a)"></div><div class="cap">AI reklama roligi · <b>250 000 soʻm · 3 kun</b></div></div>
+   <div class="frm b"><div class="th" style="background:radial-gradient(circle at 55% 40%,#7ef0d0,#14c79a 55%,#0a3f4a)"></div><div class="cap">Talking-head avatar · <b>180 000 soʻm · 2 kun</b></div></div>
+   <div class="frm c"><div class="th" style="background:radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0 60%,#22143f)"></div><div class="cap">Brend identika · <b>500 000 soʻm</b></div></div>
+  </div>
+ </section>
+ <div class="sh"><h2 class="disp">Tanlangan ijodkorlar · Instagram</h2><a>Barchasi →</a></div>
+ <div class="crail" id="crail"></div>
+ <div class="sh"><h2 class="disp">Yangi ishlar</h2><a>Galereya →</a></div>
+ <div class="mason" id="mason"></div>
+</div>
+<script>
+const G=["radial-gradient(circle at 30% 30%,#ffd27a,#ff6a3d 60%,#8a2d5a)","radial-gradient(circle at 55% 45%,#7ef0d0,#14c79a,#0a3f4a)","radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0,#22143f)","radial-gradient(circle at 45% 40%,#c9a2ff,#6d4ad0,#241146)","radial-gradient(circle at 50% 35%,#ffb0c8,#f0623c,#5a1030)","radial-gradient(circle at 35% 55%,#a0f0d8,#0f9e79,#053b2c)","radial-gradient(circle at 60% 40%,#ffe08a,#f7a53c,#7a3d10)","radial-gradient(circle at 45% 45%,#9fc2ff,#3b6ad0,#122347)"];
+const cr=[["Dilnoza R.","@vividai.uz","AI video · Level 2","4.9",G[1],[0,1,5]],["Sardor M.","@qoraquti","Brending · Level 2","4.8",G[2],[2,4,1]],["Kamila T.","@studio.aurora","Fotosurat · Top","5.0",G[4],[4,0,3]],["Bekzod A.","@neonlab","AI rasm · Level 1","4.7",G[3],[3,5,2]]];
+document.getElementById('crail').innerHTML=cr.map(c=>`<div class="creator"><div class="chead"><span class="cav" style="background:${c[4]}"></span><div><div class="cnm">${c[0]} <span class="vchip">✓</span></div><div class="chandle"><span class="igglyph"></span>${c[1]} · ulangan</div></div></div><div class="cwork"><div class="t big" style="background:${G[c[5][0]]}"><div class="play">▶</div></div><div class="t" style="background:${G[c[5][1]]}"></div><div class="t" style="background:${G[c[5][2]]}"></div></div><div class="cfoot"><span class="r">★ ${c[3]} · ${c[2]}</span><span class="view">Profil →</span></div></div>`).join('');
+const cap=["AI reklama · 250 000","AI avatar · 180 000","Brending · 500 000","Personaj · 220 000","Poster · 90 000","Fotosurat · 100 000","Explainer · 300 000","Retush · 60 000"];
+const h=[150,210,170,240,160,200,180,220];const m=document.getElementById('mason');
+G.forEach((bg,i)=>{const d=document.createElement('div');d.className='tile';d.style.animationDelay=(i*.08)+'s';d.innerHTML=`<div class="th" style="background:${bg};height:${h[i]}px"></div><div class="lb">${cap[i]} soʻm</div>`;m.appendChild(d)});
+</script></body></html>

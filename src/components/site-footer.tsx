@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 export function SiteFooter() {
   const t = useTranslations();
@@ -10,6 +11,14 @@ export function SiteFooter() {
         <p>
           © {year} {t("Brand.name")}. {t("Footer.rights")}
         </p>
+        <nav className="flex items-center gap-4">
+          <Link href="/legal/terms" className="hover:text-[hsl(var(--foreground))] hover:underline">
+            {t("Footer.terms")}
+          </Link>
+          <Link href="/legal/privacy" className="hover:text-[hsl(var(--foreground))] hover:underline">
+            {t("Footer.privacy")}
+          </Link>
+        </nav>
         <p>{t("Brand.tagline")}</p>
       </div>
     </footer>

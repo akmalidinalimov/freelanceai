@@ -1,0 +1,83 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreelanceAI — E · Editorial Bento</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0c1526;--soft:#54617a;--teal:#0f9e79;--teal2:#0a5f4b;--tint:#eef7f3;--coral:#f0623c;--line:#e6ecea;--paper:#f7f9f8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+.disp{font-family:Unbounded,sans-serif;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1160px;margin:0 auto;padding:0 30px}
+nav{display:flex;align-items:center;justify-content:space-between;height:78px}
+.brand{font-family:Unbounded;font-weight:800;font-size:20px}.brand b{color:var(--teal)}
+.nl{display:flex;gap:26px;align-items:center;font-weight:500;font-size:15px;color:var(--soft)}
+.dark{background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-weight:600}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:18px;padding:20px 0 40px}
+.b{border-radius:22px;padding:24px;position:relative;overflow:hidden;opacity:0;transform:translateY(20px) scale(.98);animation:pop .7s cubic-bezier(.2,.8,.2,1) forwards;transition:transform .25s}
+.b:hover{transform:translateY(-4px)}
+@keyframes pop{to{opacity:1;transform:none}}
+/* headline tile */
+.head{grid-column:span 2;grid-row:span 2;background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:space-between}
+.head .tag{font-size:13px;font-weight:700;color:#7ef0d0}
+.head h1{font-weight:800;font-size:40px;line-height:1.05;margin-top:10px}
+.head h1 .g{color:var(--teal)}
+.head .p1{align-self:flex-start;background:var(--teal);color:#03231c;font-weight:700;padding:12px 20px;border-radius:12px}
+.head .blob{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,#14c79a,transparent 70%);right:-60px;bottom:-60px;opacity:.5;filter:blur(20px);animation:float 8s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-18px)}}
+/* search tile */
+.srch{grid-column:span 2;background:#fff;border:1.5px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.srch .lb{font-size:13px;font-weight:700;color:var(--teal2)}
+.srch .bar{margin-top:12px;display:flex;background:var(--paper);border:1.5px solid var(--line);border-radius:13px;padding:6px 6px 6px 16px}
+.srch input{flex:1;border:0;background:none;outline:0;font-family:inherit;font-size:15px;color:var(--ink)}
+.srch button{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:0 18px;font-weight:700;font-family:inherit;cursor:pointer}
+.srch .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.srch .chips span{font-size:12.5px;font-weight:600;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+/* stat tile */
+.stat{background:var(--tint);display:flex;flex-direction:column;justify-content:center}
+.stat b{font-family:Unbounded;font-size:38px;color:var(--teal2);line-height:1}
+.stat span{font-size:13px;font-weight:600;color:var(--teal2);margin-top:6px}
+/* creator tile */
+.crt{background:#fff;border:1.5px solid var(--line);display:flex;flex-direction:column;justify-content:space-between}
+.crt .av{width:44px;height:44px;border-radius:13px;background:radial-gradient(circle at 40% 35%,#7ef0d0,#0f9e79 60%,#0a3f4a)}
+.crt .nm{font-weight:800;font-size:15px;margin-top:10px}
+.crt .vf{display:inline-flex;gap:5px;align-items:center;color:var(--teal2);font-weight:700;font-size:12px}
+.crt .rl{font-size:12.5px;color:var(--soft);font-weight:600}
+/* art tiles */
+.art{color:#fff;display:flex;align-items:flex-end;font-weight:700;font-size:13px}
+.art.big{grid-row:span 2}
+.art .lb{position:relative;z-index:2}.art .p{font-size:12px;color:rgba(255,255,255,.85);font-weight:600}
+/* category tile */
+.cat{background:#fff;border:1.5px solid var(--line);display:flex;flex-direction:column;justify-content:center;gap:8px}
+.cat a{font-weight:600;font-size:14px;color:var(--ink);display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)}
+.cat a:last-child{border:0}.cat a span{color:var(--soft)}
+@media (prefers-reduced-motion:reduce){.b{opacity:1;transform:none;animation:none}.blob{animation:none}}
+@media(max-width:900px){.bento{grid-template-columns:repeat(2,1fr)}.head,.srch{grid-column:span 2}.nl a:not(.dark){display:none}}
+</style></head><body>
+<div class="wrap">
+ <nav><div class="brand">Freelance<b>AI</b></div><div class="nl"><a>Xizmatlar</a><a>Ijodkor boʻlish</a><a>Oʻzbek ▾</a><a class="dark">Kirish</a></div></nav>
+ <div class="bento">
+  <div class="b head" style="animation-delay:.05s">
+   <div class="blob"></div>
+   <div><div class="tag">✦ Markaziy Osiyoning AI-ijodkorlar bozori</div><h1 class="disp">Biznesingiz uchun <span class="g">AI ijod</span></h1></div>
+   <a class="p1">Boshlash →</a>
+  </div>
+  <div class="b srch" style="animation-delay:.12s">
+   <div class="lb">Nima qidiryapsiz?</div>
+   <div class="bar"><input placeholder="AI video, logotip, fotosurat…"><button>Qidirish</button></div>
+   <div class="chips"><span>AI video</span><span>AI rasm</span><span>Avatar</span><span>Brending</span></div>
+  </div>
+  <div class="b stat" style="animation-delay:.19s"><b class="cnt" data-to="10240">0</b><span>Tasdiqlangan ijodkor</span></div>
+  <div class="b crt" style="animation-delay:.26s"><div class="av"></div><div><div class="nm">Dilnoza R.</div><div class="vf">✓ Tasdiqlangan</div><div class="rl">AI video · 4.9★</div></div></div>
+  <div class="b art big" style="animation-delay:.33s;background:radial-gradient(circle at 40% 35%,#ffd27a,#f0623c 60%,#8a2d5a)"><div class="lb">AI reklama roligi<div class="p">250 000 soʻm</div></div></div>
+  <div class="b art" style="animation-delay:.4s;background:radial-gradient(circle at 55% 45%,#7ef0d0,#0f9e79,#0a3f4a)"><div class="lb">Talking-head avatar<div class="p">180 000 soʻm</div></div></div>
+  <div class="b cat" style="animation-delay:.47s">
+   <a>AI video <span>→</span></a><a>AI rasm <span>→</span></a><a>Ovoz dublyaji <span>→</span></a><a>Brending <span>→</span></a>
+  </div>
+  <div class="b art" style="animation-delay:.54s;background:radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0,#22143f)"><div class="lb">Brend identika<div class="p">500 000 soʻm</div></div></div>
+  <div class="b stat" style="animation-delay:.61s"><b class="cnt" data-to="58000">0</b><span>Bajarilgan buyurtma</span></div>
+ </div>
+</div>
+<script>
+setTimeout(()=>document.querySelectorAll('.cnt').forEach(el=>{const to=+el.dataset.to;let n=0;const st=Math.ceil(to/38);const t=setInterval(()=>{n+=st;if(n>=to){n=to;clearInterval(t)}el.textContent=n.toLocaleString('ru-RU')+(to>50000?'+':'')},26)}),700);
+</script></body></html>

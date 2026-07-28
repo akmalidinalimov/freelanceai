@@ -77,10 +77,11 @@ describe("verifyLoginWidget", () => {
   });
 });
 
-/** Sign Mini App initData (different secret derivation). */
+/** Sign Mini App initData (different secret derivation). Excludes hash + signature
+ * exactly as Telegram does — real clients send a `signature` field. */
 function signMiniApp(params: Record<string, string>): string {
   const dcs = Object.keys(params)
-    .filter((k) => k !== "hash")
+    .filter((k) => k !== "hash" && k !== "signature")
     .sort()
     .map((k) => `${k}=${params[k]}`)
     .join("\n");
@@ -115,5 +116,18 @@ describe("verifyMiniAppInitData", () => {
     expect(
       verifyMiniAppInitData(initData, { botToken: BOT_TOKEN, nowSeconds: NOW })
     ).toBeNull();
+  });
+
+  it("accepts initData that includes a `signature` field (current Telegram clients)", () => {
+    // Real payloads carry a `signature`; it must be excluded from the HMAC check.
+    const params: Record<string, string> = {
+      auth_date: String(NOW - 5),
+      user: JSON.stringify({ id: 9, first_name: "Aziz", username: "aziz" }),
+      signature: "ed25519_third_party_proof_ignored_by_hmac",
+    };
+    params.hash = signMiniApp(params);
+    const initData = new URLSearchParams(params).toString();
+    const user = verifyMiniAppInitData(initData, { botToken: BOT_TOKEN, nowSeconds: NOW });
+    expect(user?.id).toBe("9");
   });
 });

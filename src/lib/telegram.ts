@@ -37,10 +37,15 @@ function getBotToken(): string {
   return token;
 }
 
-/** Build the data-check-string from a set of fields, excluding `hash`. */
+/**
+ * Build the data-check-string, excluding `hash` AND `signature`. Current Telegram
+ * clients include a `signature` field (the Ed25519 third-party proof) in EVERY
+ * initData payload, and Telegram excludes it from the HMAC data-check-string — so
+ * keeping it here would compute a different hash and reject every real login.
+ */
 function buildDataCheckString(fields: Record<string, string>): string {
   return Object.keys(fields)
-    .filter((k) => k !== "hash")
+    .filter((k) => k !== "hash" && k !== "signature")
     .sort()
     .map((k) => `${k}=${fields[k]}`)
     .join("\n");

@@ -1,0 +1,261 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreelanceAI — B3 · AI Concierge (mobile-first)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0c1526;--soft:#4d5a72;--soft2:#8a97a8;--teal:#0f9e79;--teal2:#0a5f4b;--tint:#eef7f3;--coral:#f0623c;--line:#e6ecea;--paper:#fbfdfc;--gold:#f4a628}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:var(--paper);
+ background-image:radial-gradient(rgba(15,158,121,.07) 1px,transparent 1px);background-size:22px 22px;padding-bottom:76px}
+.disp{font-family:Unbounded,sans-serif;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}button{font-family:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+/* header */
+nav{position:sticky;top:0;z-index:50;background:rgba(251,253,252,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.navin{max-width:1040px;margin:0 auto;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:Unbounded;font-weight:800;font-size:18px}.brand b{color:var(--teal)}
+.nr{display:flex;align-items:center;gap:10px}
+.lang{font-size:13px;font-weight:600;color:var(--soft);border:1px solid var(--line);border-radius:9px;padding:6px 9px}
+.login{background:var(--ink);color:#fff;padding:8px 15px;border-radius:10px;font-weight:600;font-size:14px}
+/* live ticker */
+.ticker{background:var(--ink);color:#dfe7e3;font-size:12px;font-weight:600;overflow:hidden;white-space:nowrap;height:32px;display:flex;align-items:center}
+.ticker .tk{display:inline-flex;gap:34px;padding-left:100%;animation:tick 26s linear infinite}
+.ticker b{color:#7ef0d0}.ticker .dot{color:var(--teal);animation:blink 1.4s infinite}
+@keyframes tick{to{transform:translateX(-100%)}}
+@keyframes blink{50%{opacity:.3}}
+/* hero / search */
+.hero{padding:26px 0 6px;text-align:center}
+.eyebrow{display:inline-flex;gap:6px;align-items:center;background:var(--tint);color:var(--teal2);font-weight:700;font-size:12.5px;padding:6px 13px;border-radius:999px}
+h1{font-weight:800;font-size:30px;line-height:1.08;margin:14px auto 0;max-width:16ch;text-wrap:balance}
+h1 .g{color:var(--teal)}
+.hsub{color:var(--soft);font-size:15.5px;margin:11px auto 0;max-width:40ch;line-height:1.5}
+.searchcard{margin:20px auto 0;background:#fff;border:1.5px solid var(--line);border-radius:22px;box-shadow:0 30px 60px -40px rgba(11,21,38,.35);padding:14px;text-align:left;transition:.2s}
+.searchcard:focus-within{border-color:var(--teal);box-shadow:0 30px 60px -34px rgba(15,158,121,.4)}
+.sclab{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--teal2)}
+.scdot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(15,158,121,.18);animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(15,158,121,0)}}
+.scin{display:flex;align-items:flex-end;gap:8px;margin-top:10px}
+textarea#q{flex:1;border:0;outline:0;resize:none;font-family:inherit;font-size:17px;line-height:1.4;color:var(--ink);max-height:96px;min-height:26px}
+textarea#q::placeholder{color:var(--soft2)}
+.mic{width:42px;height:42px;flex:0 0 auto;border-radius:13px;border:1.5px solid var(--line);background:#fff;font-size:18px;cursor:pointer;transition:.15s}
+.mic:active{transform:scale(.94)}.mic.live{border-color:var(--coral);color:var(--coral);animation:miclive 1s infinite}
+@keyframes miclive{50%{box-shadow:0 0 0 6px rgba(240,98,60,.15)}}
+.go{width:46px;height:46px;flex:0 0 auto;border-radius:14px;border:0;background:var(--teal);color:#fff;font-size:20px;cursor:pointer;transition:.15s}
+.go:active{transform:scale(.94)}.go:hover{background:var(--teal2)}
+.tryrow{display:flex;gap:7px;overflow-x:auto;margin-top:12px;scrollbar-width:none;padding-bottom:2px}
+.tryrow::-webkit-scrollbar{display:none}
+.try{flex:0 0 auto;font-size:12.5px;font-weight:600;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:#fff;cursor:pointer;transition:.15s}
+.try:active{background:var(--tint);border-color:var(--teal);color:var(--teal2)}
+.trylabel{font-size:11.5px;color:var(--soft2);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:14px 4px 0;text-align:left}
+/* results */
+.results{margin-top:16px}
+.intent{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;opacity:0;animation:fade .4s forwards}
+.intent .il{font-size:12px;color:var(--soft);font-weight:700;align-self:center}
+.intent .ic{font-size:12.5px;font-weight:700;background:var(--tint);color:var(--teal2);border-radius:8px;padding:5px 10px}
+@keyframes fade{to{opacity:1}}
+.rhead{display:flex;justify-content:space-between;align-items:baseline;margin:4px 4px 12px}
+.rhead h2{font-family:Unbounded;font-size:17px}.rhead span{font-size:12.5px;color:var(--soft);font-weight:600}
+.rlist{display:grid;gap:11px}
+.rc{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;text-align:left;opacity:0;transform:translateY(12px);animation:rise .5s forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.rc .av{width:52px;height:52px;border-radius:15px;flex:0 0 auto;position:relative}
+.rc .av .on{position:absolute;right:-2px;bottom:-2px;width:15px;height:15px;border-radius:50%;background:#22c55e;border:2.5px solid #fff}
+.rc .mid{flex:1;min-width:0}
+.rc .nm{font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px}.rc .vc{color:var(--teal2);font-size:12px}
+.rc .why{font-size:12.5px;color:var(--soft);font-weight:600;margin-top:2px;line-height:1.35}
+.rc .sub2{font-size:12px;color:var(--soft2);font-weight:600;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.rc .sub2 b{color:var(--ink)}
+.rc .right{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto}
+.ring{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--teal2);
+ background:conic-gradient(var(--teal) var(--p),#e9efec 0);position:relative}
+.ring::after{content:"";position:absolute;inset:4px;background:#fff;border-radius:50%}
+.ring span{position:relative;z-index:2}
+.rc .cta{font-size:12.5px;font-weight:700;color:#fff;background:var(--teal);border-radius:10px;padding:7px 11px;border:0;cursor:pointer}
+/* skeleton */
+.skel{display:grid;gap:11px}
+.sk{height:78px;border-radius:16px;background:linear-gradient(100deg,#eef1f0 30%,#f7faf9 50%,#eef1f0 70%);background-size:200% 100%;animation:sh 1.2s infinite}
+.thinking{display:flex;align-items:center;gap:9px;color:var(--teal2);font-weight:700;font-size:13.5px;margin-bottom:12px}
+.thinking .d{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:tw 1s infinite}
+.thinking .d:nth-child(2){animation-delay:.15s}.thinking .d:nth-child(3){animation-delay:.3s}
+@keyframes tw{50%{transform:translateY(-5px);opacity:.5}}
+@keyframes sh{to{background-position:-200% 0}}
+/* section */
+.sec{margin-top:34px}
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin:0 4px 14px}
+.sh h2{font-family:Unbounded;font-size:20px}.sh a{color:var(--teal2);font-weight:700;font-size:14px}
+/* categories */
+.cats{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.cat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;transition:.18s;cursor:pointer;position:relative;overflow:hidden}
+.cat:active{transform:scale(.98)}.cat:hover{border-color:var(--teal);box-shadow:0 14px 30px -22px rgba(15,158,121,.5)}
+.cat .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--tint)}
+.cat h3{font-size:14.5px;font-weight:700;margin-top:11px}
+.cat p{font-size:12px;color:var(--soft);font-weight:600;margin-top:2px}
+.cat .arr{position:absolute;top:15px;right:15px;color:var(--soft2);transition:.2s}.cat:hover .arr{color:var(--teal);transform:translateX(3px)}
+/* how it works */
+.steps{display:grid;grid-template-columns:1fr;gap:11px}
+.step{display:flex;gap:13px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px}
+.step .n{width:30px;height:30px;flex:0 0 auto;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:Unbounded;font-weight:700;font-size:14px}
+.step h3{font-size:15px;font-weight:800}.step p{font-size:13px;color:var(--soft);font-weight:600;margin-top:3px;line-height:1.45}
+/* featured creators (moved down) */
+.crail{display:flex;gap:13px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 4px 8px;scrollbar-width:none;margin:0 -4px}
+.crail::-webkit-scrollbar{display:none}
+.creator{scroll-snap-align:start;flex:0 0 262px;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:13px 13px 10px}
+.cav{width:42px;height:42px;border-radius:12px;flex:0 0 auto}
+.cnm{font-weight:800;font-size:14px;display:flex;align-items:center;gap:5px}.cvc{color:var(--teal2);font-size:11px}
+.chandle{font-size:11.5px;color:var(--soft);font-weight:600;display:flex;align-items:center;gap:5px}
+.igglyph{width:12px;height:12px;border-radius:4px;background:linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0);display:inline-block}
+.cwork{display:grid;grid-template-columns:2fr 1fr 1fr;grid-auto-rows:58px;gap:3px}
+.cwork .t{position:relative;overflow:hidden}.cwork .t.big{grid-row:span 2}
+.cwork .play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:16px;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.cfoot{display:flex;justify-content:space-between;padding:10px 13px;font-size:12.5px;font-weight:700;color:var(--soft)}.cfoot .r{color:var(--ink)}.cfoot .v{color:var(--teal2)}
+/* trust */
+.trust{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:30px}
+.trust span{font-size:12.5px;font-weight:600;color:var(--soft);background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 13px}
+.trust b{color:var(--teal2)}
+.foot{text-align:center;color:var(--soft2);font-size:12px;padding:26px 0 20px}
+/* bottom nav (mobile) */
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 0 max(8px,env(safe-area-inset-bottom))}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:var(--soft2)}
+.bnav a .bi{font-size:20px}.bnav a.active{color:var(--teal2)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}.intent,.rc{opacity:1;transform:none}}
+/* desktop */
+@media(min-width:760px){
+ body{padding-bottom:0}
+ h1{font-size:48px}.hsub{font-size:18px}
+ .hero{padding:44px 0 8px}
+ textarea#q{font-size:19px}
+ .cats{grid-template-columns:repeat(4,1fr)}
+ .steps{grid-template-columns:repeat(3,1fr)}
+ .navin{height:64px}.brand{font-size:20px}
+ .bnav{display:none}
+ .searchcard{max-width:680px}
+}
+</style></head><body>
+<nav><div class="navin"><div class="brand">Freelance<b>AI</b></div><div class="nr"><span class="lang">Oʻz ▾</span><a class="login">Kirish</a></div></div></nav>
+<div class="ticker"><div class="tk" id="tk"></div></div>
+
+<div class="wrap">
+ <section class="hero">
+  <span class="eyebrow">✦ AI yordamchi · <span class="dot" style="color:var(--teal)">●</span> 1 240 ijodkor online</span>
+  <h1 class="disp">Nima yaratmoqchisiz? <span class="g">Yozing, topamiz.</span></h1>
+  <p class="hsub">Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.</p>
+
+  <form class="searchcard" id="form" onsubmit="return false">
+   <div class="sclab"><span class="scdot"></span>FreelanceAI yordamchi</div>
+   <div class="scin">
+    <textarea id="q" rows="1" placeholder="Masalan: kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…" aria-label="Kerakli ishni tasvirlang"></textarea>
+    <button type="button" class="mic" id="mic" aria-label="Ovoz bilan qidirish">🎙</button>
+    <button type="submit" class="go" id="go" aria-label="Qidirish">→</button>
+   </div>
+   <div class="tryrow" id="tryrow"></div>
+  </form>
+
+  <div class="results" id="results" hidden></div>
+ </section>
+
+ <section class="sec" id="browse">
+  <div class="sh"><h2 class="disp">Xizmat turlari</h2><a>Barchasi →</a></div>
+  <div class="cats" id="cats"></div>
+ </section>
+
+ <section class="sec">
+  <div class="sh"><h2 class="disp">Qanday ishlaydi</h2></div>
+  <div class="steps">
+   <div class="step"><div class="n">1</div><div><h3>Tasvirlang</h3><p>Kerakli ishni oddiy tilda yozing yoki ovozda ayting.</p></div></div>
+   <div class="step"><div class="n">2</div><div><h3>Mos ijodkorni tanlang</h3><p>AI top mosliklarni, narx va muddat bilan koʻrsatadi.</p></div></div>
+   <div class="step"><div class="n">3</div><div><h3>Xavfsiz toʻlang</h3><p>Ish tugagach toʻlov ijodkorga oʻtadi — Payme, Click, Uzum.</p></div></div>
+  </div>
+ </section>
+
+ <section class="sec">
+  <div class="sh"><h2 class="disp">Tanlangan ijodkorlar</h2><a>Barchasi →</a></div>
+  <div class="crail" id="crail"></div>
+ </section>
+
+ <div class="trust"><span>✓ Xavfsiz <b>toʻlov</b></span><span><b>Payme · Click · Uzum</b></span><span>✓ Tasdiqlangan (KYC)</span><span>✓ 3 tilda</span></div>
+ <p class="foot">FreelanceAI — Markaziy Osiyoning AI-ijodkorlar bozori</p>
+</div>
+
+<div class="bnav"><a class="active"><span class="bi">⌂</span>Bosh</a><a><span class="bi">🔍</span>Qidiruv</a><a><span class="bi">✦</span>Buyurtmalar</a><a><span class="bi">☰</span>Menyu</a></div>
+
+<script>
+const G=["radial-gradient(circle at 30% 30%,#f7b24a,#f0623c 60%,#8a2d5a)","radial-gradient(circle at 55% 45%,#7ef0d0,#0f9e79,#0a3f4a)","radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0,#22143f)","radial-gradient(circle at 45% 40%,#c9a2ff,#6d4ad0,#241146)","radial-gradient(circle at 50% 35%,#ffb0c8,#f0623c,#5a1030)","radial-gradient(circle at 35% 55%,#a0f0d8,#0f9e79,#053b2c)"];
+/* creators with service tags — the "match" corpus */
+const CRE=[
+ {n:"Malika F.",h:"@moda.studio",av:G[4],tags:["video","reklama","fashion","moda"],bio:"Moda va fashion AI videolar — kiyim brendlari uchun lookbook, reels va podium roliklari.",rat:4.9,ord:180,lvl:"Level 2",price:"250 000–500 000",days:"3–5 kun",on:true,role:"Fashion AI video",work:[4,0,3]},
+ {n:"Dilnoza R.",h:"@vividai.uz",av:G[1],tags:["video","reklama","avatar","talking","mahsulot"],bio:"AI reklama roliklari va talking-head avatarlar; kosmetika va oziq-ovqat brendlari bilan tajriba.",rat:4.9,ord:312,lvl:"Level 2",price:"200 000–350 000",days:"2–4 kun",on:true,role:"AI video",work:[0,1,5]},
+ {n:"Sesara C.",h:"@sesara",av:G[0],tags:["video","explainer","taqdimot","reklama","motion"],bio:"Explainer va taqdimot videolari, motion-grafika; restoran va kafe uchun roliklar.",rat:4.8,ord:210,lvl:"Level 2",price:"180 000–400 000",days:"3–6 kun",on:false,role:"Explainer video",work:[0,3,1]},
+ {n:"Kamila T.",h:"@studio.aurora",av:G[2],tags:["foto","mahsulot","fotosurat","ecommerce","rasm","fashion"],bio:"Mahsulot va moda fotosurati — e-commerce kataloglar, kiyim va aksessuar suratlari.",rat:5.0,ord:265,lvl:"Top Rated",price:"90 000–200 000",days:"1–3 kun",on:true,role:"Fotosurat",work:[4,0,3]},
+ {n:"Sardor M.",h:"@qoraquti",av:G[3],tags:["brend","logo","identika","dizayn"],bio:"Brending, logotip va vizual identika; startaplar va do'konlar uchun.",rat:4.8,ord:190,lvl:"Level 2",price:"300 000–600 000",days:"3–5 kun",on:false,role:"Brending",work:[2,4,1]},
+ {n:"Bekzod A.",h:"@neonlab",av:G[3],tags:["rasm","personaj","concept","illustratsiya","dizayn"],bio:"AI rasm, personaj va concept dizayn; o'yin va brendlar uchun illustratsiya.",rat:4.7,ord:120,lvl:"Level 1",price:"120 000–260 000",days:"2–4 kun",on:true,role:"AI rasm",work:[3,5,2]},
+ {n:"PixelBek",h:"@pixelbek",av:G[5],tags:["retush","upscale","rasm","tahrir","foto"],bio:"Rasm tahrirlash, retush va upscale; mahsulot suratlarini tozalash.",rat:4.9,ord:410,lvl:"Level 2",price:"50 000–120 000",days:"1–2 kun",on:true,role:"Rasm tahrir",work:[5,4,0]}
+];
+/* naive intent parser — production: Claude parses → pgvector semantic match */
+const LEX={video:["video","rolik","reels","reel"],reklama:["reklama","advert","ad "],avatar:["avatar","talking","head","blogger"],rasm:["rasm","image","picture","surat"],foto:["foto","fotosurat","photo","product shot"],brend:["brend","logo","logotip","identika","brand"],ovoz:["ovoz","voice","dubl","dublyaj"],retush:["retush","upscale","tahrir","edit"],mahsulot:["mahsulot","product","kosmetika","tovar"]};
+/* domain / niche lexicon — the "fashion" case: matched against the creator's own profile text */
+const DOM={moda:["fashion","moda","kiyim","lookbook","clothing","podium"],ovqat:["food","oziq","restoran","kafe","cafe","menyu"],kosmetika:["kosmetika","beauty","cosmetic"],ecom:["ecommerce","e-commerce","magazin","do'kon","market","katalog"]};
+const DOMLABEL={moda:"moda / fashion",ovqat:"oziq-ovqat",kosmetika:"kosmetika",ecom:"e-commerce"};
+const doc=c=>(c.bio+" "+c.role+" "+c.tags.join(" ")).toLowerCase();
+function parse(text){const t=" "+text.toLowerCase()+" ";const hits=new Set();for(const k in LEX)for(const w of LEX[k])if(t.includes(w)){hits.add(k);break;}
+ const doms=[];for(const k in DOM)for(const w of DOM[k])if(t.includes(w)){doms.push(k);break;}
+ const budget=(text.match(/(\d[\d\s.,]{2,})\s*(so'?m|som|uzs|ming|k\b)/i)||[])[0];
+ return {hits:[...hits],doms,budget};}
+/* score = lexical (their profile text) + domain match + quality — mirrors production blend */
+function score(c,hits,doms){let s=0;const d=doc(c);
+ hits.forEach(h=>{if(c.tags.includes(h))s+=3;});
+ doms.forEach(dm=>{if(DOM[dm].some(w=>d.includes(w)))s+=3.2;});   // niche in profile text wins
+ s+=c.rat*0.4+(c.on?0.6:0);return s;}
+function pct(s,max){return Math.max(62,Math.min(98,Math.round((s/(max||1))*88+10)));}
+const R=document.getElementById('results'),Q=document.getElementById('q');
+function runSearch(){const text=Q.value.trim();if(!text){Q.focus();return;}
+ const {hits,budget,doms}=parse(text);
+ R.hidden=false;R.scrollIntoView({behavior:'smooth',block:'nearest'});
+ R.innerHTML=`<div class="thinking"><span class="d"></span><span class="d"></span><span class="d"></span> AI mosliklarni tahlil qilmoqda…</div><div class="skel">${'<div class="sk"></div>'.repeat(4)}</div>`;
+ setTimeout(()=>{
+  let ranked=CRE.map(c=>({c,s:score(c,hits,doms)}));
+  if(hits.length||doms.length)ranked=ranked.filter(x=>x.s>2.5);
+  ranked.sort((a,b)=>b.s-a.s);if(!ranked.length)ranked=CRE.map(c=>({c,s:c.rat})).sort((a,b)=>b.s-a.s);
+  const max=ranked[0].s;const top=ranked.slice(0,6);
+  const chips=[];if(hits.length)chips.push(...hits.map(h=>({k:h==="mahsulot"?"Kontekst":"Xizmat",v:{video:"AI video",reklama:"reklama roligi",avatar:"talking-head avatar",rasm:"AI rasm",foto:"mahsulot fotosurati",brend:"brending / logo",ovoz:"ovoz / dublyaj",retush:"rasm tahrir",mahsulot:"mahsulot uchun"}[h]})));
+  doms.forEach(dm=>chips.push({k:"Yoʻnalish",v:DOMLABEL[dm]}));
+  if(budget)chips.push({k:"Byudjet",v:budget});chips.push({k:"Til",v:"oʻzbek"});
+  const reason=c=>{const d=doc(c);const m=hits.filter(h=>c.tags.includes(h));const map={video:"AI video",reklama:"reklama roliklari",avatar:"talking-head avatar",rasm:"AI rasm",foto:"mahsulot fotosurati",brend:"brending",retush:"rasm tahrir",mahsulot:"mahsulot ijodi"};
+   const dparts=doms.filter(dm=>DOM[dm].some(w=>d.includes(w))).map(dm=>DOMLABEL[dm]);
+   const parts=[...dparts,...m.map(x=>map[x]).filter(Boolean)];return (parts.length?parts.slice(0,2).join(" + ")+" boʻyicha tajriba":c.role+" mutaxassisi")+` · ${c.ord} buyurtma · ${c.days}`;};
+  R.innerHTML=`<div class="intent"><span class="il">Tushundim:</span>${chips.map(ch=>`<span class="ic">${ch.k}: ${ch.v}</span>`).join('')}</div>
+   <div class="rhead"><h2 class="disp">Eng mos ${top.length} ijodkor</h2><span>moslik boʻyicha</span></div>
+   <div class="rlist">${top.map((x,i)=>{const c=x.c,p=pct(x.s,max);
+    return `<div class="rc" style="animation-delay:${i*.07}s"><div class="av" style="background:${c.av}">${c.on?'<span class="on"></span>':''}</div>
+    <div class="mid"><div class="nm">${c.n} <span class="vc">✓</span></div><div class="why">${reason(c)}</div>
+    <div class="sub2"><span>★ <b>${c.rat}</b></span><span>${c.lvl}</span><span><b>${c.price}</b> soʻm</span></div></div>
+    <div class="right"><div class="ring" style="--p:${p}%"><span>${p}%</span></div><button class="cta">Bogʻlanish</button></div></div>`}).join('')}</div>`;
+ },820);
+}
+document.getElementById('go').onclick=runSearch;
+document.getElementById('form').addEventListener('submit',runSearch);
+Q.addEventListener('input',()=>{Q.style.height='auto';Q.style.height=Math.min(Q.scrollHeight,96)+'px'});
+Q.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runSearch();}});
+/* mic (demo): simulate listening then fill */
+const mic=document.getElementById('mic');
+mic.onclick=()=>{mic.classList.add('live');Q.placeholder="Tinglayapman…";setTimeout(()=>{mic.classList.remove('live');Q.value="Kafe uchun Instagram reels — AI video, 15 soniya";Q.focus();runSearch();},1300);};
+/* guided prompts */
+const tries=["kosmetika uchun 15s AI reklama roligi","restoran menyusi uchun mahsulot fotosurati","brendim uchun logotip va identika","oʻzbek ovozli talking-head avatar","Instagram uchun 10 ta AI rasm"];
+document.getElementById('tryrow').innerHTML=tries.map(t=>`<button type="button" class="try">${t}</button>`).join('');
+document.querySelectorAll('.try').forEach(b=>b.onclick=()=>{Q.value=b.textContent;Q.dispatchEvent(new Event('input'));runSearch();});
+/* animated placeholder (stops on focus) */
+const ex=["kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…","brendim uchun logotip va vizual identika…","Instagram uchun oʻzbek ovozli talking-head avatar…","e-commerce uchun mahsulot fotosuratlari, oq fon…"];
+let ei=0,ci=0,del=false,stop=false;
+function tick(){if(stop)return;const s="Masalan: "+ex[ei];Q.placeholder=s.slice(0,ci);if(!del){ci++;if(ci>s.length){del=true;return setTimeout(tick,1600);}}else{ci--;if(ci<9){del=false;ei=(ei+1)%ex.length;ci=9;}}setTimeout(tick,del?24:48);}
+setTimeout(tick,600);Q.addEventListener('focus',()=>{stop=true;Q.placeholder="Kerakli ishni tasvirlang…";});
+/* categories */
+const cats=[["🎬","AI video","reklama, reels, explainer"],["🖼️","AI rasm","personaj, poster, art"],["🧑‍💼","AI avatar","talking-head, blogger"],["📸","Mahsulot fotosurati","e-commerce, katalog"],["🎙️","Ovoz / dublyaj","uz · ru · en"],["✨","Brending","logo, identika"],["🎞️","Motion / animatsiya","logo anim, intro"],["🛠️","Rasm tahrir","retush, upscale"]];
+document.getElementById('cats').innerHTML=cats.map(c=>`<div class="cat"><div class="ic">${c[0]}</div><span class="arr">→</span><h3>${c[1]}</h3><p>${c[2]}</p></div>`).join('');
+document.querySelectorAll('.cat').forEach((el,i)=>el.onclick=()=>{Q.value=cats[i][1].toLowerCase();Q.dispatchEvent(new Event('input'));runSearch();});
+/* featured creators (moved below) */
+document.getElementById('crail').innerHTML=CRE.slice(0,4).map(c=>`<div class="creator"><div class="chead"><span class="cav" style="background:${c.av}"></span><div><div class="cnm">${c.n} <span class="cvc">✓</span></div><div class="chandle"><span class="igglyph"></span>${c.h} · ulangan</div></div></div><div class="cwork"><div class="t big" style="background:${G[c.work[0]]}"><div class="play">▶</div></div><div class="t" style="background:${G[c.work[1]]}"></div><div class="t" style="background:${G[c.work[2]]}"></div></div><div class="cfoot"><span class="r">★ ${c.rat} · ${c.role}</span><span class="v">Profil →</span></div></div>`).join('');
+/* live ticker */
+const acts=["<b>Dilnoza</b> hozirgina AI reklama roligini yetkazdi","<b>Kamila</b> 5★ sharh oldi","yangi buyurtma: <b>talking-head avatar</b>","<b>PixelBek</b> onlayn — 12 ta ish bajarilmoqda","<b>Sardor</b> logotip loyihasini boshladi"];
+document.getElementById('tk').innerHTML=acts.map(a=>`<span><span class="dot">●</span> ${a}</span>`).join('')+acts.map(a=>`<span><span class="dot">●</span> ${a}</span>`).join('');
+</script></body></html>
