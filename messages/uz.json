@@ -52,7 +52,12 @@
     "bulkGrant": "Berish",
     "tagCourse": "Kurs oʻquvchisi deb belgilash",
     "untagCourse": "Kurs belgisini olib tashlash",
-    "courseStudent": "AI CREATORS kursi bitiruvchisi"
+    "courseStudent": "AI CREATORS kursi bitiruvchisi",
+    "bulkDelete": "Oʻchirish",
+    "bulkDeleteWarn": "{n} ta hisob butunlay yopiladi: shaxsiy maʼlumotlar oʻchiriladi, xizmatlar yashiriladi, kirish bekor qilinadi. Buyurtmalar va toʻlov yozuvlari saqlanadi. Ortga qaytarib boʻlmaydi. Faol buyurtmasi yoki yechilmagan mablagʻi bor hisoblar oʻtkazib yuboriladi.",
+    "bulkDeleteConfirm": "Tasdiqlash uchun DELETE deb yozing",
+    "bulkDeleteResult": "Oʻchirildi: {done} · oʻtkazib yuborildi: {skipped} (faol buyurtma yoki mablagʻ) · xato: {failed}",
+    "refreshList": "Roʻyxatni yangilash"
   },
   "AdminAudit": {
     "title": "Audit jurnali",

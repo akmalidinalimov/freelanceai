@@ -530,7 +530,8 @@ export type BulkUserAction =
   | "removeSeller"
   | "creditGrant"
   | "tagCourse"
-  | "untagCourse";
+  | "untagCourse"
+  | "delete";
 
 /** Hard cap per bulk request — keeps one click from touching the whole user base. */
 const BULK_MAX = 200;
@@ -541,8 +542,14 @@ const BULK_MAX = 200;
  * user notifications behave identically to acting one-by-one. Sequential on purpose:
  * these are support batches, not a migration, and it keeps the DB calm.
  *
- * Deliberately NOT bulk-able: account deletion (irreversible, needs typed
- * confirmation per user) and KYC approval (each one needs its phone reviewed).
+ * `delete` anonymizes-and-closes (see anonymizeAndClose): orders, ledger entries, reviews
+ * and messages survive — they are the counterparty's record and the platform's accounting
+ * — while every personal identifier is stripped and the account is closed. It keeps the
+ * per-user data-integrity guards, so anyone with a live order or an unwithdrawn balance is
+ * SKIPPED rather than deleted; the caller reports that count. The route additionally
+ * requires a typed confirmation, matching the single-user delete.
+ *
+ * Still NOT bulk-able: KYC approval (each one needs its phone reviewed).
  */
 export async function bulkUserAction(
   admin: User,
@@ -577,12 +584,19 @@ export async function bulkUserAction(
       else if (action === "removeSeller") await setUserSeller(admin, id, false);
       else if (action === "tagCourse" || action === "untagCourse")
         await setCourseStudent(admin, id, action === "tagCourse");
+      else if (action === "delete") await adminDeleteUser(admin, id);
       else await adjustUserCredit(admin, id, opts.amountUzs!, opts.reason!);
       done += 1;
     } catch (err) {
-      // "Cannot modify an admin" / "not found" are skips; anything else is a failure.
-      if (err instanceof ApiError && (err.code === "FORBIDDEN" || err.code === "NOT_FOUND")) skipped += 1;
-      else failed += 1;
+      // "Cannot modify an admin" / "not found" are skips. So is CONFLICT: for delete that
+      // means a live order or an unwithdrawn balance, i.e. a deliberate refusal to destroy
+      // an identity someone is mid-transaction with — not a failure of the batch.
+      if (
+        err instanceof ApiError &&
+        (err.code === "FORBIDDEN" || err.code === "NOT_FOUND" || err.code === "CONFLICT")
+      ) {
+        skipped += 1;
+      } else failed += 1;
     }
   }
   await audit({

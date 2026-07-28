@@ -52,7 +52,12 @@
     "bulkGrant": "Grant to",
     "tagCourse": "Tag as course student",
     "untagCourse": "Untag course",
-    "courseStudent": "AI CREATORS course graduate"
+    "courseStudent": "AI CREATORS course graduate",
+    "bulkDelete": "Delete",
+    "bulkDeleteWarn": "{n} account(s) will be closed for good: personal data erased, gigs hidden, access revoked. Orders and payment records are kept. This cannot be undone. Accounts with a live order or an unwithdrawn balance are skipped.",
+    "bulkDeleteConfirm": "Type DELETE to confirm",
+    "bulkDeleteResult": "Deleted {done} · skipped {skipped} (live order or balance) · failed {failed}",
+    "refreshList": "Refresh list"
   },
   "AdminAudit": {
     "title": "Audit log",

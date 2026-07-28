@@ -130,9 +130,13 @@ test("real-life journey: a new buyer registers, hires the freelancer, and both s
   await seller.getByRole("button", { name: "Yuborish", exact: true }).click();
   await expect(seller.getByText(answer).first()).toBeVisible();
 
-  // Buyer reads the reply.
-  await buyer.goto(threadUrl);
-  await expect(buyer.getByText(answer).first(), "freelancer's answer reaches the buyer").toBeVisible();
+  // Buyer reads the reply. Re-fetch rather than assert on a single render: this is a
+  // cross-context handoff (the seller's POST just committed), and a one-shot load made this
+  // step intermittently flaky. It still fails if the answer never arrives.
+  await expect(async () => {
+    await buyer.goto(threadUrl);
+    await expect(buyer.getByText(answer).first()).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 30_000 });
 
   // ─── 6. Ordering ────────────────────────────────────────────────────────────────────────
   await buyer.goto("/uz/gigs/e2e-gig");

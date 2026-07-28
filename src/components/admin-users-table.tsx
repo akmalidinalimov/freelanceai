@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 
 export interface AdminUserRow {
   id: string;
@@ -29,7 +29,8 @@ type Bulk =
   | "removeSeller"
   | "creditGrant"
   | "tagCourse"
-  | "untagCourse";
+  | "untagCourse"
+  | "delete";
 
 /** Compact "how long ago". */
 function ago(iso: string | null): string {
@@ -49,12 +50,14 @@ function ago(iso: string | null): string {
  */
 export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
   const t = useTranslations("AdminUsers");
+  const router = useRouter();
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [amount, setAmount] = useState("");
   const [mode, setMode] = useState<Bulk | null>(null);
+  const [confirmText, setConfirmText] = useState("");
 
   const selectable = rows.filter((r) => r.role !== "ADMIN");
   const allSelected = selectable.length > 0 && selectable.every((r) => sel.has(r.id));
@@ -81,12 +84,27 @@ export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
           userIds: [...sel],
           ...(reason.trim() ? { reason: reason.trim() } : {}),
           ...(action === "creditGrant" && amount ? { amountUzs: parseInt(amount, 10) } : {}),
+          ...(action === "delete" ? { confirm: confirmText } : {}),
         }),
       });
       const j = await r.json();
       if (!j.ok) {
         setMsg(j.error?.message ?? "Failed");
         setBusy(false);
+        return;
+      }
+      // Deletion reports per-user outcomes worth reading: anyone mid-transaction is skipped
+      // on purpose. Show the tally instead of silently reloading it away.
+      if (action === "delete") {
+        const { done = 0, skipped = 0, failed = 0 } = j.data ?? {};
+        setMsg(t("bulkDeleteResult", { done, skipped, failed }));
+        setSel(new Set());
+        setMode(null);
+        setConfirmText("");
+        setBusy(false);
+        // Deliberately NOT refreshing here: when the filter ends up empty the page swaps the
+        // table for an empty state, unmounting this component and taking the tally with it.
+        // The admin refreshes from the message row once they've read the outcome.
         return;
       }
       window.location.reload();
@@ -157,6 +175,17 @@ export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
           <button type="button" className={btn} disabled={busy} onClick={() => run("untagCourse")}>
             {t("untagCourse")}
           </button>
+          <button
+            type="button"
+            className="rounded-md border border-[hsl(var(--danger))]/50 bg-[hsl(var(--card))] px-2.5 py-1 text-xs font-medium text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/10 disabled:opacity-50"
+            disabled={busy}
+            onClick={() => {
+              setConfirmText("");
+              setMode(mode === "delete" ? null : "delete");
+            }}
+          >
+            🗑 {t("bulkDelete")}…
+          </button>
 
           {/* Reason / amount inputs appear for the actions that require them. */}
           {mode === "suspend" && (
@@ -202,8 +231,46 @@ export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
               </button>
             </span>
           )}
-          {msg && <span className="w-full text-xs text-[hsl(var(--danger))]">{msg}</span>}
+          {mode === "delete" && (
+            <span className="flex w-full flex-col gap-2 rounded-lg border border-[hsl(var(--danger))]/40 bg-[hsl(var(--danger))]/[0.06] p-2.5">
+              <span className="text-xs text-[hsl(var(--foreground))]">
+                {t("bulkDeleteWarn", { n: sel.size })}
+              </span>
+              <span className="flex items-center gap-2">
+                <input
+                  className={`${input} w-40`}
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  aria-label={t("bulkDeleteConfirm")}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  className="rounded-md bg-[hsl(var(--danger))] px-3 py-1 text-xs font-semibold text-[hsl(var(--danger-foreground))] disabled:opacity-50"
+                  disabled={busy || confirmText !== "DELETE"}
+                  onClick={() => run("delete")}
+                >
+                  {busy ? "…" : `${t("bulkDelete")} ${sel.size}`}
+                </button>
+              </span>
+            </span>
+          )}
         </div>
+      )}
+
+      {/* Outside the bar on purpose: the bar unmounts once the selection clears (which a
+          completed delete does), and the result tally must outlive it. */}
+      {msg && (
+        <p
+          className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-xs"
+          role="status"
+        >
+          <span>{msg}</span>
+          <button type="button" className={btn} onClick={() => router.refresh()}>
+            {t("refreshList")}
+          </button>
+        </p>
       )}
 
       <div className="overflow-x-auto">
