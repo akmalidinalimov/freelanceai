@@ -8,6 +8,7 @@ import {
   tgHelpText,
   tgOpenButton,
   tgAnswerCallback,
+  tgSendLoginPrompt,
   tgSetChatCommands,
   ADMIN_BOT_COMMANDS,
 } from "@/lib/telegram-bot";
@@ -54,7 +55,9 @@ export async function POST(request: Request) {
     callback_query?: {
       id: string;
       data?: string;
-      from?: { id: number; is_bot?: boolean };
+      // Names are carried so a login confirmation can seed onboarding for a brand-new user,
+      // who has no account row yet at the moment they confirm.
+      from?: { id: number; is_bot?: boolean; first_name?: string; last_name?: string };
     };
   };
   try {
@@ -81,12 +84,49 @@ export async function POST(request: Request) {
       void tgAnswerCallback(cb.id, "Juda tez. Biroz kuting.");
       return NextResponse.json({ ok: true });
     }
+    // Login confirmation runs BEFORE the account lookup: a first-time deep-link visitor has
+    // no account yet, so the "sign in first" guard below would make signing in impossible.
+    const cbData = cb.data ?? "";
+    if (cbData.startsWith("lg:")) {
+      const [, verdict, token] = cbData.split(":");
+      if (verdict === "n") {
+        await prisma.loginToken.deleteMany({ where: { token: token ?? "", telegramId: cbFrom } });
+        void tgAnswerCallback(cb.id, "Bekor qilindi.");
+        return NextResponse.json({ ok: true });
+      }
+      // Only the Telegram account that opened the deep link may confirm it, and only while it
+      // is still PENDING and unexpired — all enforced in the WHERE so the claim is atomic.
+      const confirmed = await prisma.loginToken.updateMany({
+        where: { token: token ?? "", status: "PENDING", telegramId: cbFrom, expiresAt: { gt: new Date() } },
+        data: { status: "CONFIRMED" },
+      });
+      if (confirmed.count === 0) {
+        void tgAnswerCallback(cb.id, "Muddati tugagan. Saytda qayta urinib koʻring.");
+        return NextResponse.json({ ok: true });
+      }
+      void tgAnswerCallback(cb.id, "✅ Tasdiqlandi!");
+      void tgSendMessage(cb.from.id, "✅ Tasdiqlandi! Saytga qayting — avtomatik kirasiz.");
+      const existing = await prisma.user.findUnique({
+        where: { telegramId: cbFrom },
+        select: { firstName: true, locale: true, onboardingCompleted: true },
+      });
+      if (!existing || !existing.onboardingCompleted) {
+        void startBotOnboarding(
+          cb.from.id,
+          cb.from.first_name ?? "",
+          cb.from.last_name ?? "",
+          existing?.locale
+        );
+      }
+      return NextResponse.json({ ok: true });
+    }
+
     const account = await prisma.user.findFirst({ where: { telegramId: cbFrom, status: "ACTIVE" } });
     if (!account) {
       void tgAnswerCallback(cb.id, "Avval saytga kiring.");
       return NextResponse.json({ ok: true });
     }
-    const data = cb.data ?? "";
+    const data = cbData;
     try {
       if (data.startsWith("o:acc:")) {
         await acceptOrder(data.slice(6), account);
@@ -250,27 +290,31 @@ export async function POST(request: Request) {
     const locale = account?.locale;
     const name = account?.firstName ?? from.first_name;
 
-    // /start with a login-token payload: confirm the web deep-link login.
+    // /start with a login-token payload: ASK, don't confirm.
+    //
+    // This used to flip the token to CONFIRMED on sight. Because the browser-nonce binding
+    // ties the session to whoever called /start, a phisher could start a login in their own
+    // browser, forward the t.me link, and have the victim's tap authenticate the ATTACKER's
+    // session — the victim seeing only "✅ Tasdiqlandi". So we now claim the token for this
+    // Telegram id (still PENDING) and require an explicit tap on a prompt showing a pairing
+    // code the victim can only have seen on the login page they opened themselves.
     const payload = text.startsWith("/start") ? text.split(/\s+/)[1] : undefined;
     if (payload) {
-      const confirmed = await prisma.loginToken.updateMany({
-        where: { token: payload, status: "PENDING", expiresAt: { gt: new Date() } },
+      const claimed = await prisma.loginToken.updateMany({
+        where: { token: payload, status: "PENDING", expiresAt: { gt: new Date() }, telegramId: null },
         data: {
-          status: "CONFIRMED",
           telegramId: String(from.id),
           firstName: from.first_name,
           lastName: from.last_name,
           username: from.username,
         },
       });
-      if (confirmed.count > 0) {
-        void tgSendMessage(from.id, "✅ Tasdiqlandi! Saytga qayting — avtomatik kirasiz.");
-        // New/unfinished profile → run the profile conversation right here in the chat
-        // (the account row may not exist for a heartbeat — the web poll creates it, and
-        // it exists by the time the first button is tapped).
-        if (!account || !account.onboardingCompleted) {
-          void startBotOnboarding(from.id, from.first_name ?? "", from.last_name ?? "", locale);
-        }
+      if (claimed.count > 0) {
+        const lt = await prisma.loginToken.findUnique({
+          where: { token: payload },
+          select: { pairingCode: true, locale: true },
+        });
+        void tgSendLoginPrompt(from.id, payload, lt?.pairingCode ?? "??-??", lt?.locale ?? locale);
         return NextResponse.json({ ok: true });
       }
     }

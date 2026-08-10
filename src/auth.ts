@@ -67,6 +67,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           );
         });
         if (!user) return null;
+        // The other providers all gate on status (miniapp at :124, email-link in
+        // consumeMagicToken); this one never did, so a suspended account could sign back in
+        // through the bot (audit 2026-08-10, workstream A).
+        if (user.status !== "ACTIVE") return null;
 
         return {
           id: user.id,

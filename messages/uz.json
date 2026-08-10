@@ -258,7 +258,9 @@
     "emailSigningIn": "Hisobingizga kirilmoqda...",
     "emailLinkInvalid": "Havola yaroqsiz yoki muddati oʻtgan. Qaytadan urinib koʻring.",
     "loginToContinue": "Davom etish uchun kiring — 30 soniya kifoya. Tanlovingiz saqlanadi.",
-    "miniAppSigningIn": "Kirish amalga oshirilmoqda…"
+    "miniAppSigningIn": "Kirish amalga oshirilmoqda…",
+    "pairingCodeLabel": "Tasdiqlash kodi",
+    "pairingCodeHint": "Telegram botda shu kodni tekshiring va tasdiqlang"
   },
   "Onboarding": {
     "title": "Xush kelibsiz! 👋",

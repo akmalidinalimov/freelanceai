@@ -258,6 +258,13 @@ model LoginToken {
   // sha256 of the httpOnly nonce cookie set on /start — binds the session exchange
   // to the originating browser (defends against login-CSRF / token-leak takeover).
   browserNonceHash String?
+  /// Short code shown on the login page AND in the bot's confirm prompt. The browser nonce
+  /// binds the session to whoever called /start — which in a phishing attack is the ATTACKER's
+  /// browser — so it cannot tell a real sign-in from a forwarded deep link. Only a code the
+  /// victim can have seen on their own screen distinguishes the two (audit 2026-08-10, S4).
+  pairingCode String?
+  /// Locale of the browser that started the login, so the bot prompt is not always Uzbek.
+  locale     String?
   telegramId String?
   firstName  String?
   lastName   String?

@@ -18,17 +18,23 @@ export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?:
   const t = useTranslations("Auth");
   const [phase, setPhase] = useState<Phase>("init");
   const [deepLink, setDeepLink] = useState<string>();
+  const [code, setCode] = useState<string>();
   const tokenRef = useRef<string | undefined>(undefined);
   const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const prepare = useCallback(async () => {
     setPhase("init");
     try {
-      const r = await fetch("/api/auth/telegram/start", { method: "POST" });
+      const r = await fetch("/api/auth/telegram/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
+      });
       const j = await r.json();
       if (j.ok) {
         tokenRef.current = j.data.token;
         setDeepLink(j.data.deepLink);
+        setCode(j.data.pairingCode);
         setPhase("ready");
       } else {
         setPhase("error");
@@ -36,7 +42,7 @@ export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?:
     } catch {
       setPhase("error");
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     prepare();
@@ -111,6 +117,16 @@ export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?:
           {phase === "init" ? t("preparing") : t("loginTelegram")}
         </Button>
       </a>
+
+      {/* The pairing code must be on screen BEFORE the user leaves for Telegram — it is only
+          protective if they saw it here first. Rendered from "ready", not just "waiting". */}
+      {code && phase !== "init" && (
+        <div className="flex w-full flex-col items-center gap-1 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-3 text-center">
+          <span className="text-xs text-[hsl(var(--muted-foreground))]">{t("pairingCodeLabel")}</span>
+          <span className="font-mono text-2xl font-bold tracking-[0.2em] tabular-nums">{code}</span>
+          <span className="text-xs text-[hsl(var(--muted-foreground))]">{t("pairingCodeHint")}</span>
+        </div>
+      )}
 
       {phase === "waiting" && (
         <div className="flex flex-col items-center gap-2 text-center">

@@ -258,7 +258,9 @@
     "emailSigningIn": "Signing you in...",
     "emailLinkInvalid": "This link is invalid or expired. Please try again.",
     "loginToContinue": "Sign in to continue — takes 30 seconds. Your selection is saved.",
-    "miniAppSigningIn": "Signing you in…"
+    "miniAppSigningIn": "Signing you in…",
+    "pairingCodeLabel": "Confirmation code",
+    "pairingCodeHint": "Match this code in the Telegram bot, then confirm"
   },
   "Onboarding": {
     "title": "Welcome aboard! 👋",

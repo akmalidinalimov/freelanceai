@@ -258,7 +258,9 @@
     "emailSigningIn": "Выполняется вход...",
     "emailLinkInvalid": "Ссылка недействительна или истекла. Попробуйте снова.",
     "loginToContinue": "Войдите, чтобы продолжить — это займёт 30 секунд. Ваш выбор сохранится.",
-    "miniAppSigningIn": "Выполняем вход…"
+    "miniAppSigningIn": "Выполняем вход…",
+    "pairingCodeLabel": "Код подтверждения",
+    "pairingCodeHint": "Сверьте этот код в Telegram-боте и подтвердите"
   },
   "Onboarding": {
     "title": "Добро пожаловать! 👋",

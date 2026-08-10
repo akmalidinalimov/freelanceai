@@ -354,3 +354,31 @@ export async function tgSendMediaGroup(
     return false;
   }
 }
+
+/**
+ * Ask the user to CONFIRM a browser sign-in, showing a pairing code they must match against
+ * the login page. The code is the whole point: a bare "was this you?" prompt is defeated by
+ * social engineering (a primed victim taps yes), whereas a code can only be known by someone
+ * looking at the page that started the login (audit 2026-08-10, S4).
+ */
+export async function tgSendLoginPrompt(
+  chatId: number | string,
+  token: string,
+  code: string,
+  locale?: string | null
+): Promise<boolean> {
+  const L = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
+  const body = {
+    uz: `🔐 Gigora'ga kirish soʻrovi\n\nKod: ${code}\n\nAgar bu kod saytdagi kod bilan bir xil boʻlsa — tasdiqlang.\nAgar siz kirmayotgan boʻlsangiz — bekor qiling.`,
+    ru: `🔐 Запрос на вход в Gigora\n\nКод: ${code}\n\nПодтвердите, только если код совпадает с кодом на сайте.\nЕсли вы не входили — отмените.`,
+    en: `🔐 Sign-in request for Gigora\n\nCode: ${code}\n\nConfirm only if this matches the code shown on the website.\nIf you didn't start this, cancel.`,
+  }[L];
+  const yes = { uz: "✅ Tasdiqlash", ru: "✅ Подтвердить", en: "✅ Confirm" }[L];
+  const no = { uz: "✕ Bekor qilish", ru: "✕ Отмена", en: "✕ Cancel" }[L];
+  return tgSendMessage(chatId, body, {
+    inline_keyboard: [
+      [{ text: yes, callback_data: `lg:y:${token}` }],
+      [{ text: no, callback_data: `lg:n:${token}` }],
+    ],
+  });
+}
