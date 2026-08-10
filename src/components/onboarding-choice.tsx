@@ -115,7 +115,7 @@ export function OnboardingChoice({
           <GalleryUpload value={portfolio} onChange={setPortfolio} prefix="portfolio" video />
         </FormSection>
 
-        {error && <p className="text-sm text-[hsl(var(--danger))]">{t("error")}</p>}
+        {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{t("error")}</p>}
 
         <div className="flex items-center gap-4">
           <button
@@ -178,7 +178,7 @@ export function OnboardingChoice({
           />
         </button>
       ))}
-      {error && <p className="text-sm text-[hsl(var(--danger))]">{t("error")}</p>}
+      {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{t("error")}</p>}
     </div>
   );
 }

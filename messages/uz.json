@@ -690,7 +690,10 @@
     "pagination": "Sahifalar",
     "prevPage": "← Oldingi",
     "nextPage": "Keyingi →",
-    "seeAllOrders": "Hammasini koʻrish"
+    "seeAllOrders": "Hammasini koʻrish",
+    "deliveredTitle": "Ish topshirildi ✅",
+    "deliveredBody": "Endi buyurtmachi koʻrib chiqadi. U qabul qilsa yoki tahrir soʻrasa, sizga xabar keladi.",
+    "autoReleaseNote": "Buyurtmachi javob bermasa, {date} da avtomatik qabul qilinadi va toʻlov chiqariladi."
   },
   "Review": {
     "leaveReview": "Sharh qoldiring",
@@ -736,7 +739,7 @@
     "reportPlaceholder": "Muammo nimada? (faqat moderatorlar koʻradi)",
     "reportSubmit": "Shikoyat yuborish",
     "cancel": "Bekor qilish",
-    "blockedNotice": "Siz bu foydalanuvchini bloklagansiz. Yozish uchun blokdan chiqaring.",
+    "blockedNotice": "Bu suhbat bloklangan — xabar yuborib boʻlmaydi.",
     "selectConversation": "Suhbatni tanlab, yozishni boshlang.",
     "messageSeller": "Sotuvchiga yozish",
     "escrowStrip": "Gigora himoyasida — toʻlov va nizolar faqat platformada kafolatlanadi.",

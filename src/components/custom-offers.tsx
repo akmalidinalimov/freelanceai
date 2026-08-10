@@ -164,7 +164,7 @@ export function CustomOffers({
         </ul>
       )}
       {sent && <p className="mt-2 text-sm font-medium text-[hsl(var(--success))]">{t("sent")}</p>}
-      {error && <p className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

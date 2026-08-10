@@ -82,7 +82,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
         <Button type="submit" disabled={busy}>
           {busy ? "…" : "Add"}
         </Button>
-        {error && <p className="w-full text-sm text-[hsl(var(--danger))]">{error}</p>}
+        {error && <p role="alert" className="w-full text-sm text-[hsl(var(--danger))]">{error}</p>}
       </form>
 
       {categories.length === 0 ? (

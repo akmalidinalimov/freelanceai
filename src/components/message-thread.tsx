@@ -31,12 +31,15 @@ export function MessageThread({
   initial,
   counterpart,
   initiallyBlocked = false,
+  threadBlocked = false,
 }: {
   conversationId: string;
   currentUserId: string;
   initial: Msg[];
   counterpart?: { name: string; lastSeenAt: string | null } | null;
   initiallyBlocked?: boolean;
+  /** Either direction blocked — what the server enforces. Composing is pointless, so don't offer it. */
+  threadBlocked?: boolean;
 }) {
   const t = useTranslations("Message");
   const format = useFormatter();
@@ -50,6 +53,9 @@ export function MessageThread({
 
   // Block / report state (T&S). Server enforces block on send; UI reflects + disables.
   const [blocked, setBlocked] = useState(initiallyBlocked);
+  // `blocked` is only MY block (it drives the Block/Unblock toggle). Sending is barred whenever
+  // EITHER side blocked, so the composer follows the server's rule, not the button's.
+  const isBlocked = blocked || threadBlocked;
   const [tsBusy, setTsBusy] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [reportReason, setReportReason] = useState("");
@@ -377,12 +383,20 @@ export function MessageThread({
             }}
             placeholder={t("placeholder")}
             aria-label={t("placeholder")}
-            className="h-10 flex-1 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm"
+            disabled={isBlocked}
+            className="h-10 flex-1 rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
           />
-          <Button onClick={send} disabled={busy || (!input.trim() && files.length === 0)}>
+          <Button onClick={send} disabled={isBlocked || busy || (!input.trim() && files.length === 0)}>
             {t("send")}
           </Button>
         </div>
+        {/* Say it BEFORE they type. The server rejects on either direction being blocked, so a
+            live-looking composer just invited a wasted message and a raw English error (audit S9). */}
+        {isBlocked && (
+          <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]" role="status">
+            {t("blockedNotice")}
+          </p>
+        )}
         {sendError && (
           <p className="mt-2 text-sm text-[hsl(var(--danger))]" role="alert">
             {sendError}

@@ -123,6 +123,23 @@ export function OrderActions({
         </div>
       )}
 
+      {/* After delivering, the whole seller rail used to disappear — no confirmation, no idea
+          what happens next or when the money releases. The buyer gets a full panel here; the
+          seller got a blank space (audit S9). Admins keep seeing the buyer view below. */}
+      {role === "seller" && status === "DELIVERED" && (
+        <div className="space-y-1 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+          <p className="text-sm font-medium">{t("deliveredTitle")}</p>
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">{t("deliveredBody")}</p>
+          {autoCompleteAt && (
+            <p className="pt-1 text-xs text-[hsl(var(--muted-foreground))]">
+              {t("autoReleaseNote", {
+                date: format.dateTime(new Date(autoCompleteAt), { day: "numeric", month: "long" }),
+              })}
+            </p>
+          )}
+        </div>
+      )}
+
       {isBuyer && status === "DELIVERED" && (
         <div className="space-y-3">
           <div className="flex flex-wrap gap-3">
@@ -184,7 +201,7 @@ export function OrderActions({
         </Button>
       )}
 
-      {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

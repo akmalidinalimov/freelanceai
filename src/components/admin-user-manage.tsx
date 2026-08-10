@@ -324,7 +324,7 @@ export function AdminUserManage({
         </div>
       )}
 
-      {error && <p className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
       <p className="mt-3 text-xs text-[hsl(var(--muted-foreground))]">
         Admin role cannot be granted here — it is allowlist-only (ADMIN_TELEGRAM_IDS), by design.
       </p>

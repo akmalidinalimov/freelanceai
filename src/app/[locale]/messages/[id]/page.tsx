@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listConversationMessages, markConversationRead, listInbox } from "@/server/services/message";
 import { hasBlockedCounterpart } from "@/server/services/moderation-user";
+import { isBlockedBetween } from "@/server/services/blocks";
 import { listOffers } from "@/server/services/offer";
 import { prisma } from "@/lib/prisma";
 import { MessageThread } from "@/components/message-thread";
@@ -63,7 +64,14 @@ export default async function ConversationPage({
         lastSeenAt: other.lastSeenAt ? other.lastSeenAt.toISOString() : null,
       }
     : null;
+  // Two different questions, and the UI previously only asked the first one:
+  //   blocked        — did I block them? (drives the Block/Unblock button label)
+  //   threadBlocked  — is EITHER direction blocked? (what the server actually enforces on send,
+  //                    message.ts:166). When they blocked me, the composer used to look normal
+  //                    and only rejected after I had typed the whole message (audit S9).
   const blocked = counterpart ? await hasBlockedCounterpart(convId, user).catch(() => false) : false;
+  const threadBlocked =
+    other && counterpart ? await isBlockedBetween(user.id, other.id).catch(() => false) : false;
   const offers = isGigConvo
     ? (await listOffers(convId, user)).map((o) => ({
         id: o.id,
@@ -96,6 +104,7 @@ export default async function ConversationPage({
             initial={msgs}
             counterpart={counterpart}
             initiallyBlocked={blocked}
+            threadBlocked={threadBlocked}
           />
           {isGigConvo && (
             <div className="border-t border-[hsl(var(--border))] p-4">

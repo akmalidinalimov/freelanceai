@@ -57,7 +57,7 @@ export function DisputeBox({ orderId, status }: { orderId: string; status: strin
             aria-label={t("reasonPh")}
             className="min-h-20 w-full rounded-md border border-[hsl(var(--input-border))] bg-transparent px-3 py-2 text-sm"
           />
-          {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
+          {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{error}</p>}
           <Button variant="outline" size="sm" onClick={submit} disabled={busy}>
             {t("submit")}
           </Button>

@@ -1,5 +1,4 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import { requireOnboardedUser } from "@/lib/auth-guards";
 import { listBuyerOrdersPage, ORDER_TABS, type OrderTab } from "@/server/services/order";
 import { orderDueMeta, displayName, initialOf } from "@/lib/order-due";
@@ -41,7 +40,10 @@ export default async function OrdersPage({
     k === tab
       ? `${chip} bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]`
       : `${chip} bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]`;
-  const href = (k: OrderTab, p = 1) => `/orders?tab=${k}${p > 1 ? `&page=${p}` : ""}`;
+  // Native anchors, not the i18n <Link>: a query-only change on the SAME pathname does not
+  // navigate through the client router here (the URL simply never updates), and these are
+  // server-rendered filters with no client state to preserve. loading.tsx covers the transition.
+  const href = (k: OrderTab, p = 1) => `/${locale}/orders?tab=${k}${p > 1 ? `&page=${p}` : ""}`;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -49,9 +51,9 @@ export default async function OrdersPage({
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
         {ORDER_TABS.map((k) => (
-          <Link key={k} href={href(k)} className={tabClass(k)} aria-current={k === tab ? "page" : undefined}>
+          <a key={k} href={href(k)} className={tabClass(k)} aria-current={k === tab ? "page" : undefined}>
             {t(`tab.${k}`)} {tabCounts[k] > 0 && <span className="tabular-nums opacity-70">{tabCounts[k]}</span>}
-          </Link>
+          </a>
         ))}
       </div>
 
@@ -79,9 +81,9 @@ export default async function OrdersPage({
           {pageCount > 1 && (
             <nav className="mt-6 flex items-center justify-between gap-3" aria-label={t("pagination")}>
               {current > 1 ? (
-                <Link href={href(tab, current - 1)} className={`${chip} bg-[hsl(var(--muted))]`}>
+                <a href={href(tab, current - 1)} className={`${chip} bg-[hsl(var(--muted))]`}>
                   {t("prevPage")}
-                </Link>
+                </a>
               ) : (
                 <span />
               )}
@@ -89,9 +91,9 @@ export default async function OrdersPage({
                 {current} / {pageCount}
               </span>
               {current < pageCount ? (
-                <Link href={href(tab, current + 1)} className={`${chip} bg-[hsl(var(--muted))]`}>
+                <a href={href(tab, current + 1)} className={`${chip} bg-[hsl(var(--muted))]`}>
                   {t("nextPage")}
-                </Link>
+                </a>
               ) : (
                 <span />
               )}

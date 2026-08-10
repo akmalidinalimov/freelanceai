@@ -151,7 +151,7 @@ export function AvatarUpload({
           )}
         </div>
         <p className="text-xs text-[hsl(var(--muted-foreground))]">{t("avatarHint")}</p>
-        {error && <p className="text-sm text-[hsl(var(--danger))]" role="alert">{error}</p>}
+        {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{error}</p>}
       </div>
       {/* accept="image/*" on purpose: the cropper re-encodes to webp, so HEIC/GIF/BMP
           all work. Anything the browser can't decode gets a clear message in the dialog. */}

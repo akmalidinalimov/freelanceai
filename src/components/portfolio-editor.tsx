@@ -141,7 +141,7 @@ export function PortfolioEditor({ items }: { items: Item[] }) {
           e.target.value = "";
         }}
       />
-      {error && <p className="text-sm text-[hsl(var(--danger))]">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }

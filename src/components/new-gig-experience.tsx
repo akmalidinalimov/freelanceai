@@ -196,7 +196,7 @@ export function NewGigExperience({ locale, categories }: { locale: string; categ
         <input className={field} value={differentiator} onChange={(e) => setDifferentiator(e.target.value)} placeholder={t("aiDiffPh")} />
       </label>
 
-      {error && <p className="text-sm text-[hsl(var(--danger))]" role="alert">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[hsl(var(--danger))]">{error}</p>}
 
       <div className="flex flex-wrap items-center gap-3">
         <button

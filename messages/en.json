@@ -690,7 +690,10 @@
     "pagination": "Pagination",
     "prevPage": "← Previous",
     "nextPage": "Next →",
-    "seeAllOrders": "See all"
+    "seeAllOrders": "See all",
+    "deliveredTitle": "Delivered ✅",
+    "deliveredBody": "The buyer is reviewing it now. You'll be notified when they accept or request a revision.",
+    "autoReleaseNote": "If the buyer doesn't respond, it auto-accepts on {date} and the payment is released."
   },
   "Review": {
     "leaveReview": "Leave a review",
@@ -736,7 +739,7 @@
     "reportPlaceholder": "What's the problem? (visible to moderators only)",
     "reportSubmit": "Send report",
     "cancel": "Cancel",
-    "blockedNotice": "You blocked this user. Unblock to message again.",
+    "blockedNotice": "This conversation is blocked — messages can't be sent.",
     "selectConversation": "Select a conversation to start messaging.",
     "messageSeller": "Message seller",
     "escrowStrip": "Protected by Gigora — payments & disputes are only covered on the platform.",

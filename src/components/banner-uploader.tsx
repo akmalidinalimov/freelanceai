@@ -159,7 +159,7 @@ export function BannerUploader({ initial }: { initial: Banner | null }) {
           </button>
         )}
       </div>
-      {error && <p className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-[hsl(var(--danger))]">{error}</p>}
     </div>
   );
 }
