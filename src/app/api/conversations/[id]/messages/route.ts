@@ -38,7 +38,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!isSameOrigin(request)) throw Errors.forbidden("Cross-origin request rejected");
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
-    enforceRateLimit(`msg:${clientIp(request)}`, 30, 60_000);
+    // Keyed on the sender, not the IP. This route is authenticated, and clientIp() deliberately
+    // returns the literal "unknown" in production when cf-connecting-ip is absent — so an
+    // IP-keyed bucket bounded no individual account and collapsed every such user into ONE
+    // shared 30/min bucket, i.e. a self-DoS on chat (audit 2026-08-10, S12).
+    enforceRateLimit(`msg:${user.id}`, 30, 60_000);
     const { id } = await params;
     const input = parseInput(schema, await request.json().catch(() => ({})));
     // Only accept attachments that are our own R2 uploads — a public URL from our bucket or a

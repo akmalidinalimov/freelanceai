@@ -94,6 +94,9 @@ export async function createOrder(
         sellerId: gig.sellerId,
         packageTier: tier,
         packageTitle: pkg.title,
+        // Snapshot the promise, like the price: the seller can edit the package afterwards,
+        // and the buyer is owed what was advertised when they paid (audit S11).
+        revisionsIncluded: pkg.revisions,
         amountUzs,
         commissionUzs,
         sellerNetUzs,
@@ -151,6 +154,7 @@ export async function createOrderFromOffer(offer: {
   title: string;
   priceUzs: number;
   deliveryDays: number;
+  revisions?: number;
 }) {
   // Re-validate at accept time — the offer may be stale (gig paused/deleted, seller changed).
   const gig = await prisma.gig.findFirst({
@@ -171,6 +175,7 @@ export async function createOrderFromOffer(offer: {
         sellerId: offer.sellerId,
         packageTier: "BASIC",
         packageTitle: offer.title,
+        revisionsIncluded: offer.revisions ?? null,
         amountUzs,
         commissionUzs,
         sellerNetUzs,
@@ -393,9 +398,20 @@ export async function requestRevision(orderId: string, buyer: User, message = ""
   if (!order) throw Errors.notFound("Order not found");
   if (order.buyerId !== buyer.id && buyer.role !== "ADMIN") throw Errors.forbidden();
   assertTransition(order.status, "REVISION");
+  // Enforce the allowance the package advertised. Safe to decide from the row we just read:
+  // the status claim below is the lock, so two concurrent requests cannot both consume one.
+  // revisionsIncluded is null for legacy orders whose package could not be resolved — those
+  // stay unenforced rather than having a limit invented for them after the fact.
+  if (
+    order.revisionsIncluded !== null &&
+    order.revisionsUsed >= order.revisionsIncluded &&
+    buyer.role !== "ADMIN"
+  ) {
+    throw Errors.conflict("You have used all the revisions included in this package");
+  }
   const claimed = await prisma.order.updateMany({
     where: { id: orderId, status: order.status },
-    data: { status: "REVISION" },
+    data: { status: "REVISION", revisionsUsed: { increment: 1 } },
   });
   if (claimed.count === 0) throw Errors.conflict("Order status changed — please refresh");
   const note = message.trim().slice(0, 1000);

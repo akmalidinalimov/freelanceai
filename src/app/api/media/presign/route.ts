@@ -21,7 +21,9 @@ export const POST = defineHandler({ auth: true, schema }, async ({ user, body, r
   if (!user) throw Errors.unauthenticated();
   if (SELLER_PREFIXES.has(body.prefix)) requireSeller(user);
   else requireActive(user);
-  enforceRateLimit(`media:${clientIp(request)}`, 30, 60_000);
+  // Sender-keyed for the same reason as chat: clientIp() is the literal "unknown" in prod
+  // without Cloudflare, which merged every uploader into one bucket (audit S12).
+  enforceRateLimit(`media:${user.id}`, 30, 60_000);
   try {
     const result = await presignUpload(body.prefix, body.contentType, body.size);
     return ok(result);

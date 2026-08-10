@@ -580,6 +580,12 @@ model Order {
   seller       User        @relation("SellerOrders", fields: [sellerId], references: [id])
   // Snapshot of the purchased package so later edits don't change history.
   packageTier  PackageTier
+  /// Revisions the package promised, snapshotted at order time (the gig's packages can change
+  /// afterwards), and how many the buyer has used. Null means legacy/unknown -> unenforced.
+  /// Without these the "N revisions included" on every package was advertised and never
+  /// checked (audit 2026-08-10, S11).
+  revisionsIncluded Int?
+  revisionsUsed     Int  @default(0)
   packageTitle String
   amountUzs    Int
   commissionUzs Int        @default(0)

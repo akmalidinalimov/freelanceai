@@ -13,6 +13,7 @@ import {
 import { confirmOrderPayment } from "@/server/services/payments";
 import { openDispute } from "@/server/services/dispute";
 import { isOwnUpload } from "@/lib/media";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const schema = z
   .object({
@@ -34,8 +35,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const user = await getCurrentUser();
     if (!user) throw Errors.unauthenticated();
 
+    // The lifecycle route had no limit at all — the one place a user can drive deliver/accept/
+    // revision/dispute, plus reorder, which re-enters createOrder and so slipped past the
+    // order:create bucket entirely (audit 2026-08-10, S12).
+    enforceRateLimit(`order:act:${user.id}`, 30, 60_000);
+
     const { id } = await params;
     const body = parseInput(schema, await request.json().catch(() => ({})));
+    // Reorder creates a real order, so it must also spend the order-creation budget rather than
+    // being a cheaper side door into the same operation.
+    if (body.action === "reorder") enforceRateLimit(`order:create:${user.id}`, 8, 60_000);
     // Attachments must be our own R2 uploads (public URL or private ref), never arbitrary URLs.
     if (body.fileUrls?.some((u) => !isOwnUpload(u))) {
       throw Errors.validation({ fileUrls: "Only uploaded files are allowed" });
