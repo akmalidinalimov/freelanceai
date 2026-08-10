@@ -284,9 +284,16 @@ export function listSellerGigs(sellerId: string) {
 type GigActor = Pick<User, "id" | "role">;
 
 /** Pause / resume / soft-delete a gig — owner (or admin) only, scoped via gigEditWhereForUser. */
-async function updateOwnedGig(gigId: string, user: GigActor, data: Prisma.GigUpdateManyMutationInput, action: string) {
+async function updateOwnedGig(
+  gigId: string,
+  user: GigActor,
+  data: Prisma.GigUpdateManyMutationInput,
+  action: string,
+  /** Extra precondition folded into the same UPDATE, so the guard is atomic rather than TOCTOU. */
+  precondition: Prisma.GigWhereInput = {}
+) {
   const res = await prisma.gig.updateMany({
-    where: { ...gigEditWhereForUser(gigId, user), deletedAt: null },
+    where: { ...gigEditWhereForUser(gigId, user), deletedAt: null, ...precondition },
     data,
   });
   if (res.count === 0) throw Errors.notFound("Gig not found");
@@ -295,8 +302,34 @@ async function updateOwnedGig(gigId: string, user: GigActor, data: Prisma.GigUpd
 
 export const pauseGig = (gigId: string, user: GigActor) =>
   updateOwnedGig(gigId, user, { status: "PAUSED" }, "gig.pause");
-export const resumeGig = (gigId: string, user: GigActor) =>
-  updateOwnedGig(gigId, user, { status: "ACTIVE" }, "gig.resume");
+
+/**
+ * Un-pause a gig that was already approved. Deliberately constrained to PAUSED for non-admins:
+ * reaching ACTIVE is an admin transition (moderateGig), and publishGig routes an owner's draft to
+ * PENDING_REVIEW on purpose. Without that precondition `resume` was an owner-scoped one-request
+ * bypass of the whole moderation gate — PENDING_REVIEW/DRAFT/REJECTED straight to ACTIVE, and
+ * GigRowActions rendered the button for every one of those states (audit 2026-08-10, S1).
+ */
+export async function resumeGig(gigId: string, user: GigActor) {
+  if (user.role !== "ADMIN") {
+    // Read first only to produce an honest error; the UPDATE below re-checks atomically.
+    const gig = await prisma.gig.findFirst({
+      where: { ...gigEditWhereForUser(gigId, user), deletedAt: null },
+      select: { status: true },
+    });
+    if (!gig) throw Errors.notFound("Gig not found");
+    if (gig.status !== "PAUSED") {
+      throw Errors.conflict("Only a paused service can be resumed. Send it for review to publish.");
+    }
+  }
+  return updateOwnedGig(
+    gigId,
+    user,
+    { status: "ACTIVE" },
+    "gig.resume",
+    user.role === "ADMIN" ? {} : { status: "PAUSED" }
+  );
+}
 export const softDeleteGig = (gigId: string, user: GigActor) =>
   updateOwnedGig(gigId, user, { deletedAt: new Date(), status: "PAUSED" }, "gig.softDelete");
 

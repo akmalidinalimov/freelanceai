@@ -22,6 +22,10 @@ export async function createReview(
   if (!order) throw Errors.notFound("Order not found");
   if (order.buyerId !== authorId) throw Errors.forbidden();
   if (order.status !== "COMPLETED") throw Errors.conflict("Only completed orders can be reviewed");
+  // A COMPLETED order is not necessarily a REAL one. Under FREE_ORDERS every order is isTest and
+  // auto-settles for 0 UZS, so create -> deliver -> accept -> review was four free calls that
+  // minted public reputation at zero cost (audit 2026-08-10, S3).
+  if (order.isTest) throw Errors.conflict("Test orders cannot be reviewed");
 
   const existing = await prisma.review.findUnique({ where: { orderId } });
   if (existing) throw Errors.conflict("This order is already reviewed");
@@ -55,6 +59,8 @@ export async function createBuyerReview(orderId: string, seller: User, rating: n
   if (!order) throw Errors.notFound("Order not found");
   if (order.sellerId !== seller.id && seller.role !== "ADMIN") throw Errors.forbidden();
   if (order.status !== "COMPLETED") throw Errors.conflict("Only completed orders can be reviewed");
+  // Same reasoning as createReview: a free test order must not produce a real reputation signal.
+  if (order.isTest) throw Errors.conflict("Test orders cannot be reviewed");
   const existing = await prisma.buyerReview.findUnique({ where: { orderId } });
   if (existing) throw Errors.conflict("This order's buyer is already reviewed");
 
@@ -81,15 +87,19 @@ export async function getBuyerRating(buyerId: string) {
 
 /** Reviews for a gig + average/count + star distribution, for the public gig page. */
 export async function getGigReviews(gigId: string) {
+  // Test orders must never reach a public surface. recomputeSellerStats (profile.ts:22) and
+  // browse.ts already filter this; the gig page did not, so a free FREE_ORDERS order could
+  // put a 5★ review on a listing — and into the page's structured data (audit 2026-08-10, S3).
+  const publicReviews = { gigId, order: { isTest: false } } as const;
   const [reviews, agg, grouped] = await Promise.all([
     prisma.review.findMany({
-      where: { gigId },
+      where: publicReviews,
       orderBy: { createdAt: "desc" },
       take: 50,
       include: { author: { select: { firstName: true, name: true, username: true } } },
     }),
-    prisma.review.aggregate({ where: { gigId }, _avg: { rating: true }, _count: true }),
-    prisma.review.groupBy({ by: ["rating"], where: { gigId }, _count: true }),
+    prisma.review.aggregate({ where: publicReviews, _avg: { rating: true }, _count: true }),
+    prisma.review.groupBy({ by: ["rating"], where: publicReviews, _count: true }),
   ]);
   const distribution = [5, 4, 3, 2, 1].map((star) => ({
     star,

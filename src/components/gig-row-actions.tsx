@@ -35,11 +35,15 @@ export function GigRowActions({ gigId, status }: { gigId: string; status: string
           {t("publish")}
         </button>
       )}
-      {status === "ACTIVE" ? (
+      {status === "ACTIVE" && (
         <button onClick={() => act("pause")} disabled={busy} className="hover:underline">
           {t("pause")}
         </button>
-      ) : (
+      )}
+      {/* Resume only un-pauses an already-approved gig. It used to render for every non-ACTIVE
+          status, which is how it became a one-click way past moderation (audit 2026-08-10, S1).
+          PENDING_REVIEW and REJECTED gigs are waiting on an admin; a DRAFT uses Publish. */}
+      {status === "PAUSED" && (
         <button onClick={() => act("resume")} disabled={busy} className="text-[hsl(var(--primary-ink))] hover:underline">
           {t("resume")}
         </button>
