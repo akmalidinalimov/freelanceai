@@ -151,7 +151,9 @@
     "search": "Qidiruv",
     "becomeSeller": "Ijodkor bo'lish",
     "login": "Kirish",
-    "dashboard": "Boshqaruv paneli"
+    "dashboard": "Boshqaruv paneli",
+    "orders": "Buyurtmalar",
+    "messages": "Xabarlar"
   },
   "Home": {
     "heroTitle": "Biznesingiz uchun AI video va rasmlar",
@@ -672,7 +674,23 @@
     "protectHeld": "Toʻlovingiz himoyalangan",
     "protectHeldBody": "Mablagʻ xavfsiz saqlanadi — ijodkor faqat siz ishni qabul qilganingizdan keyin toʻlov oladi.",
     "acceptConfirmTitle": "Ishni qabul qilasizmi?",
-    "acceptConfirmBody": "Bu toʻlovni ijodkorga oʻtkazadi va qaytarib boʻlmaydi. Ishdan roziligmisiz?"
+    "acceptConfirmBody": "Bu toʻlovni ijodkorga oʻtkazadi va qaytarib boʻlmaydi. Ishdan roziligmisiz?",
+    "tab": {
+      "active": "Faol",
+      "completed": "Yakunlangan",
+      "cancelled": "Bekor qilingan",
+      "all": "Hammasi"
+    },
+    "empty": {
+      "active": "Faol buyurtmalaringiz yoʻq",
+      "completed": "Hali yakunlangan buyurtma yoʻq",
+      "cancelled": "Bekor qilingan buyurtma yoʻq",
+      "all": "Hali buyurtma bermagansiz"
+    },
+    "pagination": "Sahifalar",
+    "prevPage": "← Oldingi",
+    "nextPage": "Keyingi →",
+    "seeAllOrders": "Hammasini koʻrish"
   },
   "Review": {
     "leaveReview": "Sharh qoldiring",

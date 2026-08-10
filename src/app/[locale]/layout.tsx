@@ -110,7 +110,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <SiteFooter />
-          <MobileBottomNav />
+          <MobileBottomNav signedIn={Boolean(user)} />
           <CookieConsent />
           </UIProviders>
         </NextIntlClientProvider>

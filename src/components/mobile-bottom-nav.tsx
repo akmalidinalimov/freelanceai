@@ -2,19 +2,32 @@
 
 import { Link, usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Home, Search, LayoutGrid, Users } from "lucide-react";
+import { Home, Search, LayoutGrid, Users, Package, MessageCircle } from "lucide-react";
 
-const ITEMS = [
+/**
+ * Signed-in users get Orders and Messages instead of Creators: browsing is reachable from
+ * Explore and the header, but a phone-only buyer previously had NO route back to something
+ * they had paid for, and none to their inbox (audit 2026-08-10, S6).
+ */
+const PUBLIC_ITEMS = [
   { href: "/", key: "home", Icon: Home },
   { href: "/search", key: "search", Icon: Search },
   { href: "/gigs", key: "explore", Icon: LayoutGrid },
   { href: "/creators", key: "creators", Icon: Users },
 ] as const;
 
+const SIGNED_IN_ITEMS = [
+  { href: "/", key: "home", Icon: Home },
+  { href: "/gigs", key: "explore", Icon: LayoutGrid },
+  { href: "/orders", key: "orders", Icon: Package },
+  { href: "/messages", key: "messages", Icon: MessageCircle },
+] as const;
+
 /** Thumb-reachable bottom tab bar for mobile (hidden on md+). */
-export function MobileBottomNav() {
+export function MobileBottomNav({ signedIn = false }: { signedIn?: boolean }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
+  const ITEMS = signedIn ? SIGNED_IN_ITEMS : PUBLIC_ITEMS;
 
   return (
     <nav

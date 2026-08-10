@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { OrderStatus, PackageTier, User } from "@prisma/client";
+import type { OrderStatus, PackageTier, Prisma, User } from "@prisma/client";
 import { orderWhereForUser, assertFound } from "@/lib/authz";
 import { Errors } from "@/lib/api";
 import { audit } from "@/lib/audit";
@@ -221,6 +221,60 @@ export function listBuyerOrders(buyerId: string) {
       review: { select: { id: true } },
     },
   });
+}
+
+/** Buyer-order filters for the /orders page. "active" is everything still in flight. */
+export const ORDER_TABS = ["active", "completed", "cancelled", "all"] as const;
+export type OrderTab = (typeof ORDER_TABS)[number];
+
+const TAB_WHERE: Record<OrderTab, Prisma.OrderWhereInput> = {
+  active: { status: { in: ["PENDING_PAYMENT", "PAID", "IN_PROGRESS", "DELIVERED", "REVISION", "DISPUTED"] } },
+  completed: { status: "COMPLETED" },
+  cancelled: { status: "CANCELLED" },
+  all: {},
+};
+
+export const ORDERS_PAGE_SIZE = 20;
+
+/**
+ * A buyer's orders, filtered and paginated — the backing query for /orders.
+ *
+ * listBuyerOrders above loads a buyer's ENTIRE history with three joins and no take, which
+ * the dashboard can afford only because it slices to 8 afterwards. A real list page needs a
+ * bounded query, so this one pages at the database rather than in JS (audit 2026-08-10, S6/S10).
+ */
+export async function listBuyerOrdersPage(buyerId: string, tab: OrderTab, page = 1) {
+  const where: Prisma.OrderWhereInput = { buyerId, ...TAB_WHERE[tab] };
+  const current = Math.max(1, page);
+  const [orders, total, counts] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (current - 1) * ORDERS_PAGE_SIZE,
+      take: ORDERS_PAGE_SIZE,
+      include: {
+        gig: { select: { title: true, slug: true } },
+        seller: { select: { firstName: true, name: true, username: true } },
+        review: { select: { id: true } },
+      },
+    }),
+    prisma.order.count({ where }),
+    prisma.order.groupBy({ by: ["status"], where: { buyerId }, _count: true }),
+  ]);
+  const byStatus = Object.fromEntries(counts.map((c) => [c.status, c._count])) as Record<string, number>;
+  const sum = (...s: string[]) => s.reduce((n, k) => n + (byStatus[k] ?? 0), 0);
+  return {
+    orders,
+    total,
+    page: current,
+    pageCount: Math.max(1, Math.ceil(total / ORDERS_PAGE_SIZE)),
+    tabCounts: {
+      active: sum("PENDING_PAYMENT", "PAID", "IN_PROGRESS", "DELIVERED", "REVISION", "DISPUTED"),
+      completed: sum("COMPLETED"),
+      cancelled: sum("CANCELLED"),
+      all: Object.values(byStatus).reduce((a, b) => a + b, 0),
+    },
+  };
 }
 
 export function listSellerOrders(sellerId: string) {

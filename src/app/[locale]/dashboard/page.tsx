@@ -132,8 +132,10 @@ export default async function DashboardPage({
             <h2 className="text-xs font-bold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
               {t("yourOrders")}
             </h2>
-            <Link href="/gigs" className="text-xs font-semibold text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
-              {to("browse")} →
+            {/* This widget shows ACTIVE orders only, capped at 8 — completed ones drop off it
+                entirely, so it needs a way through to the full list (audit S6). */}
+            <Link href="/orders" className="text-xs font-semibold text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+              {to("seeAllOrders")} →
             </Link>
           </div>
           {activeOrders.length === 0 ? (

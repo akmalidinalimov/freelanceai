@@ -53,7 +53,11 @@ export function CookieConsent() {
       role="dialog"
       aria-label={t("title")}
       aria-live="polite"
-      className="fixed inset-x-0 bottom-0 z-[70] border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-lg"
+      // Sits ABOVE the mobile tab bar rather than on top of it. At bottom-0 this banner (z-70)
+      // completely covered MobileBottomNav (z-40, also bottom-0), so a first-time phone visitor
+      // could not tap Home/Explore/Orders/Messages at all until they dismissed cookies. Same
+      // offset MobileOrderBar uses, so the two stack consistently.
+      className="fixed inset-x-0 z-[70] border-t border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 shadow-lg bottom-[calc(53px+env(safe-area-inset-bottom))] md:bottom-0"
     >
       <div className="mx-auto flex max-w-4xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-[hsl(var(--foreground))]">

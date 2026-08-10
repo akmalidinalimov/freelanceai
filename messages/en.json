@@ -151,7 +151,9 @@
     "search": "Search",
     "becomeSeller": "Become a creator",
     "login": "Log in",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "messages": "Messages"
   },
   "Home": {
     "heroTitle": "AI videos and images for your business",
@@ -672,7 +674,23 @@
     "protectHeld": "Your payment is protected",
     "protectHeldBody": "We hold it safely — the seller is paid only after you accept the delivery.",
     "acceptConfirmTitle": "Accept the delivery?",
-    "acceptConfirmBody": "This releases your payment to the seller and can't be undone. Happy with the work?"
+    "acceptConfirmBody": "This releases your payment to the seller and can't be undone. Happy with the work?",
+    "tab": {
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "all": "All"
+    },
+    "empty": {
+      "active": "No active orders",
+      "completed": "No completed orders yet",
+      "cancelled": "No cancelled orders",
+      "all": "You haven't ordered anything yet"
+    },
+    "pagination": "Pagination",
+    "prevPage": "← Previous",
+    "nextPage": "Next →",
+    "seeAllOrders": "See all"
   },
   "Review": {
     "leaveReview": "Leave a review",
