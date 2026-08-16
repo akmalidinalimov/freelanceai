@@ -2,6 +2,7 @@
 // then delete it. Reads S3_* from .env.deploy.local; secrets are never printed.
 import { readFileSync } from "fs";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const env = {};
 for (const line of readFileSync(new URL("../.env.deploy.local", import.meta.url), "utf8").split(/\r?\n/)) {
@@ -42,6 +43,37 @@ try {
 
   await s3.send(new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: key }));
   console.log("3) cleanup: OK");
+
+  // 4) The check this file was MISSING, and the reason every user-facing upload could be broken
+  //    while steps 1-3 stayed green: uploads go browser -> R2 directly on a presigned PUT, so
+  //    they are governed by the bucket's CORS policy. Steps 1-3 are server-side, where CORS does
+  //    not apply. With no policy the preflight returns no Access-Control-Allow-Origin and the
+  //    browser refuses to send the PUT at all — avatars, portfolio images and video all fail.
+  const origin = (env.APP_ORIGIN || "https://gigora.ai").replace(/\/$/, "");
+  const probeKey = `avatars/_corsprobe-${Date.now()}.webp`;
+  const signed = await getSignedUrl(
+    s3,
+    new PutObjectCommand({ Bucket: S3_BUCKET, Key: probeKey, ContentType: "image/webp" }),
+    { expiresIn: 120 }
+  );
+  const pre = await fetch(signed, {
+    method: "OPTIONS",
+    headers: {
+      Origin: origin,
+      "Access-Control-Request-Method": "PUT",
+      "Access-Control-Request-Headers": "content-type",
+    },
+  });
+  const allow = pre.headers.get("access-control-allow-origin");
+  if (allow === "*" || (allow && origin.startsWith(allow))) {
+    console.log(`4) CORS preflight from ${origin}: OK (allow-origin: ${allow})`);
+  } else {
+    console.log(`4) CORS preflight from ${origin}: HTTP ${pre.status}, allow-origin: ${allow ?? "ABSENT"}`);
+    console.log("   ❌ BROWSER UPLOADS ARE BLOCKED — set the bucket CORS policy in Cloudflare:");
+    console.log(`      AllowedOrigins ["${origin}"], AllowedMethods ["PUT","GET","HEAD"],`);
+    console.log('      AllowedHeaders ["content-type"], ExposeHeaders ["ETag"]');
+    process.exitCode = 1;
+  }
 } catch (e) {
   console.log("ERROR:", e?.name, "-", String(e?.message).slice(0, 200));
   if (e?.name === "NoSuchBucket") console.log("   -> S3_BUCKET name is wrong");

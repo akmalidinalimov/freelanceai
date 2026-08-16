@@ -38,7 +38,7 @@ if (streak < NEED) {
 const steps = [
   ["smoke — HTTP regression over all features", "node deploy/smoke-test.mjs"],
   ["deep sweep — content + search + filters + SEO", "node deploy/e2e-prod.mjs"],
-  ["R2 storage — upload + public serve", "node deploy/test-r2.mjs"],
+  ["R2 storage — upload + public serve + browser CORS", "node deploy/test-r2.mjs"],
 ];
 
 let failed = 0;
