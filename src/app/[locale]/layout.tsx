@@ -3,6 +3,7 @@ import { Manrope, Unbounded } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale, getTranslations, getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
@@ -12,6 +13,8 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ClarityAnalytics } from "@/components/clarity-analytics";
 import { MetaPixel } from "@/components/meta-pixel";
 import { CookieConsent } from "@/components/cookie-consent";
+import { TelegramChrome } from "@/components/telegram/telegram-chrome";
+import { isMiniAppRequest } from "@/lib/miniapp";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
 import { UIProviders } from "@/components/ui-providers";
 import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
@@ -81,6 +84,12 @@ export default async function LocaleLayout({
     ? (user!.firstName ?? user!.name ?? user!.username ?? user!.id)
     : null;
 
+  // Telegram Mini App: suppress OUR chrome because Telegram draws its own. Optimistic — the
+  // marker is a cookie, so it can be stale or arrive via a copied URL. TelegramChrome verifies
+  // against the real SDK after hydration and restores the chrome if the marker lied, which is
+  // what stops a user landing on a page with no navigation at all.
+  const miniApp = isMiniAppRequest(await headers());
+
   const skip =
     ({ uz: "Asosiy kontentga oʻtish", ru: "Перейти к содержимому", en: "Skip to content" } as Record<string, string>)[
       locale
@@ -102,21 +111,22 @@ export default async function LocaleLayout({
             {skip}
           </a>
           {impName && <ImpersonationBanner targetName={impName} />}
-          <SiteHeader />
+          {!miniApp && <SiteHeader />}
           {showReconnect && botUsername && (
             <BotReconnectBanner deepLink={`https://t.me/${botUsername}`} botName={`@${botUsername}`} />
           )}
-          <main id="main" className="flex-1 pb-16 md:pb-0">
+          <main id="main" className={miniApp ? "flex-1" : "flex-1 pb-16 md:pb-0"}>
             {children}
           </main>
-          <SiteFooter />
-          <MobileBottomNav signedIn={Boolean(user)} />
-          <CookieConsent />
+          {!miniApp && <SiteFooter />}
+          {!miniApp && <MobileBottomNav signedIn={Boolean(user)} />}
+          {!miniApp && <CookieConsent />}
           </UIProviders>
         </NextIntlClientProvider>
         <Suspense fallback={null}>
           <ReferralCapture />
         </Suspense>
+        <TelegramChrome markerActive={miniApp} />
         <TelegramMiniAppBootstrap />
         <ClarityAnalytics />
         <MetaPixel />

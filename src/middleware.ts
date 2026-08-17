@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import { MINIAPP_COOKIE, MINIAPP_HEADER, MINIAPP_PARAM } from "./lib/miniapp";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -31,12 +32,34 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/uz/creators/${vanity[1]}`, request.url), 302);
   }
 
+  // Telegram Mini App marker. Bot links carry ?tgapp=1; we convert it into a session cookie and
+  // REDIRECT to the clean URL. Stripping the param matters: left in place it travels whenever a
+  // user copies the address out of the Mini App, and a recipient opening that link in a normal
+  // browser would get a page with our chrome suppressed and no Telegram controls to navigate with.
+  if (request.nextUrl.searchParams.get(MINIAPP_PARAM)) {
+    const clean = new URL(request.nextUrl);
+    clean.searchParams.delete(MINIAPP_PARAM);
+    const redirect = NextResponse.redirect(clean, 307);
+    redirect.cookies.set(MINIAPP_COOKIE, "1", {
+      httpOnly: false, // TelegramChrome clears it client-side when the marker turns out to be wrong
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV !== "development",
+    });
+    return redirect;
+  }
+
   // Expose the requested path to server components (they can't read the URL).
   // Auth guards use it to build /login?next=<path>, so a Telegram Mini App that
   // deep-links into a protected page returns THERE after auto-authenticating
   // instead of being dumped on the home page.
   const res = intlMiddleware(request);
   res.headers.set("x-pathname", request.nextUrl.pathname + request.nextUrl.search);
+  // Server Components cannot read cookies during render of a shared layout, so forward the marker
+  // as a header the layout can consult synchronously.
+  if (request.cookies.get(MINIAPP_COOKIE)?.value === "1") {
+    res.headers.set(MINIAPP_HEADER, "1");
+  }
   return res;
 }
 

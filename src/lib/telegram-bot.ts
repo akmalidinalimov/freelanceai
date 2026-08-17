@@ -1,4 +1,5 @@
 import "server-only";
+import { MINIAPP_PARAM } from "@/lib/miniapp";
 
 /**
  * Thin client for the Telegram Bot API. Server-only (uses the bot token).
@@ -132,6 +133,19 @@ function appOrigin(): string {
   return (process.env.APP_ORIGIN ?? "https://gigora.ai").replace(/\/$/, "");
 }
 
+/**
+ * Append the Mini App marker to a locale-prefixed path, preserving any existing query and
+ * #fragment. EVERY web_app URL must go through this: the marker is what lets the first paint
+ * inside Telegram already omit our chrome instead of flashing a web header. Three separate call
+ * sites build these URLs (the reply keyboard, the menu button, miniAppUrl) — hence one helper
+ * rather than three copies of the same string concatenation.
+ */
+function withMarker(path: string): string {
+  const [beforeHash, hash] = path.split("#", 2);
+  const sep = beforeHash.includes("?") ? "&" : "?";
+  return `${beforeHash}${sep}${MINIAPP_PARAM}=1${hash ? `#${hash}` : ""}`;
+}
+
 type Loc = "uz" | "ru" | "en";
 const asLoc = (l?: string): Loc => (l === "ru" || l === "en" ? l : "uz");
 
@@ -148,7 +162,7 @@ export function tgMainKeyboard(
 ): Record<string, unknown> {
   const loc = asLoc(locale);
   const origin = appOrigin();
-  const wa = (path: string) => ({ url: `${origin}/${loc}${path}` });
+  const wa = (path: string) => ({ url: `${origin}/${loc}${withMarker(path)}` });
   const L = KEYBOARD_LABELS[loc];
 
   // Admins get a purpose-built ops keyboard — not the buyer/seller nav. Stats opens the
@@ -193,7 +207,7 @@ export async function tgSetChatMenuButton(chatId: number | string, locale?: stri
         menu_button: {
           type: "web_app",
           text: KEYBOARD_LABELS[loc].openApp,
-          web_app: { url: `${appOrigin()}/${loc}` },
+          web_app: { url: `${appOrigin()}/${loc}${withMarker("/")}` },
         },
       }),
     });
@@ -258,9 +272,16 @@ export const HELP_LABELS: Record<Loc, string> = {
 
 const OPEN_LABEL: Record<Loc, string> = { uz: "Ochish", ru: "Открыть", en: "Open" };
 
-/** Full Mini App URL for a platform path (used in notification "open" buttons). */
+/**
+ * Full Mini App URL for a platform path (used in notification "open" buttons).
+ *
+ * Carries `?tgapp=1` so the very first paint inside Telegram already omits our chrome instead of
+ * flashing a web header. Middleware converts it to a cookie and redirects to the clean URL, so the
+ * param never lingers where a user could copy and share it. Preserves an existing query string and
+ * any #fragment, since callers pass paths like "/dashboard/seller#orders".
+ */
 export function miniAppUrl(locale: string | undefined, path: string): string {
-  return `${appOrigin()}/${asLoc(locale)}${path}`;
+  return `${appOrigin()}/${asLoc(locale)}${withMarker(path)}`;
 }
 
 /** Inline "open in the app" button (opens the Mini App at `path`). */
