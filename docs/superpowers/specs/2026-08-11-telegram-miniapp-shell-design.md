@@ -1,6 +1,10 @@
 # Telegram Mini App — Phase 1: the shell
 
-**Date:** 2026-08-11 · **Status:** design, awaiting review · **Scope:** Phase 1 of 4
+**Date:** 2026-08-11 · **Status:** reviewed (eng), scope reduced · **Scope:** Phase 1 of 4
+
+> **Revised after engineering review.** Scope cut from 10 files to 6: MainButton, haptics and
+> closing confirmation move to Phase 2, which rewrites those same screens anyway. Three defects
+> found in the first draft are fixed below — see *Detection* and *Review findings*.
 
 ---
 
@@ -31,9 +35,11 @@ For a Telegram-native Uzbek audience this is the difference between an app and a
 ## Goals
 
 1. Inside Telegram the app uses Telegram's chrome, not ours.
-2. Native affordances work: back, primary action, haptics, frame colours, keyboard-aware viewport.
-3. Unsaved work survives a stray swipe-to-close.
+2. Native navigation works: BackButton, frame colours, keyboard-aware viewport.
+3. **No user is ever left without a way to navigate** — see the detection contract.
 4. **The web experience is byte-for-byte unchanged.** Every behaviour here is a no-op outside Telegram.
+
+Primary action (MainButton), haptics and closing confirmation are Phase 2 — see §5.
 
 ## Non-goals (deliberately deferred)
 
@@ -66,8 +72,39 @@ context without duplicating every route, and duplicated routes drift.
 *Rejected:* client-only detection. It flashes web chrome on every launch, which is precisely the
 cheap-wrapper feel this phase exists to remove.
 
-**Contract:** `isMiniApp` is true if the cookie/header is set **or** `initData` is present.
-False on the open web, always.
+**Contract — optimistic server, client corrects.** The naive version ("cookie means no chrome")
+has a dead end in it: any context where the cookie is set but Telegram is absent renders a page
+with no header, no bottom nav, **and** no Telegram back button. The user cannot navigate at all.
+Two routes reach it — a stale cookie, and a `?tgapp=1` URL copied out of the Mini App and shared.
+
+So:
+
+```
+        request
+           │
+   ┌───────┴────────┐
+   │ cookie or param │──no──▶ render web chrome (unchanged, always)
+   └───────┬────────┘
+          yes
+           │
+   suppress chrome  ◀── correct first paint, no flash
+           │
+      hydration
+           │
+   ┌───────┴─────────┐
+   │ Telegram SDK?   │
+   └───┬─────────┬───┘
+     yes         no
+      │           │
+   stay clean   restore chrome + clear cookie
+                (worst case: one frame without a header)
+```
+
+Middleware also **strips `?tgapp=1`** after setting the cookie, so the marker never survives into
+a URL the user can copy and share.
+
+`isMiniApp` is therefore: server-optimistic from cookie/param, authoritative from `initData`
+after hydration. False on the open web, always.
 
 ### 2. Chrome suppression
 
@@ -95,13 +132,16 @@ the most common way Mini Apps break in the field, so no component touches
 ```ts
 const tg = useTelegram();
 // tg.available            — inside Telegram at all?
-// tg.supports("6.1")      — client version gate
+// tg.atLeast("6.1")       — wraps Telegram's own isVersionAtLeast()
 // tg.haptic("light")      — no-op if unsupported
 // tg.setFrameColors(...)  — no-op if unsupported
 // tg.confirmClose(on)     — no-op if unsupported
 ```
 
 Every wrapper is a no-op when unavailable or unsupported. Nothing throws, on any client, ever.
+Version checks wrap Telegram's built-in `isVersionAtLeast()` rather than comparing version
+strings ourselves, and every accessor guards `typeof window` so the module is import-safe on
+the server.
 
 ### 4. BackButton
 
@@ -109,73 +149,88 @@ A client component in the layout: `show()` when there is history to pop, `hide()
 screen (home, search, orders, messages), `onClick` → `router.back()`. Roots come from one
 exported list so it cannot drift from the nav.
 
-### 5. MainButton — declared by the page, rendered by Telegram
+### 5. Deferred to Phase 2 — MainButton, haptics, closing confirmation
 
-Telegram's MainButton is native and singular, so pages cannot each render their own. A
-`useMainButton({ text, onClick, enabled, loading })` hook claims it for the mounted screen and
-releases it on unmount. Last mount wins; unmount restores the previous claim.
+Cut in review. MainButton needs a claim protocol, and the naive "last mount wins" is broken: in
+App Router the incoming page can mount before the outgoing one unmounts, so release-on-unmount
+deletes the *new* claim. It needs a keyed claim stack — and it touches `order-panel`,
+`message-thread` and `gig-form`, which Phase 2 rewrites anyway. Building the protocol before
+Phase 2 says what those screens need is guessing.
 
-Phase 1 wires three call sites as proof, and leaves the rest to Phase 2/3:
+Haptics and closing confirmation ride along with it for the same reason.
 
-| Screen | MainButton |
-|---|---|
-| Gig detail | `Buyurtma berish` |
-| Message thread | `Yuborish` |
-| Gig wizard, final step | `Eʼlon qilish` |
-
-The in-page button stays rendered on web and is hidden inside Telegram, so there is exactly one
-primary action visible in each environment.
-
-### 6. Frame, viewport, haptics, closing confirmation
+### 6. Frame and viewport
 
 - **Frame:** `setHeaderColor` / `setBottomBarColor` to Gigora's sand token so the frame is
   deliberate rather than mismatched for a dark-mode user.
 - **Viewport:** `expand()` on launch; bind `viewportStableHeight` to a CSS variable so the message
-  composer is not covered by the keyboard.
-- **Haptics:** `impactOccurred("light")` on primary actions; `notificationOccurred` on
-  success/failure of order and delivery transitions. Nowhere else — haptics stop meaning anything
-  if everything buzzes.
-- **Closing confirmation:** `enableClosingConfirmation()` while the gig wizard holds unsaved
-  input, disabled on submit or clear. The wizard already autosaves to `localStorage`; this stops
-  a stray swipe discarding work in the first place.
+  composer is not covered by the keyboard. Bind it to Telegram's `viewportChanged` event, **not** a
+  window resize listener — resize fires continuously while the keyboard animates and would thrash
+  the variable.
 
 ---
 
 ## Files
 
+Six files, down from ten.
+
 **New**
 - `src/lib/miniapp.ts` — `MINIAPP_PARAM`, `MINIAPP_COOKIE`, `isMiniAppRequest(headers)`, root-screen list
 - `src/components/telegram/use-telegram.ts` — the guarded SDK surface
-- `src/components/telegram/use-main-button.ts` — MainButton claim/release
-- `src/components/telegram/telegram-chrome.tsx` — BackButton + frame + viewport + closing confirmation, mounted once
+- `src/components/telegram/telegram-chrome.tsx` — BackButton, frame colours, viewport, and the
+  client-side correction that restores chrome when the SDK is absent
 
 **Modified**
-- `src/middleware.ts` — set the cookie from `?tgapp=1`, forward the marker header
+- `src/middleware.ts` — set the cookie from `?tgapp=1`, strip the param, forward the marker header
 - `src/app/[locale]/layout.tsx` — conditional chrome; mount `TelegramChrome`
 - `src/lib/telegram-bot.ts` — `miniAppUrl()` appends the param
-- `src/components/telegram-miniapp-bootstrap.tsx` — expose context instead of only signing in
-- `src/components/order-panel.tsx`, `message-thread.tsx`, `gig-form.tsx` — three MainButton call sites
 
 ---
 
 ## Testing
 
 Telegram's WebView cannot be driven by Playwright, so the shell is tested by **simulating the
-contract**, which is what our code actually depends on.
+contract**, which is what our code actually depends on. `signTelegramInitData()` in
+`e2e/helpers.ts` already mints valid signed initData (built for the login-pairing work), so a
+stubbed `window.Telegram.WebApp` is cheap to assemble.
 
-1. **Server marker (e2e).** Load `/uz/gigs?tgapp=1`: assert no header, no footer, no bottom nav, no
-   cookie banner, and that the cookie is set so the next navigation stays correct without the param.
-2. **Web is untouched (e2e).** The same routes without the param: chrome present, exactly as today.
-   This is the regression that matters most.
-3. **Client detection (e2e).** Inject a stubbed `window.Telegram.WebApp` with `initData` signed by
-   the test bot token — reusing `signTelegramInitData()` from `e2e/helpers.ts`, already built for the
-   login-pairing work — and assert the chrome disappears without the param.
-4. **Version gating (unit).** With a stub reporting version `6.0`, assert every `useTelegram()`
-   wrapper no-ops rather than throwing; with `7.0`, assert it calls through.
-5. **MainButton claim (unit).** Mount two consumers, assert last-wins and that unmount restores
-   the previous claim.
+```
+CODE PATHS                                          USER FLOWS
+[+] src/lib/miniapp.ts                              [+] Bot button -> Mini App
+  |-- isMiniAppRequest()                              |-- [->E2E] opens with no chrome
+  |   |-- cookie present -> true                      \-- [->E2E] BackButton returns
+  |   |-- param present  -> true
+  |   \-- neither        -> false                    [+] Shared URL in a real browser
+[+] middleware.ts                                     \-- [->E2E] chrome RESTORED and
+  |-- param   -> set cookie AND strip param                      cookie cleared   * trap
+  |-- cookie  -> forward header
+  \-- neither -> untouched                           [+] Plain web visitor
+[+] layout.tsx                                        \-- [->E2E] header/nav/footer all
+  |-- marker    -> chrome suppressed                            present, unchanged
+  \-- no marker -> chrome present     * REGRESSION
+[+] use-telegram.ts                                 [+] Old Telegram client
+  |-- SDK absent      -> no-op, no throw               \-- unsupported call no-ops
+  |-- version too low -> no-op
+  \-- version ok      -> calls through
+[+] telegram-chrome.tsx
+  |-- SDK present -> back / frame / expand
+  \-- SDK absent  -> restore chrome + clear   * trap fix
+[+] miniAppUrl() -> appends param
 
-The existing 38 e2e specs act as the safety net for "web unchanged".
+17 paths, all new code.  * = must-have
+```
+
+**The two that are not optional:**
+
+1. **`no marker -> chrome present` (regression).** Every existing web user depends on this. The 38
+   existing e2e specs are the broader safety net, but this gets an explicit assertion.
+2. **`SDK absent -> chrome restored` (the trap).** Load a route with the cookie set and no stubbed
+   SDK; assert the header returns and the cookie is cleared. This is the defect review found, so it
+   gets the test that proves it stays fixed.
+
+**The rest:** unit tests around `isMiniAppRequest` (3 branches), the `useTelegram` wrappers against
+stubs reporting version `6.0` and `7.0`, and middleware's three branches including that the param
+is stripped from the redirect location.
 
 ## Error handling
 
@@ -207,3 +262,75 @@ again; keep every native call optional.
 - **Phase 2** — buyer journey in Telegram + `startapp` deep links so a shared gig opens in-app.
 - **Phase 3** — seller journey: notification → order → deliver → reply.
 - **Phase 4** — payments, gated on the Stars question above.
+
+---
+
+## Review findings (eng review, 2026-08-11)
+
+The first draft of this spec had three defects. All are fixed above.
+
+| # | Sev | Conf | Finding | Resolution |
+|---|---|---|---|---|
+| 1 | P0 | 9/10 | Chrome suppression keyed on a persisted cookie can leave a user with no header, no bottom nav **and** no Telegram back button — unable to navigate at all | Detection is now optimistic-server / client-corrects (§1) |
+| 2 | P1 | 8/10 | `?tgapp=1` travels when a user copies a URL out of the Mini App, so recipients hit defect 1 in a normal browser | Middleware strips the param after setting the cookie (§1) |
+| 3 | P1 | 8/10 | MainButton "last mount wins" is wrong — in App Router the incoming page can mount before the outgoing unmounts, so release-on-unmount deletes the new claim | Deferred to Phase 2 with a keyed claim stack (§5) |
+
+Also corrected: hand-rolled version comparison replaced with Telegram's own `isVersionAtLeast()`
+[Layer 1 — don't reinvent a documented built-in]; viewport bound to Telegram's `viewportChanged`
+rather than a window resize listener, which fires continuously while the keyboard animates.
+
+**Scope reduced 10 files → 6.** MainButton, haptics and closing confirmation all touch
+`order-panel`, `message-thread` and `gig-form`, which Phase 2 rewrites. Committing to a
+MainButton protocol before Phase 2 defines those screens is guessing.
+
+### What already exists (reused, not rebuilt)
+
+| Existing | Used for |
+|---|---|
+| `TelegramMiniAppBootstrap` | Extended to expose context; already does `ready()`/`expand()`/sign-in |
+| `miniAppUrl()` | Single chokepoint for the marker — one edit, not twenty |
+| `middleware.ts` `x-pathname` | Proven mechanism for passing computed state into the render |
+| `signTelegramInitData()` (`e2e/helpers.ts`) | Minting signed initData for the Mini App e2e stubs |
+| `seller-visibility.ts`, `EmptyState`, skeletons | Untouched; the shell changes chrome, not content |
+
+### NOT in scope
+
+| Deferred | Why |
+|---|---|
+| MainButton, haptics, closing confirmation | Phase 2 rewrites those screens; protocol needs their requirements first |
+| Dark mode | Own project; `DESIGN.md` parks it deliberately |
+| `startapp` deep links, share-to-chat | Phase 2 — growth, not shell |
+| Payments in the Mini App | Phase 4, gated on the Stars policy question |
+| Admin console adaptation | Desktop-shaped wide tables; a Mini App admin is its own decision |
+| Loading boundaries | Blocked upstream: `loading.tsx` swallows 307/404 (see `docs/audit/2026-08-10`) |
+
+### Failure modes
+
+| Failure | Test? | Handled? | User sees |
+|---|---|---|---|
+| Cookie set, Telegram absent | yes (trap test) | yes — chrome restored | One frame without a header, then normal |
+| Telegram SDK partially present | yes (version stubs) | yes — `available: false` | Renders as plain web |
+| Unsupported method on an old client | yes | yes — no-op | Nothing; the feature is simply absent |
+| Marker missing inside Telegram | yes (client detection) | yes — client suppresses after hydration | A brief flash of web chrome |
+| `viewportChanged` never fires | no | partial — CSS var keeps its default | Composer may sit under the keyboard |
+
+The last row is the one real gap: it degrades rather than breaks, and it needs a device to
+reproduce, so it is accepted for Phase 1 and revisited in Phase 2 when the chat screen is adapted.
+
+### Implementation tasks
+
+- [ ] **T1 (P1, human: ~2h / CC: ~15min)** — `src/lib/miniapp.ts` — marker constants, `isMiniAppRequest()`, root-screen list
+  - Verify: unit tests, 3 branches
+- [ ] **T2 (P0, human: ~3h / CC: ~20min)** — `middleware.ts` + `layout.tsx` — set/strip marker, conditional chrome
+  - Surfaced by: findings 1 and 2
+  - Verify: e2e "no marker → chrome present" (regression) and "marker → chrome suppressed"
+- [ ] **T3 (P1, human: ~2h / CC: ~15min)** — `use-telegram.ts` — guarded SDK surface over `isVersionAtLeast()`
+  - Verify: unit tests against stubs at version 6.0 and 7.0
+- [ ] **T4 (P0, human: ~3h / CC: ~20min)** — `telegram-chrome.tsx` — BackButton, frame colours, viewport, **and the client correction**
+  - Surfaced by: finding 1
+  - Verify: e2e trap test — cookie set, no SDK, chrome returns and cookie clears
+- [ ] **T5 (P2, human: ~30min / CC: ~5min)** — `miniAppUrl()` appends the marker
+  - Verify: unit test on the built URL
+
+Sequential: T1 → T2/T3 in parallel → T4 → T5. No parallel worktree lanes worth splitting; six
+files with a shared contract.
