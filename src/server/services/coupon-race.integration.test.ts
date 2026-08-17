@@ -7,9 +7,17 @@
  * discount than it authorized. Exactly one order gets the discount; the coupon never exceeds
  * maxUses; the losers proceed at full price rather than failing.
  */
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, afterAll, beforeAll } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { createOrder } from "@/server/services/order";
+
+// `createOrder` skips coupons entirely under FREE_ORDERS (order.ts:62), so with a dev .env that
+// has FREE_ORDERS="1" every order here comes back at full price and both assertions fail with
+// "expected 0 to be 1" — a green codebase looking like a broken coupon claim. Own the env so the
+// test measures the race it is named after, not the developer's local flags.
+beforeAll(() => {
+  process.env.FREE_ORDERS = "0";
+});
 
 let seq = 0;
 const ids: string[] = [];

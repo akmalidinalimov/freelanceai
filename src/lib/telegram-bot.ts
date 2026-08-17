@@ -195,11 +195,19 @@ export function tgMainKeyboard(
   return { keyboard: rows, is_persistent: true, resize_keyboard: true };
 }
 
-/** Set the chat Menu Button (beside the input) to launch the Mini App home. */
-export async function tgSetChatMenuButton(chatId: number | string, locale?: string): Promise<void> {
+/**
+ * Set the chat Menu Button (beside the input) to launch the Mini App home, reporting the
+ * outcome. Telegram stores this PER CHAT, so it only ever reflects the code that ran the
+ * last time a given user talked to the bot — which is why the backfill needs to know
+ * whether each call actually landed. Silent for the user: no message is sent.
+ */
+export async function tgSetChatMenuButtonResult(
+  chatId: number | string,
+  locale?: string
+): Promise<{ ok: boolean; blocked: boolean; retryAfter?: number }> {
   const loc = asLoc(locale);
   try {
-    await fetch(api("setChatMenuButton"), {
+    const res = await fetch(api("setChatMenuButton"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -211,9 +219,21 @@ export async function tgSetChatMenuButton(chatId: number | string, locale?: stri
         },
       }),
     });
+    if (res.ok) {
+      const b = await res.json().catch(() => null);
+      return { ok: b?.ok === true, blocked: false };
+    }
+    const b = (await res.json().catch(() => null)) as { parameters?: { retry_after?: number } } | null;
+    return { ok: false, blocked: res.status === 403, retryAfter: b?.parameters?.retry_after };
   } catch (err) {
-    console.error("tgSetChatMenuButton failed", err);
+    console.error("tgSetChatMenuButtonResult failed", err);
+    return { ok: false, blocked: false };
   }
+}
+
+/** Fire-and-forget wrapper for the webhook path, where the outcome doesn't change behaviour. */
+export async function tgSetChatMenuButton(chatId: number | string, locale?: string): Promise<void> {
+  await tgSetChatMenuButtonResult(chatId, locale);
 }
 
 /** Command list shown (via a chat-scoped menu) only to admins — includes ops commands. */
