@@ -57,13 +57,22 @@ the keyboard-overlap problem it exists to solve is not actually fixed yet. The c
 consumer, and Phase 2 adapts that screen. Shipping the plumbing now is fine; claiming the keyboard
 issue is fixed would not be.
 
-**G2 — Native affordances are unverified on a device.** BackButton behaviour, frame colours and
-viewport can only be confirmed inside real Telegram. Stubs prove our code calls the right methods
-with the right guards; they cannot prove Telegram does what its docs say.
+**G2 — Native affordances: narrowed, not closed.** The device script was re-run against **live
+`gigora.ai`** with a recording Telegram stub (2026-08-17): **13/13 passed**, including BackButton
+hidden on `/uz/gigs` and shown on `/uz/gigs/kop-tilli-ai-ovoz-dublyaji`, both frame colours sent as
+`#f3f1ec`, marker stripped from the URL, cookie persistence across navigation, the trap fix, empty
+`initData`, and a pre-6.0 client with zero uncaught errors. That moves these from "the local build
+behaves" to "the deployed build behaves". What is still unproven is only the last hop: whether
+Telegram itself honours the calls. That needs a phone.
 
-**G3 — No visual review.** `plan-design-review` was offered and not run. What the app *looks* like
-with no header — spacing at the top of each page, whether anything depended on the header for
-visual anchoring — is unexamined.
+**G3 — CLOSED. Visual review done** (390px, 2× DPR, against production). The header-less layout
+holds up: `#main` starts at y=0 with the H1 at y=40 on both `/` and `/uz/gigs`, and `pb-16` is
+correctly dropped so no dead space sits under the last card. Nothing depended on the header for
+anchoring.
+
+One defect found, and it is **not ours**: the homepage hero prompt `<textarea>` is 40px tall with
+64px of content (`line-height: 24px`), so its placeholder is clipped mid-sentence at 390px.
+Identical on plain web and in the Mini App, so it predates Phase 1 — logged here, not fixed here.
 
 **G4 — Marker-less Mini App launch shows a brief flash.** If a Mini App opens without the param
 (an old saved link), the server renders chrome and the client suppresses after hydration. Correct,
@@ -82,6 +91,22 @@ but visibly a flash. Self-heals on the next navigation once the cookie is set.
 6. In a normal phone browser, open `gigora.ai/uz/gigs` → **full header and tab bar present.**
 
 If 1, 2 and 6 hold, the shell is doing its job.
+
+**Steps 1, 2, 3, 4 and 6 have since been run against production** (see G2) and all passed. Only
+**step 5 still needs a phone** — a desktop browser has no soft keyboard, so the viewport behaviour
+`--tg-viewport` exists to serve cannot be exercised there at all.
+
+### A gap the browser found that no test covers
+
+`tgSetChatMenuButton` and `tgMainKeyboard` are **per-chat**, and `webhook/route.ts:333` only calls
+them when a user messages the bot. Telegram stores them server-side per chat, so **every user
+paired before Phase 1 still has the old unmarked URLs.** For them every launch takes the G4 path —
+server renders chrome, client suppresses after hydration — so the flash is per-launch, not
+one-time. New users are unaffected.
+
+`setChatMenuButton` sends the user nothing, so a one-time silent backfill over paired Telegram IDs
+fixes the primary entry point. The reply keyboard cannot be refreshed without sending a message,
+but it self-heals: once the menu button sets the cookie, later keyboard launches carry the marker.
 
 ---
 
