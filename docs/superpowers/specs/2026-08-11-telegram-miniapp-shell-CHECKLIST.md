@@ -108,6 +108,15 @@ one-time. New users are unaffected.
 fixes the primary entry point. The reply keyboard cannot be refreshed without sending a message,
 but it self-heals: once the menu button sets the cookie, later keyboard launches carry the marker.
 
+**RESOLVED 2026-08-18.** `deploy/menu-button-sync.ps1` run against production: 31 paired users,
+**30 ok, 0 failed, 1 blocked** (that user had blocked the bot and is now marked, so every future
+fan-out skips them). One round, no cursor resumption needed. Telegram returned `ok:true` for each
+call, so the marked button is stored on its side for all 30 reachable users.
+
+Residual, and small: a user who launches via the **reply keyboard** before ever using the menu
+button still has no marker on that first launch, so they take the G4 path once. It heals as soon
+as any marked launch sets the cookie, and the keyboard itself refreshes on their next `/start`.
+
 ---
 
 ## Verdict
