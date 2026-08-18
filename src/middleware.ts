@@ -1,7 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { MINIAPP_COOKIE, MINIAPP_HEADER, MINIAPP_PARAM } from "./lib/miniapp";
+import {
+  MINIAPP_COOKIE,
+  MINIAPP_COOKIE_MAX_AGE,
+  MINIAPP_HEADER,
+  MINIAPP_PARAM,
+  crossSiteCookieOptions,
+  isSecureRequest,
+} from "./lib/miniapp";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -40,11 +47,14 @@ export default function middleware(request: NextRequest) {
     const clean = new URL(request.nextUrl);
     clean.searchParams.delete(MINIAPP_PARAM);
     const redirect = NextResponse.redirect(clean, 307);
+    // SameSite=None + Partitioned, not Lax: on Telegram Desktop/Web the Mini App is a cross-site
+    // iframe, and a Lax cookie is never sent back there — the marker would be set and then
+    // invisible on every request. Max-Age so it also survives the WebView closing.
     redirect.cookies.set(MINIAPP_COOKIE, "1", {
       httpOnly: false, // TelegramChrome clears it client-side when the marker turns out to be wrong
-      sameSite: "lax",
       path: "/",
-      secure: process.env.NODE_ENV !== "development",
+      maxAge: MINIAPP_COOKIE_MAX_AGE,
+      ...crossSiteCookieOptions(isSecureRequest(request)),
     });
     return redirect;
   }

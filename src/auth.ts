@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -8,6 +8,7 @@ import { consumeMagicToken } from "@/lib/email-auth";
 import { verifyMiniAppInitData } from "@/lib/telegram";
 import { stampLastLogin } from "@/server/services/activity";
 import { readCookie, sha256 } from "@/lib/rate-limit";
+import { MINIAPP_COOKIE, crossSiteCookieOptions, isSecureRequest } from "@/lib/miniapp";
 
 /**
  * Auth.js (NextAuth v5). JWT sessions (required by the Credentials/Telegram bridge,
@@ -16,7 +17,7 @@ import { readCookie, sha256 } from "@/lib/rate-limit";
  * Role/status are read fresh from the DB in getCurrentUser, so the JWT only carries
  * the user id (changes like admin-promote/suspend take effect immediately).
  */
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const baseConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
   trustHost: true,
@@ -184,4 +185,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+};
+
+/**
+ * Auth cookies that work inside Telegram.
+ *
+ * Telegram Desktop and Telegram Web run a Mini App in an iframe on telegram.org, so gigora.ai is a
+ * CROSS-SITE context there. `SameSite=Lax` cookies — the Auth.js default — are never sent in that
+ * context. Measured against production: framed from telegram.org, gigora.ai received no Cookie
+ * header at all. The session was therefore written at login and never returned, so every relaunch
+ * looked signed-out and the user had to log in again.
+ *
+ * When (and only when) the request carries the Mini App marker, reissue the three cookies the
+ * sign-in flow depends on as `SameSite=None; Secure; Partitioned`. Names are byte-identical to the
+ * Auth.js defaults, so existing web sessions keep working rather than being silently invalidated.
+ * Plain web requests never take this branch and keep the stricter Lax default.
+ */
+function miniAppCookies(isSecure: boolean): NextAuthConfig["cookies"] {
+  const options = { httpOnly: true, path: "/", ...crossSiteCookieOptions(isSecure) } as const;
+  // Names must be byte-identical to @auth/core's defaults, which prefix ONLY on a secure origin —
+  // get this wrong and every signed-in user is silently logged out by a cookie rename. Both
+  // prefixes permit SameSite=None and Partitioned; __Host- also forbids a Domain, which we never set.
+  const secure = isSecure ? "__Secure-" : "";
+  const host = isSecure ? "__Host-" : "";
+  return {
+    sessionToken: { name: `${secure}authjs.session-token`, options },
+    callbackUrl: { name: `${secure}authjs.callback-url`, options },
+    csrfToken: { name: `${host}authjs.csrf-token`, options },
+  };
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth((request) => {
+  // `request` is undefined for server-side auth() calls, which only READ an existing cookie and
+  // therefore never need the relaxed attributes.
+  if (!request) return baseConfig;
+  const inMiniApp = request.cookies?.get(MINIAPP_COOKIE)?.value === "1";
+  return inMiniApp ? { ...baseConfig, cookies: miniAppCookies(isSecureRequest(request)) } : baseConfig;
 });

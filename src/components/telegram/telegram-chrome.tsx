@@ -41,7 +41,13 @@ export function TelegramChrome({ markerActive }: { markerActive: boolean }) {
     correcting.current = true;
     // Expire the cookie, then ask the server to re-render. Middleware strips the query param on
     // its way in, so nothing re-sets the marker and this cannot loop.
-    document.cookie = `${MINIAPP_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`;
+    // Attributes must match how middleware set it or the delete is a no-op: a Partitioned cookie
+    // is a DIFFERENT storage entry from an unpartitioned one of the same name, so omitting
+    // Partitioned here would leave the lying marker in place and strand the user.
+    document.cookie =
+      window.location.protocol === "https:"
+        ? `${MINIAPP_COOKIE}=; Max-Age=0; Path=/; SameSite=None; Secure; Partitioned`
+        : `${MINIAPP_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`;
     router.refresh();
   }, [markerActive, router]);
 

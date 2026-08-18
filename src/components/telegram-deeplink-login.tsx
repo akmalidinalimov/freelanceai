@@ -113,7 +113,17 @@ export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?:
         className="w-full"
         aria-disabled={phase === "init"}
       >
-        <Button size="lg" className="w-full" disabled={phase === "init"}>
+        {/* Telegram brand blue (#229ED9), not our orange: this button hands the user off to
+            Telegram, and matching the destination is what makes it read as safe rather than as a
+            third party asking for credentials. Hover/active are the brand's darker steps. */}
+        <Button
+          size="lg"
+          className="w-full bg-[#229ED9] text-white hover:bg-[#1E8BC0] active:bg-[#1A7BA8] focus-visible:ring-[#229ED9] disabled:bg-[#229ED9]/60"
+          disabled={phase === "init"}
+        >
+          <svg aria-hidden viewBox="0 0 24 24" className="mr-2 h-5 w-5 shrink-0 fill-current">
+            <path d="M11.94 2.02c-5.5 0-9.96 4.46-9.96 9.96s4.46 9.96 9.96 9.96 9.96-4.46 9.96-9.96-4.46-9.96-9.96-9.96Zm4.64 6.79-1.55 7.33c-.12.52-.42.65-.86.4l-2.37-1.75-1.14 1.1c-.13.13-.24.24-.48.24l.17-2.42 4.4-3.98c.19-.17-.04-.27-.3-.1l-5.43 3.42-2.34-.73c-.51-.16-.52-.51.11-.76l9.13-3.52c.42-.15.79.1.66.77Z" />
+          </svg>
           {phase === "init" ? t("preparing") : t("loginTelegram")}
         </Button>
       </a>
