@@ -4,6 +4,7 @@ import {
   tgSendMessage,
   tgMainKeyboard,
   tgSetChatMenuButton,
+  miniAppUrl,
   tgWelcome,
   tgHelpText,
   tgOpenButton,
@@ -244,6 +245,27 @@ export async function POST(request: Request) {
     }
     const account = await prisma.user.findUnique({ where: { telegramId: String(from.id) }, select: { locale: true } });
     void tgSendMessage(from.id, "📣 Ommaviy xabar yuborish (darhol yoki rejalashtirilgan):", tgOpenButton(account?.locale, "/admin/broadcast"));
+    return NextResponse.json({ ok: true });
+  }
+
+  // Admin-only: open the Mini App launch diagnostic. Two different faults render the SAME screen
+  // (our chrome visible + a login prompt) — a missing marker, and empty initData — and they need
+  // opposite fixes. Only Telegram's own client can tell them apart, so this is a one-tap probe.
+  if (from && !from.is_bot && text === "/tgdebug") {
+    if (!isAdminTelegramId(from.id, process.env.ADMIN_TELEGRAM_IDS)) {
+      void tgSendMessage(from.id, "Bu buyruq faqat administratorlar uchun.");
+      return NextResponse.json({ ok: true });
+    }
+    // `locale` is only resolved further down, after the account lookup — read it here directly.
+    const acct = await prisma.user.findUnique({
+      where: { telegramId: String(from.id) },
+      select: { locale: true },
+    });
+    void tgSendMessage(from.id, "Diagnostika: tugmani bosing va ekranni yuboring.", {
+      inline_keyboard: [
+        [{ text: "🔍 Diagnostika", web_app: { url: miniAppUrl(acct?.locale, "/tg-debug") } }],
+      ],
+    });
     return NextResponse.json({ ok: true });
   }
 
