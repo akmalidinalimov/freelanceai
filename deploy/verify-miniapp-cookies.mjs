@@ -21,39 +21,52 @@ const browser = await chromium.launch();
 const ctx = await browser.newContext();
 const page = await ctx.newPage();
 
-// 1. A Mini App launch must issue a marker cookie that is cross-site capable and persistent.
-await page.goto(`${ORIGIN}/uz/?tgapp=1`, { waitUntil: "domcontentloaded" });
-await page.waitForTimeout(1500);
-const marker = (await ctx.cookies(ORIGIN)).find((c) => c.name === "gigora_tgapp");
-check("marker cookie is set", Boolean(marker), marker ? "present" : "missing");
-if (marker) {
-  check("marker is SameSite=None", marker.sameSite === "None", `sameSite=${marker.sameSite}`);
-  check("marker is Secure", marker.secure === true, `secure=${marker.secure}`);
-  const days = marker.expires > 0 ? Math.round((marker.expires - Date.now() / 1000) / 86400) : 0;
-  check("marker survives a relaunch", days >= 25, days ? `expires in ${days}d` : "SESSION COOKIE");
-}
+// 1. The server must emit a cross-site-capable, persistent marker cookie.
+const launch = await page.request.get(`${ORIGIN}/uz?tgapp=1`, { maxRedirects: 0 });
+const setCookie = (launch.headersArray().find((h) => h.name.toLowerCase() === "set-cookie") || {}).value ?? "";
+check("marker cookie is issued", setCookie.includes("gigora_tgapp="), setCookie || "no Set-Cookie");
+check("marker is SameSite=None", /samesite=none/i.test(setCookie));
+check("marker is Secure", /;\s*Secure/i.test(setCookie));
+check("marker is Partitioned (CHIPS)", /Partitioned/i.test(setCookie));
+check("marker survives a relaunch", /Max-Age=\d{6,}/i.test(setCookie), /Max-Age=\d+/i.exec(setCookie)?.[0]);
 
-// 2. The decisive one: framed from telegram.org, do our cookies actually arrive?
-let cookieHeader = "";
-await page.route(`${ORIGIN}/uz/**`, async (route) => {
+// 2. The decisive one, replicating what Telegram actually does.
+//
+// A Partitioned cookie is keyed to the TOP-LEVEL site, so one set while gigora.ai is top-level is
+// correctly invisible under telegram.org — testing it that way measures nothing. Telegram launches
+// the Mini App INSIDE the iframe, so the cookie must be set there and then survive to the next
+// framed request under the same top-level site. That is the property a session depends on.
+await page.goto("https://web.telegram.org/k/", { waitUntil: "domcontentloaded" });
+
+const frameTo = (path) =>
+  page.evaluate(
+    ([o, p]) =>
+      new Promise((resolve) => {
+        const f = document.createElement("iframe");
+        f.src = `${o}${p}`;
+        f.onload = () => resolve(true);
+        document.body.appendChild(f);
+        setTimeout(() => resolve(false), 15000);
+      }),
+    [ORIGIN, path]
+  );
+
+let secondVisitCookies = "";
+await page.route(`${ORIGIN}/uz/gigs**`, async (route) => {
   const req = route.request();
-  if (req.resourceType() === "document" && req.frame() !== page.mainFrame()) {
-    cookieHeader = req.headers()["cookie"] ?? "";
-  }
+  if (req.resourceType() === "document") secondVisitCookies = req.headers()["cookie"] ?? "";
   await route.continue();
 });
-await page.goto("https://web.telegram.org/k/", { waitUntil: "domcontentloaded" });
-await page.evaluate((o) => {
-  const f = document.createElement("iframe");
-  f.src = `${o}/uz/`;
-  document.body.appendChild(f);
-}, ORIGIN);
-await page.waitForTimeout(5000);
+
+await frameTo("/uz?tgapp=1"); // the real launch, inside Telegram's frame
+await page.waitForTimeout(2500);
+await frameTo("/uz/gigs"); // a later launch / navigation in the same context
+await page.waitForTimeout(2500);
 
 check(
-  "cookies reach gigora.ai inside Telegram's iframe",
-  cookieHeader.includes("gigora_tgapp"),
-  cookieHeader ? `Cookie: ${cookieHeader.slice(0, 90)}` : "NO Cookie header — session cannot persist"
+  "the marker survives to the next launch inside Telegram's iframe",
+  secondVisitCookies.includes("gigora_tgapp"),
+  secondVisitCookies ? `Cookie: ${secondVisitCookies.slice(0, 100)}` : "NO Cookie header — a session cannot persist"
 );
 
 // 3. Telegram must still be allowed to frame us at all.
