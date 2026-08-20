@@ -396,3 +396,23 @@ body::before {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Telegram Mini App: hide OUR chrome because Telegram draws its own.
+ *
+ * The server normally suppresses this from a cookie marker, but Telegram Desktop's webview does
+ * not keep that cookie (measured on tdesktop 9.6: initData present and fresh, marker cookie
+ * absent), so the header and bottom nav rendered inside Telegram. TelegramChrome sets this
+ * attribute from the SDK itself, which is always there, making suppression cookie-free.
+ *
+ * CSS rather than unmounting because the chrome lives in a shared server-rendered layout that a
+ * client component cannot take apart.
+ */
+[data-gigora-miniapp="1"] [data-site-chrome] {
+  display: none !important;
+}
+
+/* The bottom nav is gone, so its reserved space must go too or every page ends in dead air. */
+[data-gigora-miniapp="1"] main {
+  padding-bottom: 0 !important;
+}

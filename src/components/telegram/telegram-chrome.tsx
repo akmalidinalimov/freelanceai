@@ -34,6 +34,32 @@ export function TelegramChrome({ markerActive }: { markerActive: boolean }) {
   const pathname = usePathname();
   const correcting = useRef(false);
 
+  // --- Suppression, client-side and cookie-free. ---
+  //
+  // The server marker rides a cookie, and Telegram Desktop's webview does not keep it (measured on
+  // tdesktop 9.6: initData present and fresh, marker cookie absent). The server therefore rendered
+  // our header and bottom nav inside Telegram. initData IS reliably there, so treat the SDK as the
+  // authority it always was and hide the chrome from the client, whatever the cookie did.
+  //
+  // A data attribute plus CSS rather than unmounting: the chrome is server-rendered in a shared
+  // layout that a child client component cannot take apart.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (inTelegram()) {
+      root.dataset.gigoraMiniapp = "1";
+      // Best-effort re-arm so the NEXT launch can suppress server-side and skip this flash. It is
+      // fine for this to be dropped — that is precisely the case this effect exists to cover.
+      if (!markerActive) {
+        document.cookie =
+          window.location.protocol === "https:"
+            ? `${MINIAPP_COOKIE}=1; Path=/; Max-Age=2592000; SameSite=None; Secure; Partitioned`
+            : `${MINIAPP_COOKIE}=1; Path=/; Max-Age=2592000; SameSite=Lax`;
+      }
+    } else {
+      delete root.dataset.gigoraMiniapp;
+    }
+  }, [markerActive]);
+
   // --- The correction. Runs before anything else touches the SDK. ---
   useEffect(() => {
     if (!markerActive || inTelegram() || correctionAttempted) return;

@@ -110,3 +110,25 @@ test("an ancient Telegram client renders instead of throwing", async ({ page }) 
   await expect(page.getByPlaceholder("Xizmat qidirish...")).toBeVisible();
   expect(errors, `no uncaught errors:\n${errors.join("\n")}`).toHaveLength(0);
 });
+
+test("tdesktop case: initData present but NO marker cookie still hides our chrome", async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  // Reproduces what the founder measured on Telegram Desktop 9.6: initData present and 2s fresh,
+  // marker cookie absent because that webview did not keep it. The server therefore rendered our
+  // header and bottom nav INSIDE Telegram. Suppression must not depend on the cookie.
+  await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
+  await page.goto("/uz/gigs"); // deliberately NO ?tgapp=1 and no cookie
+
+  await expect(page.locator(HEADER)).toBeHidden();
+  await expect(page.locator(NAV)).toBeHidden();
+  // Content must survive — only the chrome goes.
+  await expect(page.getByPlaceholder("Xizmat qidirish...")).toBeVisible();
+});
+
+test("a plain web visitor is untouched by the client-side suppression", async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  // The same code path runs for everyone, so prove it stays inert without Telegram.
+  await page.goto("/uz/gigs");
+  await expect(page.locator(HEADER).first()).toBeVisible();
+  await expect(page.locator(NAV)).toBeVisible();
+});

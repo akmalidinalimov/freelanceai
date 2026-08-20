@@ -32,6 +32,7 @@ export function MobileBottomNav({ signedIn = false }: { signedIn?: boolean }) {
   return (
     <nav
       aria-label="Primary"
+      data-site-chrome
       className="fixed inset-x-0 bottom-0 z-40 flex justify-around border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 backdrop-blur md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
