@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { upsertTelegramUser, upsertEmailUser, ensureUsername } from "@/lib/users";
 import { consumeMagicToken } from "@/lib/email-auth";
 import { verifyMiniAppInitData } from "@/lib/telegram";
+import { consumeLaunchTicket } from "@/lib/launch-ticket";
 import { stampLastLogin } from "@/server/services/activity";
 import { readCookie, sha256 } from "@/lib/rate-limit";
 import { MINIAPP_COOKIE, crossSiteCookieOptions, isSecureRequest } from "@/lib/miniapp";
@@ -98,6 +99,38 @@ const baseConfig: NextAuthConfig = {
           id: user.id,
           name: user.firstName ?? user.name ?? email.split("@")[0],
           image: user.photoUrl ?? user.image ?? undefined,
+        };
+      },
+    }),
+    Credentials({
+      // Zero-tap sign-in from a bot-issued launch ticket. The webhook knew the user's Telegram id
+      // when they messaged the bot, so it mints a single-use ticket straight into that chat and the
+      // Mini App spends it on open. Unlike the initData bridge this needs nothing from Telegram at
+      // runtime, so it still works when a client hands the page an empty initData.
+      //
+      // The safety rests on consumeLaunchTicket, which will only spend a token that is CONFIRMED,
+      // unexpired, carries a Telegram id, and has NO browser nonce — the last of which is what
+      // makes it structurally impossible to redeem a browser-flow login token here.
+      id: "telegram-ticket",
+      name: "Telegram launch ticket",
+      credentials: { token: { type: "text" } },
+      async authorize(credentials) {
+        const token = typeof credentials?.token === "string" ? credentials.token : "";
+        if (!token) return null;
+        const id = await consumeLaunchTicket(token);
+        if (!id) return null;
+        const user = await upsertTelegramUser({
+          id: id.telegramId,
+          firstName: id.firstName ?? undefined,
+          lastName: id.lastName ?? undefined,
+          username: id.username ?? undefined,
+          authDate: Math.floor(Date.now() / 1000),
+        });
+        if (user.status !== "ACTIVE") return null;
+        return {
+          id: user.id,
+          name: user.firstName ?? user.username ?? "User",
+          image: user.photoUrl ?? undefined,
         };
       },
     }),

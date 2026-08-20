@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { mintLaunchTicket } from "@/lib/launch-ticket";
 import {
   tgSendMessage,
   tgMainKeyboard,
   tgSetChatMenuButton,
   miniAppUrl,
+  tgOpenAppText,
+  tgOpenAppLabel,
   tgWelcome,
   tgHelpText,
   tgOpenButton,
@@ -353,6 +356,30 @@ export async function POST(request: Request) {
       // Welcome + the always-visible role-aware keyboard + Menu Button → Mini App.
       const isAdmin = isAdminTelegramId(from.id, process.env.ADMIN_TELEGRAM_IDS);
       void tgSetChatMenuButton(from.id, locale);
+      // Zero-tap sign-in: mint a single-use launch ticket into this chat so the very first tap
+      // lands them INSIDE the app already signed in. Deliberately an inline button on this one
+      // message, never the persistent keyboard or the menu button — those live for months, and a
+      // long-lived ticket is a standing key. Once this establishes the session, the cookie carries
+      // every later launch.
+      void (async () => {
+        try {
+          const tkt = await mintLaunchTicket({
+            telegramId: String(from.id),
+            firstName: from.first_name,
+            lastName: from.last_name,
+            username: from.username,
+            locale,
+          });
+          await tgSendMessage(from.id, tgOpenAppText(locale), {
+            inline_keyboard: [
+              [{ text: tgOpenAppLabel(locale), web_app: { url: miniAppUrl(locale, `/enter?tkt=${tkt}`) } }],
+            ],
+          });
+        } catch (err) {
+          // Never block /start on this — the reply keyboard below is still a working way in.
+          console.error("launch ticket failed", err);
+        }
+      })();
       // Give admins the ops commands (/stats, /pending, /broadcast) in their "/" autocomplete.
       if (isAdmin) void tgSetChatCommands(from.id, ADMIN_BOT_COMMANDS);
       void tgSendMessage(

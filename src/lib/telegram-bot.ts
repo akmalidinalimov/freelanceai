@@ -262,6 +262,25 @@ export async function tgSetChatCommands(
   }
 }
 
+/**
+ * Copy for the zero-tap launch message sent on /start. Localised: the bot's strings were hardcoded
+ * Uzbek for a long time, and a Russian-speaking buyer reading Uzbek at the exact moment they sign
+ * in is where we lose them.
+ */
+const OPEN_APP_COPY: Record<Loc, { text: string; label: string }> = {
+  uz: { text: "Tayyor! Ilovani ochish uchun bosing — qayta kirish shart emas.", label: "🚀 Gigora'ni ochish" },
+  ru: { text: "Готово! Нажмите, чтобы открыть приложение — входить заново не нужно.", label: "🚀 Открыть Gigora" },
+  en: { text: "Ready. Tap to open the app — no need to sign in again.", label: "🚀 Open Gigora" },
+};
+
+export function tgOpenAppText(locale?: string): string {
+  return OPEN_APP_COPY[asLoc(locale)].text;
+}
+
+export function tgOpenAppLabel(locale?: string): string {
+  return OPEN_APP_COPY[asLoc(locale)].label;
+}
+
 const KEYBOARD_LABELS: Record<Loc, Record<string, string>> = {
   uz: {
     search: "🔍 Qidirish", messages: "📨 Xabarlar", orders: "🛒 Buyurtmalarim",
