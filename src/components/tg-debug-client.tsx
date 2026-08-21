@@ -34,12 +34,33 @@ export function TgDebugClient() {
         session = "session check failed";
       }
 
+      // Ask the server WHICH check fails. NextAuth collapses every authorize() failure into one
+      // opaque "CredentialsSignin", so this is the only way to tell an HMAC mismatch from a stale
+      // auth_date from a malformed user payload.
+      let verify = "not attempted";
+      if (initData) {
+        try {
+          const vr = await fetch("/api/telegram/initdata-debug", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ initData }),
+          });
+          const v = await vr.json();
+          verify = vr.ok
+            ? `hash ${v.hashMatches ? "OK" : "MISMATCH"} · fresh ${v.freshWithin600s ? "OK" : "NO"} · token ${v.botTokenLength} chars · sig ${v.signaturePresentAndExcluded ? "yes" : "no"}`
+            : `${vr.status}: ${v.error ?? "error"}`;
+        } catch {
+          verify = "request failed";
+        }
+      }
+
       const next: Row[] = [
         { label: "initData present", value: initData ? `yes (${initData.length} chars)` : "NO — this is the problem", ok: Boolean(initData) },
         { label: "initData age", value: authAge, ok: authAge === "n/a" ? null : Number(authAge.replace(/\D/g, "")) < 600 },
         { label: "raw #tgWebAppData in URL", value: rawFrag ? "yes" : "no", ok: rawFrag },
         { label: "marker cookie", value: document.cookie.includes("gigora_tgapp") ? "yes" : "no", ok: document.cookie.includes("gigora_tgapp") },
         { label: "session", value: session, ok: session === "SIGNED IN" },
+        { label: "server verify", value: verify, ok: verify.includes("hash OK") ? verify.includes("fresh OK") : false },
         { label: "platform", value: String(wa?.platform ?? "unknown"), ok: null },
         { label: "Telegram version", value: String(wa?.version ?? "unknown"), ok: null },
         { label: "SDK loaded", value: wa ? "yes" : "no", ok: Boolean(wa) },
