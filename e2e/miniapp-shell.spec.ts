@@ -51,7 +51,7 @@ test("REGRESSION: a plain web visitor keeps the full chrome", async ({ page }) =
   await expect(page.getByText("Gigora").first()).toBeVisible();
 });
 
-test("bot link: the marker suppresses our chrome and is stripped from the URL", async ({ page }) => {
+test("bot link: the marker strips the URL and hides only DUPLICATED chrome", async ({ page }) => {
   await page.setViewportSize(PHONE);
   // A real Mini App launch: the bot's marked URL, with Telegram present.
   await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
@@ -60,17 +60,16 @@ test("bot link: the marker suppresses our chrome and is stripped from the URL", 
   // The param must not survive — otherwise it travels when a user copies the address.
   await expect(page).toHaveURL(/\/uz\/gigs$/);
 
-  await expect(page.locator(HEADER)).toHaveCount(0);
-  await expect(page.locator(NAV)).toHaveCount(0);
-  // Content still renders; only the chrome is gone.
+  // The header STAYS: it carries the account menu, and Telegram draws no account controls.
+  // Hiding it left a signed-out user with no route to login at all (reported from tdesktop 9.6).
+  await expect(page.locator(HEADER).first()).toBeVisible();
+  await expect(page.locator('[data-miniapp-hide]').first()).toBeHidden(); // the brand IS duplicated
+  // The bottom nav STAYS too — Telegram supplies no app navigation.
+  await expect(page.locator(NAV)).toBeVisible();
   await expect(page.getByPlaceholder("Xizmat qidirish...")).toBeVisible();
-
-  // And the marker persists across in-app navigation via the cookie.
-  await page.goto("/uz/search");
-  await expect(page.locator(HEADER)).toHaveCount(0);
 });
 
-test("TRAP FIX: marker set but no Telegram SDK restores the chrome", async ({ page }) => {
+test("TRAP FIX: marker set but no Telegram SDK restores the full chrome", async ({ page }) => {
   await page.setViewportSize(PHONE);
   // Someone copied a ?tgapp=1 URL out of the Mini App and opened it in a normal browser.
   // Without the correction they would have no header, no bottom nav, and no Telegram back
@@ -80,8 +79,12 @@ test("TRAP FIX: marker set but no Telegram SDK restores the chrome", async ({ pa
   await expect(page.locator(HEADER).first(), "chrome must come back").toBeVisible({ timeout: 10_000 });
   await expect(page.locator(NAV)).toBeVisible();
 
-  const cookies = await page.context().cookies();
-  expect(cookies.find((c) => c.name === "gigora_tgapp"), "the lying cookie must be cleared").toBeUndefined();
+  // Poll rather than read once: the header is now always rendered, so its visibility no longer
+  // gates on the correction having run. Asserting immediately would race the effect.
+  await expect(async () => {
+    const cookies = await page.context().cookies();
+    expect(cookies.find((c) => c.name === "gigora_tgapp"), "the lying cookie must be cleared").toBeUndefined();
+  }).toPass({ timeout: 10_000 });
 });
 
 test("an empty initData is NOT treated as Telegram", async ({ page }) => {
@@ -119,9 +122,10 @@ test("tdesktop case: initData present but NO marker cookie still hides our chrom
   await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
   await page.goto("/uz/gigs"); // deliberately NO ?tgapp=1 and no cookie
 
-  await expect(page.locator(HEADER)).toBeHidden();
-  await expect(page.locator(NAV)).toBeHidden();
-  // Content must survive — only the chrome goes.
+  // Only the duplicated brand hides; the account menu and navigation must remain reachable.
+  await expect(page.locator('[data-miniapp-hide]').first()).toBeHidden();
+  await expect(page.locator(HEADER).first()).toBeVisible();
+  await expect(page.locator(NAV)).toBeVisible();
   await expect(page.getByPlaceholder("Xizmat qidirish...")).toBeVisible();
 });
 
@@ -131,4 +135,17 @@ test("a plain web visitor is untouched by the client-side suppression", async ({
   await page.goto("/uz/gigs");
   await expect(page.locator(HEADER).first()).toBeVisible();
   await expect(page.locator(NAV)).toBeVisible();
+});
+
+test("a Mini App user can always reach login and logout", async ({ page }) => {
+  // The regression that prompted this: with the header hidden there was no hamburger, so a
+  // signed-out user inside Telegram had no way to sign in and a signed-in one no way to sign out.
+  await page.setViewportSize(PHONE);
+  await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
+  await page.goto("/uz/gigs?tgapp=1");
+
+  const menu = page.locator("header button").last();
+  await expect(menu, "the hamburger must exist inside Telegram").toBeVisible();
+  await menu.click();
+  await expect(page.getByRole("link", { name: /Kirish|Login|Войти/i }).first()).toBeVisible();
 });

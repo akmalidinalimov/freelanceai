@@ -408,11 +408,14 @@ body::before {
  * CSS rather than unmounting because the chrome lives in a shared server-rendered layout that a
  * client component cannot take apart.
  */
-[data-gigora-miniapp="1"] [data-site-chrome] {
+/*
+ * What Telegram actually draws is a TITLE BAR and a BACK BUTTON. It does not draw app navigation
+ * and it does not draw account controls. Phase 1 hid our header and bottom nav on the assumption
+ * that it did, which left a signed-out user with no way to reach login and no way to navigate —
+ * reported from a real device. So only genuinely duplicated chrome is hidden now: the brand mark
+ * (Telegram already shows the app name) and the footer. The header keeps the account menu, and the
+ * bottom nav keeps navigation.
+ */
+[data-gigora-miniapp="1"] [data-miniapp-hide] {
   display: none !important;
-}
-
-/* The bottom nav is gone, so its reserved space must go too or every page ends in dead air. */
-[data-gigora-miniapp="1"] main {
-  padding-bottom: 0 !important;
 }

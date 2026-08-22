@@ -27,10 +27,11 @@ export async function SiteHeader() {
   }
 
   return (
-    <header data-site-chrome className="sticky top-0 z-40 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/80 backdrop-blur">
+    <header className="sticky top-0 z-40 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link
           href="/"
+          data-miniapp-hide
           className="font-display flex items-center gap-1.5 text-lg font-extrabold tracking-tight"
         >
           <span className="text-[hsl(var(--primary-ink))]">●</span>

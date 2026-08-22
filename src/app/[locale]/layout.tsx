@@ -111,15 +111,16 @@ export default async function LocaleLayout({
             {skip}
           </a>
           {impName && <ImpersonationBanner targetName={impName} />}
-          {!miniApp && <SiteHeader />}
+          <SiteHeader />
           {showReconnect && botUsername && (
             <BotReconnectBanner deepLink={`https://t.me/${botUsername}`} botName={`@${botUsername}`} />
           )}
-          <main id="main" className={miniApp ? "flex-1" : "flex-1 pb-16 md:pb-0"}>
+          {/* pb-16 unconditionally now: the bottom nav renders in the Mini App too. */}
+          <main id="main" className="flex-1 pb-16 md:pb-0">
             {children}
           </main>
           {!miniApp && <SiteFooter />}
-          {!miniApp && <MobileBottomNav signedIn={Boolean(user)} />}
+          <MobileBottomNav signedIn={Boolean(user)} />
           {!miniApp && <CookieConsent />}
           </UIProviders>
         </NextIntlClientProvider>
