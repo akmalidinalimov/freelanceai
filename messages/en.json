@@ -272,9 +272,9 @@
     "tgManualBody": "Tap Start in the bot once — everything continues by itself after that.",
     "tgOpenBot": "Sign in with Telegram",
     "tgRetry": "Try again",
-    "tgBotWaitTitle": "Signing in through Telegram",
-    "tgBotWaitBody": "The @{bot} chat opened and the request was sent automatically. Come back here and this page continues by itself. If the bot shows a Start button, tap it once.",
-    "tgImBack": "I am back — check now",
+    "tgBotWaitTitle": "Sent to the bot",
+    "tgBotWaitBody": "In the @{bot} chat, tap “Open Gigora” — that button signs you in. Coming back here also works.",
+    "tgImBack": "I signed in — check",
     "tgBrowseGuest": "Browse services"
   },
   "Onboarding": {

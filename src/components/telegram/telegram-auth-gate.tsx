@@ -149,8 +149,13 @@ export function TelegramAuthGate({
     return () => clearTimeout(id);
   }, [state]);
 
-  // Returning from the bot chat: re-check the moment the app is visible again, rather than making
-  // the user wait out a timer on a screen that looks stuck.
+  // Returning from the bot chat: re-check the moment the app is visible again.
+  //
+  // This is a CONVENIENCE, not the mechanism. The deep link carries no correlator tying the
+  // /start back to this WebView, so nothing can push a session here. What actually signs the user
+  // in is the launch-ticket button the bot just sent; if they tap it, the second WebView shares
+  // this cookie jar and the poll below notices. The copy says so plainly rather than promising a
+  // page that continues by itself.
   useEffect(() => {
     if (state !== "botWaiting") return;
     const recheck = async () => {

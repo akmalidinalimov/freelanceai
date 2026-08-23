@@ -272,9 +272,9 @@
     "tgManualBody": "Botda bir marta «Start» ni bosing — keyin hammasi oʻzi davom etadi.",
     "tgOpenBot": "Telegram orqali kirish",
     "tgRetry": "Qayta urinish",
-    "tgBotWaitTitle": "Telegram orqali kirilmoqda",
-    "tgBotWaitBody": "@{bot} bot ochildi va kirish avtomatik yuborildi. Shu yerga qayting — sahifa oʻzi davom etadi. Agar bot «Start» tugmasini koʻrsatsa, bir marta bosing.",
-    "tgImBack": "Qaytdim — tekshirish",
+    "tgBotWaitTitle": "Botga kirish yuborildi",
+    "tgBotWaitBody": "@{bot} chatida «Гigora'ni ochish» tugmasini bosing — shu bilan kirasiz. Bu yerga qaytsangiz ham davom etadi.",
+    "tgImBack": "Kirdim — tekshirish",
     "tgBrowseGuest": "Xizmatlarni koʻrish"
   },
   "Onboarding": {
