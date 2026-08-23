@@ -270,10 +270,10 @@
     "tgSlowHint": "Sekin ketyaptimi? Boshqa yoʻl bilan kiring",
     "tgManualTitle": "Avtomatik kirish ishlamadi",
     "tgManualBody": "Botda bir marta «Start» ni bosing — keyin hammasi oʻzi davom etadi.",
-    "tgOpenBot": "Botni ochish va kirish",
+    "tgOpenBot": "Telegram orqali kirish",
     "tgRetry": "Qayta urinish",
-    "tgBotWaitTitle": "Botda «Start» ni bosing",
-    "tgBotWaitBody": "@{bot} chatini ochdik. «Start» ni bosing va shu yerga qayting.",
+    "tgBotWaitTitle": "Telegram orqali kirilmoqda",
+    "tgBotWaitBody": "@{bot} bot ochildi va kirish avtomatik yuborildi. Shu yerga qayting — sahifa oʻzi davom etadi. Agar bot «Start» tugmasini koʻrsatsa, bir marta bosing.",
     "tgImBack": "Qaytdim — tekshirish",
     "tgBrowseGuest": "Xizmatlarni koʻrish"
   },

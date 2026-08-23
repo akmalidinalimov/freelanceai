@@ -270,10 +270,10 @@
     "tgSlowHint": "Taking too long? Sign in another way",
     "tgManualTitle": "Automatic sign-in did not work",
     "tgManualBody": "Tap Start in the bot once — everything continues by itself after that.",
-    "tgOpenBot": "Open the bot and sign in",
+    "tgOpenBot": "Sign in with Telegram",
     "tgRetry": "Try again",
-    "tgBotWaitTitle": "Tap Start in the bot",
-    "tgBotWaitBody": "We opened the @{bot} chat. Tap Start and come back here.",
+    "tgBotWaitTitle": "Signing in through Telegram",
+    "tgBotWaitBody": "The @{bot} chat opened and the request was sent automatically. Come back here and this page continues by itself. If the bot shows a Start button, tap it once.",
     "tgImBack": "I am back — check now",
     "tgBrowseGuest": "Browse services"
   },

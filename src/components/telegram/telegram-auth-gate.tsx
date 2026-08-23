@@ -55,6 +55,7 @@ export function TelegramAuthGate({
   const [state, setState] = useState<State>(serverSaysMiniApp ? "detecting" : "web");
   const [slow, setSlow] = useState(false);
   const [who, setWho] = useState<{ name?: string; photoUrl?: string } | null>(null);
+  const [reason, setReason] = useState<string | null>(null);
   const started = useRef(false);
 
   const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : browseHref;
@@ -87,6 +88,32 @@ export function TelegramAuthGate({
       // the next request for the destination to render as signed in.
       window.location.replace(dest);
       return;
+    }
+    // Ask the server WHY, because next-auth collapses every authorize() failure into one opaque
+    // "CredentialsSignin". Without this the only way to tell an HMAC mismatch from a stale
+    // auth_date is a separate admin command, which is a poor thing to need mid-sign-in.
+    try {
+      const r = await fetch("/api/telegram/initdata-debug", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ initData }),
+      });
+      if (r.ok) {
+        const v = await r.json();
+        setReason(
+          v.hashMatches === false
+            ? "E-TG-HMAC"
+            : v.freshWithin600s === false
+              ? "E-TG-STALE"
+              : v.hasUser === false
+                ? "E-TG-NOUSER"
+                : "E-TG-OTHER"
+        );
+      } else {
+        setReason("E-TG-" + r.status);
+      }
+    } catch {
+      setReason("E-TG-NET");
     }
     setState("manual");
   }, [dest, tg]);
@@ -234,6 +261,11 @@ export function TelegramAuthGate({
         {t("tgRetry")}
       </button>
       {browse}
+      {reason && (
+        <span className="text-[10px] text-[hsl(var(--muted-foreground))]" data-testid="tg-reason">
+          {reason}
+        </span>
+      )}
     </>
   );
 }
