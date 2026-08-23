@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { isAdminTelegramId } from "@/lib/roles";
+import { verifyMiniAppInitData } from "@/lib/telegram";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Says WHICH initData check fails, because NextAuth cannot.
@@ -48,7 +50,27 @@ export async function POST(request: Request) {
   const authDate = Number(fields.auth_date);
   const ageSeconds = authDate ? Math.floor(Date.now() / 1000) - authDate : null;
 
+  // Run the REAL verifier and the REAL account lookup, not a re-implementation. Every input to
+  // the signature has now been checked and found correct — the bot token belongs to the right bot,
+  // the check string excludes hash and signature, the payload is seconds old — so whatever is
+  // rejecting sign-in happens AFTER verification, and only the actual code path can show it.
+  const verified = verifyMiniAppInitData(initData, { maxAgeSeconds: 600 });
+  const account = verified
+    ? await prisma.user.findUnique({
+        where: { telegramId: verified.id },
+        select: { id: true, status: true, username: true, telegramId: true },
+      })
+    : null;
+
   return NextResponse.json({
+    // The decisive line: what the provider itself would do with this payload.
+    verifierAccepts: verified !== null,
+    accountExists: account !== null,
+    accountStatus: account?.status ?? null,
+    // `authorize` returns null for anything other than ACTIVE, which looks identical to a bad
+    // signature from the client. This is the one that separates them.
+    wouldSignIn: verified !== null && account !== null && account.status === "ACTIVE",
+    accountUsername: account?.username ?? null,
     botTokenConfigured: Boolean(botToken),
     botTokenLength: botToken.length, // a truncated or quoted env var is the classic cause
     hashPresent: Boolean(fields.hash),
