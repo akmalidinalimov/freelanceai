@@ -10,6 +10,7 @@ import { describe, it, expect, afterAll, beforeEach, vi } from "vitest";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { upsertTelegramUser } from "@/lib/users";
+import { mintLaunchTicket, consumeLaunchTicket } from "@/lib/launch-ticket";
 
 const made: string[] = [];
 const tgId = () => {
@@ -115,5 +116,35 @@ describe("/start remembers the Telegram id", () => {
 
     const user = await prisma.user.findUniqueOrThrow({ where: { telegramId: id } });
     expect(user.status).toBe("SUSPENDED");
+  });
+});
+
+/**
+ * Every reply to /start must be a signed-in way in.
+ *
+ * The ticket used to be minted only in the welcome branch, which the onboarding divert returns
+ * ahead of. So any account with `onboardingCompleted: false` — every account created before that
+ * default changed — got a button that opened the Mini App SIGNED OUT, and the bot-hop fallback had
+ * nothing to hand back at all. That is the dead end the founder hit on a real device.
+ */
+describe("/start always leaves a usable way in", () => {
+  it("mints a redeemable ticket for an account that has NOT completed onboarding", async () => {
+    const id = tgId();
+    await onStart(id);
+    await prisma.user.update({ where: { telegramId: id }, data: { onboardingCompleted: false } });
+
+    // What the webhook now does before any branch can return.
+    const ticket = await mintLaunchTicket({ telegramId: id, firstName: "T", locale: "uz" });
+    expect(ticket).toMatch(/^bl_[0-9a-f]{48}$/);
+
+    const redeemed = await consumeLaunchTicket(ticket);
+    expect(redeemed?.telegramId).toBe(id);
+  });
+
+  it("the ticket is single-use, so a forwarded message cannot reuse it", async () => {
+    const id = tgId();
+    const ticket = await mintLaunchTicket({ telegramId: id, firstName: "T", locale: "uz" });
+    expect(await consumeLaunchTicket(ticket)).not.toBeNull();
+    expect(await consumeLaunchTicket(ticket)).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signInOnce, hasSession } from "@/components/telegram/signin-once";
 import { useTranslations } from "next-intl";
 import { useTelegram, inTelegram, getWebApp } from "@/components/telegram/use-telegram";
 import { Avatar } from "@/components/ui/avatar";
@@ -70,50 +70,54 @@ export function TelegramAuthGate({
     setState("authenticating");
 
     // Already signed in from an earlier launch? Then there is nothing to do but leave.
-    try {
-      const s = await fetch("/api/auth/session", { cache: "no-store" }).then((r) => r.json());
-      if (s?.user?.id) {
-        setState("success");
-        window.location.replace(dest);
-        return;
-      }
-    } catch {
-      /* fall through and try to sign in */
+    if (await hasSession()) {
+      setState("success");
+      window.location.replace(dest);
+      return;
     }
 
-    const res = await signIn("telegram-miniapp", { initData, redirect: false }).catch(() => null);
-    if (res?.ok && !res.error) {
+    const res = await signInOnce("telegram-miniapp", { initData });
+    if (res.ok) {
       setState("success");
       // A full load, not a client transition: the session cookie must be attached by the server on
       // the next request for the destination to render as signed in.
       window.location.replace(dest);
       return;
     }
-    // Ask the server WHY, because next-auth collapses every authorize() failure into one opaque
-    // "CredentialsSignin". Without this the only way to tell an HMAC mismatch from a stale
-    // auth_date is a separate admin command, which is a poor thing to need mid-sign-in.
-    try {
-      const r = await fetch("/api/telegram/initdata-debug", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ initData }),
-      });
-      if (r.ok) {
-        const v = await r.json();
-        setReason(
-          v.hashMatches === false
-            ? "E-TG-HMAC"
-            : v.freshWithin600s === false
-              ? "E-TG-STALE"
-              : v.hasUser === false
-                ? "E-TG-NOUSER"
-                : "E-TG-OTHER"
-        );
-      } else {
-        setReason("E-TG-" + r.status);
-      }
-    } catch {
+
+    // Do not trust our own failure before re-checking. This screen was being shown to users who
+    // WERE signed in: a sibling attempt won the csrf race and created the session while this one
+    // lost it, and nothing here looked again.
+    if (await hasSession()) {
+      setState("success");
+      window.location.replace(dest);
+      return;
+    }
+    // Name the failure. Three of the four classes are already in next-auth's own reply, so most of
+    // the time this costs no request at all — and never leaks anything, since it is the value the
+    // server just handed this client.
+    if (res.network) {
       setReason("E-TG-NET");
+    } else if (res.error === "MissingCSRF") {
+      setReason("E-TG-CSRF");
+    } else if (res.error === "Configuration") {
+      setReason("E-TG-SRV");
+    } else {
+      // Staleness is computable here: auth_date is in the payload we already hold.
+      const authDate = Number(new URLSearchParams(initData).get("auth_date"));
+      const age = Number.isFinite(authDate) ? Math.floor(Date.now() / 1000) - authDate : null;
+      if (age !== null && (age > 600 || age < -300)) {
+        setReason("E-TG-STALE");
+      } else {
+        const r = await fetch("/api/telegram/initdata-reason", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ initData }),
+        })
+          .then((x) => (x.ok ? x.json() : null))
+          .catch(() => null);
+        setReason(r?.reason ? `E-TG-${String(r.reason).toUpperCase()}` : "E-TG-OTHER");
+      }
     }
     setState("manual");
   }, [dest, tg]);

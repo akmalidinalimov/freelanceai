@@ -52,12 +52,24 @@ export async function startBotOnboarding(
   tgId: number | string,
   firstName: string,
   _lastName: string,
-  locale?: string | null
+  locale?: string | null,
+  /**
+   * A single-use launch ticket, so the Mini App this button opens arrives SIGNED IN.
+   *
+   * Without one this message was a dead end: it is the branch every account with
+   * `onboardingCompleted: false` takes on /start — which is every account created before that
+   * default changed — and the form it opens is behind an auth guard, so the user landed on a login
+   * screen having just tapped a button in an authenticated chat.
+   */
+  ticket?: string | null
 ): Promise<void> {
   const L = asLoc(locale);
+  const path = ticket
+    ? `/enter?tkt=${ticket}&next=${encodeURIComponent(`/${asLoc(locale)}/onboarding`)}`
+    : "/onboarding";
   await tgSendMessage(tgId, T.kickoff[L](firstName || ""), {
     inline_keyboard: [
-      [{ text: T.openForm[L], web_app: { url: miniAppUrl(locale ?? undefined, "/onboarding") } }],
+      [{ text: T.openForm[L], web_app: { url: miniAppUrl(locale ?? undefined, path) } }],
     ],
   });
 }

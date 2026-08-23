@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import { useCallback, useRef } from "react";
-import { signIn } from "next-auth/react";
+import { signInOnce, hasSession } from "@/components/telegram/signin-once";
 import { useRouter } from "next/navigation";
 
 /**
@@ -29,17 +29,6 @@ declare global {
   }
 }
 
-/** True when the browser currently holds a real Auth.js session. */
-async function hasSession(): Promise<boolean> {
-  try {
-    const r = await fetch("/api/auth/session", { cache: "no-store" });
-    const j = await r.json();
-    return Boolean(j?.user?.id);
-  } catch {
-    return false;
-  }
-}
-
 export function TelegramMiniAppBootstrap() {
   const router = useRouter();
   const running = useRef(false);
@@ -58,8 +47,11 @@ export function TelegramMiniAppBootstrap() {
       // Already signed in (cookie survived from an earlier launch) → nothing to do.
       if (await hasSession()) return;
 
-      const res = await signIn("telegram-miniapp", { initData, redirect: false }).catch(() => null);
-      if (!res?.ok || res.error) return; // stale/replayed initData — leave the login UI up
+      // Shared with TelegramAuthGate. Both used to call signIn() independently on the same page
+      // load, minting two csrf cookies and making one of them fail MissingCSRF — which showed the
+      // user a failure screen over a session that had actually been created.
+      const res = await signInOnce("telegram-miniapp", { initData });
+      if (!res.ok) return; // the gate renders the reason; nothing useful to do here
 
       // Follow the destination the guard preserved, else re-render as logged-in.
       const next = new URLSearchParams(window.location.search).get("next");

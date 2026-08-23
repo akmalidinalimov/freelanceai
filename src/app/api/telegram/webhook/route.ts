@@ -385,11 +385,36 @@ export async function POST(request: Request) {
       }
     }
 
+    // Mint the ticket BEFORE any branch returns, so every reply to /start is a signed-in way in.
+    // It used to be minted only in the welcome branch below, which the onboarding divert returns
+    // ahead of — so every account with `onboardingCompleted: false` (i.e. every account created
+    // before that default changed) got a button that opened the Mini App SIGNED OUT, and the
+    // bot-hop fallback had nothing to hand back at all.
+    const ticket =
+      text.startsWith("/start") || text === "/menu"
+        ? await mintLaunchTicket({
+            telegramId: String(from.id),
+            firstName: from.first_name,
+            lastName: from.last_name,
+            username: from.username,
+            locale,
+          }).catch((err) => {
+            console.error("launch ticket failed", err);
+            return null;
+          })
+        : null;
+
     // Unfinished profile → resume the conversation instead of the generic welcome.
     // `existedBefore` matters: without it the row we just created above would make this true on a
     // first /start and divert the new user into the onboarding nudge instead of the welcome.
     if (existedBefore && account && !account.onboardingCompleted && text !== "/help") {
-      void startBotOnboarding(from.id, account.firstName ?? from.first_name ?? "", from.last_name ?? "", locale);
+      void startBotOnboarding(
+        from.id,
+        account.firstName ?? from.first_name ?? "",
+        from.last_name ?? "",
+        locale,
+        ticket
+      );
       return NextResponse.json({ ok: true });
     }
 
@@ -404,25 +429,13 @@ export async function POST(request: Request) {
       // message, never the persistent keyboard or the menu button — those live for months, and a
       // long-lived ticket is a standing key. Once this establishes the session, the cookie carries
       // every later launch.
-      void (async () => {
-        try {
-          const tkt = await mintLaunchTicket({
-            telegramId: String(from.id),
-            firstName: from.first_name,
-            lastName: from.last_name,
-            username: from.username,
-            locale,
-          });
-          await tgSendMessage(from.id, tgOpenAppText(locale), {
-            inline_keyboard: [
-              [{ text: tgOpenAppLabel(locale), web_app: { url: miniAppUrl(locale, `/enter?tkt=${tkt}`) } }],
-            ],
-          });
-        } catch (err) {
-          // Never block /start on this — the reply keyboard below is still a working way in.
-          console.error("launch ticket failed", err);
-        }
-      })();
+      if (ticket) {
+        void tgSendMessage(from.id, tgOpenAppText(locale), {
+          inline_keyboard: [
+            [{ text: tgOpenAppLabel(locale), web_app: { url: miniAppUrl(locale, `/enter?tkt=${ticket}`) } }],
+          ],
+        });
+      }
       // Give admins the ops commands (/stats, /pending, /broadcast) in their "/" autocomplete.
       if (isAdmin) void tgSetChatCommands(from.id, ADMIN_BOT_COMMANDS);
       void tgSendMessage(

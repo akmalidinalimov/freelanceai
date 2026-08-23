@@ -34,7 +34,12 @@ export async function POST(request: Request) {
     /* reported below as hasUser:false */
   }
   if (!claimedId || !isAdminTelegramId(claimedId, process.env.ADMIN_TELEGRAM_IDS)) {
-    return NextResponse.json({ error: "not an admin id" }, { status: 403 });
+    // A UNIFORM response, not a 403. Answering 403-vs-200 on an UNVERIFIED claimed id turned this
+    // into an admin-id enumeration oracle: anyone could post {"user":{"id":N}} and learn from the
+    // status code whether N is on ADMIN_TELEGRAM_IDS. It also produced "E-TG-403" on the sign-in
+    // screen — a permissions code masquerading as a sign-in reason. Non-admins get the coarse
+    // endpoint instead: /api/telegram/initdata-reason.
+    return NextResponse.json({ reason: "see /api/telegram/initdata-reason" });
   }
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN ?? "";
