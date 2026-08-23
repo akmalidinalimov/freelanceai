@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { useCallback, useRef } from "react";
 import { signInOnce, hasSession } from "@/components/telegram/signin-once";
+import { NO_AUTOLOGIN_COOKIE } from "@/lib/miniapp";
 import { useRouter } from "next/navigation";
 
 /**
@@ -46,6 +47,9 @@ export function TelegramMiniAppBootstrap() {
     try {
       // Already signed in (cookie survived from an earlier launch) → nothing to do.
       if (await hasSession()) return;
+      // Just logged out? Then staying out IS the user's intent. Without this the next page load —
+      // which is the logout redirect itself — signs them straight back in from initData.
+      if (document.cookie.includes(`${NO_AUTOLOGIN_COOKIE}=1`)) return;
 
       // Shared with TelegramAuthGate. Both used to call signIn() independently on the same page
       // load, minting two csrf cookies and making one of them fail MissingCSRF — which showed the

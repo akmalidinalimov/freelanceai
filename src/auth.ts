@@ -7,6 +7,7 @@ import { upsertTelegramUser, upsertEmailUser, ensureUsername } from "@/lib/users
 import { consumeMagicToken } from "@/lib/email-auth";
 import { verifyMiniAppInitData } from "@/lib/telegram";
 import { consumeLaunchTicket } from "@/lib/launch-ticket";
+import { shouldExpireSession, absoluteExpiry } from "@/lib/session-policy";
 import { stampLastLogin } from "@/server/services/activity";
 import { readCookie, sha256 } from "@/lib/rate-limit";
 import { MINIAPP_COOKIE, crossSiteCookieOptions, isSecureRequest } from "@/lib/miniapp";
@@ -210,8 +211,13 @@ const baseConfig: NextAuthConfig = {
       return true;
     },
     jwt({ token, user }) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      // Rolling sessions with no ceiling are not sessions, they are permanent credentials. Returning
+      // null here is the supported force-expiry: @auth/core clears the cookie rather than reissuing.
+      if (shouldExpireSession(token, nowSec)) return null;
       if (user?.id) {
         token.uid = user.id;
+        token.absExp = absoluteExpiry(nowSec); // stamped at the login moment, never extended
         // `user` is only present on the sign-in request → this is the login moment.
         stampLastLogin(user.id);
         // Storefront handle for accounts without one (email/Google, or Telegram users

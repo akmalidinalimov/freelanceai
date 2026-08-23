@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { signInOnce, hasSession } from "@/components/telegram/signin-once";
 import { useTranslations } from "next-intl";
 import { useTelegram, inTelegram, getWebApp } from "@/components/telegram/use-telegram";
+import { NO_AUTOLOGIN_COOKIE } from "@/lib/miniapp";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
@@ -61,6 +62,14 @@ export function TelegramAuthGate({
   const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : browseHref;
 
   const attempt = useCallback(async () => {
+    // Reaching the login screen IS the user asking to sign in, which overrides the short
+    // suppression logout sets. Clearing it here keeps the two controls honest: logout keeps you out,
+    // and tapping Kirish lets you back in without waiting the window out.
+    document.cookie =
+      window.location.protocol === "https:"
+        ? `${NO_AUTOLOGIN_COOKIE}=; Max-Age=0; Path=/; SameSite=None; Secure; Partitioned`
+        : `${NO_AUTOLOGIN_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`;
+
     const initData = getWebApp()?.initData ?? "";
     if (!initData) {
       setState("web");

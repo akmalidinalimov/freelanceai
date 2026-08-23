@@ -87,6 +87,20 @@ export function isFramedCrossSite(headers: { get(name: string): string | null })
   return site === "cross-site" || site === "same-site";
 }
 
+/**
+ * Set briefly by logout so the Mini App does not immediately sign the user back in.
+ *
+ * Inside Telegram the bootstrap re-authenticates from initData on every page load, and logout
+ * redirects to "/" — which mounts the bootstrap. The result was a logout button that visibly did
+ * nothing: the session was cleared and recreated before the page finished painting, with no signal
+ * to the user. Not an escalation (whoever holds the device already holds the Telegram account) but
+ * a control that lies about what it did, and no way to hand someone your phone.
+ *
+ * Ten minutes is enough to leave, and short enough that a normal relaunch is still zero-tap.
+ */
+export const NO_AUTOLOGIN_COOKIE = "gigora_no_autologin";
+export const NO_AUTOLOGIN_MAX_AGE = 10 * 60;
+
 /** Header the middleware sets so Server Components (which cannot read cookies mid-render) see it. */
 export const MINIAPP_HEADER = "x-gigora-miniapp";
 

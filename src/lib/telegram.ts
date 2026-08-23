@@ -82,7 +82,7 @@ export function parseInitData(initData: string): Record<string, string> {
 }
 
 /** Constant-time hex comparison. Returns false on any length mismatch. */
-function safeHexEqual(a: string, b: string): boolean {
+export function safeHexEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   try {
     return crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));

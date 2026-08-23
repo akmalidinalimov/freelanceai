@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { isAdminTelegramId } from "@/lib/roles";
-import { verifyMiniAppInitData, parseInitData } from "@/lib/telegram";
+import { verifyMiniAppInitData, parseInitData, safeHexEqual } from "@/lib/telegram";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { isSameOrigin } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -18,6 +20,11 @@ import { prisma } from "@/lib/prisma";
  * to the CLAIMED admin ids anyway, and it never echoes the payload, the hash, or the bot token.
  */
 export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!rateLimit(`tg-debug:${clientIp(request)}`, 20, 60_000)) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const body = (await request.json().catch(() => null)) as { initData?: string } | null;
   const initData = typeof body?.initData === "string" ? body.initData : "";
   if (!initData) return NextResponse.json({ error: "no initData" }, { status: 400 });
@@ -25,21 +32,11 @@ export async function POST(request: Request) {
   // Same parser as the verifier, so the diagnostic can never disagree with it.
   const fields = parseInitData(initData);
 
-  // Gate on the CLAIMED id. Unverified by definition — that is the point, since a failing HMAC is
-  // what we are here to detect — but it keeps the endpoint useless to anyone but us.
   let claimedId = "";
   try {
     claimedId = String((JSON.parse(fields.user ?? "{}") as { id?: unknown }).id ?? "");
   } catch {
     /* reported below as hasUser:false */
-  }
-  if (!claimedId || !isAdminTelegramId(claimedId, process.env.ADMIN_TELEGRAM_IDS)) {
-    // A UNIFORM response, not a 403. Answering 403-vs-200 on an UNVERIFIED claimed id turned this
-    // into an admin-id enumeration oracle: anyone could post {"user":{"id":N}} and learn from the
-    // status code whether N is on ADMIN_TELEGRAM_IDS. It also produced "E-TG-403" on the sign-in
-    // screen — a permissions code masquerading as a sign-in reason. Non-admins get the coarse
-    // endpoint instead: /api/telegram/initdata-reason.
-    return NextResponse.json({ reason: "see /api/telegram/initdata-reason" });
   }
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN ?? "";
@@ -59,6 +56,14 @@ export async function POST(request: Request) {
   // the check string excludes hash and signature, the payload is seconds old — so whatever is
   // rejecting sign-in happens AFTER verification, and only the actual code path can show it.
   const verified = verifyMiniAppInitData(initData, { maxAgeSeconds: 600 });
+
+  // Admin gate AFTER verification, on the VERIFIED id. Gating on the claimed id let anyone probe
+  // ADMIN_TELEGRAM_IDS by watching the response shape change; requiring a valid signature first
+  // means only the real Telegram account can ask, so the answer tells them only about themselves.
+  // Everyone else gets the coarse reason endpoint, which is what the sign-in screen already calls.
+  if (!verified || !isAdminTelegramId(verified.id, process.env.ADMIN_TELEGRAM_IDS)) {
+    return NextResponse.json({ reason: "see /api/telegram/initdata-reason" });
+  }
   const account = verified
     ? await prisma.user.findUnique({
         where: { telegramId: verified.id },
@@ -78,7 +83,8 @@ export async function POST(request: Request) {
     botTokenConfigured: Boolean(botToken),
     botTokenLength: botToken.length, // a truncated or quoted env var is the classic cause
     hashPresent: Boolean(fields.hash),
-    hashMatches: computed === fields.hash,
+    // safeHexEqual, matching the production verifier's constant-time standard rather than ===.
+    hashMatches: safeHexEqual(computed, fields.hash ?? ""),
     signaturePresentAndExcluded: Boolean(fields.signature),
     fieldsInCheckString: Object.keys(fields).filter((k) => k !== "hash" && k !== "signature").sort(),
     ageSeconds,
