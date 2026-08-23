@@ -131,3 +131,63 @@ describe("verifyMiniAppInitData", () => {
     expect(user?.id).toBe("9");
   });
 });
+
+/**
+ * The bug that made every real Mini App sign-in fail with an unexplained "hash MISMATCH".
+ *
+ * Telegram's `query_id` and `signature` are base64 and routinely contain a literal "+". Parsing
+ * initData with URLSearchParams applies form-urlencoded rules, where "+" means SPACE — silently
+ * corrupting the value, the data-check-string and therefore the HMAC. It was invisible because a
+ * hand-built payload with no "+" verified perfectly, which is exactly what our own tests did.
+ */
+describe("verifyMiniAppInitData — values containing '+'", () => {
+  /** Serialise the way Telegram does: a query string, with "+" left literal in the value. */
+  function rawInitData(fields: Record<string, string>) {
+    const signed = { ...fields, hash: signMiniApp(fields) };
+    return Object.entries(signed)
+      .map(([k, v]) => `${k}=${k === "query_id" || k === "hash" ? v : encodeURIComponent(v)}`)
+      .join("&");
+  }
+
+  it("accepts a payload whose query_id contains '+'", () => {
+    const initData = rawInitData({
+      query_id: "AAHdF6IQ+AAAAN0Xoh/Q",
+      auth_date: String(NOW - 3),
+      user: JSON.stringify({ id: 11, first_name: "Akmal", username: "alikhanova_team" }),
+    });
+    expect(initData).toContain("+"); // guard: the test must actually exercise the case
+
+    const user = verifyMiniAppInitData(initData, { botToken: BOT_TOKEN, nowSeconds: NOW });
+    expect(user?.id).toBe("11");
+  });
+
+  it("accepts a payload where BOTH query_id and signature contain '+'", () => {
+    const fields = {
+      query_id: "AA+BB/CC+DD",
+      auth_date: String(NOW - 3),
+      user: JSON.stringify({ id: 12, first_name: "Test" }),
+    };
+    // `signature` is excluded from the check string, so it can be anything — including a "+".
+    const initData = rawInitData(fields) + "&signature=abc+def/ghi";
+    expect(verifyMiniAppInitData(initData, { botToken: BOT_TOKEN, nowSeconds: NOW })?.id).toBe("12");
+  });
+
+  it("still rejects tampering when a '+' is present", () => {
+    // The fix must not become "trust anything with a plus in it".
+    const initData = rawInitData({
+      query_id: "AA+BB",
+      auth_date: String(NOW - 3),
+      user: JSON.stringify({ id: 13, first_name: "Real" }),
+    }).replace("Real", "Fake");
+    expect(verifyMiniAppInitData(initData, { botToken: BOT_TOKEN, nowSeconds: NOW })).toBeNull();
+  });
+
+  it("preserves a literal '+' rather than turning it into a space", () => {
+    const initData = rawInitData({
+      query_id: "X+Y",
+      auth_date: String(NOW - 3),
+      user: JSON.stringify({ id: 14, first_name: "A B" }), // a real space must still decode
+    });
+    expect(verifyMiniAppInitData(initData, { botToken: BOT_TOKEN, nowSeconds: NOW })?.firstName).toBe("A B");
+  });
+});

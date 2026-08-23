@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { isAdminTelegramId } from "@/lib/roles";
-import { verifyMiniAppInitData } from "@/lib/telegram";
+import { verifyMiniAppInitData, parseInitData } from "@/lib/telegram";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -22,9 +22,8 @@ export async function POST(request: Request) {
   const initData = typeof body?.initData === "string" ? body.initData : "";
   if (!initData) return NextResponse.json({ error: "no initData" }, { status: 400 });
 
-  const params = new URLSearchParams(initData);
-  const fields: Record<string, string> = {};
-  for (const [k, v] of params.entries()) fields[k] = v;
+  // Same parser as the verifier, so the diagnostic can never disagree with it.
+  const fields = parseInitData(initData);
 
   // Gate on the CLAIMED id. Unverified by definition — that is the point, since a failing HMAC is
   // what we are here to detect — but it keeps the endpoint useless to anyone but us.

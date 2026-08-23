@@ -51,6 +51,36 @@ function buildDataCheckString(fields: Record<string, string>): string {
     .join("\n");
 }
 
+/**
+ * Parse initData into fields. NOT with URLSearchParams — that is the bug that broke every real
+ * Mini App sign-in.
+ *
+ * `URLSearchParams` follows application/x-www-form-urlencoded, where "+" means SPACE. Telegram's
+ * initData is a plain URL query string whose `query_id` and `signature` are base64, so they
+ * routinely contain a literal "+". Decoding that as a space corrupts the value, which corrupts
+ * the data-check-string, which makes the HMAC mismatch — for every launch that happened to carry
+ * a "+", with no error anywhere and nothing to distinguish it from a wrong bot token.
+ *
+ * Measured: production verified a payload we signed ourselves (no "+" in it) while rejecting the
+ * real ones Telegram sends. `decodeURIComponent` leaves "+" alone, which is the correct reading
+ * for a query string.
+ */
+export function parseInitData(initData: string): Record<string, string> {
+  const fields: Record<string, string> = {};
+  for (const pair of initData.split("&")) {
+    if (!pair) continue;
+    const eq = pair.indexOf("=");
+    if (eq < 0) continue;
+    try {
+      fields[decodeURIComponent(pair.slice(0, eq))] = decodeURIComponent(pair.slice(eq + 1));
+    } catch {
+      // A malformed percent-escape is not a valid payload; leaving the field out makes the hash
+      // mismatch, which is the correct outcome.
+    }
+  }
+  return fields;
+}
+
 /** Constant-time hex comparison. Returns false on any length mismatch. */
 function safeHexEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -133,9 +163,7 @@ export function verifyMiniAppInitData(
   const maxAge = opts.maxAgeSeconds ?? DEFAULT_MAX_AGE_SECONDS;
   const now = opts.nowSeconds ?? Math.floor(Date.now() / 1000);
 
-  const params = new URLSearchParams(initData);
-  const fields: Record<string, string> = {};
-  for (const [k, v] of params.entries()) fields[k] = v;
+  const fields = parseInitData(initData);
 
   const hash = fields.hash;
   if (!hash || !fields.auth_date) return null;
