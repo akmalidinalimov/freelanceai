@@ -215,3 +215,15 @@ test("the web login page still offers every option, and its code stays lazy", as
   // ...but no token is minted and no code shown until the user asks for one.
   await expect(page.locator("body")).not.toContainText(/[A-Z]{2}-[0-9]{2}/);
 });
+
+test("the web login options are in the SERVER html, not just after hydration", async ({ page }) => {
+  // Caught by a deploy check: wrapping the login page in the Telegram gate made its initial state
+  // a spinner, so the server HTML no longer contained the email form. That breaks the no-JS path,
+  // crawlers and first paint — not only the check. The server decides the first paint now.
+  const res = await page.request.get("/uz/login");
+  const html = await res.text();
+  expect(html).toContain("Telegram orqali kirish");
+  expect(html.toLowerCase()).toContain("email");
+  // And no confirmation code is minted for a visitor who has not asked to sign in.
+  expect(html).not.toMatch(/[A-Z]{2}-[0-9]{2}/);
+});

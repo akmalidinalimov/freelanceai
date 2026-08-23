@@ -1,4 +1,6 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
+import { isMiniAppRequest } from "@/lib/miniapp";
 import { redirect } from "@/i18n/navigation";
 import { redirect as nextRedirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
@@ -42,6 +44,7 @@ export default async function LoginPage({
     <TelegramAuthGate
       next={next ?? undefined}
       botUsername={process.env.TELEGRAM_BOT_USERNAME}
+      serverSaysMiniApp={isMiniAppRequest(await headers())}
       browseHref={`/${locale}/gigs`}
     >
     <div className="relative mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-6 px-4 text-center">

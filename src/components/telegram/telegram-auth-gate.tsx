@@ -34,16 +34,25 @@ export function TelegramAuthGate({
   next,
   botUsername,
   browseHref,
+  /**
+   * What the SERVER already concluded from the request. This decides the first paint, and it
+   * matters twice over: a web visitor must get the real login options in the server HTML (no-JS,
+   * crawlers, and first paint all depend on it — a deploy check caught this by noticing the email
+   * form had vanished), while a Telegram user must NOT see those options flash before the gate
+   * takes over. Client detection then confirms or corrects it.
+   */
+  serverSaysMiniApp = false,
   children,
 }: {
   next?: string;
   botUsername?: string;
   browseHref: string;
+  serverSaysMiniApp?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Auth");
   const tg = useTelegram();
-  const [state, setState] = useState<State>("detecting");
+  const [state, setState] = useState<State>(serverSaysMiniApp ? "detecting" : "web");
   const [slow, setSlow] = useState(false);
   const [who, setWho] = useState<{ name?: string; photoUrl?: string } | null>(null);
   const started = useRef(false);
@@ -94,6 +103,7 @@ export function TelegramAuthGate({
         started.current = true;
         void attempt();
       } else if (tries * DETECT_STEP_MS >= DETECT_MS) {
+        // Not Telegram after all: show the ordinary options rather than a spinner.
         clearInterval(id);
         started.current = true;
         setState("web");
