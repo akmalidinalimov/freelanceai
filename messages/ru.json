@@ -153,7 +153,9 @@
     "login": "Войти",
     "dashboard": "Панель",
     "orders": "Заказы",
-    "messages": "Сообщения"
+    "messages": "Сообщения",
+    "logout": "Выйти",
+    "account": "Мой аккаунт"
   },
   "Home": {
     "heroTitle": "AI-видео и изображения для вашего бизнеса",
@@ -262,7 +264,18 @@
     "loginToContinue": "Войдите, чтобы продолжить — это займёт 30 секунд. Ваш выбор сохранится.",
     "miniAppSigningIn": "Выполняем вход…",
     "pairingCodeLabel": "Код подтверждения",
-    "pairingCodeHint": "Сверьте этот код в Telegram-боте и подтвердите"
+    "pairingCodeHint": "Сверьте этот код в Telegram-боте и подтвердите",
+    "tgSigningInNamed": "Привет, {name}! Выполняем вход...",
+    "tgSuccess": "Вы вошли, {name}",
+    "tgSlowHint": "Долго? Войти другим способом",
+    "tgManualTitle": "Автоматический вход не сработал",
+    "tgManualBody": "Нажмите «Start» в боте один раз — дальше всё продолжится само.",
+    "tgOpenBot": "Открыть бота и войти",
+    "tgRetry": "Повторить",
+    "tgBotWaitTitle": "Нажмите «Start» в боте",
+    "tgBotWaitBody": "Мы открыли чат @{bot}. Нажмите «Start» и вернитесь сюда.",
+    "tgImBack": "Я вернулся — проверить",
+    "tgBrowseGuest": "Смотреть услуги"
   },
   "Onboarding": {
     "title": "Добро пожаловать! 👋",

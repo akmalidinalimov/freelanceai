@@ -78,9 +78,17 @@ export async function upsertTelegramUser(
       lastName: tg.lastName,
       photoUrl: tg.photoUrl,
       role: targetRole,
-      // The home page routes not-yet-onboarded users to /onboarding exactly once
-      // (names arrive prefilled from Telegram, so it's a confirm + one tap).
-      onboardingCompleted: false,
+      // Telegram already told us who they are — name, username, photo — so there is nothing left
+      // to ask before letting someone browse. Marking them complete at creation is what removes
+      // the form that used to stand between tapping Start and seeing the marketplace.
+      //
+      // This also settles a contradiction: the home page carried a comment saying Telegram users
+      // "are onboarded at creation and skip this entirely" while this line set `false`, so every
+      // one of them hit the wall the comment said they skipped.
+      //
+      // Selling still needs real credentials (experience, portfolio); those are collected at the
+      // moment someone chooses to sell, where the answers actually mean something.
+      onboardingCompleted: true,
     },
   });
 }

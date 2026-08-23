@@ -16,6 +16,7 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { TelegramChrome } from "@/components/telegram/telegram-chrome";
 import { isMiniAppRequest } from "@/lib/miniapp";
 import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
+import { SessionKeepalive } from "@/components/session-keepalive";
 import { UIProviders } from "@/components/ui-providers";
 import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
 import { ReferralCapture } from "@/components/referral-capture";
@@ -129,6 +130,9 @@ export default async function LocaleLayout({
         </Suspense>
         <TelegramChrome markerActive={miniApp} />
         <TelegramMiniAppBootstrap />
+        {/* Only for signed-in users: it exists to extend a session, so there is nothing to do
+            for a visitor without one. */}
+        {user && <SessionKeepalive />}
         <ClarityAnalytics />
         <MetaPixel />
       </body>

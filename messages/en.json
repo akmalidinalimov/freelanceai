@@ -153,7 +153,9 @@
     "login": "Log in",
     "dashboard": "Dashboard",
     "orders": "Orders",
-    "messages": "Messages"
+    "messages": "Messages",
+    "logout": "Log out",
+    "account": "My account"
   },
   "Home": {
     "heroTitle": "AI videos and images for your business",
@@ -262,7 +264,18 @@
     "loginToContinue": "Sign in to continue — takes 30 seconds. Your selection is saved.",
     "miniAppSigningIn": "Signing you in…",
     "pairingCodeLabel": "Confirmation code",
-    "pairingCodeHint": "Match this code in the Telegram bot, then confirm"
+    "pairingCodeHint": "Match this code in the Telegram bot, then confirm",
+    "tgSigningInNamed": "Hi {name} — signing you in...",
+    "tgSuccess": "You are signed in, {name}",
+    "tgSlowHint": "Taking too long? Sign in another way",
+    "tgManualTitle": "Automatic sign-in did not work",
+    "tgManualBody": "Tap Start in the bot once — everything continues by itself after that.",
+    "tgOpenBot": "Open the bot and sign in",
+    "tgRetry": "Try again",
+    "tgBotWaitTitle": "Tap Start in the bot",
+    "tgBotWaitBody": "We opened the @{bot} chat. Tap Start and come back here.",
+    "tgImBack": "I am back — check now",
+    "tgBrowseGuest": "Browse services"
   },
   "Onboarding": {
     "title": "Welcome aboard! 👋",

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { NotificationBell } from "@/components/notification-bell";
 import { MobileMenu } from "@/components/mobile-menu";
+import { Avatar } from "@/components/ui/avatar";
 import { getCurrentUser } from "@/lib/session";
 
 export async function SiteHeader() {
@@ -82,11 +83,17 @@ export async function SiteHeader() {
                   {t("Dash.admin")}
                 </Link>
               )}
+              {/* Identity is a LINK, never a submit. This used to be the logout form's button
+                  with the user's own name as its label, so tapping your name signed you out. */}
+              <Link href="/dashboard/settings" className="inline-flex items-center gap-2">
+                <Avatar src={user.photoUrl} name={user.firstName ?? user.username ?? "?"} size="sm" />
+                <span className="inline-block max-w-[6rem] truncate align-bottom text-sm font-medium">
+                  {user.firstName ?? user.username ?? t("Nav.account")}
+                </span>
+              </Link>
               <form action="/api/auth/logout" method="post">
                 <Button size="sm" variant="ghost" type="submit">
-                  <span className="inline-block max-w-[6rem] truncate align-bottom">
-                    {user.firstName ?? user.username ?? "✕"}
-                  </span>
+                  {t("Nav.logout")}
                 </Button>
               </form>
             </>
@@ -97,11 +104,18 @@ export async function SiteHeader() {
           )}
         </nav>
 
-        {/* Mobile cluster: bell + locale + hamburger */}
-        <div className="flex items-center gap-1 md:hidden">
+        {/* Mobile cluster. ml-auto, not justify-between: inside the Mini App the brand is hidden,
+            which left this as the row's only child and packed it to the LEFT — dragging the
+            hamburger to the screen edge and pushing its panel off-screen. */}
+        <div className="ml-auto flex items-center gap-1 md:hidden">
+          {user && (
+            <Link href="/dashboard/settings" aria-label={t("Nav.account")} className="mr-1">
+              <Avatar src={user.photoUrl} name={user.firstName ?? user.username ?? "?"} size="sm" />
+            </Link>
+          )}
           {user && <NotificationBell />}
           <LocaleSwitcher />
-          <MobileMenu items={navItems} logoutLabel={user ? (user.firstName ?? user.username ?? "✕") : null} />
+          <MobileMenu items={navItems} logoutLabel={user ? t("Nav.logout") : null} />
         </div>
       </div>
     </header>

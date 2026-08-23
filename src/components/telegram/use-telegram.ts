@@ -30,6 +30,7 @@ export interface TelegramWebApp {
   viewportStableHeight?: number;
   BackButton?: BackButton;
   HapticFeedback?: { impactOccurred?: (s: string) => void; notificationOccurred?: (t: string) => void };
+  openTelegramLink?: (url: string) => void;
 }
 
 /** Never read `window` at module scope — this module is imported by server-rendered trees. */
@@ -126,6 +127,44 @@ export function useTelegram() {
         };
       },
       viewportStableHeight: () => getWebApp()?.viewportStableHeight,
+
+      /**
+       * Hand the user to a t.me link — used to send /start to the bot when signing in from the
+       * signed initData is not possible. Bot API 6.1+; returns false when unavailable so the
+       * caller can fall back to a real anchor, which is the only thing that works on clients old
+       * enough to block programmatic navigation.
+       */
+      openTelegramLink: (url: string): boolean => {
+        const wa = getWebApp();
+        if (!wa || !inTelegram() || !atLeast("6.1") || typeof wa.openTelegramLink !== "function") {
+          return false;
+        }
+        try {
+          wa.openTelegramLink(url);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+
+      /**
+       * The user's own name and photo, parsed from initData for DISPLAY ONLY.
+       *
+       * Deliberately unverified: the server re-checks the HMAC before trusting any of it. Using it
+       * for pixels costs nothing and turns an anonymous spinner into "Gigora knows who I am",
+       * which is the difference between waiting and worrying.
+       */
+      initDataUser: (): { name?: string; photoUrl?: string } | null => {
+        const raw = getWebApp()?.initData;
+        if (!raw) return null;
+        try {
+          const u = JSON.parse(new URLSearchParams(raw).get("user") ?? "{}");
+          const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username;
+          return { name: name || undefined, photoUrl: u.photo_url || undefined };
+        } catch {
+          return null;
+        }
+      },
     }),
     [available, atLeast, guarded]
   );

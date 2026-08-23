@@ -20,7 +20,14 @@ import { MINIAPP_COOKIE, crossSiteCookieOptions, isSecureRequest } from "@/lib/m
  */
 const baseConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
+  // 30 days, rolling. Auth.js re-signs the JWT on every /api/auth/session read, so the clock
+  // restarts from last use — but ONLY through that route: auth() inside a Server Component
+  // discards the refreshed Set-Cookie (next-auth/lib/index.js), and nothing on the web called
+  // that route, so web sessions used to die 7 days after ISSUE no matter how active the user was.
+  // SessionKeepalive now pings it. Note updateAge is deliberately absent: it is a no-op for the
+  // JWT strategy (@auth/core reads it only in the database branch), so setting it would look like
+  // a fix and do nothing.
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   trustHost: true,
   secret: process.env.AUTH_SECRET,
   pages: { signIn: "/login" },

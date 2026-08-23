@@ -7,6 +7,7 @@ import {
   MINIAPP_HEADER,
   MINIAPP_PARAM,
   crossSiteCookieOptions,
+  isFramedCrossSite,
   isSecureRequest,
 } from "./lib/miniapp";
 
@@ -65,10 +66,26 @@ export default function middleware(request: NextRequest) {
   // instead of being dumped on the home page.
   const res = intlMiddleware(request);
   res.headers.set("x-pathname", request.nextUrl.pathname + request.nextUrl.search);
-  // Server Components cannot read cookies during render of a shared layout, so forward the marker
-  // as a header the layout can consult synchronously.
-  if (request.cookies.get(MINIAPP_COOKIE)?.value === "1") {
+
+  // Two ways to know we are inside Telegram, and the second one is why sign-in was broken.
+  //
+  // The cookie only exists AFTER a ?tgapp=1 launch, so on a first launch there is no marker — and
+  // without it `auth.ts` issues the CSRF cookie as SameSite=Lax, which a cross-site iframe can
+  // never send back, so signIn() fails its CSRF check silently. Fetch Metadata arrives on this
+  // very first document request, before any cookie exists, so it breaks that circle: we set the
+  // marker here, and every later /api/auth/* call carries it.
+  const marked = request.cookies.get(MINIAPP_COOKIE)?.value === "1";
+  const framed = isFramedCrossSite(request.headers);
+  if (marked || framed) {
     res.headers.set(MINIAPP_HEADER, "1");
+  }
+  if (framed && !marked) {
+    res.cookies.set(MINIAPP_COOKIE, "1", {
+      httpOnly: false, // TelegramChrome clears it client-side when the marker turns out to be wrong
+      path: "/",
+      maxAge: MINIAPP_COOKIE_MAX_AGE,
+      ...crossSiteCookieOptions(isSecureRequest(request)),
+    });
   }
   return res;
 }

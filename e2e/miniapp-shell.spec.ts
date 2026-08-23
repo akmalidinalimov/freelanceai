@@ -144,8 +144,74 @@ test("a Mini App user can always reach login and logout", async ({ page }) => {
   await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
   await page.goto("/uz/gigs?tgapp=1");
 
-  const menu = page.locator("header button").last();
+  const menu = page.getByRole("button", { name: "Menu" });
   await expect(menu, "the hamburger must exist inside Telegram").toBeVisible();
   await menu.click();
-  await expect(page.getByRole("link", { name: /Kirish|Login|Войти/i }).first()).toBeVisible();
+  await expect(
+    page.getByRole("menuitem", { name: /Kirish|Login|Войти/i }).first()
+  ).toBeVisible();
+});
+
+test("the hamburger menu opens FULLY on screen inside Telegram", async ({ page }) => {
+  // The reported bug: with the brand hidden, the header's justify-between row had a single child
+  // and packed it LEFT, so a 224px panel anchored right-0 to a trigger at x=154 ran off the left
+  // edge of the screen. The menu is the only route to sign in or out on a phone.
+  await page.setViewportSize(PHONE);
+  await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
+  await page.goto("/uz/gigs?tgapp=1");
+
+  const trigger = page.getByRole("button", { name: "Menu" });
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+
+  const panel = page.getByRole("menu");
+  await expect(panel).toBeVisible();
+  const box = await panel.boundingBox();
+  expect(box, "the panel must have a box").not.toBeNull();
+  expect(box!.x, "left edge must be on screen").toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width, "right edge must be on screen").toBeLessThanOrEqual(PHONE.width);
+});
+
+test("tapping outside closes the menu", async ({ page }) => {
+  // The scrim used to be `fixed inset-0` inside a backdrop-blur header, which makes a containing
+  // block for fixed children — so it covered only the 64px header and tapping the page did nothing.
+  await page.setViewportSize(PHONE);
+  await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
+  await page.goto("/uz/gigs?tgapp=1");
+
+  await page.getByRole("button", { name: "Menu" }).click();
+  await expect(page.getByRole("menu")).toBeVisible();
+
+  await page.mouse.click(PHONE.width / 2, PHONE.height - 120); // well below the header
+  await expect(page.getByRole("menu")).toBeHidden();
+});
+
+test("a signed-out Mini App user can reach login from the menu", async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
+  await page.goto("/uz/gigs?tgapp=1");
+
+  await page.getByRole("button", { name: "Menu" }).click();
+  await expect(page.getByRole("menuitem", { name: /Kirish|Login|Войти/i }).first()).toBeVisible();
+});
+
+test("no pairing code is shown inside Telegram", async ({ page }) => {
+  // A user Telegram has already identified must never be asked to read a code back to us.
+  await page.setViewportSize(PHONE);
+  await stubTelegram(page, { initData: "auth_date=1&hash=deadbeef" });
+  await page.goto("/uz/login?tgapp=1");
+  await page.waitForTimeout(3000);
+
+  // The code renders as LL-DD in a monospace block; assert the pattern is absent entirely.
+  await expect(page.locator("body")).not.toContainText(/[A-Z]{2}-[0-9]{2}/);
+});
+
+test("the web login page still offers every option, and its code stays lazy", async ({ page }) => {
+  // Regression guard: the Telegram branch must not leak into ordinary web visitors.
+  await page.setViewportSize(PHONE);
+  await page.goto("/uz/login");
+
+  await expect(page.getByRole("button", { name: /Telegram/i }).first()).toBeVisible();
+  // ...but no token is minted and no code shown until the user asks for one.
+  await expect(page.locator("body")).not.toContainText(/[A-Z]{2}-[0-9]{2}/);
 });

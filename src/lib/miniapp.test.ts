@@ -3,6 +3,7 @@ import {
   crossSiteCookieOptions,
   isMiniAppRequest,
   isRootPath,
+  isFramedCrossSite,
   isSecureRequest,
   MINIAPP_HEADER,
   MINIAPP_ROOT_PATHS,
@@ -106,5 +107,44 @@ describe("isSecureRequest", () => {
   it("falls back to the URL protocol when the header is absent", () => {
     expect(isSecureRequest(req(null, "https://gigora.ai/"))).toBe(true);
     expect(isSecureRequest(req(null, "http://localhost:3000/"))).toBe(false);
+  });
+});
+
+/**
+ * The circular dependency that silently broke every Mini App sign-in.
+ *
+ * Auth cookies only got cross-site attributes when the marker cookie was already present, but on
+ * a first launch it is not — so the CSRF cookie was issued SameSite=Lax, Telegram's cross-site
+ * iframe could never send it back, and signIn() failed its CSRF check with nothing shown to the
+ * user. Fetch Metadata arrives on the first document request, before any cookie exists, which is
+ * what breaks the circle.
+ */
+describe("isFramedCrossSite", () => {
+  const h = (dest: string | null, site: string | null) => ({
+    get: (n: string) =>
+      n === "sec-fetch-dest" ? dest : n === "sec-fetch-site" ? site : null,
+  });
+
+  it("detects Telegram Desktop and Telegram Web framing us", () => {
+    expect(isFramedCrossSite(h("iframe", "cross-site"))).toBe(true);
+  });
+
+  it("accepts nested-document, which some engines send instead of iframe", () => {
+    expect(isFramedCrossSite(h("nested-document", "cross-site"))).toBe(true);
+  });
+
+  it("does NOT fire for an ordinary top-level page view", () => {
+    // The regression that matters: a plain web visitor must keep the stricter Lax cookies.
+    expect(isFramedCrossSite(h("document", "none"))).toBe(false);
+    expect(isFramedCrossSite(h("document", "same-origin"))).toBe(false);
+  });
+
+  it("does not fire for subresources or same-origin fetches", () => {
+    expect(isFramedCrossSite(h("empty", "same-origin"))).toBe(false);
+    expect(isFramedCrossSite(h("script", "cross-site"))).toBe(false);
+  });
+
+  it("is false when the headers are absent, so old clients fall back to the cookie", () => {
+    expect(isFramedCrossSite(h(null, null))).toBe(false);
   });
 });

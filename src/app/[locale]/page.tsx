@@ -39,10 +39,14 @@ type GigWithSeller = {
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  // First-login intent capture: email/Google signups arrive here not yet onboarded and
-  // the buy-vs-sell choice page was otherwise unreachable (no link ever pointed at it).
-  // One redirect, once — the choice marks onboardingCompleted, so it never repeats.
-  // Telegram users are onboarded at creation (Fiverr-style) and skip this entirely.
+  // First-login intent capture, for email/Google signups only: they arrive with no name and no
+  // stated intent, and the buy-vs-sell page is otherwise unreachable. One redirect, once.
+  //
+  // Telegram users now genuinely skip it (upsertTelegramUser marks them complete at creation),
+  // which is what the comment here always claimed and the code never did. Nothing should stand
+  // between tapping Start in the bot and seeing the marketplace: a buyer who has not looked at a
+  // single gig cannot meaningfully answer "do you want to hire or sell", and asking costs us the
+  // ones who would have browsed.
   const visitor = await getCurrentUser();
   if (visitor && !visitor.onboardingCompleted && visitor.role !== "ADMIN") {
     redirect({ href: "/onboarding", locale });

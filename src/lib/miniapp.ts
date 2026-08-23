@@ -60,6 +60,33 @@ export function isSecureRequest(req: {
   return req.nextUrl?.protocol === "https:";
 }
 
+/**
+ * True when the browser says THIS document is being framed cross-site — i.e. Telegram Desktop or
+ * Telegram Web is embedding us on telegram.org.
+ *
+ * This exists to break a circular dependency that silently broke every Mini App sign-in. Auth
+ * cookies only get cross-site attributes when the marker cookie is already present, but on a first
+ * launch it is not — and measured against production, that means `__Host-authjs.csrf-token` is
+ * issued `SameSite=Lax`, which the iframe can never send back, so `signIn()` fails its CSRF check
+ * with no error the user can see.
+ *
+ * Fetch Metadata resolves it because these headers arrive on the very first DOCUMENT request,
+ * before any cookie exists. Middleware turns that into the marker, and every later `/api/auth/*`
+ * call carries it. Note the limitation this is designed around: the sign-in POST itself is a
+ * same-origin fetch from inside the iframe (`Sec-Fetch-Site: same-origin`), so these headers can
+ * never classify THAT request — only the navigation that precedes it.
+ *
+ * Only ever used to widen cookie attributes and to suppress our own chrome. Never to authorize.
+ * Spoofing it grants nothing: `Sec-Fetch-*` is browser-set and forbidden to scripts, and the worst
+ * a forged value achieves is a cookie the sender could already obtain by adding `?tgapp=1`.
+ */
+export function isFramedCrossSite(headers: { get(name: string): string | null }): boolean {
+  const dest = headers.get("sec-fetch-dest");
+  const site = headers.get("sec-fetch-site");
+  if (dest !== "iframe" && dest !== "nested-document") return false;
+  return site === "cross-site" || site === "same-site";
+}
+
 /** Header the middleware sets so Server Components (which cannot read cookies mid-render) see it. */
 export const MINIAPP_HEADER = "x-gigora-miniapp";
 

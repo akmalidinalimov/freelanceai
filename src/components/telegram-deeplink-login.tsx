@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
-type Phase = "init" | "ready" | "waiting" | "error";
+type Phase = "idle" | "init" | "ready" | "waiting" | "error";
 
 /**
  * Bot deep-link login. Fetches a one-time token on mount, opens the Telegram bot
@@ -16,7 +16,7 @@ type Phase = "init" | "ready" | "waiting" | "error";
  */
 export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?: string }) {
   const t = useTranslations("Auth");
-  const [phase, setPhase] = useState<Phase>("init");
+  const [phase, setPhase] = useState<Phase>("idle");
   const [deepLink, setDeepLink] = useState<string>();
   const [code, setCode] = useState<string>();
   const tokenRef = useRef<string | undefined>(undefined);
@@ -44,10 +44,12 @@ export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?:
     }
   }, [locale]);
 
-  useEffect(() => {
-    prepare();
-    return () => clearInterval(pollRef.current);
-  }, [prepare]);
+  // Deliberately NOT prepare()-on-mount. Doing that minted a LoginToken on every page view and,
+  // worse, rendered the confirmation code to someone who had not yet tapped anything — the first
+  // thing the founder reported was an unexplained 4-character code sitting on the login screen.
+  // The code is only protective if it is seen at the moment the user chooses to sign in, so it is
+  // now produced by the tap that starts the flow.
+  useEffect(() => () => clearInterval(pollRef.current), []);
 
   function startPolling() {
     setPhase("waiting");
@@ -99,13 +101,18 @@ export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?:
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
+      {/* A normal top-level navigation, never target="_blank": Telegram's in-app WebView ignores
+          _blank, so the old anchor registered the tap, started the poll, and never opened
+          Telegram — a spinner that could not possibly resolve. */}
       <a
         href={deepLink ?? "#"}
-        target="_blank"
-        rel="noopener noreferrer"
+        rel="noopener"
         onClick={(e) => {
           if (!deepLink) {
+            // Nothing minted yet: this tap mints it, and the code appears with the panel below
+            // rather than before the user asked for it.
             e.preventDefault();
+            void prepare();
             return;
           }
           startPolling();
@@ -120,6 +127,7 @@ export function TelegramDeepLinkLogin({ locale, next }: { locale: string; next?:
           size="lg"
           className="w-full bg-[#229ED9] text-white hover:bg-[#1E8BC0] active:bg-[#1A7BA8] focus-visible:ring-[#229ED9] disabled:bg-[#229ED9]/60"
           disabled={phase === "init"}
+          aria-busy={phase === "init"}
         >
           <svg aria-hidden viewBox="0 0 24 24" className="mr-2 h-5 w-5 shrink-0 fill-current">
             <path d="M11.94 2.02c-5.5 0-9.96 4.46-9.96 9.96s4.46 9.96 9.96 9.96 9.96-4.46 9.96-9.96-4.46-9.96-9.96-9.96Zm4.64 6.79-1.55 7.33c-.12.52-.42.65-.86.4l-2.37-1.75-1.14 1.1c-.13.13-.24.24-.48.24l.17-2.42 4.4-3.98c.19-.17-.04-.27-.3-.1l-5.43 3.42-2.34-.73c-.51-.16-.52-.51.11-.76l9.13-3.52c.42-.15.79.1.66.77Z" />

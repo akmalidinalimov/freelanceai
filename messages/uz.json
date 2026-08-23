@@ -153,7 +153,9 @@
     "login": "Kirish",
     "dashboard": "Boshqaruv paneli",
     "orders": "Buyurtmalar",
-    "messages": "Xabarlar"
+    "messages": "Xabarlar",
+    "logout": "Chiqish",
+    "account": "Hisobim"
   },
   "Home": {
     "heroTitle": "Biznesingiz uchun AI video va rasmlar",
@@ -262,7 +264,18 @@
     "loginToContinue": "Davom etish uchun kiring — 30 soniya kifoya. Tanlovingiz saqlanadi.",
     "miniAppSigningIn": "Kirish amalga oshirilmoqda…",
     "pairingCodeLabel": "Tasdiqlash kodi",
-    "pairingCodeHint": "Telegram botda shu kodni tekshiring va tasdiqlang"
+    "pairingCodeHint": "Telegram botda shu kodni tekshiring va tasdiqlang",
+    "tgSigningInNamed": "Salom, {name}! Kirilmoqda...",
+    "tgSuccess": "Kirdingiz, {name}",
+    "tgSlowHint": "Sekin ketyaptimi? Boshqa yoʻl bilan kiring",
+    "tgManualTitle": "Avtomatik kirish ishlamadi",
+    "tgManualBody": "Botda bir marta «Start» ni bosing — keyin hammasi oʻzi davom etadi.",
+    "tgOpenBot": "Botni ochish va kirish",
+    "tgRetry": "Qayta urinish",
+    "tgBotWaitTitle": "Botda «Start» ni bosing",
+    "tgBotWaitBody": "@{bot} chatini ochdik. «Start» ni bosing va shu yerga qayting.",
+    "tgImBack": "Qaytdim — tekshirish",
+    "tgBrowseGuest": "Xizmatlarni koʻrish"
   },
   "Onboarding": {
     "title": "Xush kelibsiz! 👋",

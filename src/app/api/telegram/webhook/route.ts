@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { mintLaunchTicket } from "@/lib/launch-ticket";
+import { upsertTelegramUser } from "@/lib/users";
 import {
   tgSendMessage,
   tgMainKeyboard,
@@ -312,8 +313,39 @@ export async function POST(request: Request) {
       where: { telegramId: String(from.id) },
       select: { firstName: true, locale: true, isSeller: true, onboardingCompleted: true },
     });
+    // Captured BEFORE we create anything below. The onboarding branch further down keys off
+    // whether an account already existed, and if it read a row we just created, a brand-new user's
+    // very first /start would divert into the onboarding nudge and return early — skipping the
+    // welcome, the keyboard, the menu button AND the zero-tap launch ticket, for exactly the
+    // people that path exists to serve.
+    const existedBefore = account !== null;
     const locale = account?.locale;
     const name = account?.firstName ?? from.first_name;
+
+    // Remember them from the very first contact.
+    //
+    // Until now the account was created only when a sign-in actually completed, so someone who
+    // tapped Start and did not immediately tap the button left NO record: their Telegram id lived
+    // only in a launch ticket that expired in ten minutes. Telegram has already authenticated this
+    // chat, so `from.id` is trustworthy identity — persist it and every later order, message and
+    // profile attaches to the same row.
+    if (!existedBefore && text.startsWith("/start")) {
+      // Per-user cap so one account cannot churn rows by spamming /start. Same shape as the
+      // existing tg-cb:/tg-reply: limiters in this file.
+      if (rateLimit(`tg-newuser:${from.id}`, 5, 60_000)) {
+        await upsertTelegramUser({
+          id: String(from.id),
+          firstName: from.first_name,
+          lastName: from.last_name,
+          username: from.username,
+          authDate: Math.floor(Date.now() / 1000),
+        }).catch((err) => {
+          // A concurrent /start can lose the unique-index race. The row exists either way, which
+          // is all we need, and the welcome below must not be blocked by it.
+          console.error("upsert on /start failed", err);
+        });
+      }
+    }
 
     // /start with a login-token payload: ASK, don't confirm.
     //
@@ -326,7 +358,16 @@ export async function POST(request: Request) {
     const payload = text.startsWith("/start") ? text.split(/\s+/)[1] : undefined;
     if (payload) {
       const claimed = await prisma.loginToken.updateMany({
-        where: { token: payload, status: "PENDING", expiresAt: { gt: new Date() }, telegramId: null },
+        // `pairingCode: { not: null }` names the browser flow's own discriminator in the predicate
+        // rather than leaving it implied. Launch tickets carry a null code and a null nonce, so
+        // this makes it structurally impossible for one flow to claim the other's token.
+        where: {
+          token: payload,
+          status: "PENDING",
+          pairingCode: { not: null },
+          expiresAt: { gt: new Date() },
+          telegramId: null,
+        },
         data: {
           telegramId: String(from.id),
           firstName: from.first_name,
@@ -345,7 +386,9 @@ export async function POST(request: Request) {
     }
 
     // Unfinished profile → resume the conversation instead of the generic welcome.
-    if (account && !account.onboardingCompleted && text !== "/help") {
+    // `existedBefore` matters: without it the row we just created above would make this true on a
+    // first /start and divert the new user into the onboarding nudge instead of the welcome.
+    if (existedBefore && account && !account.onboardingCompleted && text !== "/help") {
       void startBotOnboarding(from.id, account.firstName ?? from.first_name ?? "", from.last_name ?? "", locale);
       return NextResponse.json({ ok: true });
     }
