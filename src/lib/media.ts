@@ -24,7 +24,11 @@ const EXT: Record<string, string> = {
   "video/webm": "webm",
   "video/quicktime": "mov",
 };
-export const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
+// 15 MB. Almost every upload is re-encoded to webp client-side and lands far under this, so the
+// ceiling only governs the pass-through path — a native-format file small enough to skip
+// re-encoding. Raised from 8MB because a modern phone photo can exceed that before any of our
+// code runs, and rejecting it on size is the wrong answer when downscaling is available.
+export const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15 MB
 export const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
 
 function r2(): S3Client {

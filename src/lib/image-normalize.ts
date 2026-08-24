@@ -1,8 +1,13 @@
+import { decodeImageBounded, isDecodeFailure } from "@/lib/image-decode";
+
 /**
  * Client-side image normalization. Re-encodes ANY image the browser can decode
  * (iPhone HEIC on Safari, GIF, BMP, TIFF…) into webp, downscaling oversized phone
  * photos on the way. This is what lets the upload inputs accept `image/*` while
  * storage keeps a small, predictable allowlist.
+ *
+ * Decoding is bounded (see image-decode.ts), so an oversized phone photo is downsampled rather
+ * than exhausting the device.
  *
  * Returns null when the browser cannot decode the file at all — callers should show
  * a "try a JPG" message rather than pushing an unreadable blob to storage.
@@ -12,26 +17,21 @@
 export const NATIVE_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 export async function toWebpBlob(file: File, maxEdge = 1600): Promise<Blob | null> {
-  const url = URL.createObjectURL(file);
+  // Bounded decode, not `new Image()`. A 108MP phone photo is ~432MB as a full bitmap, which is
+  // enough for a mobile WebView to fail outright — and that failure was indistinguishable from an
+  // unreadable format, so users were told to try a JPG about a file that already was one.
+  const res = await decodeImageBounded(file, maxEdge);
+  if (isDecodeFailure(res)) return null;
   try {
-    const img = await new Promise<HTMLImageElement | null>((res) => {
-      const i = new Image();
-      i.onload = () => res(i);
-      i.onerror = () => res(null);
-      i.src = url;
-    });
-    if (!img || !img.naturalWidth) return null;
-    const long = Math.max(img.naturalWidth, img.naturalHeight);
-    const k = long > maxEdge ? maxEdge / long : 1;
     const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * k));
-    canvas.height = Math.max(1, Math.round(img.naturalHeight * k));
+    canvas.width = res.width;
+    canvas.height = res.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/webp", 0.9));
+    ctx.drawImage(res.source, 0, 0, canvas.width, canvas.height);
+    return await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", 0.9));
   } finally {
-    URL.revokeObjectURL(url);
+    res.close();
   }
 }
 

@@ -980,7 +980,7 @@
     "cropHint": "Rasmni surib joylashtiring.",
     "cropApply": "Qoʻllash",
     "cropCancel": "Bekor qilish",
-    "cropUnsupported": "Bu format qurilmada oʻqilmadi. JPG yoki PNG sinab koʻring.",
+    "cropUnsupported": "Rasmni qirqib boʻlmadi. Uni kesmasdan yuklashingiz mumkin.",
     "noHeadlineYet": "Sarlavha qoʻshing — xaridorlar nima qilishingizni bilsin",
     "statGigs": "xizmat",
     "statOrders": "buyurtma",
@@ -996,7 +996,9 @@
     "secLinksHint": "Xaridorlar ishlaringizni qayerda koʻradi.",
     "optionalBadge": "Ixtiyoriy",
     "headlinePh": "Masalan: kichik brendlar uchun AI video",
-    "aboutPh": "Nima qilasiz, qanday ishlaysiz, mijoz nima oladi."
+    "aboutPh": "Nima qilasiz, qanday ishlaysiz, mijoz nima oladi.",
+    "cropHeic": "Bu HEIC rasm — brauzer uni oʻqiy olmaydi. Telefon kamerasida formatni JPEG qilib qoʻying yoki skrinshot yuboring.",
+    "cropSkip": "Kesmasdan yuklash"
   },
   "Instagram": {
     "connect": "Instagram'ni ulash",

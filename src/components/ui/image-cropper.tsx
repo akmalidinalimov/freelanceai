@@ -2,13 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { decodeImageBounded, isDecodeFailure } from "@/lib/image-decode";
+import { NATIVE_IMAGE_TYPES } from "@/lib/image-normalize";
 
 /**
  * Interactive crop dialog: drag to pan, slider to zoom, then Apply.
  *
- * Accepts ANY image the browser can decode (iPhone HEIC on Safari, GIF, BMP…) and
- * always outputs a webp blob at a fixed output size — so the server only ever stores
- * one predictable format and the narrow upload allowlist can't reject a phone photo.
+ * Accepts ANY image the browser can decode and always outputs a webp blob at a fixed output
+ * size, so storage only ever holds one predictable format.
+ *
+ * Decoding goes through decodeImageBounded, which caps the longest edge. The full-size decode this
+ * replaced could not survive a modern phone photo: 50-200MP is hundreds of MB as a bitmap, the
+ * WebView gave up, and the resulting onerror was reported to the user as "try a JPG or PNG" about
+ * a file that already was one. Nothing is lost by bounding it — the output here is a few hundred
+ * pixels, so 2048 is already far more detail than can survive the crop.
  */
 export function ImageCropper({
   file,
@@ -26,29 +33,57 @@ export function ImageCropper({
 }) {
   const t = useTranslations("Profile");
   const frameRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
   const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<null | "heic" | "undecodable">(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const decoded = useRef<{ width: number; height: number } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [frame, setFrame] = useState({ w: 0, h: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
-  const objectUrl = useRef<string | null>(null);
+  const bitmap = useRef<CanvasImageSource | null>(null);
 
-  // Decode the picked file once. Any decode failure is surfaced (not silently ignored).
+  // Decode once, bounded, and build the preview from the DECODED pixels. Pointing an <img> at the
+  // original was the third place full resolution was being held in memory at the same time.
   useEffect(() => {
-    const url = URL.createObjectURL(file);
-    objectUrl.current = url;
-    const img = new Image();
-    img.onload = () => {
-      imgRef.current = img;
+    let cancelled = false;
+    let release: (() => void) | null = null;
+    let previewUrl: string | null = null;
+
+    (async () => {
+      const res = await decodeImageBounded(file, 2048);
+      if (cancelled) {
+        if (!isDecodeFailure(res)) res.close();
+        return;
+      }
+      if (isDecodeFailure(res)) {
+        setFailed(res.reason);
+        return;
+      }
+      release = res.close;
+      bitmap.current = res.source;
+      decoded.current = { width: res.width, height: res.height };
+
+      // Re-encode the bounded image for display so the <img> holds the small copy, not the original.
+      const c = document.createElement("canvas");
+      c.width = res.width;
+      c.height = res.height;
+      c.getContext("2d")?.drawImage(res.source, 0, 0);
+      const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/webp", 0.92));
+      if (cancelled) return;
+      if (blob) {
+        previewUrl = URL.createObjectURL(blob);
+        setPreview(previewUrl);
+      }
       setReady(true);
-    };
-    img.onerror = () => setFailed(true);
-    img.src = url;
+    })();
+
     return () => {
-      URL.revokeObjectURL(url);
-      objectUrl.current = null;
+      cancelled = true;
+      release?.();
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      bitmap.current = null;
+      decoded.current = null;
     };
   }, [file]);
 
@@ -68,20 +103,20 @@ export function ImageCropper({
   /** Cover-fit scale for the current zoom. */
   const scaleOf = useCallback(
     (z: number) => {
-      const img = imgRef.current;
-      if (!img || !frame.w) return 1;
-      return Math.max(frame.w / img.naturalWidth, frame.h / img.naturalHeight) * z;
+      const d = decoded.current;
+      if (!d || !frame.w) return 1;
+      return Math.max(frame.w / d.width, frame.h / d.height) * z;
     },
     [frame.w, frame.h]
   );
 
   const clamp = useCallback(
     (p: { x: number; y: number }, z: number) => {
-      const img = imgRef.current;
-      if (!img) return p;
+      const d = decoded.current;
+      if (!d) return p;
       const s = scaleOf(z);
-      const minX = frame.w - img.naturalWidth * s;
-      const minY = frame.h - img.naturalHeight * s;
+      const minX = frame.w - d.width * s;
+      const minY = frame.h - d.height * s;
       return { x: Math.min(0, Math.max(minX, p.x)), y: Math.min(0, Math.max(minY, p.y)) };
     },
     [frame.w, frame.h, scaleOf]
@@ -89,16 +124,15 @@ export function ImageCropper({
 
   // Center the image whenever the frame or zoom baseline changes.
   useEffect(() => {
-    const img = imgRef.current;
-    if (!img || !frame.w) return;
+    const d = decoded.current;
+    if (!d || !frame.w) return;
     const s = scaleOf(zoom);
-    setPos(clamp({ x: (frame.w - img.naturalWidth * s) / 2, y: (frame.h - img.naturalHeight * s) / 2 }, zoom));
+    setPos(clamp({ x: (frame.w - d.width * s) / 2, y: (frame.h - d.height * s) / 2 }, zoom));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frame.w, frame.h, ready]);
 
   function onZoom(z: number) {
-    const img = imgRef.current;
-    if (!img) return;
+    if (!decoded.current) return;
     // Keep the frame's center point stable while zooming.
     const oldS = scaleOf(zoom);
     const newS = scaleOf(z);
@@ -122,7 +156,7 @@ export function ImageCropper({
   };
 
   async function apply() {
-    const img = imgRef.current;
+    const img = bitmap.current;
     if (!img) return;
     const s = scaleOf(zoom);
     const outHeight = Math.round(outWidth / aspect);
@@ -137,7 +171,7 @@ export function ImageCropper({
     if (blob) onCropped(blob);
   }
 
-  const s = imgRef.current ? scaleOf(zoom) : 1;
+  const s = decoded.current ? scaleOf(zoom) : 1;
 
   return (
     <div className="fixed inset-0 z-[95] grid place-items-center bg-black/60 p-4" role="dialog" aria-modal="true">
@@ -145,7 +179,22 @@ export function ImageCropper({
         <p className="mb-3 font-semibold">{t("cropTitle")}</p>
 
         {failed ? (
-          <p className="mb-3 text-sm text-[hsl(var(--danger))]">{t("cropUnsupported")}</p>
+          <div className="mb-3">
+            <p className="text-sm text-[hsl(var(--danger))]">
+              {failed === "heic" ? t("cropHeic") : t("cropUnsupported")}
+            </p>
+            {/* Never dead-end a format storage would happily accept. If we could not crop a JPEG or
+                PNG, uploading it uncropped is strictly better than refusing the picture outright. */}
+            {NATIVE_IMAGE_TYPES.includes(file.type) && (
+              <button
+                type="button"
+                onClick={() => onCropped(file)}
+                className="mt-3 w-full rounded-lg border border-[hsl(var(--border))] px-3 py-2 text-sm font-medium"
+              >
+                {t("cropSkip")}
+              </button>
+            )}
+          </div>
         ) : (
           <>
             <div
@@ -159,18 +208,18 @@ export function ImageCropper({
                 aspect === 1 ? "rounded-full" : "rounded-lg"
               }`}
             >
-              {ready && imgRef.current && (
+              {ready && preview && decoded.current && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={objectUrl.current ?? ""}
+                  src={preview}
                   alt=""
                   draggable={false}
                   style={{
                     position: "absolute",
                     left: pos.x,
                     top: pos.y,
-                    width: imgRef.current.naturalWidth * s,
-                    height: imgRef.current.naturalHeight * s,
+                    width: decoded.current.width * s,
+                    height: decoded.current.height * s,
                     cursor: "grab",
                   }}
                 />

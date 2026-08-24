@@ -980,7 +980,7 @@
     "cropHint": "Drag the image to reposition.",
     "cropApply": "Apply",
     "cropCancel": "Cancel",
-    "cropUnsupported": "This image format can't be read on this device. Try a JPG or PNG.",
+    "cropUnsupported": "We could not crop this one. You can upload it uncropped.",
     "noHeadlineYet": "Add a headline so buyers know what you do",
     "statGigs": "gigs",
     "statOrders": "orders",
@@ -996,7 +996,9 @@
     "secLinksHint": "Where buyers can see more of your work.",
     "optionalBadge": "Optional",
     "headlinePh": "e.g. AI video for small brands",
-    "aboutPh": "What you do, how you work, what a client gets."
+    "aboutPh": "What you do, how you work, what a client gets.",
+    "cropHeic": "This is a HEIC photo, which browsers cannot read. Set your camera to JPEG, or send a screenshot.",
+    "cropSkip": "Upload without cropping"
   },
   "Instagram": {
     "connect": "Connect Instagram",
