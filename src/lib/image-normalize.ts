@@ -1,4 +1,4 @@
-import { decodeImageBounded, isDecodeFailure } from "@/lib/image-decode";
+import { decodeImageBounded, isDecodeFailure, transcodeViaServer } from "@/lib/image-decode";
 
 /**
  * Client-side image normalization. Re-encodes ANY image the browser can decode
@@ -42,8 +42,16 @@ export async function toWebpBlob(file: File, maxEdge = 1600): Promise<Blob | nul
 export async function prepareImage(file: File): Promise<{ blob: Blob; contentType: string } | null> {
   const smallAndNative = NATIVE_IMAGE_TYPES.includes(file.type) && file.size <= 2 * 1024 * 1024;
   if (smallAndNative) return { blob: file, contentType: file.type };
+
   const webp = await toWebpBlob(file);
   if (webp) return { blob: webp, contentType: "image/webp" };
-  // Undecodable, but storage would accept the original format → send it unchanged.
+
+  // The browser could not read it. Before giving up, let the server try — this is the HEIC path,
+  // which no Chromium browser can decode but libvips can. Same rescue the cropper uses, so a
+  // banner or portfolio upload is not held to a lower standard than an avatar.
+  const converted = await transcodeViaServer(file);
+  if (converted) return { blob: converted, contentType: "image/webp" };
+
+  // Undecodable everywhere, but storage would accept the original format → send it unchanged.
   return NATIVE_IMAGE_TYPES.includes(file.type) ? { blob: file, contentType: file.type } : null;
 }

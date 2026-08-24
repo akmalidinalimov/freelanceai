@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { decodeImageBounded, isDecodeFailure } from "@/lib/image-decode";
+import { decodeImageOrTranscode, isDecodeFailure } from "@/lib/image-decode";
 import { NATIVE_IMAGE_TYPES } from "@/lib/image-normalize";
 
 /**
@@ -51,7 +51,8 @@ export function ImageCropper({
     let previewUrl: string | null = null;
 
     (async () => {
-      const res = await decodeImageBounded(file, 2048);
+      // Local decode first; only a file this browser truly cannot read goes to the server.
+      const res = await decodeImageOrTranscode(file, 2048);
       if (cancelled) {
         if (!isDecodeFailure(res)) res.close();
         return;

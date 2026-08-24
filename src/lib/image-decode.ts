@@ -98,3 +98,51 @@ export async function decodeImageBounded(file: File, maxEdge = 2048): Promise<De
     close: () => URL.revokeObjectURL(url),
   };
 }
+
+/**
+ * Last resort: ask the server to decode what this browser could not.
+ *
+ * HEIC is why this exists. Every iPhone and many Samsungs shoot it, and no Chromium browser can
+ * read it — so without this the honest answer was "go change your camera setting", which is not an
+ * answer a seller uploading their portfolio wants to hear. libvips on the server handles it, along
+ * with TIFF and GIF.
+ *
+ * Returns null when the server cannot help either, so the caller still has a real failure to show
+ * rather than a spinner.
+ */
+export async function transcodeViaServer(file: File): Promise<File | null> {
+  try {
+    const res = await fetch("/api/media/transcode", {
+      method: "POST",
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    if (!blob.size) return null;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webp", { type: "image/webp" });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Decode with a server fallback. This is what callers should use for anything a user picked.
+ *
+ * The local attempt runs first so the common case costs nothing; only a file this browser genuinely
+ * cannot read is sent anywhere.
+ */
+export async function decodeImageOrTranscode(
+  file: File,
+  maxEdge = 2048
+): Promise<DecodeResult & { transcoded?: File }> {
+  const local = await decodeImageBounded(file, maxEdge);
+  if (!isDecodeFailure(local)) return local;
+
+  const converted = await transcodeViaServer(file);
+  if (!converted) return local; // keep the ORIGINAL reason: heic vs undecodable still differ
+
+  const second = await decodeImageBounded(converted, maxEdge);
+  if (isDecodeFailure(second)) return local;
+  return { ...second, transcoded: converted };
+}

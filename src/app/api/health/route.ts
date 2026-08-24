@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canDecodeHeif } from "@/lib/image-transcode";
 import { prisma } from "@/lib/prisma";
 import { mediaConfigured } from "@/lib/media";
 import { emailConfigured } from "@/lib/email";
@@ -40,6 +41,10 @@ export async function GET() {
         email: emailConfigured(),
         ai: Boolean(process.env.ANTHROPIC_API_KEY),
         errorAlerts: Boolean(process.env.ERROR_ALERT_WEBHOOK),
+        // Whether THIS build of libvips can read HEIC. Prebuilt sharp binaries differ per
+        // platform, and the container runs a musl build that is not the one a developer tests
+        // against, so the capability is reported rather than assumed.
+        heic: canDecodeHeif(),
         version: process.env.APP_VERSION ?? "dev",
       },
     },
