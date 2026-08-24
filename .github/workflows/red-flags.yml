@@ -1,0 +1,27 @@
+name: red-flags
+
+# Nightly trust & safety scan + housekeeping (red flags, expired tokens,
+# activity-event retention). Needs the repo secret CRON_SECRET to match the
+# app's CRON_SECRET env (same secret as auto-complete).
+on:
+  schedule:
+    - cron: "20 22 * * *" # nightly 22:20 UTC (~03:20 Tashkent)
+  workflow_dispatch:
+
+concurrency:
+  group: red-flags
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger red-flag scan
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "CRON_SECRET repo secret not set — skipping."
+            exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://gigora.ai/api/cron/red-flags

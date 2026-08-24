@@ -1,7 +1,94 @@
+import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import {
+  MINIAPP_COOKIE,
+  MINIAPP_COOKIE_MAX_AGE,
+  MINIAPP_HEADER,
+  MINIAPP_PARAM,
+  crossSiteCookieOptions,
+  isFramedCrossSite,
+  isSecureRequest,
+} from "./lib/miniapp";
 
-export default createMiddleware(routing);
+const intlMiddleware = createMiddleware(routing);
+
+// Gigora cutover: 301 the legacy host → gigora.ai when REDIRECT_LEGACY_HOST=1.
+// STAGED OFF by default. Do NOT enable before the Google OAuth redirect URI for
+// gigora.ai is added — a legacy-host Google login would bounce to gigora.ai where
+// the callback isn't yet allow-listed and fail. Activation: set the repo build-var
+// REDIRECT_LEGACY_HOST=1, redeploy. Does not import auth → keeps middleware
+// edge-safe (auth.ts can still use node-only imports).
+const LEGACY_HOST = "freelanceai.aicreator.academy";
+const CANONICAL_ORIGIN = "https://gigora.ai";
+
+export default function middleware(request: NextRequest) {
+  if (process.env.REDIRECT_LEGACY_HOST === "1") {
+    const host = request.headers.get("host") ?? "";
+    if (host === LEGACY_HOST) {
+      const dest = new URL(request.nextUrl.pathname + request.nextUrl.search, CANONICAL_ORIGIN);
+      return NextResponse.redirect(dest, 301);
+    }
+  }
+  // Creator vanity URLs: gigora.ai/@username → the public profile. Bio-link
+  // friendly (Instagram/TikTok/Telegram bios). 302 (not 308) so the target can
+  // become locale-smart later without poisoning caches. Telegram-style
+  // usernames only (letters/digits/underscore — the matcher already excludes
+  // any path containing a dot).
+  const vanity = request.nextUrl.pathname.match(/^\/@([a-zA-Z0-9_]{3,32})$/);
+  if (vanity) {
+    return NextResponse.redirect(new URL(`/uz/creators/${vanity[1]}`, request.url), 302);
+  }
+
+  // Telegram Mini App marker. Bot links carry ?tgapp=1; we convert it into a session cookie and
+  // REDIRECT to the clean URL. Stripping the param matters: left in place it travels whenever a
+  // user copies the address out of the Mini App, and a recipient opening that link in a normal
+  // browser would get a page with our chrome suppressed and no Telegram controls to navigate with.
+  if (request.nextUrl.searchParams.get(MINIAPP_PARAM)) {
+    const clean = new URL(request.nextUrl);
+    clean.searchParams.delete(MINIAPP_PARAM);
+    const redirect = NextResponse.redirect(clean, 307);
+    // SameSite=None + Partitioned, not Lax: on Telegram Desktop/Web the Mini App is a cross-site
+    // iframe, and a Lax cookie is never sent back there — the marker would be set and then
+    // invisible on every request. Max-Age so it also survives the WebView closing.
+    redirect.cookies.set(MINIAPP_COOKIE, "1", {
+      httpOnly: false, // TelegramChrome clears it client-side when the marker turns out to be wrong
+      path: "/",
+      maxAge: MINIAPP_COOKIE_MAX_AGE,
+      ...crossSiteCookieOptions(isSecureRequest(request)),
+    });
+    return redirect;
+  }
+
+  // Expose the requested path to server components (they can't read the URL).
+  // Auth guards use it to build /login?next=<path>, so a Telegram Mini App that
+  // deep-links into a protected page returns THERE after auto-authenticating
+  // instead of being dumped on the home page.
+  const res = intlMiddleware(request);
+  res.headers.set("x-pathname", request.nextUrl.pathname + request.nextUrl.search);
+
+  // Two ways to know we are inside Telegram, and the second one is why sign-in was broken.
+  //
+  // The cookie only exists AFTER a ?tgapp=1 launch, so on a first launch there is no marker — and
+  // without it `auth.ts` issues the CSRF cookie as SameSite=Lax, which a cross-site iframe can
+  // never send back, so signIn() fails its CSRF check silently. Fetch Metadata arrives on this
+  // very first document request, before any cookie exists, so it breaks that circle: we set the
+  // marker here, and every later /api/auth/* call carries it.
+  const marked = request.cookies.get(MINIAPP_COOKIE)?.value === "1";
+  const framed = isFramedCrossSite(request.headers);
+  if (marked || framed) {
+    res.headers.set(MINIAPP_HEADER, "1");
+  }
+  if (framed && !marked) {
+    res.cookies.set(MINIAPP_COOKIE, "1", {
+      httpOnly: false, // TelegramChrome clears it client-side when the marker turns out to be wrong
+      path: "/",
+      maxAge: MINIAPP_COOKIE_MAX_AGE,
+      ...crossSiteCookieOptions(isSecureRequest(request)),
+    });
+  }
+  return res;
+}
 
 export const config = {
   // Match all paths except API routes, Next internals, and static files.

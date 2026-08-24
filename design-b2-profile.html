@@ -1,0 +1,109 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreelanceAI — B2 · Creator profile (Instagram portfolio)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0c1526;--soft:#4d5a72;--teal:#0f9e79;--teal2:#0a5f4b;--tint:#eef7f3;--coral:#f0623c;--line:#e6ecea;--paper:#fbfdfc}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+.disp{font-family:Unbounded,sans-serif;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:50;background:rgba(251,253,252,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);height:66px;display:flex;align-items:center}
+.navin{max-width:1040px;margin:0 auto;width:100%;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:Unbounded;font-weight:800;font-size:19px}.brand b{color:var(--teal)}
+.back{color:var(--soft);font-weight:600;font-size:14px}
+/* profile header */
+.phead{display:flex;gap:22px;align-items:flex-start;padding:34px 0 8px}
+.pav{width:104px;height:104px;border-radius:28px;flex:0 0 auto;background:radial-gradient(circle at 40% 35%,#7ef0d0,#0f9e79 60%,#0a3f4a);position:relative}
+.pav .on{position:absolute;right:-4px;bottom:-4px;width:30px;height:30px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.12);font-size:14px}
+.pmeta{flex:1;min-width:0}
+.pname{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pname h1{font-family:Unbounded;font-size:30px;letter-spacing:-.02em}
+.verified{display:inline-flex;gap:6px;align-items:center;background:var(--tint);color:var(--teal2);font-weight:800;font-size:12.5px;padding:5px 11px;border-radius:999px}
+.lvl{background:#eef1f6;color:#3a4658;font-weight:700;font-size:12.5px;padding:5px 11px;border-radius:999px}
+.prole{color:var(--soft);font-weight:600;margin-top:6px}
+.pstats{display:flex;gap:26px;margin-top:14px}
+.pstats b{font-family:Unbounded;font-size:18px}.pstats span{color:var(--soft);font-size:12.5px;font-weight:600;display:block}
+.pact{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.p1{background:var(--teal);color:#fff;font-weight:700;padding:12px 22px;border-radius:12px;transition:.15s;white-space:nowrap}
+.p1:hover{background:var(--teal2)}
+.p2{border:1.5px solid var(--line);font-weight:600;padding:12px 20px;border-radius:12px;white-space:nowrap}
+.igconnect{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#3a4658;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;margin-top:2px}
+.igglyph{width:16px;height:16px;border-radius:5px;background:linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0)}
+.igglyph.sm{width:13px;height:13px;border-radius:4px}
+/* portfolio */
+.psec{margin-top:30px}
+.psechead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.psechead .lft{display:flex;align-items:center;gap:10px}
+.psechead h2{font-family:Unbounded;font-size:20px}
+.synced{font-size:12px;color:var(--soft);font-weight:600;display:flex;align-items:center;gap:6px}
+.synced .dot{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+.arrows{display:flex;gap:8px}
+.arrows button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-size:17px;font-weight:700;color:var(--ink);transition:.15s}
+.arrows button:hover{border-color:var(--teal);color:var(--teal2)}
+.carousel{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.post{scroll-snap-align:start;flex:0 0 clamp(220px,42vw,300px);border-radius:18px;overflow:hidden;position:relative;aspect-ratio:4/5;border:1px solid var(--line);background:#000}
+.post .media{position:absolute;inset:0}
+.post .type{position:absolute;top:10px;right:10px;color:#fff;font-size:13px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.post .play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:34px;text-shadow:0 2px 10px rgba(0,0,0,.55);transition:.2s}
+.post:hover .play{transform:scale(1.12)}
+.post .cap{position:absolute;left:0;right:0;bottom:0;padding:34px 13px 12px;background:linear-gradient(transparent,rgba(4,8,15,.9));color:#fff}
+.post .cap .txt{font-size:12.5px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.post .cap .lk{font-size:11px;color:#bfe6da;font-weight:700;margin-top:6px;display:inline-flex;gap:5px;align-items:center}
+.hint{text-align:center;color:var(--soft);font-size:12.5px;margin-top:10px}
+/* gigs */
+.gsec{margin-top:40px;padding-bottom:60px}
+.gsec h2{font-family:Unbounded;font-size:20px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.gig{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;transition:.2s}
+.gig:hover{transform:translateY(-4px);box-shadow:0 20px 44px -28px rgba(11,21,38,.4)}
+.gig .cv{height:130px}.gig .b{padding:12px 13px 14px}
+.gig h3{font-size:14.5px;font-weight:700;line-height:1.3;min-height:38px}
+.gig .pr{font-family:Unbounded;font-weight:700;font-size:15px;margin-top:8px}.gig .pr small{font-weight:600;font-size:11px;color:var(--soft)}
+@media (prefers-reduced-motion:reduce){.synced .dot{animation:none}}
+@media(max-width:760px){.phead{flex-wrap:wrap}.pact{width:100%;flex-direction:row;align-items:stretch}.pact .p1,.pact .p2{flex:1;text-align:center}.grid{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<nav><div class="navin"><div class="brand">Freelance<b>AI</b></div><a class="back" href="design-b2.html">← Ijodkorlar</a></div></nav>
+<div class="wrap">
+ <section class="phead">
+  <div class="pav"><div class="on">✓</div></div>
+  <div class="pmeta">
+   <div class="pname"><h1>Dilnoza R.</h1><span class="verified">✓ Tasdiqlangan</span><span class="lvl">Level 2</span></div>
+   <div class="prole">AI video · talking-head · reklama roliklari — VividAI studiyasi</div>
+   <div class="pstats"><div><b>4.9★</b><span>247 sharh</span></div><div><b>312</b><span>Buyurtma</span></div><div><b>1 soat</b><span>Javob vaqti</span></div><div><b>98%</b><span>Oʻz vaqtida</span></div></div>
+   <div style="margin-top:12px"><span class="igconnect"><span class="igglyph"></span>Instagram ulangan · @vividai.uz</span></div>
+  </div>
+  <div class="pact"><a class="p1">Xabar yozish</a><a class="p2">+ Kuzatish</a></div>
+ </section>
+
+ <section class="psec">
+  <div class="psechead">
+   <div class="lft"><h2 class="disp">Ishlar</h2><span class="synced"><span class="igglyph sm"></span>Instagram'dan · <span class="dot"></span>2 soat oldin yangilandi</span></div>
+   <div class="arrows"><button id="prev" aria-label="Oldingi">‹</button><button id="next" aria-label="Keyingi">›</button></div>
+  </div>
+  <div class="carousel" id="car"></div>
+  <p class="hint">← Suring yoki oʻqlardan foydalaning · har bir ish Instagram'dagi asl postga bogʻlangan</p>
+ </section>
+
+ <section class="gsec">
+  <h2 class="disp">Xizmatlar</h2>
+  <div class="grid" id="gigs"></div>
+ </section>
+</div>
+<script>
+const G=["radial-gradient(circle at 30% 30%,#ffd27a,#f0623c 60%,#8a2d5a)","radial-gradient(circle at 55% 45%,#7ef0d0,#14c79a,#0a3f4a)","radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0,#22143f)","radial-gradient(circle at 45% 40%,#c9a2ff,#6d4ad0,#241146)","radial-gradient(circle at 50% 35%,#ffb0c8,#f0623c,#5a1030)","radial-gradient(circle at 35% 55%,#a0f0d8,#0f9e79,#053b2c)","radial-gradient(circle at 60% 40%,#ffe08a,#f7a53c,#7a3d10)"];
+// portfolio posts synced from IG: [gradient, type(VIDEO/IMAGE), caption]
+const posts=[[0,"VIDEO","Yangi mahsulot uchun 15s AI reklama roligi 🔥 #reels"],[2,"IMAGE","Brend uchun personaj konsept-dizayni"],[1,"VIDEO","Talking-head avatar — oʻzbek ovozi bilan"],[4,"IMAGE","E-commerce mahsulot fotosuratlari"],[3,"VIDEO","AI motion — logotip animatsiyasi"],[5,"IMAGE","Ijtimoiy tarmoq uchun karusel dizayn"],[6,"VIDEO","Explainer video · 30 soniya"]];
+const car=document.getElementById('car');
+car.innerHTML=posts.map(p=>{const [g,ty,cap]=p;const vid=ty==="VIDEO";
+ return `<div class="post"><div class="media" style="background:${G[g]}"></div><div class="type">${vid?'▷':'▤'}</div>${vid?'<div class="play">▶</div>':''}<div class="cap"><div class="txt">${cap}</div><a class="lk">↗ Instagram'da koʻrish</a></div></div>`}).join('');
+const step=()=>Math.min(car.clientWidth*.8,340);
+document.getElementById('next').onclick=()=>car.scrollBy({left:step(),behavior:'smooth'});
+document.getElementById('prev').onclick=()=>car.scrollBy({left:-step(),behavior:'smooth'});
+// gigs
+const gigs=[["Oʻyin va brend uchun personaj dizayni","220 000",G[3]],["AI taqdimot va explainer video","180 000",G[1]],["Talking-head avatar (oʻzbek ovozi)","150 000",G[0]]];
+document.getElementById('gigs').innerHTML=gigs.map(g=>`<div class="gig"><div class="cv" style="background:${g[2]}"></div><div class="b"><h3>${g[0]}</h3><div class="pr">${g[1]} <small>soʻm</small></div></div></div>`).join('');
+</script></body></html>

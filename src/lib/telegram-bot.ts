@@ -1,0 +1,444 @@
+import "server-only";
+import { MINIAPP_PARAM } from "@/lib/miniapp";
+
+/**
+ * Thin client for the Telegram Bot API. Server-only (uses the bot token).
+ * Used by the bot deep-link login flow (webhook + sendMessage) and webhook setup.
+ */
+
+function api(method: string): string {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not set");
+  return `https://api.telegram.org/bot${token}/${method}`;
+}
+
+/**
+ * Resolve a Telegram file_id to its short-lived download URL (getFile). Used to pull
+ * a user's photo (e.g. a portfolio sample sent to the bot) into our own storage.
+ * Returns null on any failure — callers treat ingestion as best-effort.
+ */
+export async function tgFileUrl(fileId: string): Promise<string | null> {
+  try {
+    const res = await fetch(api("getFile"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_id: fileId }),
+    });
+    if (!res.ok) return null;
+    const body = (await res.json().catch(() => null)) as { ok?: boolean; result?: { file_path?: string } } | null;
+    const path = body?.ok ? body.result?.file_path : undefined;
+    return path ? `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${path}` : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function tgSendMessage(
+  chatId: number | string,
+  text: string,
+  replyMarkup?: Record<string, unknown>
+): Promise<boolean> {
+  try {
+    const res = await fetch(api("sendMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text, ...(replyMarkup ? { reply_markup: replyMarkup } : {}) }),
+    });
+    // Telegram answers 200 {ok:true} on accept; 403 = user blocked the bot — the
+    // caller must know delivery failed (digest falls back to email on this).
+    if (!res.ok) return false;
+    const body = (await res.json().catch(() => null));
+    return body?.ok === true;
+  } catch (err) {
+    console.error("tgSendMessage failed", err);
+    return false;
+  }
+}
+
+/**
+ * Send with a richer result for broadcasts: distinguishes a 403 (user blocked the bot,
+ * so we mark them and stop trying) from a 429 (flood — the caller sleeps retry_after).
+ */
+export async function tgSendResult(
+  chatId: number | string,
+  text: string
+): Promise<{ ok: boolean; blocked: boolean; retryAfter?: number }> {
+  try {
+    const res = await fetch(api("sendMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    if (res.ok) {
+      const b = await res.json().catch(() => null);
+      return { ok: b?.ok === true, blocked: false };
+    }
+    const b = (await res.json().catch(() => null)) as { parameters?: { retry_after?: number } } | null;
+    return { ok: false, blocked: res.status === 403, retryAfter: b?.parameters?.retry_after };
+  } catch (err) {
+    console.error("tgSendResult failed", err);
+    return { ok: false, blocked: false };
+  }
+}
+
+/**
+ * Send a message and return its Telegram message_id (or null on failure). Used for
+ * bot-native quick reply: we persist the returned id so that if the recipient
+ * swipe-replies to this message in Telegram, the webhook can route their text back
+ * into the originating conversation. No force_reply — swipe-to-reply is enough and
+ * doesn't hijack the input field.
+ */
+export async function tgSendTracked(
+  chatId: number | string,
+  text: string
+): Promise<number | null> {
+  try {
+    const res = await fetch(api("sendMessage"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    if (!res.ok) return null;
+    const body = (await res.json().catch(() => null)) as { ok?: boolean; result?: { message_id?: number } } | null;
+    return body?.ok && typeof body.result?.message_id === "number" ? body.result.message_id : null;
+  } catch (err) {
+    console.error("tgSendTracked failed", err);
+    return null;
+  }
+}
+
+/** Acknowledge an inline-button tap (removes the button's loading spinner; optional toast). */
+export async function tgAnswerCallback(callbackId: string, text?: string): Promise<void> {
+  try {
+    await fetch(api("answerCallbackQuery"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackId, ...(text ? { text } : {}) }),
+    });
+  } catch (err) {
+    console.error("tgAnswerCallback failed", err);
+  }
+}
+
+/** Prompt the user to share their (Telegram-verified) phone via a one-tap contact button. */
+export async function tgRequestContact(chatId: number | string, prompt: string): Promise<void> {
+  await tgSendMessage(chatId, prompt, {
+    keyboard: [[{ text: "📱 Telefon raqamni ulashish", request_contact: true }]],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  });
+}
+
+function appOrigin(): string {
+  return (process.env.APP_ORIGIN ?? "https://gigora.ai").replace(/\/$/, "");
+}
+
+/**
+ * Append the Mini App marker to a locale-prefixed path, preserving any existing query and
+ * #fragment. EVERY web_app URL must go through this: the marker is what lets the first paint
+ * inside Telegram already omit our chrome instead of flashing a web header. Three separate call
+ * sites build these URLs (the reply keyboard, the menu button, miniAppUrl) — hence one helper
+ * rather than three copies of the same string concatenation.
+ */
+function withMarker(path: string): string {
+  const [beforeHash, hash] = path.split("#", 2);
+  const sep = beforeHash.includes("?") ? "&" : "?";
+  return `${beforeHash}${sep}${MINIAPP_PARAM}=1${hash ? `#${hash}` : ""}`;
+}
+
+type Loc = "uz" | "ru" | "en";
+const asLoc = (l?: string): Loc => (l === "ru" || l === "en" ? l : "uz");
+
+/**
+ * The always-visible, role-aware app nav (persistent reply keyboard). Each button
+ * is a `web_app` button that opens the actual platform screen as a Mini App —
+ * passwordless via initData (see telegram-miniapp-bootstrap). This is the founder's
+ * "buttons on the keyboard that are always visible", not inline buttons.
+ */
+export function tgMainKeyboard(
+  locale: string | undefined,
+  isSeller: boolean,
+  isAdmin = false
+): Record<string, unknown> {
+  const loc = asLoc(locale);
+  const origin = appOrigin();
+  const wa = (path: string) => ({ url: `${origin}/${loc}${withMarker(path)}` });
+  const L = KEYBOARD_LABELS[loc];
+
+  // Admins get a purpose-built ops keyboard — not the buyer/seller nav. Stats opens the
+  // infographic dashboard; the rest jump straight to the relevant console section.
+  if (isAdmin) {
+    return {
+      keyboard: [
+        [{ text: L.stats, web_app: wa("/admin/stats") }, { text: L.users, web_app: wa("/admin/users") }],
+        [{ text: L.queue, web_app: wa("/admin/moderation") }, { text: L.broadcast, web_app: wa("/admin/broadcast") }],
+        [{ text: L.admin, web_app: wa("/admin") }, { text: L.help }],
+      ],
+      is_persistent: true,
+      resize_keyboard: true,
+    };
+  }
+
+  const rows = isSeller
+    ? [
+        [{ text: L.dashboard, web_app: wa("/dashboard/seller") }, { text: L.messages, web_app: wa("/messages") }],
+        [{ text: L.orders, web_app: wa("/dashboard/seller#orders") }, { text: L.gigs, web_app: wa("/dashboard/seller#gigs") }],
+        [{ text: L.newGig, web_app: wa("/dashboard/seller/gigs/new") }, { text: L.profile, web_app: wa("/dashboard/seller/profile") }],
+        [{ text: L.help }],
+      ]
+    : [
+        [{ text: L.search, web_app: wa("/search") }, { text: L.messages, web_app: wa("/messages") }],
+        [{ text: L.orders, web_app: wa("/dashboard") }, { text: L.saved, web_app: wa("/dashboard/saved") }],
+        [{ text: L.profile, web_app: wa("/dashboard/settings") }, { text: L.help }],
+      ];
+
+  return { keyboard: rows, is_persistent: true, resize_keyboard: true };
+}
+
+/**
+ * Set the chat Menu Button (beside the input) to launch the Mini App home, reporting the
+ * outcome. Telegram stores this PER CHAT, so it only ever reflects the code that ran the
+ * last time a given user talked to the bot — which is why the backfill needs to know
+ * whether each call actually landed. Silent for the user: no message is sent.
+ */
+export async function tgSetChatMenuButtonResult(
+  chatId: number | string,
+  locale?: string
+): Promise<{ ok: boolean; blocked: boolean; retryAfter?: number }> {
+  const loc = asLoc(locale);
+  try {
+    const res = await fetch(api("setChatMenuButton"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        menu_button: {
+          type: "web_app",
+          text: KEYBOARD_LABELS[loc].openApp,
+          web_app: { url: `${appOrigin()}/${loc}${withMarker("/")}` },
+        },
+      }),
+    });
+    if (res.ok) {
+      const b = await res.json().catch(() => null);
+      return { ok: b?.ok === true, blocked: false };
+    }
+    const b = (await res.json().catch(() => null)) as { parameters?: { retry_after?: number } } | null;
+    return { ok: false, blocked: res.status === 403, retryAfter: b?.parameters?.retry_after };
+  } catch (err) {
+    console.error("tgSetChatMenuButtonResult failed", err);
+    return { ok: false, blocked: false };
+  }
+}
+
+/** Fire-and-forget wrapper for the webhook path, where the outcome doesn't change behaviour. */
+export async function tgSetChatMenuButton(chatId: number | string, locale?: string): Promise<void> {
+  await tgSetChatMenuButtonResult(chatId, locale);
+}
+
+/** Command list shown (via a chat-scoped menu) only to admins — includes ops commands. */
+export const ADMIN_BOT_COMMANDS = [
+  { command: "start", description: "Boshlash / Start" },
+  { command: "menu", description: "Asosiy menyu / Main menu" },
+  { command: "stats", description: "Statistika / Platform stats" },
+  { command: "pending", description: "Navbatdagi vazifalar / Pending queue" },
+  { command: "broadcast", description: "Ommaviy xabar / Broadcast" },
+  { command: "help", description: "Yordam / Help" },
+];
+
+/** Set a chat-scoped command list (autocomplete) for one chat — e.g. an admin's DM. */
+export async function tgSetChatCommands(
+  chatId: number | string,
+  commands: { command: string; description: string }[]
+): Promise<void> {
+  try {
+    await fetch(api("setMyCommands"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ commands, scope: { type: "chat", chat_id: chatId } }),
+    });
+  } catch (err) {
+    console.error("tgSetChatCommands failed", err);
+  }
+}
+
+/**
+ * Copy for the zero-tap launch message sent on /start. Localised: the bot's strings were hardcoded
+ * Uzbek for a long time, and a Russian-speaking buyer reading Uzbek at the exact moment they sign
+ * in is where we lose them.
+ */
+const OPEN_APP_COPY: Record<Loc, { text: string; label: string }> = {
+  uz: { text: "Tayyor! Ilovani ochish uchun bosing — qayta kirish shart emas.", label: "🚀 Gigora'ni ochish" },
+  ru: { text: "Готово! Нажмите, чтобы открыть приложение — входить заново не нужно.", label: "🚀 Открыть Gigora" },
+  en: { text: "Ready. Tap to open the app — no need to sign in again.", label: "🚀 Open Gigora" },
+};
+
+export function tgOpenAppText(locale?: string): string {
+  return OPEN_APP_COPY[asLoc(locale)].text;
+}
+
+export function tgOpenAppLabel(locale?: string): string {
+  return OPEN_APP_COPY[asLoc(locale)].label;
+}
+
+const KEYBOARD_LABELS: Record<Loc, Record<string, string>> = {
+  uz: {
+    search: "🔍 Qidirish", messages: "📨 Xabarlar", orders: "🛒 Buyurtmalarim",
+    saved: "❤️ Saqlangan", profile: "👤 Profil", help: "ℹ️ Yordam",
+    dashboard: "📊 Boshqaruv", gigs: "📦 Gaglarim", newGig: "➕ Yangi gig",
+    openApp: "🚀 Gigora'ni ochish", admin: "🛠 Konsol",
+    stats: "📊 Statistika", users: "👥 Foydalanuvchilar", queue: "📋 Navbat", broadcast: "📣 Xabar",
+  },
+  ru: {
+    search: "🔍 Поиск", messages: "📨 Сообщения", orders: "🛒 Мои заказы",
+    saved: "❤️ Избранное", profile: "👤 Профиль", help: "ℹ️ Помощь",
+    dashboard: "📊 Панель", gigs: "📦 Мои услуги", newGig: "➕ Новая услуга",
+    openApp: "🚀 Открыть Gigora", admin: "🛠 Консоль",
+    stats: "📊 Статистика", users: "👥 Пользователи", queue: "📋 Очередь", broadcast: "📣 Рассылка",
+  },
+  en: {
+    search: "🔍 Search", messages: "📨 Messages", orders: "🛒 My orders",
+    saved: "❤️ Saved", profile: "👤 Profile", help: "ℹ️ Help",
+    dashboard: "📊 Dashboard", gigs: "📦 My gigs", newGig: "➕ New gig",
+    openApp: "🚀 Open Gigora", admin: "🛠 Console",
+    stats: "📊 Stats", users: "👥 Users", queue: "📋 Queue", broadcast: "📣 Broadcast",
+  },
+};
+
+export const HELP_LABELS: Record<Loc, string> = {
+  uz: "ℹ️ Yordam", ru: "ℹ️ Помощь", en: "ℹ️ Help",
+};
+
+const OPEN_LABEL: Record<Loc, string> = { uz: "Ochish", ru: "Открыть", en: "Open" };
+
+/**
+ * Full Mini App URL for a platform path (used in notification "open" buttons).
+ *
+ * Carries `?tgapp=1` so the very first paint inside Telegram already omits our chrome instead of
+ * flashing a web header. Middleware converts it to a cookie and redirects to the clean URL, so the
+ * param never lingers where a user could copy and share it. Preserves an existing query string and
+ * any #fragment, since callers pass paths like "/dashboard/seller#orders".
+ */
+export function miniAppUrl(locale: string | undefined, path: string): string {
+  return `${appOrigin()}/${asLoc(locale)}${withMarker(path)}`;
+}
+
+/** Inline "open in the app" button (opens the Mini App at `path`). */
+export function tgOpenButton(locale: string | undefined, path: string): Record<string, unknown> {
+  return {
+    inline_keyboard: [[{ text: OPEN_LABEL[asLoc(locale)], web_app: { url: miniAppUrl(locale, path) } }]],
+  };
+}
+
+/**
+ * Inline buttons for a "gig awaiting review" admin push: one-tap Approve/Reject
+ * (callback_data — dispatched + admin-re-checked in the webhook) plus Open moderation.
+ */
+export function adminGigReviewButtons(locale: string | undefined, gigId: string): Record<string, unknown>[][] {
+  const loc = asLoc(locale);
+  const approve = { uz: "✅ Tasdiqlash", ru: "✅ Одобрить", en: "✅ Approve" }[loc];
+  const reject = { uz: "❌ Rad etish", ru: "❌ Отклонить", en: "❌ Reject" }[loc];
+  return [
+    [
+      { text: approve, callback_data: `ag:a:${gigId}` },
+      { text: reject, callback_data: `ag:r:${gigId}` },
+    ],
+    [{ text: OPEN_LABEL[loc], web_app: { url: miniAppUrl(locale, "/admin/moderation") } }],
+  ];
+}
+
+export function tgWelcome(locale: string | undefined, name?: string): string {
+  const loc = asLoc(locale);
+  const who = name ? `, ${name}` : "";
+  return {
+    uz: `Salom${who}! 👋 Gigora'ga xush kelibsiz. Quyidagi tugmalar orqali hamma narsani shu yerda — Telegram ichida — parolsiz bajaring.`,
+    ru: `Привет${who}! 👋 Добро пожаловать в Gigora. Кнопки ниже открывают всё прямо здесь, в Telegram — без пароля.`,
+    en: `Hi${who}! 👋 Welcome to Gigora. The buttons below open everything right here in Telegram — no password.`,
+  }[loc];
+}
+
+export function tgHelpText(locale: string | undefined): string {
+  const loc = asLoc(locale);
+  return {
+    uz: "Tugmalardan foydalaning: Qidirish, Xabarlar, Buyurtmalar, Profil. Har biri ilovani shu yerda ochadi. Savol boʻlsa — @gigora_support.",
+    ru: "Используйте кнопки: Поиск, Сообщения, Заказы, Профиль. Каждая открывает приложение здесь. Вопросы — @gigora_support.",
+    en: "Use the buttons: Search, Messages, Orders, Profile. Each opens the app right here. Questions — @gigora_support.",
+  }[loc];
+}
+
+/** Register the webhook (called once during setup). */
+export async function tgSetWebhook(url: string, secretToken: string): Promise<unknown> {
+  const res = await fetch(api("setWebhook"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      url,
+      secret_token: secretToken,
+      allowed_updates: ["message", "callback_query"],
+      drop_pending_updates: true,
+    }),
+  });
+  return res.json();
+}
+
+/**
+ * Send an album (2–10 items) of public media URLs. Telegram fetches the URLs itself,
+ * so nothing is proxied through us. Used for the gig-review packet: the reviewer sees
+ * the actual work in the chat instead of clicking through to the site.
+ * Returns false on any failure — the caller still sends its text message.
+ */
+export async function tgSendMediaGroup(
+  chatId: number | string,
+  media: { url: string; type: "photo" | "video" }[],
+  caption?: string
+): Promise<boolean> {
+  const items = media.slice(0, 10);
+  if (items.length === 0) return false;
+  try {
+    const res = await fetch(api("sendMediaGroup"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        media: items.map((m, i) => ({
+          type: m.type,
+          media: m.url,
+          // Only the first item carries the caption (Telegram shows it for the album).
+          ...(i === 0 && caption ? { caption: caption.slice(0, 1024) } : {}),
+        })),
+      }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("tgSendMediaGroup failed", err);
+    return false;
+  }
+}
+
+/**
+ * Ask the user to CONFIRM a browser sign-in, showing a pairing code they must match against
+ * the login page. The code is the whole point: a bare "was this you?" prompt is defeated by
+ * social engineering (a primed victim taps yes), whereas a code can only be known by someone
+ * looking at the page that started the login (audit 2026-08-10, S4).
+ */
+export async function tgSendLoginPrompt(
+  chatId: number | string,
+  token: string,
+  code: string,
+  locale?: string | null
+): Promise<boolean> {
+  const L = locale === "ru" ? "ru" : locale === "en" ? "en" : "uz";
+  const body = {
+    uz: `🔐 Gigora'ga kirish soʻrovi\n\nKod: ${code}\n\nAgar bu kod saytdagi kod bilan bir xil boʻlsa — tasdiqlang.\nAgar siz kirmayotgan boʻlsangiz — bekor qiling.`,
+    ru: `🔐 Запрос на вход в Gigora\n\nКод: ${code}\n\nПодтвердите, только если код совпадает с кодом на сайте.\nЕсли вы не входили — отмените.`,
+    en: `🔐 Sign-in request for Gigora\n\nCode: ${code}\n\nConfirm only if this matches the code shown on the website.\nIf you didn't start this, cancel.`,
+  }[L];
+  const yes = { uz: "✅ Tasdiqlash", ru: "✅ Подтвердить", en: "✅ Confirm" }[L];
+  const no = { uz: "✕ Bekor qilish", ru: "✕ Отмена", en: "✕ Cancel" }[L];
+  return tgSendMessage(chatId, body, {
+    inline_keyboard: [
+      [{ text: yes, callback_data: `lg:y:${token}` }],
+      [{ text: no, callback_data: `lg:n:${token}` }],
+    ],
+  });
+}

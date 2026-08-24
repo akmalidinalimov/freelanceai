@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FreelanceAI — F4 · Film-strip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c10;
+    --elev:#11151c;
+    --glass:rgba(255,255,255,.04);
+    --line:rgba(255,255,255,.09);
+    --text:#e9eef4;
+    --body:#c3cdd8;
+    --muted:#9aa7b5;
+    --teal:#14c79a;
+    --teal-dim:rgba(20,199,154,.14);
+    --violet:#7c6cf0;
+    --r-lg:24px;
+    --r-md:16px;
+    --pad:20px;
+    --nav-h:64px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Manrope",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .disp{font-family:"Unbounded",sans-serif;letter-spacing:-0.02em}
+  img{display:block;max-width:100%}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  .wrap{max-width:1160px;margin-inline:auto;padding-inline:var(--pad)}
+  ::selection{background:var(--teal);color:#04110c}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,12,16,.72);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-in{height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{font-family:"Unbounded",sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:-0.02em}
+  .brand em{font-style:normal;color:var(--teal)}
+  .nav-links{display:none;align-items:center;gap:28px;font-size:.92rem;font-weight:600;color:var(--body)}
+  .nav-links a{padding:10px 2px;transition:color .2s}
+  .lang-chip{
+    display:none;align-items:center;gap:6px;
+    padding:8px 14px;border:1px solid var(--line);border-radius:99px;
+    font-size:.85rem;font-weight:600;color:var(--body);background:var(--glass);
+    min-height:38px;
+  }
+  .btn-login{
+    background:var(--teal);color:#04110c;font-weight:800;font-size:.92rem;
+    padding:0 22px;height:44px;border-radius:99px;
+    box-shadow:0 0 24px rgba(20,199,154,.28);
+    transition:transform .2s,box-shadow .25s;
+  }
+  .btn-login:active{transform:scale(.97)}
+  @media (hover:hover) and (pointer:fine){
+    .nav-links a:hover{color:var(--text)}
+    .btn-login:hover{transform:translateY(-1px);box-shadow:0 0 34px rgba(20,199,154,.45)}
+  }
+  @media (min-width:760px){
+    .nav-links{display:flex}
+    .lang-chip{display:inline-flex}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:64px 0 40px;overflow:hidden}
+  .hero-ghost{
+    position:absolute;top:8px;right:-8px;z-index:0;
+    font-family:"Unbounded",sans-serif;font-weight:800;font-size:clamp(6rem,18vw,13rem);
+    line-height:1;color:rgba(255,255,255,.03);user-select:none;pointer-events:none;
+  }
+  .hero .wrap{position:relative;z-index:1}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--teal-dim);border:1px solid rgba(20,199,154,.25);
+    color:var(--teal);font-size:.8rem;font-weight:700;
+    padding:8px 16px;border-radius:99px;margin-bottom:28px;
+  }
+  .eyebrow .sep{opacity:.5}
+  h1{
+    font-size:clamp(1.75rem,7.2vw,5rem);
+    font-weight:800;line-height:1.06;
+    margin-bottom:22px;max-width:14ch;
+  }
+  h1 .row{display:block;overflow:hidden;padding-bottom:.08em}
+  h1 .w{display:inline-block;will-change:transform}
+  h1 .teal{color:var(--teal);text-shadow:0 0 40px rgba(20,199,154,.35)}
+  .hero-sub{color:var(--body);font-size:1.05rem;max-width:44ch;margin-bottom:36px}
+
+  /* ---------- AI SEARCH CARD ---------- */
+  .ai-card{
+    max-width:680px;
+    background:var(--glass);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line);
+    border-radius:var(--r-lg);
+    padding:18px 18px 14px;
+    box-shadow:0 24px 60px rgba(0,0,0,.4);
+  }
+  .ai-label{
+    display:flex;align-items:center;gap:8px;
+    color:var(--teal);font-size:.78rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1.8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.78)}}
+  .ai-row{display:flex;align-items:flex-end;gap:10px}
+  .ai-input{
+    flex:1;background:transparent;border:none;outline:none;resize:none;
+    color:var(--text);font-family:inherit;font-size:1rem;line-height:1.5;
+    min-height:44px;padding:10px 0;
+  }
+  .ai-input::placeholder{color:var(--muted)}
+  .btn-mic,.btn-go{
+    width:46px;height:46px;flex:none;border-radius:50%;
+    display:grid;place-items:center;font-size:1.1rem;
+    transition:transform .2s,box-shadow .25s,background .2s;
+  }
+  .btn-mic{background:var(--glass);border:1px solid var(--line)}
+  .btn-go{background:var(--teal);color:#04110c;font-weight:800;font-size:1.3rem;box-shadow:0 0 22px rgba(20,199,154,.3)}
+  .btn-mic:active,.btn-go:active{transform:scale(.97)}
+  @media (hover:hover) and (pointer:fine){
+    .btn-mic:hover{background:rgba(255,255,255,.08)}
+    .btn-go:hover{transform:translateY(-1px);box-shadow:0 0 32px rgba(20,199,154,.5)}
+  }
+  .chips{
+    display:flex;gap:10px;overflow-x:auto;margin-top:22px;max-width:820px;
+    padding-bottom:6px;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);
+    mask-image:linear-gradient(90deg,#000 88%,transparent);
+  }
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:none;white-space:nowrap;
+    background:var(--glass);border:1px solid var(--line);border-radius:99px;
+    color:var(--body);font-size:.85rem;font-weight:600;
+    padding:0 18px;min-height:44px;display:inline-flex;align-items:center;
+    transition:border-color .2s,color .2s,transform .2s;
+  }
+  .chip:active{transform:scale(.97)}
+  @media (hover:hover) and (pointer:fine){
+    .chip:hover{border-color:rgba(20,199,154,.45);color:var(--text)}
+  }
+
+  /* ---------- SECTION HEADERS ---------- */
+  section{position:relative;overflow:hidden}
+  .sec-head{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+    margin-bottom:26px;
+  }
+  .sec-count{
+    display:block;color:var(--teal);font-size:.78rem;font-weight:700;
+    letter-spacing:.14em;margin-bottom:10px;font-variant-numeric:tabular-nums;
+  }
+  h2{font-size:clamp(1.4rem,4.6vw,2.2rem);font-weight:700;line-height:1.15}
+  .sec-link{
+    color:var(--muted);font-size:.9rem;font-weight:700;white-space:nowrap;
+    padding:10px 0;transition:color .2s;
+  }
+  @media (hover:hover) and (pointer:fine){.sec-link:hover{color:var(--teal)}}
+  .ghost-num{
+    position:absolute;top:-14px;right:-6px;z-index:0;
+    font-family:"Unbounded",sans-serif;font-weight:800;
+    font-size:clamp(5rem,14vw,9rem);line-height:1;
+    color:rgba(255,255,255,.035);user-select:none;pointer-events:none;
+  }
+
+  /* ---------- FILM STRIP ---------- */
+  .strip-sec{padding:56px 0 34px}
+  .strip-meta{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    margin-bottom:16px;
+  }
+  .strip-index{
+    color:var(--muted);font-size:.82rem;font-weight:700;letter-spacing:.2em;
+    font-variant-numeric:tabular-nums;
+  }
+  .strip-index b{color:var(--teal);font-weight:800}
+  .strip-arrows{display:none;gap:10px}
+  .arrow{
+    width:46px;height:46px;border-radius:50%;
+    background:var(--glass);border:1px solid var(--line);
+    display:grid;place-items:center;font-size:1.05rem;color:var(--body);
+    transition:transform .2s,border-color .2s,color .2s;
+  }
+  .arrow:active{transform:scale(.97)}
+  @media (hover:hover) and (pointer:fine){
+    .arrow:hover{border-color:rgba(20,199,154,.5);color:var(--teal)}
+  }
+  @media (min-width:760px){.strip-arrows{display:flex}}
+  .strip{
+    display:flex;gap:18px;
+    overflow-x:auto;overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;
+    padding:18px calc(50vw - min(36vw,150px)) 26px;
+    scrollbar-width:none;cursor:grab;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);
+    mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);
+  }
+  .strip::-webkit-scrollbar{display:none}
+  .strip.dragging{cursor:grabbing;scroll-snap-type:none}
+  .poster{
+    position:relative;flex:none;
+    width:min(72vw,300px);aspect-ratio:3/4;
+    border-radius:var(--r-md);overflow:hidden;
+    scroll-snap-align:center;
+    background:var(--elev);
+    border:1px solid var(--line);
+    transform:scale(var(--s,1)) translateY(var(--lift,0px));
+    opacity:var(--o,1);
+    transition:transform .45s cubic-bezier(.22,.8,.3,1),opacity .45s ease,box-shadow .35s ease;
+    will-change:transform,opacity;
+  }
+  .poster:active{--lift:0px;transform:scale(calc(var(--s,1)*.98))}
+  @media (hover:hover) and (pointer:fine){
+    .poster:hover{--lift:-8px;box-shadow:0 26px 50px rgba(0,0,0,.55),0 0 0 1px rgba(20,199,154,.25)}
+  }
+  .poster img{
+    width:100%;height:100%;object-fit:cover;
+    transform:translateX(var(--px,0%)) scale(1.14);
+    will-change:transform;pointer-events:none;
+  }
+  .p-scrim{
+    position:absolute;inset:auto 0 0 0;height:62%;
+    background:linear-gradient(180deg,transparent,rgba(6,8,12,.92));
+    pointer-events:none;
+  }
+  .p-idx{
+    position:absolute;top:14px;left:16px;
+    color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:.16em;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 1px 8px rgba(0,0,0,.6);
+  }
+  .p-meta{position:absolute;inset:auto 0 0 0;padding:18px 18px 16px}
+  .p-meta h3{font-size:1.08rem;font-weight:800;line-height:1.25;margin-bottom:3px}
+  .p-meta p{color:var(--body);font-size:.84rem;margin-bottom:0}
+  .p-arrow{
+    position:absolute;right:16px;bottom:18px;
+    color:var(--teal);font-size:1.15rem;font-weight:800;
+  }
+
+  /* ---------- STEPS ---------- */
+  .steps-sec{padding:56px 0}
+  .steps{display:grid;gap:14px;margin-top:8px}
+  .step{
+    background:var(--glass);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:26px 24px;
+  }
+  .step-num{
+    font-family:"Unbounded",sans-serif;font-weight:800;font-size:2rem;
+    letter-spacing:-0.02em;color:rgba(255,255,255,.14);
+    line-height:1;margin-bottom:14px;font-variant-numeric:tabular-nums;
+  }
+  .step h3{font-size:1.05rem;font-weight:800;margin-bottom:6px}
+  .step p{color:var(--body);font-size:.92rem}
+  @media (min-width:760px){.steps{grid-template-columns:repeat(3,1fr);gap:18px}}
+
+  /* ---------- CREATORS ---------- */
+  .makers-sec{padding:26px 0 56px}
+  .rail{
+    display:flex;gap:16px;overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    padding:8px var(--pad) 18px;
+    margin-inline:calc(var(--pad) * -1);
+    scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%);
+    mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%);
+  }
+  .rail::-webkit-scrollbar{display:none}
+  .maker{
+    flex:none;width:min(74vw,260px);scroll-snap-align:start;
+    background:var(--glass);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:22px;
+    transition:transform .25s ease,box-shadow .3s ease,border-color .25s;
+  }
+  .maker:active{transform:scale(.97)}
+  @media (hover:hover) and (pointer:fine){
+    .maker:hover{transform:translateY(-6px);border-color:rgba(20,199,154,.3);box-shadow:0 20px 44px rgba(0,0,0,.45)}
+  }
+  .ava{width:56px;height:56px;border-radius:50%;margin-bottom:16px;border:1px solid var(--line)}
+  .a1{background:radial-gradient(circle at 32% 30%,#f0a6c0,#7c6cf0 70%)}
+  .a2{background:radial-gradient(circle at 32% 30%,#8be3c9,#14785f 72%)}
+  .a3{background:radial-gradient(circle at 32% 30%,#ffd9a0,#c96a3b 72%)}
+  .a4{background:radial-gradient(circle at 32% 30%,#a8c6ff,#3b5bc9 72%)}
+  .maker-name{display:flex;align-items:center;gap:7px;font-size:1.02rem;font-weight:800;margin-bottom:3px}
+  .vrf{color:var(--teal);font-size:.9rem}
+  .maker-role{color:var(--body);font-size:.86rem;margin-bottom:12px}
+  .maker-foot{display:flex;align-items:center;justify-content:space-between}
+  .stars{color:var(--text);font-weight:700;font-size:.9rem}
+  .stars span{color:var(--teal)}
+  .maker-link{color:var(--teal);font-size:.88rem;font-weight:700;padding:8px 0}
+
+  /* ---------- TRUST + FOOTER ---------- */
+  .foot-sec{padding:10px 0 56px}
+  .trust{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px}
+  .trust span{
+    background:var(--glass);border:1px solid var(--line);border-radius:99px;
+    color:var(--body);font-size:.83rem;font-weight:600;
+    padding:10px 16px;display:inline-flex;align-items:center;min-height:44px;
+  }
+  .trust b{color:var(--teal);font-weight:800;margin-right:6px}
+  .foot-line{
+    border-top:1px solid var(--line);padding-top:26px;
+    color:var(--muted);font-size:.86rem;
+  }
+
+  /* ---------- MOBILE BOTTOM NAV ---------- */
+  .bnav{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:rgba(13,16,22,.82);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    display:flex;
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .bnav a{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--muted);font-size:.68rem;font-weight:700;
+    padding:6px 0;min-height:48px;border-radius:12px;
+  }
+  .bnav a .ico{font-size:1.15rem;line-height:1}
+  .bnav a.on{color:var(--teal)}
+  .bnav a:active{transform:scale(.97)}
+  @media (min-width:760px){.bnav{display:none}}
+  main{padding-bottom:96px}
+  @media (min-width:760px){main{padding-bottom:0}}
+
+  /* ---------- REDUCED MOTION ---------- */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation:none!important;
+      transition:none!important;
+      scroll-behavior:auto!important;
+    }
+    .poster{--s:1!important;--o:1!important;--lift:0!important}
+    .poster img{--px:0%!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#">Freelance<em>AI</em></a>
+    <nav class="nav-links" aria-label="Asosiy">
+      <a href="#yonalishlar">Xizmatlar</a>
+      <a href="#ijodkorlar">Ijodkorlar</a>
+      <a href="#">Ijodkor boʻlish</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="lang-chip" type="button">Oʻzbek <span style="font-size:.7em">▾</span></button>
+      <button class="btn-login" type="button">Kirish</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-ghost disp" aria-hidden="true">F4</div>
+  <div class="wrap">
+    <div class="eyebrow">✦ AI yordamchi <span class="sep">·</span> <span>● 1 240 ijodkor onlayn</span></div>
+    <h1 class="disp" id="heroH1">
+      <span class="row"><span class="w">Nima</span> <span class="w">yaratmoqchisiz?</span></span>
+      <span class="row teal"><span class="w">Yozing,</span> <span class="w">topamiz.</span></span>
+    </h1>
+    <p class="hero-sub">Ishingizni oddiy tilda tasvirlang — AI eng mos ijodkorlarni tartiblab beradi.</p>
+
+    <!-- AI SEARCH CARD -->
+    <div class="ai-card">
+      <div class="ai-label"><span class="dot"></span> FreelanceAI yordamchi</div>
+      <div class="ai-row">
+        <textarea class="ai-input" id="aiInput" rows="1" aria-label="Ishingizni tasvirlang" placeholder=""></textarea>
+        <button class="btn-mic" type="button" aria-label="Ovozli kiritish">🎙</button>
+        <button class="btn-go" type="button" aria-label="Qidirish">→</button>
+      </div>
+    </div>
+
+    <div class="chips" id="chips">
+      <button class="chip" type="button">Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…</button>
+      <button class="chip" type="button">Restoran menyusi uchun mahsulot fotosuratlari, oq fon…</button>
+      <button class="chip" type="button">Brendim uchun logotip va vizual identika…</button>
+      <button class="chip" type="button">Instagram uchun oʻzbek ovozli talking-head avatar…</button>
+      <button class="chip" type="button">Kiyim doʻkoni uchun moda AI videosi (reels)</button>
+    </div>
+  </div>
+</section>
+
+<!-- FILM STRIP -->
+<section class="strip-sec" id="yonalishlar">
+  <div class="ghost-num disp" aria-hidden="true">02</div>
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="sec-count">02 / YOʻNALISHLAR</span>
+        <h2 class="disp">Mashhur yoʻnalishlar</h2>
+      </div>
+      <a class="sec-link" href="#">Barchasini koʻrish →</a>
+    </div>
+    <div class="strip-meta">
+      <div class="strip-index" id="stripIdx"><b>01</b> — 08</div>
+      <div class="strip-arrows">
+        <button class="arrow" id="prevBtn" type="button" aria-label="Oldingi">←</button>
+        <button class="arrow" id="nextBtn" type="button" aria-label="Keyingi">→</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip" id="strip" aria-label="Yoʻnalishlar lentasi">
+    <a class="poster" href="#">
+      <img src="mock-assets/ai-video.webp" alt="AI video" loading="eager">
+      <div class="p-scrim"></div>
+      <span class="p-idx">01</span>
+      <div class="p-meta"><h3>AI video</h3><p>reklama, reels, explainer</p><span class="p-arrow">→</span></div>
+    </a>
+    <a class="poster" href="#">
+      <img src="mock-assets/ai-image.webp" alt="AI rasm / art" loading="lazy">
+      <div class="p-scrim"></div>
+      <span class="p-idx">02</span>
+      <div class="p-meta"><h3>AI rasm / art</h3><p>personaj, poster, art</p><span class="p-arrow">→</span></div>
+    </a>
+    <a class="poster" href="#">
+      <img src="mock-assets/ai-avatar.webp" alt="AI avatar" loading="lazy">
+      <div class="p-scrim"></div>
+      <span class="p-idx">03</span>
+      <div class="p-meta"><h3>AI avatar</h3><p>talking-head, bloger</p><span class="p-arrow">→</span></div>
+    </a>
+    <a class="poster" href="#">
+      <img src="mock-assets/product-photo.webp" alt="Mahsulot fotosurati" loading="lazy">
+      <div class="p-scrim"></div>
+      <span class="p-idx">04</span>
+      <div class="p-meta"><h3>Mahsulot fotosurati</h3><p>e-commerce, katalog</p><span class="p-arrow">→</span></div>
+    </a>
+    <a class="poster" href="#">
+      <img src="mock-assets/voiceover.webp" alt="Ovoz / dublyaj" loading="lazy">
+      <div class="p-scrim"></div>
+      <span class="p-idx">05</span>
+      <div class="p-meta"><h3>Ovoz / dublyaj</h3><p>uz · ru · en</p><span class="p-arrow">→</span></div>
+    </a>
+    <a class="poster" href="#">
+      <img src="mock-assets/branding.webp" alt="Brending" loading="lazy">
+      <div class="p-scrim"></div>
+      <span class="p-idx">06</span>
+      <div class="p-meta"><h3>Brending</h3><p>logo, identika</p><span class="p-arrow">→</span></div>
+    </a>
+    <a class="poster" href="#">
+      <img src="mock-assets/motion.webp" alt="Motion / animatsiya" loading="lazy">
+      <div class="p-scrim"></div>
+      <span class="p-idx">07</span>
+      <div class="p-meta"><h3>Motion / animatsiya</h3><p>logo animatsiya, intro</p><span class="p-arrow">→</span></div>
+    </a>
+    <a class="poster" href="#">
+      <img src="mock-assets/image-edit.webp" alt="Rasm tahrir" loading="lazy">
+      <div class="p-scrim"></div>
+      <span class="p-idx">08</span>
+      <div class="p-meta"><h3>Rasm tahrir</h3><p>retush, upscale</p><span class="p-arrow">→</span></div>
+    </a>
+  </div>
+</section>
+
+<!-- STEPS -->
+<section class="steps-sec">
+  <div class="ghost-num disp" aria-hidden="true">03</div>
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="sec-count">03 / JARAYON</span>
+        <h2 class="disp">Qanday ishlaydi</h2>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Tasvirlang</h3>
+        <p>Kerakli ishni oddiy tilda yozing yoki ovozda ayting.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Mos ijodkorni tanlang</h3>
+        <p>AI top mosliklarni narx va muddat bilan koʻrsatadi.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Xavfsiz toʻlang</h3>
+        <p>Ish tugagach toʻlov ijodkorga oʻtadi — Payme, Click, Uzum.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CREATORS -->
+<section class="makers-sec" id="ijodkorlar">
+  <div class="ghost-num disp" aria-hidden="true">04</div>
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="sec-count">04 / IJODKORLAR</span>
+        <h2 class="disp">Tanlangan ijodkorlar</h2>
+      </div>
+      <a class="sec-link" href="#">Barchasi →</a>
+    </div>
+    <div class="rail">
+      <div class="maker">
+        <div class="ava a1"></div>
+        <div class="maker-name">Malika F. <span class="vrf">✓</span></div>
+        <div class="maker-role">Fashion AI video</div>
+        <div class="maker-foot"><span class="stars"><span>★</span> 4.9</span><a class="maker-link" href="#">Profil →</a></div>
+      </div>
+      <div class="maker">
+        <div class="ava a2"></div>
+        <div class="maker-name">Dilnoza R. <span class="vrf">✓</span></div>
+        <div class="maker-role">AI video</div>
+        <div class="maker-foot"><span class="stars"><span>★</span> 4.9</span><a class="maker-link" href="#">Profil →</a></div>
+      </div>
+      <div class="maker">
+        <div class="ava a3"></div>
+        <div class="maker-name">Kamila T. <span class="vrf">✓</span></div>
+        <div class="maker-role">Fotosurat</div>
+        <div class="maker-foot"><span class="stars"><span>★</span> 5.0</span><a class="maker-link" href="#">Profil →</a></div>
+      </div>
+      <div class="maker">
+        <div class="ava a4"></div>
+        <div class="maker-name">Sardor M. <span class="vrf">✓</span></div>
+        <div class="maker-role">Brending</div>
+        <div class="maker-foot"><span class="stars"><span>★</span> 4.8</span><a class="maker-link" href="#">Profil →</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST + FOOTER -->
+<section class="foot-sec">
+  <div class="wrap">
+    <div class="trust">
+      <span><b>✓</b> Xavfsiz toʻlov</span>
+      <span>Payme · Click · Uzum</span>
+      <span><b>✓</b> Tasdiqlangan ijodkorlar (KYC)</span>
+      <span><b>✓</b> 3 tilda</span>
+    </div>
+    <p class="foot-line">FreelanceAI — Markaziy Osiyoning AI-ijodkorlar bozori</p>
+  </div>
+</section>
+
+</main>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bnav" aria-label="Mobil navigatsiya">
+  <a href="#" class="on"><span class="ico">⌂</span>Bosh</a>
+  <a href="#"><span class="ico">🔍</span>Qidiruv</a>
+  <a href="#yonalishlar"><span class="ico">▦</span>Xizmatlar</a>
+  <a href="#ijodkorlar"><span class="ico">✦</span>Ijodkorlar</a>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Typewriter placeholder ---------- */
+  var input = document.getElementById("aiInput");
+  var sentences = [
+    "Kosmetika mahsulotim uchun 15 soniyalik AI reklama roligi…",
+    "Restoran menyusi uchun mahsulot fotosuratlari, oq fon…",
+    "Brendim uchun logotip va vizual identika…",
+    "Instagram uchun oʻzbek ovozli talking-head avatar…"
+  ];
+  if (reduced) {
+    input.placeholder = sentences[0];
+  } else {
+    var si = 0, ci = 0, deleting = false, paused = false, tId;
+    function tick(){
+      if (paused) return;
+      var s = sentences[si];
+      if (!deleting) {
+        ci++;
+        input.placeholder = s.slice(0, ci);
+        if (ci >= s.length) { deleting = true; tId = setTimeout(tick, 2100); return; }
+        tId = setTimeout(tick, 34);
+      } else {
+        ci -= 3;
+        if (ci <= 0) { ci = 0; deleting = false; si = (si + 1) % sentences.length; }
+        input.placeholder = s.slice(0, ci);
+        tId = setTimeout(tick, 14);
+      }
+    }
+    tick();
+    input.addEventListener("focus", function(){ paused = true; clearTimeout(tId); });
+    input.addEventListener("blur", function(){
+      if (input.value.trim() === "") { paused = false; tick(); }
+    });
+  }
+
+  /* ---------- Chips fill textarea (no auto-submit) ---------- */
+  document.getElementById("chips").addEventListener("click", function(e){
+    var chip = e.target.closest(".chip");
+    if (!chip) return;
+    input.value = chip.textContent.trim();
+    input.focus();
+  });
+
+  /* ---------- Film strip: center-scale + parallax + index ---------- */
+  var strip = document.getElementById("strip");
+  var posters = Array.prototype.slice.call(strip.querySelectorAll(".poster"));
+  var idxEl = document.getElementById("stripIdx");
+  var raf = null;
+
+  function updateStrip(){
+    raf = null;
+    var rect = strip.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var best = 0, bestD = Infinity;
+    for (var i = 0; i < posters.length; i++) {
+      var r = posters[i].getBoundingClientRect();
+      var pc = r.left + r.width / 2;
+      var d = pc - cx;
+      var ad = Math.abs(d);
+      if (ad < bestD) { bestD = ad; best = i; }
+      if (!reduced) {
+        var t = Math.min(ad / (r.width * 1.15), 1);
+        posters[i].style.setProperty("--s", (1 - t * 0.06).toFixed(4));
+        posters[i].style.setProperty("--o", (1 - t * 0.32).toFixed(3));
+        var px = Math.max(-6, Math.min(6, (d / rect.width) * -9));
+        posters[i].style.setProperty("--px", px.toFixed(2) + "%");
+      }
+    }
+    idxEl.innerHTML = "<b>0" + (best + 1) + "</b> — 08";
+  }
+  function queueUpdate(){ if (raf === null) raf = requestAnimationFrame(updateStrip); }
+  strip.addEventListener("scroll", queueUpdate, { passive: true });
+  window.addEventListener("resize", queueUpdate);
+  updateStrip();
+
+  /* ---------- Strip arrows ---------- */
+  function stepBy(dir){
+    var w = posters[0].getBoundingClientRect().width + 18;
+    strip.scrollBy({ left: dir * w, behavior: reduced ? "auto" : "smooth" });
+  }
+  document.getElementById("prevBtn").addEventListener("click", function(){ stepBy(-1); });
+  document.getElementById("nextBtn").addEventListener("click", function(){ stepBy(1); });
+
+  /* ---------- Desktop drag-scroll ---------- */
+  var down = false, startX = 0, startL = 0, movedPx = 0;
+  strip.addEventListener("pointerdown", function(e){
+    if (e.pointerType !== "mouse") return;
+    down = true; movedPx = 0;
+    startX = e.clientX; startL = strip.scrollLeft;
+    strip.classList.add("dragging");
+  });
+  window.addEventListener("pointermove", function(e){
+    if (!down) return;
+    var dx = e.clientX - startX;
+    movedPx = Math.max(movedPx, Math.abs(dx));
+    strip.scrollLeft = startL - dx;
+  });
+  window.addEventListener("pointerup", function(){
+    if (!down) return;
+    down = false;
+    strip.classList.remove("dragging");
+  });
+  strip.addEventListener("click", function(e){
+    if (movedPx > 6) { e.preventDefault(); e.stopPropagation(); movedPx = 0; }
+  }, true);
+
+  /* ---------- GSAP reveals (content already visible without JS) ---------- */
+  if (!reduced && window.gsap) {
+    gsap.from("#heroH1 .w", {
+      yPercent: 105, opacity: 0,
+      duration: 0.9, ease: "power3.out",
+      stagger: 0.09, delay: 0.1
+    });
+    gsap.from(".eyebrow, .hero-sub, .ai-card, .chips", {
+      y: 18, opacity: 0,
+      duration: 0.7, ease: "power2.out",
+      stagger: 0.08, delay: 0.35
+    });
+    if (window.ScrollTrigger) {
+      gsap.registerPlugin(ScrollTrigger);
+      [".strip-sec .sec-head", ".steps-sec .sec-head", ".makers-sec .sec-head"].forEach(function(sel){
+        gsap.from(sel, {
+          y: 26, opacity: 0, duration: 0.7, ease: "power2.out",
+          scrollTrigger: { trigger: sel, start: "top 88%", once: true }
+        });
+      });
+      gsap.from(".step", {
+        y: 24, opacity: 0, duration: 0.6, ease: "power2.out", stagger: 0.1,
+        scrollTrigger: { trigger: ".steps", start: "top 85%", once: true }
+      });
+      gsap.from(".maker", {
+        y: 24, opacity: 0, duration: 0.6, ease: "power2.out", stagger: 0.08,
+        scrollTrigger: { trigger: ".rail", start: "top 88%", once: true }
+      });
+      gsap.from(".trust span", {
+        y: 14, opacity: 0, duration: 0.5, ease: "power2.out", stagger: 0.05,
+        scrollTrigger: { trigger: ".trust", start: "top 92%", once: true }
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>

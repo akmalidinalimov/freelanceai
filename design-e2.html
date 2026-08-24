@@ -1,0 +1,97 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreelanceAI — E2 · Editorial Bento + IG</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0c1526;--soft:#4d5a72;--teal:#0f9e79;--teal2:#0a5f4b;--tint:#eef7f3;--coral:#f0623c;--line:#e6ecea;--paper:#f7f9f8}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+.disp{font-family:Unbounded,sans-serif;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1160px;margin:0 auto;padding:0 30px}
+nav{position:sticky;top:0;z-index:50;background:rgba(247,249,248,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.navin{max-width:1160px;margin:0 auto;padding:0 30px;height:70px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:Unbounded;font-weight:800;font-size:20px}.brand b{color:var(--teal)}
+.nl{display:flex;gap:24px;align-items:center;font-weight:500;font-size:15px;color:var(--soft)}
+.dark{background:var(--ink);color:#fff;padding:9px 17px;border-radius:11px;font-weight:600}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:18px;padding:24px 0 34px}
+.b{border-radius:22px;padding:22px;position:relative;overflow:hidden;opacity:0;transform:translateY(20px) scale(.98);animation:pop .7s cubic-bezier(.2,.8,.2,1) forwards;transition:transform .25s}
+.b:hover{transform:translateY(-4px)}
+@keyframes pop{to{opacity:1;transform:none}}
+.head{grid-column:span 2;grid-row:span 2;background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:space-between}
+.head .tag{font-size:13px;font-weight:700;color:#7ef0d0}
+.head h1{font-weight:800;font-size:40px;line-height:1.05;margin-top:10px}.head h1 .g{color:var(--teal)}
+.head .p1{align-self:flex-start;background:var(--teal);color:#03231c;font-weight:700;padding:12px 20px;border-radius:12px}
+.head .blob{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,#14c79a,transparent 70%);right:-60px;bottom:-60px;opacity:.5;filter:blur(20px);animation:float 8s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-18px)}}
+.srch{grid-column:span 2;background:#fff;border:1.5px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.srch .lb{font-size:13px;font-weight:700;color:var(--teal2)}
+.srch .bar{margin-top:12px;display:flex;background:var(--paper);border:1.5px solid var(--line);border-radius:13px;padding:6px 6px 6px 16px}
+.srch input{flex:1;border:0;background:none;outline:0;font-family:inherit;font-size:15px;color:var(--ink)}
+.srch button{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:0 18px;font-weight:700;font-family:inherit;cursor:pointer}
+.srch .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.srch .chips span{font-size:12.5px;font-weight:600;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+.stat{background:var(--tint);display:flex;flex-direction:column;justify-content:center}
+.stat b{font-family:Unbounded;font-size:36px;color:var(--teal2);line-height:1}.stat span{font-size:13px;font-weight:600;color:var(--teal2);margin-top:6px}
+/* IG creator tile */
+.crt{background:#fff;border:1.5px solid var(--line);grid-row:span 2;display:flex;flex-direction:column;padding:16px}
+.crt .top{display:flex;align-items:center;gap:10px}
+.crt .av{width:42px;height:42px;border-radius:12px;background:radial-gradient(circle at 40% 35%,#7ef0d0,#0f9e79 60%,#0a3f4a)}
+.crt .nm{font-weight:800;font-size:14.5px;display:flex;align-items:center;gap:5px}.crt .vc{color:var(--teal2);font-size:12px}
+.crt .ig{font-size:11.5px;color:var(--soft);font-weight:700;display:flex;align-items:center;gap:5px}
+.igglyph{width:12px;height:12px;border-radius:4px;background:linear-gradient(45deg,#f7b24a,#f0623c,#c13584,#5b4ad0);display:inline-block}
+.crt .work{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:12px;flex:1}
+.crt .work .t{border-radius:9px;position:relative;overflow:hidden;min-height:44px}
+.crt .work .t .pl{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:14px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.crt .rt{margin-top:11px;font-size:12.5px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between}
+.crt .rt .v{color:var(--teal2)}
+.art{color:#fff;display:flex;align-items:flex-end;font-weight:700;font-size:13px}
+.art .lb{position:relative;z-index:2}.art .p{font-size:12px;color:rgba(255,255,255,.85);font-weight:600}
+.cat{background:#fff;border:1.5px solid var(--line);display:flex;flex-direction:column;justify-content:center;gap:6px}
+.cat a{font-weight:600;font-size:14px;color:var(--ink);display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)}
+.cat a:last-child{border:0}.cat a span{color:var(--soft)}
+/* featured creators rail */
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 16px}
+.sh h2{font-family:Unbounded;font-size:22px}.sh a{color:var(--teal2);font-weight:600;font-size:15px}
+.crail{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 0 44px;scrollbar-width:none}
+.crail::-webkit-scrollbar{display:none}
+.creator{scroll-snap-align:start;flex:0 0 290px;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:.2s}
+.creator:hover{box-shadow:0 24px 50px -30px rgba(11,21,38,.4);transform:translateY(-3px)}
+.chead{display:flex;align-items:center;gap:11px;padding:14px 14px 11px}
+.cav2{width:44px;height:44px;border-radius:13px;flex:0 0 auto}
+.cnm2{font-weight:800;font-size:14.5px;display:flex;align-items:center;gap:6px}.vchip{color:var(--teal2)}
+.chandle{font-size:12px;color:var(--soft);font-weight:600;display:flex;align-items:center;gap:5px}
+.cwork{display:grid;grid-template-columns:2fr 1fr 1fr;grid-auto-rows:64px;gap:3px}
+.cwork .t{position:relative;overflow:hidden}.cwork .t.big{grid-row:span 2}
+.cwork .play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:18px;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.cfoot{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;font-size:12.5px;font-weight:600;color:var(--soft)}
+.cfoot .r{color:var(--ink)}.cfoot .view{color:var(--teal2)}
+@media (prefers-reduced-motion:reduce){.b{opacity:1;transform:none;animation:none}.blob{animation:none}}
+@media(max-width:900px){.bento{grid-template-columns:repeat(2,1fr)}.head,.srch,.crt{grid-column:span 2}.crt{grid-row:auto}.nl a:not(.dark){display:none}}
+</style></head><body>
+<nav><div class="navin"><div class="brand">Freelance<b>AI</b></div><div class="nl"><a>Xizmatlar</a><a>Ijodkorlar</a><a>Ijodkor boʻlish</a><a>Oʻzbek ▾</a><a class="dark">Kirish</a></div></div></nav>
+<div class="wrap">
+ <div class="bento">
+  <div class="b head" style="animation-delay:.05s"><div class="blob"></div><div><div class="tag">✦ Markaziy Osiyoning AI-ijodkorlar bozori</div><h1 class="disp">Biznesingiz uchun <span class="g">AI ijod</span></h1></div><a class="p1">Boshlash →</a></div>
+  <div class="b srch" style="animation-delay:.12s"><div class="lb">Nima qidiryapsiz?</div><div class="bar"><input placeholder="AI video, logotip, fotosurat…" aria-label="Qidiruv"><button>Qidirish</button></div><div class="chips"><span>AI video</span><span>AI rasm</span><span>Avatar</span><span>Brending</span></div></div>
+  <div class="b stat" style="animation-delay:.19s"><b class="cnt" data-to="10240">0</b><span>Tasdiqlangan ijodkor</span></div>
+  <div class="b crt" style="animation-delay:.26s">
+   <div class="top"><div class="av"></div><div><div class="nm">Dilnoza R. <span class="vc">✓</span></div><div class="ig"><span class="igglyph"></span>@vividai.uz · ulangan</div></div></div>
+   <div class="work"><div class="t" style="background:radial-gradient(circle at 40% 35%,#ffd27a,#f0623c)"><div class="pl">▶</div></div><div class="t" style="background:radial-gradient(circle at 55% 45%,#7ef0d0,#0f9e79)"></div><div class="t" style="background:radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0)"></div><div class="t" style="background:radial-gradient(circle at 45% 40%,#c9a2ff,#6d4ad0)"><div class="pl">▶</div></div></div>
+   <div class="rt"><span>★ 4.9 · AI video</span><span class="v">Profil →</span></div>
+  </div>
+  <div class="b art" style="animation-delay:.33s;background:radial-gradient(circle at 55% 45%,#7ef0d0,#0f9e79,#0a3f4a)"><div class="lb">Talking-head avatar<div class="p">180 000 soʻm</div></div></div>
+  <div class="b cat" style="animation-delay:.4s"><a>AI video <span>→</span></a><a>AI rasm <span>→</span></a><a>Ovoz dublyaji <span>→</span></a><a>Brending <span>→</span></a></div>
+  <div class="b art" style="animation-delay:.47s;background:radial-gradient(circle at 40% 35%,#ffd27a,#f0623c 60%,#8a2d5a)"><div class="lb">AI reklama roligi<div class="p">250 000 soʻm</div></div></div>
+  <div class="b stat" style="animation-delay:.54s"><b class="cnt" data-to="58000">0</b><span>Bajarilgan buyurtma</span></div>
+ </div>
+ <div class="sh"><h2 class="disp">Tanlangan ijodkorlar · Instagram</h2><a>Barchasi →</a></div>
+ <div class="crail" id="crail"></div>
+</div>
+<script>
+setTimeout(()=>document.querySelectorAll('.cnt').forEach(el=>{const to=+el.dataset.to;let n=0;const st=Math.ceil(to/38);const t=setInterval(()=>{n+=st;if(n>=to){n=to;clearInterval(t)}el.textContent=n.toLocaleString('ru-RU')+(to>50000?'+':'')},26)}),700);
+const G=["radial-gradient(circle at 30% 30%,#f7b24a,#f0623c 60%,#8a2d5a)","radial-gradient(circle at 55% 45%,#7ef0d0,#0f9e79,#0a3f4a)","radial-gradient(circle at 40% 60%,#8ab4ff,#5b4ad0,#22143f)","radial-gradient(circle at 45% 40%,#c9a2ff,#6d4ad0,#241146)","radial-gradient(circle at 50% 35%,#ffb0c8,#f0623c,#5a1030)","radial-gradient(circle at 35% 55%,#a0f0d8,#0f9e79,#053b2c)"];
+const cr=[["Dilnoza R.","@vividai.uz","AI video · Level 2","4.9",G[1],[0,1,5]],["Sardor M.","@qoraquti","Brending · Level 2","4.8",G[2],[2,4,1]],["Kamila T.","@studio.aurora","Fotosurat · Top","5.0",G[4],[4,0,3]],["Bekzod A.","@neonlab","AI rasm · Level 1","4.7",G[3],[3,5,2]]];
+document.getElementById('crail').innerHTML=cr.map(c=>`<div class="creator"><div class="chead"><span class="cav2" style="background:${c[4]}"></span><div><div class="cnm2">${c[0]} <span class="vchip">✓</span></div><div class="chandle"><span class="igglyph"></span>${c[1]} · ulangan</div></div></div><div class="cwork"><div class="t big" style="background:${G[c[5][0]]}"><div class="play">▶</div></div><div class="t" style="background:${G[c[5][1]]}"></div><div class="t" style="background:${G[c[5][2]]}"></div></div><div class="cfoot"><span class="r">★ ${c[3]} · ${c[2]}</span><span class="view">Profil →</span></div></div>`).join('');
+</script></body></html>

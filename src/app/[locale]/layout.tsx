@@ -1,11 +1,42 @@
 import type { Metadata } from "next";
+import { Manrope, Unbounded } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { setRequestLocale, getTranslations, getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { routing, isLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/site-header";
+import { ImpersonationBanner } from "@/components/impersonation-banner";
+import { impersonatedUserId } from "@/lib/impersonation";
 import { SiteFooter } from "@/components/site-footer";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { ClarityAnalytics } from "@/components/clarity-analytics";
+import { MetaPixel } from "@/components/meta-pixel";
+import { CookieConsent } from "@/components/cookie-consent";
+import { TelegramChrome } from "@/components/telegram/telegram-chrome";
+import { isMiniAppRequest } from "@/lib/miniapp";
+import { TelegramMiniAppBootstrap } from "@/components/telegram-miniapp-bootstrap";
+import { SessionKeepalive } from "@/components/session-keepalive";
+import { UIProviders } from "@/components/ui-providers";
+import { BotReconnectBanner } from "@/components/bot-reconnect-banner";
+import { ReferralCapture } from "@/components/referral-capture";
+import { Suspense } from "react";
+import { getCurrentUser } from "@/lib/session";
+import { needsBotReconnect } from "@/lib/telegram-migration";
 import "../globals.css";
+
+// Manrope (body) + Unbounded (display). Both carry Cyrillic so RU headings render.
+const manrope = Manrope({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+const unbounded = Unbounded({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  weight: ["600", "700", "800"],
+  variable: "--font-unbounded",
+  display: "swap",
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -36,15 +67,74 @@ export default async function LocaleLayout({
     notFound();
   }
   setRequestLocale(locale);
+  // Pass ALL messages to the client so client components can use any namespace
+  // (without this, next-intl only forwards namespaces accessed by server components
+  // on the page — e.g. OrderPanel's "Order" namespace would be missing on the gig page).
+  const messages = await getMessages();
+
+  // Telegram bot migration: nudge users linked to the old bot to open the new one
+  // (getCurrentUser is request-cached, so this reuses SiteHeader's load — no extra query).
+  const user = await getCurrentUser();
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME;
+  const showReconnect = Boolean(user && botUsername && needsBotReconnect(user));
+
+  // Impersonation strip: when the admin's signed "log in as" cookie is active,
+  // `user` above IS the target — show who they appear as, permanently, site-wide.
+  const impersonating = (await impersonatedUserId()) !== null && user !== null;
+  const impName = impersonating
+    ? (user!.firstName ?? user!.name ?? user!.username ?? user!.id)
+    : null;
+
+  // Telegram Mini App: suppress OUR chrome because Telegram draws its own. Optimistic — the
+  // marker is a cookie, so it can be stale or arrive via a copied URL. TelegramChrome verifies
+  // against the real SDK after hydration and restores the chrome if the marker lied, which is
+  // what stops a user landing on a page with no navigation at all.
+  const miniApp = isMiniAppRequest(await headers());
+
+  const skip =
+    ({ uz: "Asosiy kontentga oʻtish", ru: "Перейти к содержимому", en: "Skip to content" } as Record<string, string>)[
+      locale
+    ] ?? "Skip to content";
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${manrope.variable} ${unbounded.variable}`}>
       <body className="flex min-h-screen flex-col">
-        <NextIntlClientProvider>
+        {/* Light "clay meets Apple" world site-wide (2026-07-09): the Sandstone page
+            + fine woven texture come from :root tokens + body::before in globals.css,
+            so every token-based page themes light automatically. The homepage still
+            layers its own dark market hero on top until its redesign lands. */}
+        <NextIntlClientProvider messages={messages}>
+          <UIProviders>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[hsl(var(--primary))] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-[hsl(var(--primary-foreground))]"
+          >
+            {skip}
+          </a>
+          {impName && <ImpersonationBanner targetName={impName} />}
           <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
+          {showReconnect && botUsername && (
+            <BotReconnectBanner deepLink={`https://t.me/${botUsername}`} botName={`@${botUsername}`} />
+          )}
+          {/* pb-16 unconditionally now: the bottom nav renders in the Mini App too. */}
+          <main id="main" className="flex-1 pb-16 md:pb-0">
+            {children}
+          </main>
+          {!miniApp && <SiteFooter />}
+          <MobileBottomNav signedIn={Boolean(user)} />
+          {!miniApp && <CookieConsent />}
+          </UIProviders>
         </NextIntlClientProvider>
+        <Suspense fallback={null}>
+          <ReferralCapture />
+        </Suspense>
+        <TelegramChrome markerActive={miniApp} />
+        <TelegramMiniAppBootstrap />
+        {/* Only for signed-in users: it exists to extend a session, so there is nothing to do
+            for a visitor without one. */}
+        {user && <SessionKeepalive />}
+        <ClarityAnalytics />
+        <MetaPixel />
       </body>
     </html>
   );

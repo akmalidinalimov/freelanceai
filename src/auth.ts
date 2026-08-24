@@ -1,0 +1,270 @@
+import NextAuth, { type NextAuthConfig } from "next-auth";
+import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+import { upsertTelegramUser, upsertEmailUser, ensureUsername } from "@/lib/users";
+import { consumeMagicToken } from "@/lib/email-auth";
+import { verifyMiniAppInitData } from "@/lib/telegram";
+import { consumeLaunchTicket } from "@/lib/launch-ticket";
+import { shouldExpireSession, absoluteExpiry } from "@/lib/session-policy";
+import { stampLastLogin } from "@/server/services/activity";
+import { readCookie, sha256 } from "@/lib/rate-limit";
+import { MINIAPP_COOKIE, crossSiteCookieOptions, isSecureRequest } from "@/lib/miniapp";
+
+/**
+ * Auth.js (NextAuth v5). JWT sessions (required by the Credentials/Telegram bridge,
+ * and avoids a per-request session-store lookup). The Prisma adapter persists Google
+ * users + their Account rows; the Telegram bridge persists via upsertTelegramUser.
+ * Role/status are read fresh from the DB in getCurrentUser, so the JWT only carries
+ * the user id (changes like admin-promote/suspend take effect immediately).
+ */
+const baseConfig: NextAuthConfig = {
+  adapter: PrismaAdapter(prisma),
+  // 30 days, rolling. Auth.js re-signs the JWT on every /api/auth/session read, so the clock
+  // restarts from last use — but ONLY through that route: auth() inside a Server Component
+  // discards the refreshed Set-Cookie (next-auth/lib/index.js), and nothing on the web called
+  // that route, so web sessions used to die 7 days after ISSUE no matter how active the user was.
+  // SessionKeepalive now pings it. Note updateAge is deliberately absent: it is a no-op for the
+  // JWT strategy (@auth/core reads it only in the database branch), so setting it would look like
+  // a fix and do nothing.
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  trustHost: true,
+  secret: process.env.AUTH_SECRET,
+  pages: { signIn: "/login" },
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // Link a Google login to an existing user with the same verified email.
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Credentials({
+      id: "telegram",
+      name: "Telegram",
+      credentials: { token: { type: "text" } },
+      async authorize(credentials, request) {
+        const token = typeof credentials?.token === "string" ? credentials.token : "";
+        if (!token) return null;
+
+        const lt = await prisma.loginToken.findUnique({ where: { token } });
+        if (!lt || lt.status !== "CONFIRMED" || lt.expiresAt < new Date() || !lt.telegramId) {
+          return null;
+        }
+        // Browser binding: the httpOnly nonce cookie set on /start must match the
+        // hash stored on the token — blocks login-CSRF / leaked-deep-link takeover.
+        const nonce = readCookie(request, "fa_login_nonce");
+        if (!lt.browserNonceHash || !nonce || sha256(nonce) !== lt.browserNonceHash) {
+          return null;
+        }
+
+        // Consume (single-use) + upsert atomically: a failed upsert rolls back consume.
+        const user = await prisma.$transaction(async (tx) => {
+          const consumed = await tx.loginToken.updateMany({
+            where: { token, status: "CONFIRMED" },
+            data: { status: "CONSUMED" },
+          });
+          if (consumed.count === 0) return null;
+          return upsertTelegramUser(
+            {
+              id: lt.telegramId!,
+              firstName: lt.firstName ?? undefined,
+              lastName: lt.lastName ?? undefined,
+              username: lt.username ?? undefined,
+              authDate: Math.floor(Date.now() / 1000),
+            },
+            tx
+          );
+        });
+        if (!user) return null;
+        // The other providers all gate on status (miniapp at :124, email-link in
+        // consumeMagicToken); this one never did, so a suspended account could sign back in
+        // through the bot (audit 2026-08-10, workstream A).
+        if (user.status !== "ACTIVE") return null;
+
+        return {
+          id: user.id,
+          name: user.firstName ?? user.username ?? "User",
+          image: user.photoUrl ?? undefined,
+        };
+      },
+    }),
+    Credentials({
+      // Passwordless email login. The magic-link email carries a single-use token
+      // (created + stored by /api/auth/email/request); the callback page hands it
+      // here. Consuming the token verifies the address, so we upsert + sign in.
+      id: "email-link",
+      name: "Email",
+      credentials: { token: { type: "text" } },
+      async authorize(credentials) {
+        const token = typeof credentials?.token === "string" ? credentials.token : "";
+        if (!token) return null;
+        const email = await consumeMagicToken(token);
+        if (!email) return null;
+        const user = await upsertEmailUser(email);
+        if (user.status !== "ACTIVE") return null;
+        return {
+          id: user.id,
+          name: user.firstName ?? user.name ?? email.split("@")[0],
+          image: user.photoUrl ?? user.image ?? undefined,
+        };
+      },
+    }),
+    Credentials({
+      // Zero-tap sign-in from a bot-issued launch ticket. The webhook knew the user's Telegram id
+      // when they messaged the bot, so it mints a single-use ticket straight into that chat and the
+      // Mini App spends it on open. Unlike the initData bridge this needs nothing from Telegram at
+      // runtime, so it still works when a client hands the page an empty initData.
+      //
+      // The safety rests on consumeLaunchTicket, which will only spend a token that is CONFIRMED,
+      // unexpired, carries a Telegram id, and has NO browser nonce — the last of which is what
+      // makes it structurally impossible to redeem a browser-flow login token here.
+      id: "telegram-ticket",
+      name: "Telegram launch ticket",
+      credentials: { token: { type: "text" } },
+      async authorize(credentials) {
+        const token = typeof credentials?.token === "string" ? credentials.token : "";
+        if (!token) return null;
+        const id = await consumeLaunchTicket(token);
+        if (!id) return null;
+        const user = await upsertTelegramUser({
+          id: id.telegramId,
+          firstName: id.firstName ?? undefined,
+          lastName: id.lastName ?? undefined,
+          username: id.username ?? undefined,
+          authDate: Math.floor(Date.now() / 1000),
+        });
+        if (user.status !== "ACTIVE") return null;
+        return {
+          id: user.id,
+          name: user.firstName ?? user.username ?? "User",
+          image: user.photoUrl ?? undefined,
+        };
+      },
+    }),
+    Credentials({
+      // Passwordless login INSIDE a Telegram Mini App. The WebView posts the signed
+      // `initData`; verifyMiniAppInitData validates it against the bot token (HMAC) and
+      // its freshness — that signature IS the proof of identity, so no password/nonce.
+      // This is what makes "open the app in Telegram once → logged in forever" work.
+      id: "telegram-miniapp",
+      name: "Telegram Mini App",
+      credentials: { initData: { type: "text" } },
+      async authorize(credentials) {
+        const initData = typeof credentials?.initData === "string" ? credentials.initData : "";
+        if (!initData) return null;
+        // Short freshness window: initData carries no browser-nonce (unlike the
+        // deep-link flow), so cap the replay window to the login moment (10 min).
+        const tg = verifyMiniAppInitData(initData, { maxAgeSeconds: 600 });
+        if (!tg) return null;
+        // NOT single-use, deliberately (fixed 2026-07-26). Telegram hands the SAME
+        // initData to every page of a Mini App launch, so consuming it made the first
+        // sign-in succeed and every later one fail — a user who tapped a second bot
+        // button, or whose WebView dropped its cookie, was bounced to the login page
+        // with no way back in. Security now rests on Telegram's own documented model,
+        // which this already enforces above: an HMAC signature over the payload keyed
+        // by the bot token, plus a 10-minute freshness window on auth_date. The
+        // residual exposure is a captured initData being replayable inside that
+        // window; the durable credential is the 7-day session cookie, not this.
+        const user = await upsertTelegramUser({ ...tg, authDate: Math.floor(Date.now() / 1000) });
+        if (user.status !== "ACTIVE") return null;
+        return {
+          id: user.id,
+          name: user.firstName ?? user.username ?? "User",
+          image: user.photoUrl ?? undefined,
+        };
+      },
+    }),
+    // Test-only login for automated E2E. Present ONLY when E2E_TEST_AUTH=1 AND the app is
+    // serving a LOCALHOST origin. The origin check is the hard backstop: even if
+    // E2E_TEST_AUTH leaked into a prod deploy, this passwordless impersonation provider
+    // still can't register because prod pins AUTH_URL=https://gigora.ai. (A NODE_ENV guard
+    // can't be used here: Playwright runs against `next start`, which forces
+    // NODE_ENV=production, so it would disable the provider in CI too.) Lets Playwright
+    // sign in as a seeded user by id.
+    ...(process.env.E2E_TEST_AUTH === "1" &&
+    /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|\/|$)/.test(
+      process.env.AUTH_URL ?? process.env.APP_ORIGIN ?? ""
+    )
+      ? [
+          Credentials({
+            id: "e2e",
+            name: "e2e",
+            credentials: { userId: { type: "text" } },
+            async authorize(credentials) {
+              const userId = typeof credentials?.userId === "string" ? credentials.userId : "";
+              if (!userId) return null;
+              const user = await prisma.user.findUnique({ where: { id: userId } });
+              return user ? { id: user.id, name: user.firstName ?? user.username ?? "E2E" } : null;
+            },
+          }),
+        ]
+      : []),
+  ],
+  callbacks: {
+    // Only allow Google logins with a Google-verified email (required because
+    // allowDangerousEmailAccountLinking bypasses Auth.js's own verification check).
+    signIn({ account, profile }) {
+      if (account?.provider === "google") {
+        return profile?.email_verified === true;
+      }
+      return true;
+    },
+    jwt({ token, user }) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      // Rolling sessions with no ceiling are not sessions, they are permanent credentials. Returning
+      // null here is the supported force-expiry: @auth/core clears the cookie rather than reissuing.
+      if (shouldExpireSession(token, nowSec)) return null;
+      if (user?.id) {
+        token.uid = user.id;
+        token.absExp = absoluteExpiry(nowSec); // stamped at the login moment, never extended
+        // `user` is only present on the sign-in request → this is the login moment.
+        stampLastLogin(user.id);
+        // Storefront handle for accounts without one (email/Google, or Telegram users
+        // with no public username) — lazily backfills existing accounts too.
+        void ensureUsername(user.id);
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (token.uid && session.user) session.user.id = token.uid as string;
+      return session;
+    },
+  },
+};
+
+/**
+ * Auth cookies that work inside Telegram.
+ *
+ * Telegram Desktop and Telegram Web run a Mini App in an iframe on telegram.org, so gigora.ai is a
+ * CROSS-SITE context there. `SameSite=Lax` cookies — the Auth.js default — are never sent in that
+ * context. Measured against production: framed from telegram.org, gigora.ai received no Cookie
+ * header at all. The session was therefore written at login and never returned, so every relaunch
+ * looked signed-out and the user had to log in again.
+ *
+ * When (and only when) the request carries the Mini App marker, reissue the three cookies the
+ * sign-in flow depends on as `SameSite=None; Secure; Partitioned`. Names are byte-identical to the
+ * Auth.js defaults, so existing web sessions keep working rather than being silently invalidated.
+ * Plain web requests never take this branch and keep the stricter Lax default.
+ */
+function miniAppCookies(isSecure: boolean): NextAuthConfig["cookies"] {
+  const options = { httpOnly: true, path: "/", ...crossSiteCookieOptions(isSecure) } as const;
+  // Names must be byte-identical to @auth/core's defaults, which prefix ONLY on a secure origin —
+  // get this wrong and every signed-in user is silently logged out by a cookie rename. Both
+  // prefixes permit SameSite=None and Partitioned; __Host- also forbids a Domain, which we never set.
+  const secure = isSecure ? "__Secure-" : "";
+  const host = isSecure ? "__Host-" : "";
+  return {
+    sessionToken: { name: `${secure}authjs.session-token`, options },
+    callbackUrl: { name: `${secure}authjs.callback-url`, options },
+    csrfToken: { name: `${host}authjs.csrf-token`, options },
+  };
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth((request) => {
+  // `request` is undefined for server-side auth() calls, which only READ an existing cookie and
+  // therefore never need the relaxed attributes.
+  if (!request) return baseConfig;
+  const inMiniApp = request.cookies?.get(MINIAPP_COOKIE)?.value === "1";
+  return inMiniApp ? { ...baseConfig, cookies: miniAppCookies(isSecureRequest(request)) } : baseConfig;
+});
