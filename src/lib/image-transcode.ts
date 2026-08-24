@@ -28,10 +28,32 @@ export type TranscodeResult =
   | { ok: true; body: Buffer; contentType: "image/webp"; width: number; height: number }
   | { ok: false; reason: "unsupported" | "too_large" | "failed" };
 
-/** True when this build of libvips can actually read HEIF. Prebuilt binaries vary by platform. */
+/**
+ * True when this build can decode a real phone HEIC — i.e. HEVC-coded HEIF.
+ *
+ * Checking `sharp.format.heif.input.buffer` is NOT enough and reports a false positive: the same
+ * libvips loader serves AVIF and HEIC, so that flag is true on a build that only understands AVIF.
+ * Measured on the installed binary — `fileSuffix` is exactly [".avif"], and asking it to write
+ * HEVC returns "heifsave: Unsupported compression". sharp's prebuilt libvips deliberately omits
+ * HEVC because of the patent licensing, so this is the normal case, not a broken install.
+ *
+ * The distinction is the whole point: every iPhone and many Samsungs shoot HEVC-HEIC, so a check
+ * that says yes here while the decode fails is worse than no check at all — it turns an honest
+ * "we cannot read this" into a silent failure.
+ */
 export function canDecodeHeif(): boolean {
   try {
-    return Boolean(sharp.format.heif?.input?.buffer);
+    const suffixes = sharp.format.heif?.input?.fileSuffix ?? [];
+    return suffixes.some((s) => s.toLowerCase() === ".heic" || s.toLowerCase() === ".heif");
+  } catch {
+    return false;
+  }
+}
+
+/** True when this build can decode AVIF, which the same loader handles and which browsers mostly do too. */
+export function canDecodeAvif(): boolean {
+  try {
+    return (sharp.format.heif?.input?.fileSuffix ?? []).some((s) => s.toLowerCase() === ".avif");
   } catch {
     return false;
   }

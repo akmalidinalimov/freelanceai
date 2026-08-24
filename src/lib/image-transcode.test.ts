@@ -89,8 +89,24 @@ describe("canTranscode", () => {
 
 describe("canDecodeHeif", () => {
   it("reports a boolean without throwing on any build", () => {
-    // The value differs per platform — a developer's binary is not the container's — which is
-    // exactly why it is reported from /api/health instead of assumed.
     expect(typeof canDecodeHeif()).toBe("boolean");
+  });
+
+  it("is NOT satisfied by an AVIF-only build", () => {
+    // The bug this pins. The same libvips loader serves AVIF and HEIC, so checking
+    // `sharp.format.heif.input.buffer` reports true on a build that cannot read a single phone
+    // photo. Measured on the installed binary: fileSuffix is exactly [".avif"], and asking it to
+    // write HEVC returns "heifsave: Unsupported compression".
+    //
+    // A capability check that lies is worse than none — it turns an honest "we cannot read this"
+    // into a silent failure the user experiences as the upload just not working.
+    const suffixes = sharp.format.heif?.input?.fileSuffix ?? [];
+    const avifOnly = suffixes.length > 0 && suffixes.every((s) => s.toLowerCase() === ".avif");
+    if (avifOnly) expect(canDecodeHeif()).toBe(false);
+    // And whatever the build, the answer must follow the suffix list rather than the loader's mere
+    // presence.
+    expect(canDecodeHeif()).toBe(
+      suffixes.some((s) => [".heic", ".heif"].includes(s.toLowerCase()))
+    );
   });
 });
